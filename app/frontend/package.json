@@ -1,7 +1,7 @@
 {
   "name": "frontend",
-  "version": "0.0.0",
-  "description": "Small description for frontend goes here",
+  "version": "0.0.1",
+  "description": "CoughDrop frontend",
   "private": true,
   "directories": {
     "doc": "doc",
@@ -16,8 +16,8 @@
   "engines": {
     "node": ">= 0.10.0"
   },
-  "author": "",
-  "license": "MIT",
+  "author": "CoughDrop, Inc.",
+  "license": "AGPLv3",
   "devDependencies": {
     "broccoli-asset-rev": "^2.1.2",
     "ember-cli": "1.13.8",
