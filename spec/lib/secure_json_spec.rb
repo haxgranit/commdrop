@@ -7,7 +7,7 @@ describe SecureJson do
     end
     
     it "should error on malformed string" do
-      expect{SecureJson.load("bob")}.to raise_error
+      expect{SecureJson.load("bob")}.to raise_error(OpenSSL::Cipher::CipherError)
     end
     
     it "should properly decode stored values" do

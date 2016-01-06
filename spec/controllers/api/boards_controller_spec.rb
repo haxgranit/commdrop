@@ -786,15 +786,24 @@ describe Api::BoardsController, :type => :controller do
         PaperTrail.whodunnit = "user:#{@user.global_id}"
         b = Board.create(:user => @user, :settings => {'buttons' => []})
         key = b.key
+
+        vs = b.versions.where('whodunnit IS NOT NULL')
+        expect(vs.length).to eq(1)
+        vs.update_all(:created_at => 5.seconds.ago)
+        
         b.destroy
+
+        vs = b.versions.where('whodunnit IS NOT NULL')
+        expect(vs.length).to eq(2)
+        
         get :history, :board_id => key
         expect(response).to be_success
         json = JSON.parse(response.body)
         expect(json['boardversion']).not_to eq(nil)
         expect(json['boardversion'].length).to eq(2)
-        expect(json['boardversion'][0]['action']).to eq('create')
-        expect(json['boardversion'][0]['modifier']['user_name']).to eq(@user.user_name)
-        expect(json['boardversion'][1]['action']).to eq('destroy')
+        expect(json['boardversion'][0]['action']).to eq('destroy')
+        expect(json['boardversion'][1]['action']).to eq('create')
+        expect(json['boardversion'][1]['modifier']['user_name']).to eq(@user.user_name)
       end
     
       it "should not return a list of versions for a deleted board if not allowed" do

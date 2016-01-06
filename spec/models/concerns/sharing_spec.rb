@@ -605,6 +605,7 @@ describe Sharing, :type => :model do
       Worker.process_queues
       
       b.share_with(u2, true, true)
+      expect(b.reload.settings['downstream_board_ids']).to eq([b2.global_id, b3.global_id])
       expect(Board.all_shared_board_ids_for(u2).sort).to eq([b.global_id, b2.global_id, b3.global_id])
     end
     

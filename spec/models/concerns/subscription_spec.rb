@@ -456,7 +456,8 @@ describe Subscription, :type => :model do
         expect(u.settings['subscription']['subscription_id']).to eq(nil)
         expect(u.settings['subscription']['started']).to eq(nil)
         expect(u.settings['subscription']['plan_id']).to eq(nil)
-        expect(u.expires_at.to_i).to eq(2.weeks.from_now.to_i)
+        expect(u.expires_at.to_i).to be > (2.weeks.from_now.to_i - 4)
+        expect(u.expires_at.to_i).to be < (2.weeks.from_now.to_i + 4)
       end
       
       it "should restore any remaining time credits when unsubscribing" do

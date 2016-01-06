@@ -146,7 +146,7 @@ class Api::BoardsController < ApplicationController
       board_id = deleted_board.board_id
     end
     return unless exists?(board_id)
-    versions = PaperTrail::Version.where(:item_type => 'Board', :item_id => board_id).where('whodunnit IS NOT NULL')
+    versions = PaperTrail::Version.where(:item_type => 'Board', :item_id => board_id).where('whodunnit IS NOT NULL').order('id DESC')
     render json: JsonApi::BoardVersion.paginate(params, versions)
   end
   

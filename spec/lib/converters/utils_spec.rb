@@ -62,7 +62,7 @@ describe Converters::Utils do
     it "should make a request to the specified url" do
       res = OpenStruct.new(:body => "bacon", :headers => {'Content-Type' => 'image/png'})
       expect(Typhoeus).to receive(:get).with("http://example.com/board").and_return(res)
-      expect { Converters::Utils.remote_to_boards(nil, "http://example.com/board") }.to raise_error
+      expect { Converters::Utils.remote_to_boards(nil, "http://example.com/board") }.to raise_error("Unrecognized file type: image/png")
     end
     
     it "should error on unrecognized file type" do

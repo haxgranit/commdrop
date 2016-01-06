@@ -6,7 +6,13 @@ class SecureJson
   end
   
   def self.dump(obj)
-    secret, salt = Security.encrypt(JSON.dump(obj), "secure_json")
+    json = JSON.dump(obj)
+    res = encrypted_dump(json)
+    res
+  end
+  
+  def self.encrypted_dump(json)
+    secret, salt = Security.encrypt(json, "secure_json")
     salt + "--" + secret
   end
 end

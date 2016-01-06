@@ -12,7 +12,6 @@ class Board < ActiveRecord::Base
   include Sharing
   include Renaming
   include PgSearch
-  secure_serialize :settings
   has_many :board_button_images
   has_many :button_images, :through => :board_button_images
   has_many :board_button_sounds
@@ -30,6 +29,7 @@ class Board < ActiveRecord::Base
   after_destroy :flush_related_records
   
   has_paper_trail :only => [:current_revision, :settings, :name, :key, :public, :parent_board_id, :user_id]
+  secure_serialize :settings
 
   # public boards anyone can view
   add_permissions('view') { self.public }
@@ -378,6 +378,7 @@ class Board < ActiveRecord::Base
       non_user_params[:key] = nil if non_user_params[:key].match(/^tmp_/)
       self.key = generate_board_key(non_user_params[:key]) if non_user_params[:key]
     end
+#    @edit_description = nil
     if self.id && @edit_notes.length > 0
       @edit_description = {
         'timestamp' => Time.now.to_f,

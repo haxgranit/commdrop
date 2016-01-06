@@ -6,13 +6,13 @@ class ButtonSound < ActiveRecord::Base
   include GlobalId
   include SecureSerialize
   protect_global_id
-  secure_serialize :settings
   belongs_to :board
   has_many :board_button_sounds
   belongs_to :user
   before_save :generate_defaults
 
   has_paper_trail :only => [:settings, :board_id, :user_id, :public, :path, :url, :data]
+  secure_serialize :settings
 
   add_permissions('view') { true }
   add_permissions('view', 'edit') {|user| self.user_id == user.id || (self.user && self.user.allows?(user, 'edit')) }

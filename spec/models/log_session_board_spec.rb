@@ -1,5 +1,5 @@
 require 'spec_helper'
 
-describe LogSession, :type => :model do
+describe LogSessionBoard, :type => :model do
   it "should have specs"
 end

@@ -91,6 +91,19 @@ def token_user
   request.headers['Check-Token'] = "true"
 end
 
+def with_versioning
+  was_enabled = PaperTrail.enabled?
+  was_enabled_for_controller = PaperTrail.enabled_for_controller?
+  PaperTrail.enabled = true
+  PaperTrail.enabled_for_controller = true
+  begin
+    yield
+  ensure
+    PaperTrail.enabled = was_enabled
+    PaperTrail.enabled_for_controller = was_enabled_for_controller
+  end
+end
+
 def message_body(message, type)
   res = nil
   message.body.parts.each do |part|

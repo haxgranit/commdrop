@@ -442,6 +442,11 @@ describe SessionController, :type => :controller do
       json = JSON.parse(response.body)
       expect(json['authenticated']).to eq(true)
       expect(json['user_name']).to eq(@user.user_name)
+      
+      device = Device.find(@device.id)
+      expect(device.settings).not_to eq(nil)
+      expect(device.settings).not_to eq("null")
+      expect(device.settings['keys'][0]['value']).to eq(@device.token)
     end
   end
 end

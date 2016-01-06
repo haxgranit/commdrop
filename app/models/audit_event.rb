@@ -1,8 +1,8 @@
 class AuditEvent < ActiveRecord::Base
   include SecureSerialize
-  secure_serialize :data
   before_save :generate_summary
   has_paper_trail
+  secure_serialize :data
   attr_readonly :user_key, :summary, :data
   
   def generate_summary

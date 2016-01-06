@@ -14,7 +14,8 @@ module General
     end
   
     def deliver_message(method_name, *args)
-      self.send(method_name, *args).deliver
+      method = self.send(method_name, *args)
+      method.respond_to?(:deliver_now) ? method.deliver_now : method.deliver
     end
   end
 end

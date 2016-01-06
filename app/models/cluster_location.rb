@@ -10,13 +10,13 @@ class ClusterLocation < ActiveRecord::Base
   include Async
   include SecureSerialize
   belongs_to :user
-  secure_serialize :data
   before_save :generate_stats
   has_many :ip_sessions, :class_name => 'LogSession', :foreign_key => 'ip_cluster_id'
   has_many :geo_sessions, :class_name => 'LogSession', :foreign_key => 'geo_cluster_id'
   
   add_permissions('view', 'edit') {|user| user.id == self.user_id || (self.user && self.user.allows?(user, 'edit')) }
   has_paper_trail :only => [:data, :user_id, :cluster_type]
+  secure_serialize :data
 
   def distance_tolerance
     ClusterLocation.default_distance_tolerance

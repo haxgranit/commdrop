@@ -32,7 +32,7 @@ describe Security do
     
   describe "encrypt" do
     it "should error on empty values" do
-      expect{ Security.encrypt(nil, nil) }.to raise_error
+      expect{ Security.encrypt(nil, nil) }.to raise_error(NoMethodError)
     end
     
     it "should return a key pair" do
@@ -49,7 +49,7 @@ describe Security do
 
   describe "decrypt" do
     it "should error on empty values" do
-      expect{ Security.encrypt(nil, nil, nil) }.to raise_error
+      expect{ Security.encrypt(nil, nil, nil) }.to raise_error(NoMethodError)
     end
     
     it "should decrypt an encrypted string" do

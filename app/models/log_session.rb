@@ -4,7 +4,6 @@ class LogSession < ActiveRecord::Base
   include GlobalId
   include SecureSerialize
   include Notifier
-  secure_serialize :data
   belongs_to :user
   belongs_to :author, :class_name => User
   belongs_to :ip_cluster, :class_name => ClusterLocation
@@ -19,6 +18,7 @@ class LogSession < ActiveRecord::Base
   after_save :update_board_connections
 
   has_paper_trail :only => [:data, :user_id, :author_id, :device_id]
+  secure_serialize :data
 
   def generate_defaults
     self.data ||= {}

@@ -10,7 +10,6 @@ class User < ActiveRecord::Base
   include Notifiable
   include Subscription
   include Renaming
-  secure_serialize :settings
   has_many :log_sessions
   has_many :boards
   has_many :devices
@@ -21,6 +20,7 @@ class User < ActiveRecord::Base
   after_save :notify_of_changes
 
   has_paper_trail :only => [:settings, :user_name]
+  secure_serialize :settings
 
   # TODO: callback to update board names if username changes
   # ...I guess should do something about old links as well. Github

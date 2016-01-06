@@ -156,7 +156,7 @@ module Sharing
         end
       end
       # get the list of all possible downstream boards
-      all_deep_board_ids = boards.map{|b| b['settings']['downstream_board_ids'] || [] }.flatten.compact.uniq
+      all_deep_board_ids = boards.map{|b| b.settings['downstream_board_ids'] || [] }.flatten.compact.uniq
       
       valid_deep_board_ids = []
       # for every downstream board, mark it as shared if one of the current board's authors
