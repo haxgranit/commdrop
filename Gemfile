@@ -13,7 +13,7 @@ group :development, :test do
   gem 'rack-test'
 end
 
-gem 'rails', '4.1.9'
+gem 'rails', '4.2.5'
 gem 'pg'
 gem 'sass-rails'
 gem 'uglifier', '>= 1.3.0'
@@ -57,4 +57,4 @@ end
 # Use Capistrano for deployment
 # gem 'capistrano', group: :development
 
-ruby "2.2.1"
+ruby "2.3.0"
