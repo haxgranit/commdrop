@@ -296,7 +296,11 @@
                   {{date_ago log.started_at}}
                 </span>
                 {{#link-to 'user.log' log.user.user_name log.id}}
-                  {{t "button" count=log.button_count key='button_count'}}
+                  {{#if log.assessment}}
+                    {{t "assessment" key='assessment'}}
+                  {{else}}
+                    {{t "button" count=log.button_count key='button_count'}}
+                  {{/if}}
                 {{/link-to}}
                 {{#if app_state.currentUser.supporter_role}}
                   <span> - 

@@ -230,7 +230,11 @@
                         {{date_ago log.started_at}}
                       </span>
                       {{#link-to 'user.log' model.user_name log.id}}
-                        {{t "button" count=log.button_count key='button_count'}}
+                        {{#if log.assessment}}
+                          {{t "assessment" key='assessment'}}
+                        {{else}}
+                          {{t "button" count=log.button_count key='button_count'}}
+                        {{/if}}
                       {{/link-to}}
                       <br/>
                       <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">{{log.summary}}</span>
