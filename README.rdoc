@@ -73,3 +73,6 @@ You'll also need to configure Postgres using database.yml or something similar.
 
 You can use foreman to run the server, worker and ember watcher at the same time.
 
+=== License ===
+
+Licensed under the AGPLv3 license.
