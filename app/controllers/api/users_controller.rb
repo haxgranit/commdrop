@@ -1,10 +1,21 @@
 class Api::UsersController < ApplicationController
+  extend ::NewRelic::Agent::MethodTracer
+
   before_filter :require_api_token, :except => [:update, :index, :show, :create, :confirm_registration, :forgot_password, :password_reset]
   def show
     user = User.find_by_path(params['id'])
     user_device = @api_user == user && @api_device
-    return unless allowed?(user, 'view_existence')
-    render json: JsonApi::User.as_json(user, :wrapper => true, :permissions => @api_user, :device => user_device).to_json
+    allowed = false
+    self.class.trace_execution_scoped(['user/permission_check']) do
+      allowed = allowed?(user, 'view_existence')
+    end
+    return unless allowed
+    json = {}
+    self.class.trace_execution_scoped(['user/json_render']) do
+      json = JsonApi::User.as_json(user, :wrapper => true, :permissions => @api_user, :device => user_device)
+    end
+    
+    render json: json.to_json
   end
   
   def update
