@@ -510,6 +510,36 @@ describe LogSession, :type => :model do
       expect(s2.data['events'].length).to eq(2)
       expect(s2.data['events'].map{|e| e['button']['label'] }).to eq(['chicken', 'radish'])
     end
+
+    it "should create a new log if the last log wasn't a session type" do
+      d = Device.create
+      u = User.create
+      s = LogSession.new(:device => d, :user => u, :author => u)
+      s.data = {'assessment' => {
+        'totals' => {
+          'correct' => 5,
+          'incorrect' => 4
+        }
+      }}
+      s.save
+      s.reload
+      expect(s.log_type).to eq('assessment')
+      
+      LogSession.process_as_follow_on({
+        'events' => [
+          {'user_id' => u.global_id, 'geo' => ['2', '3'], 'timestamp' => 3.minutes.ago.to_i, 'type' => 'button', 'button' => {'label' => 'chicken', 'board' => {'id' => '1_1'}}},
+          {'user_id' => u.global_id, 'geo' => ['2', '3'], 'timestamp' => 2.minutes.ago.to_i, 'type' => 'button', 'button' => {'label' => 'radish', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:device => d, :author => u, :user => u})
+      Worker.process_queues
+      
+      s.reload
+      expect(LogSession.count).to eq(2)
+      s2 = LogSession.last
+      expect(s.data['events'].length).to eq(0)
+      expect(s2.data['events'].length).to eq(2)
+      expect(s2.data['events'].map{|e| e['button']['label'] }).to eq(['chicken', 'radish'])
+    end
     
     it "should not create a new log if the user_id changed and the author is not allowed to log for that user" do
       d = Device.create

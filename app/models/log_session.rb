@@ -423,7 +423,7 @@ class LogSession < ActiveRecord::Base
     raise "author required" if !non_user_params[:author]
     raise "device required" if !non_user_params[:device]
     
-    active_session = LogSession.all.where(['device_id = ? AND author_id = ? AND user_id = ? AND ended_at > ?', non_user_params[:device].id, non_user_params[:author].id, non_user_params[:user].id, 1.hour.ago]).order('ended_at DESC').first
+    active_session = LogSession.all.where(['log_type = ? AND device_id = ? AND author_id = ? AND user_id = ? AND ended_at > ?', 'session', non_user_params[:device].id, non_user_params[:author].id, non_user_params[:user].id, 1.hour.ago]).order('ended_at DESC').first
     if params['events']
       if active_session
         active_session.process(params, non_user_params)
