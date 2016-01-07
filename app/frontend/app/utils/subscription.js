@@ -258,6 +258,8 @@ var Subscription = Ember.Object.extend({
     var type = "communicator ";
     if(plan.match(/^slp_/)) {
       type = "supporter ";
+    } else if(plan.match(/^eval_/)) {
+      type = "eval device ";
     }
     var schedule = "monthly ";
     if(plan.match(/long_term/)) {
