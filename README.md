@@ -55,4 +55,6 @@ You can use foreman to run the server, worker and ember watcher at the same time
 
 ### License
 
+Copyright (C) 2014-2016 CoughDrop, Inc.
+
 Licensed under the AGPLv3 license.
