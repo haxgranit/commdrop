@@ -1,3 +1,5 @@
+require 'openssl'
+
 module Security
   def self.sha512(str, salt, encryption_key=nil)
     Digest::SHA512.hexdigest(str.to_s + salt.to_s + (encryption_key || self.encryption_key))
@@ -33,10 +35,20 @@ module Security
   def self.generate_password(password)
     raise "password required" if password.blank?
     pw = {}
-    pw['hash_type'] = 'sha512'
-    pw['salt'] = Digest::MD5.hexdigest("pw" + Time.now.to_i.to_s)
-    pw['hashed_password'] = Digest::SHA512.hexdigest(self.encryption_key + pw['salt'] + password.to_s)
+#     pw['hash_type'] = 'sha512'
+#     pw['hash_type'] = 'bcrypt'
+    pw['hash_type'] = 'pbkdf2-sha256'
+    pw['salt'] = Digest::MD5.hexdigest(OpenSSL::Random.pseudo_bytes(4) + Time.now.to_i.to_s + self.encryption_key + "pw" + OpenSSL::Random.pseudo_bytes(16))
+#     pw['hashed_password'] = Digest::SHA512.hexdigest(self.encryption_key + pw['salt'] + password.to_s)
+#     salted = Digest::SHA256.hexdigest(self.encryption_key + pw['salt'] + password.to_s)
+#     pw['hashed_password'] = BCrypt::Password.create(salted)
+    digest = OpenSSL::Digest::SHA256.new
+    pw['hashed_password'] = Base64.encode64(OpenSSL::PKCS5.pbkdf2_hmac(password.to_s, pw['salt'], 100000, digest.digest_length, digest))
     pw
+  end
+  
+  def self.outdated_password?(password_hash)
+    return password_hash && password_hash['hash_type'] != 'pbkdf2-sha256'
   end
   
   def self.matches_password?(attempt, password_hash)
@@ -48,6 +60,14 @@ module Security
       else
         res
       end
+    elsif password_hash && password_hash['hash_type'] == 'bcrypt' && password_hash['salt']
+      pw = BCrypt::Password.new(password_hash['hashed_password'])
+      salted = Digest::SHA256.hexdigest(self.encryption_key + password_hash['salt'] + attempt.to_s)
+      res = pw == salted
+    elsif password_hash && password_hash['hash_type'] == 'pbkdf2-sha256' && password_hash['salt']
+      digest = OpenSSL::Digest::SHA256.new
+      str = Base64.encode64(OpenSSL::PKCS5.pbkdf2_hmac(attempt.to_s, password_hash['salt'], 100000, digest.digest_length, digest))
+      res = str == password_hash['hashed_password']
     else
       false
     end

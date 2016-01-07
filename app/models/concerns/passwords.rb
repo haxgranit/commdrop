@@ -50,7 +50,12 @@ module Passwords
 
   def valid_password?(guess)
     self.settings ||= {}
-    Security.matches_password?(guess, self.settings['password'])
+    res = Security.matches_password?(guess, self.settings['password'])
+    if res && Security.outdated_password?(self.settings['password'])
+      self.generate_password(guess)
+      self.save
+    end
+    res
   end
   
   def generate_password(password)

@@ -93,7 +93,7 @@ describe Passwords, :type => :model do
     it "should generate a password" do
       u = User.new
       u.generate_password("hippo")
-      expect(u.settings['password']['hash_type']).to eq('sha512')
+      expect(u.settings['password']['hash_type']).to eq('pbkdf2-sha256')
       expect(u.settings['password']['hashed_password']).not_to eq(nil)
       expect(u.settings['password']['salt']).not_to eq(nil)
       
@@ -109,8 +109,61 @@ describe Passwords, :type => :model do
       pw = u.settings['password']
       expect(u.valid_password?("chicken")).to eq(false)
       expect(u.valid_password?("I love to eat apples and bananas")).to eq(true)
+      expect(u.valid_password?("I love to eat fried chicken")).to eq(false)
+      expect(u.valid_password?("I love to eat apples and bananas ")).to eq(false)
+      expect(u.valid_password?("I love to eat apples and bananas!")).to eq(false)
+      expect(u.valid_password?("I love to eat apples and banana")).to eq(false)
       expect(Security).to receive(:matches_password?).with("hippopotamus", pw)
       u.valid_password?("hippopotamus")
+    end
+    
+    it "should validate an outdated password" do
+      u = User.new
+      u.settings = {}
+      salt = Digest::MD5.hexdigest("pw" + Time.now.to_i.to_s)
+      hash = Digest::SHA512.hexdigest(Security.encryption_key + salt + "bacon")
+      u.settings['password'] = {
+        'hash_type' => 'sha512',
+        'hashed_password' => hash,
+        'salt' => salt
+      }
+      expect(Security.outdated_password?(u.settings['password'])).to eq(true)
+      expect(u.valid_password?('bracken')).to eq(false)
+      expect(u.valid_password?('bacon')).to eq(true)
+    end
+    
+    it "should re-generate an outdated password" do
+      u = User.new
+      u.settings = {}
+      salt = Digest::MD5.hexdigest("pw" + (Time.now.to_i - 10).to_s)
+      hash = Digest::SHA512.hexdigest(Security.encryption_key + salt + "bacon")
+      u.settings['password'] = {
+        'hash_type' => 'sha512',
+        'hashed_password' => hash,
+        'salt' => salt
+      }
+      expect(Security.outdated_password?(u.settings['password'])).to eq(true)
+      expect(u.valid_password?('bacon')).to eq(true)
+      expect(u.settings['password']['hash_type']).to eq('pbkdf2-sha256')
+      expect(u.settings['password']['hashed_password']).not_to eq(hash)
+      expect(u.settings['password']['salt']).not_to eq(salt)
+    end
+    
+    it "should not re-generate an outdated password on a bad guess" do
+      u = User.new
+      u.settings = {}
+      salt = Digest::MD5.hexdigest("pw" + Time.now.to_i.to_s)
+      hash = Digest::SHA512.hexdigest(Security.encryption_key + salt + "bacon")
+      u.settings['password'] = {
+        'hash_type' => 'sha512',
+        'hashed_password' => hash,
+        'salt' => salt
+      }
+      expect(Security.outdated_password?(u.settings['password'])).to eq(true)
+      expect(u.valid_password?('baconator')).to eq(false)
+      expect(u.settings['password']['hash_type']).to eq('sha512')
+      expect(u.settings['password']['hashed_password']).to eq(hash)
+      expect(u.settings['password']['salt']).to eq(salt)
     end
   end
 end
