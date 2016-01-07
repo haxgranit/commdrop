@@ -8,7 +8,7 @@ module Permissions
   end
   
   def cache_key(prefix)
-    key = "#{self.id}-#{self.updated_at.to_i}"
+    key = "#{self.class.to_s}#{self.id}-#{self.updated_at.to_i}"
     if prefix
       key = prefix + "/" + key
     end
@@ -27,10 +27,11 @@ module Permissions
       permissions = JSON.parse(permissions_string) rescue nil
     end
     permissions
+    nil
   end
   
   def allows?(user, action)
-    if self.class.cache_permissions
+    if false && self.class.cache_permissions
       # check for an existing result keyed off the record's id and updated_at
       permissions = get_cached('permissions')
       # call permissions_for
