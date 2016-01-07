@@ -28,12 +28,13 @@ class User < ActiveRecord::Base
   # repo names, at least until they're replaces by a same-named repo.
 
   add_permissions('view_existence') { true } # anyone can get basic information
+  add_permissions('view_existence', 'view_detailed', 'supervise', 'edit', 'manage_supervision', 'delete', 'view_deleted_boards') {|user| user.id == self.id }
   add_permissions('view_existence', 'view_detailed') { self.settings && self.settings['public'] == true }
-  add_permissions('view_existence', 'view_detailed', 'supervise', 'view_deleted_boards') {|user| user.supervisor_for?(self) }
   add_permissions('edit', 'manage_supervision', 'view_deleted_boards') {|user| user.edit_permission_for?(self) }
+  add_permissions('view_existence', 'view_detailed', 'supervise', 'view_deleted_boards') {|user| user.supervisor_for?(self) }
   add_permissions('manage_supervision', 'support_actions') {|user| Organization.manager_for?(user, self) }
   add_permissions('admin_support_actions', 'view_deleted_boards') {|user| Organization.admin_manager?(user) }
-  add_permissions('view_existence', 'view_detailed', 'supervise', 'edit', 'manage_supervision', 'delete', 'view_deleted_boards') {|user| user.id == self.id }
+  cache_permissions
   
   def self.find_for_login(user_name)
     res = self.find_by(:user_name => user_name)

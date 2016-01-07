@@ -72,9 +72,11 @@ describe Security do
     
     it "should generate a hashed password response" do
       res = Security.generate_password("abcdefg")
-      expect(res['hash_type']).to eq('sha512')
+      expect(res['hash_type']).to eq('pbkdf2-sha256')
       expect(res['salt'].length).to be > 10
-      expect(res['hashed_password']).to eq(Digest::SHA512.hexdigest(Security.encryption_key + res['salt'] + "abcdefg"))
+      
+      digest = OpenSSL::Digest::SHA256.new
+      expect(res['hashed_password']).to eq(Base64.encode64(OpenSSL::PKCS5.pbkdf2_hmac("abcdefg", res['salt'], 100000, digest.digest_length, digest)))
     end
   end
 

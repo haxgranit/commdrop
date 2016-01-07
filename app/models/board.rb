@@ -33,22 +33,19 @@ class Board < ActiveRecord::Base
 
   # public boards anyone can view
   add_permissions('view') { self.public }
-  # the author's supervisors can view the author's boards
-  add_permissions('view') {|user| self.user && self.user.allows?(user, 'supervise') }
   # explicitly-shared boards are viewable
   add_permissions('view') {|user| self.shared_with?(user) }
-  # the user and any of their editing supervisors should have edit access
-  add_permissions('view', 'edit', 'delete', 'share') {|user| self.user && self.user.allows?(user, 'edit') }
+  # the author's supervisors can view the author's boards
   # the user (and co-authors) should have edit and sharing access
   add_permissions('view', 'edit', 'delete', 'share') {|user| self.author?(user) }
-  # the user should have view access if the board is shared with any of their supervisees
-  add_permissions('view') {|user| user.supervisees.any?{|u| self.shared_with?(u) } }
+  add_permissions('view') {|user| self.user && self.user.allows?(user, 'supervise') }
+  # the user and any of their editing supervisors should have edit access
+  add_permissions('view', 'edit', 'delete', 'share') {|user| self.user && self.user.allows?(user, 'edit') }
   # the user should have edit and sharing access if a parent board is edit-shared including downstream with them
   add_permissions('view', 'edit', 'delete', 'share') {|user| self.shared_with?(user, true) }
-  # the user should have view access if for any of the user's supervisees, the board is in their set and is authored by one of their supervisors
-  # the user should have view access if they have access to a board that links to this board??
-  # any supervisors of the author's supervisees can view the author's boards (?!?!)
-  # add_permissions('view') {|user| user.supervisees.any?{|u| self.user && self.user.allows?(u, 'supervise') } }
+  # the user should have view access if the board is shared with any of their supervisees
+  add_permissions('view') {|user| user.supervisees.any?{|u| self.shared_with?(u) } }
+  cache_permissions
 
   def starred_by?(user)
     !!(user && user.global_id && (self.settings['starred_user_ids'] || []).include?(user.global_id))

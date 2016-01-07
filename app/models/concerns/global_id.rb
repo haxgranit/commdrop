@@ -50,6 +50,7 @@ module GlobalId
     end
     
     def find_all_by_global_id(ids)
+      return [] if !ids || ids.length == 0
       id_hashes = (ids || []).map{|id| id_pieces(id) }
       res = self.where(:id => id_hashes.map{|h| h[:id] }).to_a
       if self.protected_global_id

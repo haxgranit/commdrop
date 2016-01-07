@@ -414,7 +414,8 @@ describe Subscription, :type => :model do
         expect(u.settings['subscription']['subscription_id']).to eq(nil)
         expect(u.settings['subscription']['started']).to eq(nil)
         expect(u.settings['subscription']['plan_id']).to eq(nil)
-        expect(u.expires_at.to_i).to eq(2.weeks.from_now.to_i)
+        expect(u.expires_at.to_i).to be > (2.weeks.from_now.to_i - 5)
+        expect(u.expires_at.to_i).to be < (2.weeks.from_now.to_i + 5)
       end
       
       it "should ignore if not for the currently-set subscription" do

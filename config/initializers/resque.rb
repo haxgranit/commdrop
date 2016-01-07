@@ -15,11 +15,15 @@ module RedisInit
     end
     redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
     @default = Redis::Namespace.new("coughdrop-stash", :redis => redis)
-    
+    @permissions = Redis::Namespace.new("coughdrop-permissions", :redis => redis)
   end
   
   def self.default
     @default
+  end
+  
+  def self.permissions
+    @permissions
   end
 end
 

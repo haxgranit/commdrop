@@ -120,7 +120,7 @@ module Sharing
   end
   
   def shared_with?(user, plus_editing=false)
-    return false unless user && user.settings
+    return false unless user && user.settings && (user.settings['boards_shared_with_me'] || user.settings['boards_i_shared'])
     share = (user.settings['boards_shared_with_me'] || []).detect{|b| b['board_id'] == self.global_id}
     shared = plus_editing ? !!(share && share['allow_editing']) : !!share
     if !shared
@@ -132,6 +132,11 @@ module Sharing
   
   module ClassMethods
     def all_shared_board_ids_for(user, plus_editing=false)
+      return [] if (user.settings['boards_shared_with_me'] || []).length == 0 && (user.settings['boards_i_shared'] || []).length == 0
+      
+      cached = user.get_cached("all_shared_board_ids-#{plus_editing}")
+      return cached if cached
+      
       # all explicitly-shared boards
       shallow_board_ids = (user.settings['boards_shared_with_me'] || []).select{|b| plus_editing ? b['allow_editing'] : b }.map{|b| b['board_id'] }
       
@@ -168,6 +173,7 @@ module Sharing
       end
       
       all_board_ids = (shallow_board_ids + valid_deep_board_ids).uniq
+      user.set_cached("all_shared_board_ids-#{plus_editing}", all_board_ids)
       all_board_ids
     end
   end

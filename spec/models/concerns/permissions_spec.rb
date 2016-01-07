@@ -5,6 +5,7 @@ describe Permissions, :type => :model do
     include Permissions
     attr_accessor :id
     attr_accessor :name
+    attr_accessor :updated_at
     cattr_accessor :calls
   end
   
