@@ -1,4 +1,4 @@
-== CoughDrop - Every Voice Should Be Heard
+## CoughDrop - Every Voice Should Be Heard
 
 CoughDrop is an open, web-based AAC (Augmentative and Alternative Communication) app. Basically
 if people struggle getting their words out for whatever reason, they can use
@@ -33,7 +33,7 @@ our repo. Boards created in CoughDrop use the Open Board Format (http://www.open
 so they should export/import across instances of CoughDrop and a few other systems
 without having to dig around in the database.
 
-=== Technical Notes
+### Technical Notes
 
 CoughDrop has a Rails backend (`/`) and an Ember frontend (`/app/frontend`), which are both contained in this
 repository. If you're familiar with those frameworks then hopefully nothing here will
@@ -53,6 +53,6 @@ You'll also need to configure Postgres using `database.yml` or something similar
 
 You can use foreman to run the server, worker and ember watcher at the same time.
 
-=== License
+### License
 
 Licensed under the AGPLv3 license.
