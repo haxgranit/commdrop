@@ -96,12 +96,12 @@ class Api::BoardsController < ApplicationController
       return unless exists?(board)
     end
     allowed = false
-    self.class.trace_execution_scoped(['button_set/board/permission_check']) do
+    self.class.trace_execution_scoped(['boards/board/permission_check']) do
       allowed = allowed?(board, 'view')
     end
     return unless allowed
     json = {}
-    self.class.trace_execution_scoped(['button_set/board/json_render']) do
+    self.class.trace_execution_scoped(['boards/board/json_render']) do
       json = JsonApi::Board.as_json(board, :wrapper => true, :permissions => @api_user)
     end
     render json: json.to_json
