@@ -19,6 +19,7 @@
 
 /.env
 /.env.*
+!.env.example
 
 /app/frontend/dist/
 /app/frontend/tmp/
