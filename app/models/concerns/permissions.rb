@@ -7,7 +7,7 @@ module Permissions
     self.permissions_lookup = []
   end
   
-  def cache_key(prefix)
+  def cache_key(prefix=nil)
     key = "#{self.class.to_s}#{self.id}-#{self.updated_at.to_i}"
     if prefix
       key = prefix + "/" + key
@@ -33,7 +33,7 @@ module Permissions
   def allows?(user, action)
     if false && self.class.cache_permissions
       # check for an existing result keyed off the record's id and updated_at
-      permissions = get_cached('permissions')
+      permissions = get_cached("permissions-for/#{user.cache_key}")
       # call permissions_for
       permissions ||= permissions_for(user)
       
@@ -67,7 +67,7 @@ module Permissions
       end
     end
     # cache the result with a 30-minute expiration keyed off the id and updated_at
-    set_cached('permissions', granted_permissions)
+    set_cached("permissions-for/#{user.cache_key}", granted_permissions)
     granted_permissions
   end
   
