@@ -109,7 +109,7 @@ class Api::BoardsController < ApplicationController
   
   def create
     @board_user = @api_user
-    if params['board'] && params['board']['for_user_id']
+    if params['board'] && params['board']['for_user_id'] && params['board']['for_user_id'] != 'self'
       user = User.find_by_path(params['board']['for_user_id'])
       return unless allowed?(user, 'edit')
       @board_user = user
