@@ -134,7 +134,7 @@ module Sharing
     def all_shared_board_ids_for(user, plus_editing=false)
       return [] if (user.settings['boards_shared_with_me'] || []).length == 0 && (user.settings['boards_i_shared'] || []).length == 0
       
-      cached = user.get_cached("all_shared_board_ids-#{plus_editing}")
+      cached = user.get_cached("all_shared_board_ids/#{plus_editing}")
       return cached if cached
       
       # all explicitly-shared boards
@@ -173,7 +173,7 @@ module Sharing
       end
       
       all_board_ids = (shallow_board_ids + valid_deep_board_ids).uniq
-      user.set_cached("all_shared_board_ids-#{plus_editing}", all_board_ids)
+      user.set_cached("all_shared_board_ids/#{plus_editing}", all_board_ids)
       all_board_ids
     end
   end

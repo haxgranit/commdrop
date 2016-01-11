@@ -105,4 +105,21 @@ describe Permissions, :type => :model do
       expect(FakeRecord.calls).to eq(["jump_skip", "jump_hop", "leap"])
     end
   end
+  
+  describe "cache_key" do
+    it "should not require a parameter" do
+      u = User.create
+      expect(u.cache_key).to eq("User#{u.id}-#{u.updated_at.to_i}")
+    end
+    
+    it "should append a passed parameter" do
+      u = User.create
+      expect(u.cache_key('bacon')).to eq("bacon/User#{u.id}-#{u.updated_at.to_i}")
+    end
+    
+    it "should return nil on an unsaved record" do
+      u = User.new
+      expect(u.cache_key).to eq(nil)
+    end
+  end
 end
