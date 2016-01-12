@@ -25,7 +25,7 @@ module Permissions
     cache_string = RedisInit.permissions.get(self.cache_key(prefix))
     cache = nil
     if cache_string
-      cache = JSON.parse(permissions_string) rescue nil
+      cache = JSON.parse(cache_string) rescue nil
     end
     cache
   end
