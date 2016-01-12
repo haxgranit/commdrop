@@ -22,13 +22,12 @@ module Permissions
   end
   
   def get_cached(prefix)
-    permissions_string = RedisInit.permissions.get(self.cache_key(prefix))
-    permissions = nil
-    if permissions_string
-      permissions = JSON.parse(permissions_string) rescue nil
+    cache_string = RedisInit.permissions.get(self.cache_key(prefix))
+    cache = nil
+    if cache_string
+      cache = JSON.parse(permissions_string) rescue nil
     end
-    permissions
-    nil
+    cache
   end
   
   def allows?(user, action)
