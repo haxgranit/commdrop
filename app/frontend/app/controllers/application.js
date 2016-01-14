@@ -413,7 +413,7 @@ export default Ember.Controller.extend({
     
     var button_to_speak = obj;
     var specialty = utterance.specialty_button(obj);
-    if(button.load_board && button.load_board.key) {
+    if(button.load_board && button.load_board.key && !button.add_to_vocalization) {
     } else if(specialty) {
       button_to_speak = specialty;
     } else {
@@ -424,7 +424,7 @@ export default Ember.Controller.extend({
     if(obj.label) {
       if(app_state.get('speak_mode')) {
         if(app_state.get('currentUser.preferences.vocalize_buttons') || (!app_state.get('currentUser') && window.user_preferences.any_user.vocalize_buttons)) {
-          if((button.load_board || button_to_speak.special) && !app_state.get('currentUser.preferences.vocalize_linked_buttons')) {
+          if((button.load_board || button_to_speak.special) && !app_state.get('currentUser.preferences.vocalize_linked_buttons') && !button.add_to_vocalization) {
             // don't say it...
           } else if(button_to_speak.in_progress && app_state.get('currentUser.preferences.silence_spelling_buttons')) {
             // don't say it...

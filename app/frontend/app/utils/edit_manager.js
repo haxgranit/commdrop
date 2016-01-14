@@ -553,6 +553,7 @@ var editManager = Ember.Object.extend({
           }
           newButton.hidden = !!currentButton.hidden;
           newButton.link_disabled = !!currentButton.link_disabled;
+          newButton.add_to_vocalization = !!currentButton.add_to_vocalization;
           if(currentButton.part_of_speech) {
             newButton.part_of_speech = currentButton.part_of_speech;
             newButton.suggested_part_of_speech = currentButton.suggested_part_of_speech;
