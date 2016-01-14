@@ -16,6 +16,12 @@
     <div class="modal-body">
       <form class="form-horizontal" {{action "saveBoard" on="submit"}}>
       <!-- TODO: form should wrap to include submit button, no? -->
+      <div class="form-group">
+        <label for="new_board_name" class="col-sm-2 control-label">{{t "Name" key='name'}}</label>
+        <div class="col-sm-10">
+          {{input value=model.name class="form-control" id="new_board_name" placeholder="My Board"}}
+        </div>
+      </div>
       {{#if supervisees}}
         <div class="form-group">
           <label for="for_user_id" class="col-sm-2 control-label">{{t "For" key='for'}}</label>
@@ -24,12 +30,6 @@
           </div>
         </div>
       {{/if}}
-      <div class="form-group">
-        <label for="new_board_name" class="col-sm-2 control-label">{{t "Name" key='name'}}</label>
-        <div class="col-sm-10">
-          {{input value=model.name class="form-control" id="new_board_name" placeholder="My Board"}}
-        </div>
-      </div>
       <div class="form-group">
         <label for="new_board_rows" class="col-sm-2 control-label">{{t "Rows" key='rows'}}</label>
         <div class="col-sm-3">
