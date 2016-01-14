@@ -5,7 +5,9 @@
     {{#if persistence.online}}
       {{#if model.error.deleted}}
         <p>{{t "This board has been deleted." key='board_deleted'}}</p>
-        {{#if model.error.key}}
+        {{#if model.show_history}}
+          {{outlet}}
+        {{else if model.error.key}}
           <p>{{#link-to 'board.history' model.error.id}}{{t "Review the edit history for this board." key='review_edit_history'}}{{/link-to}}</p>
         {{/if}}
       {{else if model.error.never_existed}}

@@ -15,6 +15,7 @@ export default Ember.Route.extend({
   setupController: function(controller, model) {
     var _this = this;
     controller.set('model', model);
+    model.set('show_history', false);
     model.load_button_set();
     app_state.set('currentBoardState', {
       id: model.get('id'),

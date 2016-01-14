@@ -7,6 +7,7 @@ export default Ember.Route.extend({
   },
   setupController: function(controller, model) {
     controller.set('key', model.get('lookup_key'));
+    model.set('show_history', true);
     controller.load_results();
   }
 });
