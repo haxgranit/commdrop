@@ -58,6 +58,10 @@ describe JsonApi::User do
 
       json = JsonApi::User.build_json(u, permissions: u)
       expect(json['premium_voices']).to eq({'claimed' => ['abc', 'bcd']})
+      
+      u.settings['premium_voices'] = nil
+      json = JsonApi::User.build_json(u, permissions: u)
+      expect(json['premium_voices']).to eq({'claimed' => [], 'allowed' => 2})
     end
     
     it "should include board ids if the user has set a home board" do

@@ -53,6 +53,7 @@ module JsonApi::User
       nearest_device_key = (nearest_device && nearest_device.unique_device_key) || 'default'
       
       json['premium_voices'] = user.settings['premium_voices'] if user.settings['premium_voices']
+      json['premium_voices'] ||= User.default_premium_voices
       json['preferences']['device'] = user.settings['preferences']['devices'][nearest_device_key] || {}
       if args[:device] && user.settings['preferences']['devices'][args[:device].unique_device_key]
         json['preferences']['device'].merge!(user.settings['preferences']['devices'][args[:device].unique_device_key])
