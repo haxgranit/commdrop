@@ -105,6 +105,55 @@ describe('app_state', function() {
       expect(modal_closed).toEqual(true);
     });
   });
+  
+  describe('speak_mode_handlers', function() {
+    it("should call volume_check", function() {
+      app_state.setup({}, app);
+      
+      var checks = 0;
+      var warnings = 0;
+      var warning = 'bacon';
+      stub(capabilities, 'volume_check', function() {
+        checks++;
+        if(checks == 1) {
+          return Ember.RSVP.resolve(0);
+        } else if(checks == 2) {
+          return Ember.RSVP.resolve(0.1);
+        } else {
+          return Ember.RSVP.resolve(1.0);
+        }
+      });
+      stub(modal, 'warning', function(message) {
+        warnings++;
+        warning = message;
+      });
+      
+      expect(checks).toEqual(0);
+
+      stashes.set('current_mode', 'speak');
+      app_state.set('currentBoardState', {key: 'trade', id: '1_1'});
+      expect(app_state.get('speak_mode')).toEqual(true);
+
+      // set speak mode
+      waitsFor(function() { return checks == 1 && warnings == 1; });
+      runs(function() {
+        expect(warning).toEqual('Volume is muted, you will not be able to hear speech');
+        app_state.set('last_speak_mode', null);
+        app_state.speak_mode_handlers();
+      });
+      waitsFor(function() { return checks == 2 && warnings == 2; });
+      runs(function() {
+        expect(warning).toEqual('Volume is low, you may not be able to hear speech');
+        warning = null;
+        app_state.set('last_speak_mode', null);
+        app_state.speak_mode_handlers();
+      });
+      waitsFor(function() { return checks == 3; });
+      runs(function() {
+        expect(warnings).toEqual(2);
+      });
+    });
+  });
 
   describe('refresh_user', function() {
     it("should cancel an existing refresh", function() {

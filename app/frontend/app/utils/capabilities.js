@@ -356,6 +356,17 @@ var capabilities;
           return false;
         }
       },
+      volume_check: function() {
+        var res = capabilities.mini_promise();
+        if(window.plugin && window.plugin.volume && window.plugin.volume.getVolume) {
+          window.plugin.volume.getVolume(function(vol) {
+            res.resolve(vol);
+          });
+        } else {
+          res.reject();
+        }
+        return res;
+      },
       fullscreen_capable: function() {
         return (window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) || 
                 document.body.requestFullscreen || document.body.msRequestFullscreen || 

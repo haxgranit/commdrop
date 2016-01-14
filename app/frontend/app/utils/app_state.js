@@ -542,6 +542,15 @@ var app_state = Ember.Object.extend({
             modal.warning(i18n.t('fullscreen_failed', "Full Screen Mode failed to load"), true);
           });
         }
+        capabilities.volume_check().then(function(level) {
+          console.log("volume is " + level);
+          if(level === 0) {
+            modal.warning(i18n.t('volume_is_off', "Volume is muted, you will not be able to hear speech"), true);
+          } else if(level < 0.2) {
+            modal.warning(i18n.t('volume_is_low', "Volume is low, you may not be able to hear speech"), true);
+          }
+        });
+
       }
     } else if(!this.get('speak_mode') && this.get('last_speak_mode') !== undefined) {
       capabilities.wakelock('speak', false);
