@@ -65,6 +65,9 @@ Coughdrop::Application.routes.draw do
       cache "/images/unknown_action.png"
       cache "/images/settings.png"
       cache "/images/jquery.minicolors.png"
+      cache "/images/web_version.svg"
+      cache "/images/ios_app_store.svg"
+      cache "/images/google_play.png"
       cache "/offline"
       # cache other assets
 
