@@ -86,6 +86,8 @@ export default Ember.Controller.extend({
     res.needs_install_reminder = !res.added_somewhere || ((res.android || res.ios) && !res.standalone);
     if(res.standalone && (res.android || res.ios)) {
       res.needs_install_reminder = false;
+    } else if(this.get('app_state.currentUser.using_for_a_while')) {
+      res.needs_install_reminder = false;
     }
     return res;
   }.property(),
@@ -278,6 +280,9 @@ export default Ember.Controller.extend({
     },
     set_selected: function(selected) {
       this.set('selected', selected);
+    },
+    intro_video: function(url) {
+      modal.open('inline-video', {video: {url: url}, hide_overlay: true});
     }
   }
 });

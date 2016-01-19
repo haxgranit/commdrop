@@ -222,15 +222,15 @@
               <span class="glyphicon glyphicon-phone"></span>
               {{t "Try the App" key='use_cough_drop_app'}}
             </h2>
-            {{#if device.android}}
-              {{t "In Chrome, click Settings -> Add to Homescreen to add CoughDrop as an app on this device" key='cough_drop_app_android'}}
-            {{else}}
-              {{#if device.ios}}
-                {{t "Click Share (<img src='http://i.stack.imgur.com/6Yn8V.png' style='height: 20px;'/>) -> Add to Home Screen to add CoughDrop as an app on this device" key='cough_drop_app_ios'}}
-              {{else}}
-                {{t "CoughDrop will install on phones and tablets, just not through an app store. Go to mycoughdrop.com on your device and log in for instructions." key='cough_drop_app_other'}}
-              {{/if}}
-            {{/if}}
+            {{t "CoughDrop works in any web browser, but you can also install the app in the following stores:" key='app_stores'}}
+            <div>
+              <a href="https://itunes.apple.com/us/app/coughdrop/id1021384570?ls=1&mt=8">
+                <img src={{path "images/ios_app_store.svg"}} alt="ios app store" style="height: 40px; margin-top: 5px;"/>
+              </a>
+              <a href="https://play.google.com/store/apps/details?id=com.mycoughdrop.coughdrop">
+                <img src={{path "images/google_play.png"}} alt="google play" style="height: 40px; margin-top: 5px;"/>
+              </a>
+            </div>
           </div>
         {{else if needs_sync}}
           <div style="margin-bottom: 20px; text-align: center;">
@@ -469,10 +469,18 @@
         <img src="{{path "images/logo-big.png"}}" style="width: 100px;"/>
       </div>
       <h2>Simple, insightful technology that empowers
-      <span id="header_line_2">individuals in making their voices heard</span>
+        <span id="header_line_2">individuals in making their voices heard</span>
+        <button {{action 'intro_video' 'https://www.youtube.com/embed/ELNKXfvTDbA?rel=0&enablejsapi=1&autoplay=1'}} class='btn btn-default' style='background-color: rgba(255, 255, 255, 0.5); margin-top: 10px; font-size: 16px; min-width: 300px; text-align: center;'>
+          <span class='glyphicon glyphicon-play-circle' style='font-size: 24px; vertical-align: bottom;'></span>
+          See How CoughDrop Works 
+        </button>
       </h2>
-      <div style="position: absolute; bottom: 30px; text-align: center; color: #fff; width: 100%; font-size: 30px; opacity: 0.7;">
-        <span class="glyphicon glyphicon-chevron-down"></span>
+      <div>
+      </div>
+      <div style="position: absolute; bottom: 30px; text-align: center; color: #fff; width: 100%; font-size: 30px;">
+        <span style="opacity: 0.7;">
+          <span class="glyphicon glyphicon-chevron-down"></span>
+        </span>
       </div>
     </div>
     <div class="col-sm-12 full_back" style="background: #fff; padding: 50px 10px; margin-bottom: 10px; border-top: 30px solid #49c7e8;">
@@ -490,6 +498,16 @@
       </div>
       <div class="col-sm-5">
         <img src="{{path 'images/preview.png'}}" style="width: 100%; margin-top: 40px;"/>
+      </div>
+      <div class="col-sm-12" style="text-align: center; margin-top: 30px; margin-bottom: -40px;">
+        <a href="https://itunes.apple.com/us/app/coughdrop/id1021384570?ls=1&mt=8">
+          <img src={{path "images/ios_app_store.svg"}} alt="ios app store" style="height: 50px; margin-top: 5px;"/>
+        </a>
+        <img src={{path "images/web_version.svg"}} alt="web version" style="height: 50px; margin-top: 5px;"/>
+        <a href="https://play.google.com/store/apps/details?id=com.mycoughdrop.coughdrop">
+          <img src={{path "images/google_play.png"}} alt="google play" style="height: 50px; margin-top: 5px;"/>
+        </a>
+        <br/>
       </div>
     </div>
     <div class="col-sm-12 full_back" style="background: #eee; padding: 40px 10px 60px; border-top: 30px solid #f2b367;">
@@ -618,7 +636,7 @@
                 </label></p>
                 <button type="submit" class="btn btn-primary" style="width: 100px;">{{t "Sign Up" key='sign_up'}}</button>
                 <a href="#" {{action "authenticateSession"}} class="text" style="padding-left: 10px;">{{t "Already Registered?" key="already_registered"}}</a>
-              </div>    
+              </div> 
             </form>
           {{else}}
             {{partial "bad-privacy-settings"}}

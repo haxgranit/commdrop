@@ -7,14 +7,17 @@
     </h3>
   </div>
   <div class="modal-body">
-    {{#if device.android}}
-      {{t "In Chrome, click Settings -> Add to Homescreen to add CoughDrop as an app on this device" key='cough_drop_app_android'}}
-    {{else}}
-      {{#if device.ios}}
-        {{t "Click Share (<img src='http://i.stack.imgur.com/6Yn8V.png' style='height: 20px;'/>) -> Add to Home Screen to add CoughDrop as an app on this device" key='cough_drop_app_ios'}}
-      {{else}}
-        {{t "CoughDrop isn't available in app stores, but you can still install it as an app on your phone or tablet. Just go to mycoughdrop.com on your device and log in for instructions. Android devices should use Chrome and iOS devices should use Safari. If you want to use CoughDrop often on another device, just bookmark it!" key='cough_drop_app_other'}}
-      {{/if}}
-    {{/if}}
+    {{t "CoughDrop works in web browsers on your computer or mobile device, but you can also find it in the app stores listed below. If you're having trouble finding or installing the app, please contact our support team and we can help figure it out." key='app_stores'}}
+
+    <div style='text-align: center; margin: 50px 0;'>
+      <a href="https://itunes.apple.com/us/app/coughdrop/id1021384570?ls=1&mt=8">
+        <img src={{path "images/ios_app_store.svg"}} alt="ios app store" style="height: 50px; margin-top: 5px;"/>
+      </a>
+      <a href="https://play.google.com/store/apps/details?id=com.mycoughdrop.coughdrop">
+        <img src={{path "images/google_play.png"}} alt="google play" style="height: 50px; margin-top: 5px;"/>
+      </a>
+    </div>
+    
+    {{t "You can also install the web version on mobile devices by hitting share or settings and selecting \"Add to Home Screen\"." key='add_to_home_screen'}}
   </div>
 {{/modal-dialog}}

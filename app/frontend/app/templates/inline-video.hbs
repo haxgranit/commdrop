@@ -3,7 +3,9 @@
     <div class="video_box">
       <iframe src={{model.video.url}} id="video_preview" frameborder="0"></iframe>
       {{#if player.started}}
-        <div class="video_box_overlay"></div>
+        {{#unless model.hide_overlay}}
+          <div class="video_box_overlay"></div>
+        {{/unless}}
       {{/if}}
     </div>
     <p style="margin-top: 10px;">
