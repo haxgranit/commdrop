@@ -305,6 +305,12 @@ h2 {
     background: #fff;
     border-radius: 6px;
   }
+  .modal-header { 
+    .close {
+      font-size: 50px;
+      margin-top: -15px;
+    }
+  }
 }
 .modal-header h3 {
   margin-top: 0;
