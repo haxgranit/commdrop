@@ -76,7 +76,7 @@ describe JsonApi::User do
       
       u.settings['starred_board_ids'] = ["4_1", b.global_id]
       hash = JsonApi::User.build_json(u, permissions: u)
-      expect(hash['stats']['board_set_ids'].length).to eq(2)
+      expect(hash['stats']['board_set_ids'].length).to eq(1)
     end
     
     it "should include supervisee board ids if the user has any" do
@@ -98,8 +98,8 @@ describe JsonApi::User do
       
       u.settings['starred_board_ids'] = ["4_1", b.global_id]
       hash = JsonApi::User.build_json(u, permissions: u)
-      expect(hash['stats']['board_set_ids'].length).to eq(2)
-      expect(hash['stats']['board_set_ids_including_supervisees'].length).to eq(2)
+      expect(hash['stats']['board_set_ids'].length).to eq(1)
+      expect(hash['stats']['board_set_ids_including_supervisees'].length).to eq(1)
 
       User.link_supervisor_to_user(u, u2)
       u.reload
@@ -107,8 +107,8 @@ describe JsonApi::User do
       expect(u.supervisees).to eq([u2])
       
       hash = JsonApi::User.build_json(u, permissions: u)
-      expect(hash['stats']['board_set_ids'].length).to eq(2)
-      expect(hash['stats']['board_set_ids_including_supervisees'].length).to eq(3)
+      expect(hash['stats']['board_set_ids'].length).to eq(1)
+      expect(hash['stats']['board_set_ids_including_supervisees'].length).to eq(2)
     end
     
     it "should fall back to default device settings if none for the current device" do

@@ -123,12 +123,12 @@ module JsonApi::User
       json['stats'] = {}
       json['stats']['starred_boards'] = user.settings['starred_boards'] || 0
       board_ids = user.board_set_ids
-      json['stats']['board_set'] = board_ids.uniq.length
+      # json['stats']['board_set'] = board_ids.uniq.length
       json['stats']['user_boards'] = Board.where(:user_id => user.id).count
       if json['permissions'] && json['permissions']['view_detailed']
         json['stats']['board_set_ids'] = board_ids.uniq
         if json['supervisees']
-          json['stats']['board_set_ids_including_supervisees'] = user.board_set_ids(true)
+          json['stats']['board_set_ids_including_supervisees'] = user.board_set_ids(:include_supervisees => true)
         else 
           json['stats']['board_set_ids_including_supervisees'] = json['stats']['board_set_ids']
         end

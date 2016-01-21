@@ -253,15 +253,18 @@ class User < ActiveRecord::Base
     end
   end
   
-  def board_set_ids(include_supervisees=false)
+  def board_set_ids(opts=nil)
+    opts ||= {}
+    include_supervisees = opts['include_supervisees'] || opts[:include_supervisees] || false
+    include_starred = opts['include_starred'] || opts[:include_starred] || false
     root_board_ids = []
     board_ids = []
-    if self.settings
+    if self.settings && include_starred
       board_ids += self.settings['starred_board_ids'] || []
+      root_board_ids += self.settings['starred_board_ids'] || []
     end
     if self.settings && self.settings['preferences'] && self.settings['preferences']['home_board']
       root_board_ids += [self.settings['preferences']['home_board']['id']] 
-      root_board_ids += self.settings['starred_board_ids'] || []
     end
     if include_supervisees
       self.supervisees.each do |u|

@@ -484,7 +484,30 @@ describe User, :type => :model do
       u.save
       u2.settings['preferences'] = {'home_board' => {'id' => b4.global_id, 'key' => b4.key}}
       u2.save
-      expect(u.reload.board_set_ids(true).sort).to eq([b.global_id, b2.global_id, b4.global_id])
+      expect(u.reload.board_set_ids(:include_supervisees => true).sort).to eq([b.global_id, b2.global_id, b4.global_id])
+    end
+    
+    it "should include starred board ids if specified" do
+      u = User.create
+      u2 = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b3 = Board.create(:user => u)
+      b4 = Board.create(:user => u)
+      b.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => b2.global_id}}
+      ]
+      b.save
+      User.link_supervisor_to_user(u, u2)
+      Worker.process_queues
+      expect(b.reload.settings['downstream_board_ids']).to eq([b2.global_id])
+
+      u.settings['preferences'] = {'home_board' => {'id' => b.global_id, 'key' => b.key}}
+      u.settings['starred_board_ids'] = ['1_4', b3.global_id]
+      u.save
+      u2.settings['preferences'] = {'home_board' => {'id' => b4.global_id, 'key' => b4.key}}
+      u2.save
+      expect(u.reload.board_set_ids(:include_starred => true).sort).to eq([b.global_id, b2.global_id, b3.global_id, '1_4'].sort)
     end
     
     it "should not include supervisee board ids if not specified" do
