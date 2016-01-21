@@ -9,7 +9,9 @@ export default Ember.Component.extend({
     var _this = this;
     Ember.$(window).on('resize orientationchange', function() {
       Ember.run.later(function() {
+        // on mobile devices, keyboard popup shouldn't trigger a redraw
         if(app_state.get('window_inner_width') && capabilities.mobile && window.innerWidth == app_state.get('window_inner_width')) {
+          // TODO: do we need to force scrolltop to 0?
           return;
         }
         _this.sendAction('compute_height', true);

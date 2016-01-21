@@ -298,6 +298,12 @@ var buttonTracker = Ember.Object.extend({
       // chance we need to trigger a 'click', so pass it along
       buttonTracker.buttonDown = true;
       buttonTracker.element_release(selectable, event);
+//     } else if(event.type == 'touchend' && event.target.tagName == 'A' || event.target.tagName == 'BUTTON') {
+//       event.preventDefault();
+//       event.stopPropagation();
+//       Ember.$(event.target).trigger('click');
+    // TODO: if not advanced_selection, touch events (but not mouse events) should be 
+    // mapped to click events for faster activation. Maybe find a library for this..
     }
     editManager.release_stroke();
     buttonTracker.stop_dragging();
