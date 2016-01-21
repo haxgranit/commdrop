@@ -182,6 +182,18 @@ module Subscription
         'token_summary' => "Manually-set Eval Account",
         'plan_id' => 'eval_monthly_free'
       })
+    elsif type == 'add_1'
+      if self.expires_at
+        self.expires_at = [self.expires_at, Time.now].max + 1.month
+        self.save
+      end
+    elsif type == 'manual_supporter'
+      self.update_subscription({
+        'subscribe' => true,
+        'subscription_id' => 'free',
+        'token_summary' => "Manually-set Supporter Account",
+        'plan_id' => 'slp_monthly_free'
+      })
     else
       false
     end

@@ -96,9 +96,14 @@ CoughDrop.User = DS.Model.extend({
     var joined = window.moment(this.get('joined'));
     return (joined < a_while_ago);
   }.property('joined', 'app_state.refresh_stamp'),
+  // full premium means fully-featured premium, as in a paid communicator or free trial period
   full_premium: function() {
     return !this.get('expired') && !this.get('free_premium');
   }.property('expired', 'free_premium'),
+  // free premium means limited functionality, as in a free supporter
+  free_premium: function() {
+    return !!this.get('subscription.free_premium');
+  }.property('subscription.free_premium'),
   expired: function() {
     if(this.get('membership_type') != 'premium') { return true; }
     if(!this.get('subscription.expires')) { return false; }
@@ -121,9 +126,6 @@ CoughDrop.User = DS.Model.extend({
   expired_or_grace_period: function() {
     return !!(this.get('expired') || this.get('subscription.grace_period'));
   }.property('expired', 'subscription.grace_period'),
-  free_premium: function() {
-    return !!this.get('subscription.free_premium');
-  }.property('subscription.free_premium'),
   supporter_role: function() {
     return this.get('preferences.role') == 'supporter';
   }.property('preferences.role'),

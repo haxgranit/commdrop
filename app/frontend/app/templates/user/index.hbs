@@ -498,7 +498,11 @@
         {{#if model.permissions.admin_support_actions}}
           <br/><br/>
           {{t "Subscription:" key='subscription_colon'}}
-          {{subscription.subscription_plan_description}}<br/>
+          {{subscription.subscription_plan_description}}
+          {{#if subscription.expires}}
+            {{t "expires %{exp}" exp=subscription.expires key='expires'}}
+          {{/if}}
+          <br/>
           {{#if subscription_settings.type}}
             <div>
               {{#if subscription_settings.loading}}
@@ -514,6 +518,8 @@
           {{else}}
             <a href="#" {{action 'set_subscription' 'eval'}} class="btn btn-default">{{t "Set as Eval Account" key='set_as_eval'}}</a>
             <a href="#" {{action 'set_subscription' 'never_expires'}} class="btn btn-default">{{t "Set as Free Forever" key='set_as_free_forever'}}</a><br/>
+            <a href="#" {{action 'set_subscription' 'manual_supporter'}} class="btn btn-default">{{t "Set as Free Supporter" key='set_as_free_supporter'}}</a><br/>
+            <a href="#" {{action 'set_subscription' 'add_1'}} class="btn btn-default">{{t "Add 1 Month" key='add_one_month'}}</a><br/>
           {{/if}}
         {{/if}}
       </div>
