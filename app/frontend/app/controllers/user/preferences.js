@@ -77,7 +77,7 @@ export default Ember.Controller.extend({
   }.property('model.user_name'),
   check_voices_available: function() {
     var _this = this;
-    if(capabilities.installed_app && this.get('model.full_premium')) {
+    if(capabilities.installed_app) {
       capabilities.tts.status().then(function() {
         _this.set('more_voices_available', true);
       }, function() {
@@ -86,7 +86,7 @@ export default Ember.Controller.extend({
     } else {
       _this.set('more_voices_available', false);
     }
-  }.observes('model.full_premium'),
+  },
   non_communicator: function() {
     return this.get('model.preferences.role') != 'communicator';
   }.property('model.preferences.role'),
@@ -272,7 +272,9 @@ export default Ember.Controller.extend({
       }
     },
     premium_voices: function() {
-      modal.open('premium-voices', {user: this.get('model')});
+      app_state.check_for_full_premium(this.get('model'), 'premium_voices').then(function() {
+        modal.open('premium-voices', {user: this.get('model')});
+      });
     },
     test_voice: function() {
       utterance.test_voice(this.get('model.preferences.device.voice.voice_uri'), this.get('model.preferences.device.voice.rate'), this.get('model.preferences.device.voice.pitch'), this.get('model.preferences.device.voice.volume'));

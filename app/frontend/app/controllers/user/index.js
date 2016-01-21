@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import persistence from '../../utils/persistence';
 import modal from '../../utils/modal';
+import app_state from '../../utils/app_state';
 import i18n from '../../utils/i18n';
 import progress_tracker from '../../utils/progress_tracker';
 import Subscription from '../../utils/subscription';
@@ -201,14 +202,12 @@ export default Ember.Controller.extend({
       persistence.sync(this.get('model.id')).then(null, function() { });
     },
     quick_assessment: function() {
-      if(this.get('model.full_premium')) {
+      app_state.check_for_full_premium(this.get('model', 'quick_assessment')).then(function() {
         var _this = this;
         modal.open('quick-assessment', this.get('model')).then(function() {
           _this.reload_logs();
         });
-      } else {
-        modal.open('premium-required', {action: 'quick_assessment'});
-      }
+      });
     },
     approve_or_reject_org: function(approve) {
       var user = this.get('model');
@@ -223,11 +222,9 @@ export default Ember.Controller.extend({
       }, function() { });
     },
     add_supervisor: function() {
-      if(!this.get('model.full_premium')) {
-        modal.open('premium-required', {action: 'add_supervisor'});
-      } else {
+      app_state.check_for_full_premium(this.get('model'), 'add_supervisor').then(function() {
         modal.open('add-supervisor', {user: this.get('model')});
-      }
+      });
     },
     view_devices: function() {
       modal.open('device-settings', this.get('model'));

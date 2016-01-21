@@ -525,6 +525,20 @@ var app_state = Ember.Object.extend({
       return 70;
     }
   }.property('header_size', 'speak_mode'), 
+  check_for_full_premium: function(user, action) {
+    if(user && user.get('expired')) {
+      return modal.open('premium-required', {action: action});
+    } else {
+      return Ember.RSVP.resolve();
+    }
+  },
+  check_for_really_expired: function(user) {
+    if(user && user.get('really_expired')) {
+      return modal.open('premium-required', {cancel_on_close: true, remind_to_upgrade: true});
+    } else {
+      return Ember.RSVP.resolve();
+    }
+  },
   speak_mode_handlers: function() {
     if(this.get('speak_mode')) {
       stashes.set('logging_enabled', !!(this.get('speak_mode') && this.get('currentUser.preferences.logging')));

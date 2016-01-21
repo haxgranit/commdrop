@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import modal from '../../utils/modal';
+import app_state from '../../utils/app_state';
 
 export default Ember.Controller.extend({
   queryParams: ['type', 'start', 'end', 'device_id', 'location_id'],
@@ -40,14 +41,12 @@ export default Ember.Controller.extend({
       });
     },
     quick_assessment: function() {
-      if(this.get('model.full_premium')) {
+      app_state.check_for_full_premium(this.get('model'), 'quick_assessment').then(function() {
         var _this = this;
         modal.open('quick-assessment', this.get('model')).then(function() {
           _this.send('refresh');
         });
-      } else {
-        modal.open('premium-required', {action: 'quick_assessment'});
-      }
+      });
     },
     refresh: function() {
       if(!this.get('model.id')) { return; }

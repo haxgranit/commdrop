@@ -46,13 +46,6 @@ export default Ember.Controller.extend({
     decision.action = decision.action || "nothing";
     return modal.open('copying-board', {board: oldBoard, action: decision.action, user: decision.user, shares: decision.shares});
   },
-  check_for_really_expired: function() {
-    if(this.get('app_state.sessionUser.really_expired')) {
-      return modal.open('premium-required', {cancel_on_close: true, remind_to_upgrade: true});
-    } else {
-      return Ember.RSVP.resolve();
-    }
-  },
   actions: {
     index: function() {
       this.transitionToRoute('index');
@@ -191,13 +184,12 @@ export default Ember.Controller.extend({
     },
     startRecording: function() {
       // currently-speaking user must have active paid subscription to do video recording
-      if(!app_state.get('speakModeUser.full_premium')) {
-        return modal.open('premium-required', {action: 'record_session'});
-      }
-      alert("not yet implemented");
+      app_state.check_for_full_premium(app_state.get('speakModeUser'), 'record_session').then(function() {
+        alert("not yet implemented");
+      });
     },
     toggleEditMode: function(decision) {
-      this.check_for_really_expired().then(function() {
+      app_state.check_for_really_expired(app_state.get('sessionUser')).then(function() {
         app_state.toggle_edit_mode(decision);
       }, function() { });
     },
@@ -253,7 +245,7 @@ export default Ember.Controller.extend({
     },
     copy_and_edit_board: function() {
       var _this = this;
-      this.check_for_really_expired().then(function() {
+      this.check_for_really_expired(app_state.get('sessionUser')).then(function() {
         _this.copy_board(null, true).then(function(board) {
           app_state.jump_to_board({
             id: board.id,
@@ -267,7 +259,7 @@ export default Ember.Controller.extend({
     },
     tweakBoard: function(decision) {
       var _this = this;
-      this.check_for_really_expired().then(function() {
+      this.check_for_really_expired(app_state.get('sessionUser')).then(function() {
         _this.copy_board(decision).then(function(board) {
           app_state.jump_to_board({
             id: board.id,
