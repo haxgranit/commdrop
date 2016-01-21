@@ -245,7 +245,7 @@ export default Ember.Controller.extend({
     },
     copy_and_edit_board: function() {
       var _this = this;
-      this.check_for_really_expired(app_state.get('sessionUser')).then(function() {
+      app_state.check_for_really_expired(app_state.get('sessionUser')).then(function() {
         _this.copy_board(null, true).then(function(board) {
           app_state.jump_to_board({
             id: board.id,
@@ -259,7 +259,7 @@ export default Ember.Controller.extend({
     },
     tweakBoard: function(decision) {
       var _this = this;
-      this.check_for_really_expired(app_state.get('sessionUser')).then(function() {
+      app_state.check_for_really_expired(app_state.get('sessionUser')).then(function() {
         _this.copy_board(decision).then(function(board) {
           app_state.jump_to_board({
             id: board.id,
