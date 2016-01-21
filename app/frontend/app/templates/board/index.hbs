@@ -48,13 +48,25 @@
     {{else}}
       {{#if board.grid}}
         {{#if ordered_buttons}}
-          {{#each ordered_buttons as |row|}}
-            <div class="button_row">
+          {{#if app_state.edit_mode}}
+            {{#each ordered_buttons as |row|}}
+              <div class="button_row">
                 {{#each row as |button|}}
                   {{partial "button"}}
                 {{/each}}
-            </div>
-          {{/each}}
+              </div>
+            {{/each}}
+          {{else}}
+            {{#with recompute_flag as |flag|}}
+              {{#each ordered_buttons as |row|}}
+                <div class="button_row">
+                  {{#each row as |button|}}
+                    {{partial "button-unbound"}}
+                  {{/each}}
+                </div>
+              {{/each}}
+            {{/with}}
+          {{/if}}
         {{else}}
           <span class="board_status">
             {{t "Loading..." key='loading'}}
