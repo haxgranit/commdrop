@@ -114,7 +114,7 @@ CoughDrop.Board = DS.Model.extend({
         if(sound) {
           result.push(sound);
         } else {
-          console.log('missing sounds ' + button.sound_id);
+          console.log('missing sound ' + button.sound_id);
           missing = true;
         }
       }
