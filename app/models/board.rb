@@ -153,6 +153,7 @@ class Board < ActiveRecord::Base
     elsif self.settings['image_url'] != self.settings['default_image_url']
       self.settings['default_image_url'] = nil
     end
+    @buttons_changed = true if self.settings['buttons'] && !self.id
     if @edit_description
       if self.settings['edit_description'] && self.settings['edit_description']['timestamp'] < @edit_description['timestamp'] - 1
         @edit_description = nil
@@ -320,6 +321,7 @@ class Board < ActiveRecord::Base
     orphan_sounds = existing_sounds.select{|i| !sound_ids.include?(i[:id]) }
     BoardButtonSound.connect(self.id, new_sounds, :user_id => self.user.global_id)
     BoardButtonSound.disconnect(self.id, orphan_sounds)
+    @images_mapped_at = Time.now.to_i
   end
   
   def require_key

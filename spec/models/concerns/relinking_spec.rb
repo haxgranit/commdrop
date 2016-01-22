@@ -58,6 +58,14 @@ describe Relinking, :type => :model do
       expect(res.settings['hat']).to eq(nil)
       expect(res.key).to eq(b.key + "_1")
     end
+    
+    it "should trigger a call to map_images" do
+      u = User.create
+      b = Board.create(:user => u, :settings => {'hat' => true, 'image_url' => 'bob', 'buttons' => []})
+      res = b.copy_for(u)
+      expect(res.instance_variable_get('@images_mapped_at')).not_to eq(nil)
+      expect(res.instance_variable_get('@images_mapped_at')).to be > Time.now.to_i - 5
+    end
   end
   
   describe "replace_links!" do
