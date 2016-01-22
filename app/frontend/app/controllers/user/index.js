@@ -222,8 +222,9 @@ export default Ember.Controller.extend({
       }, function() { });
     },
     add_supervisor: function() {
+      var _this = this;
       app_state.check_for_full_premium(this.get('model'), 'add_supervisor').then(function() {
-        modal.open('add-supervisor', {user: this.get('model')});
+        modal.open('add-supervisor', {user: _this.get('model')});
       });
     },
     view_devices: function() {
