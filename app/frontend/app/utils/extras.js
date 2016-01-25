@@ -30,7 +30,7 @@ import capabilities from './capabilities';
       if(window.speechSynthesis) {
         console_debug("COUGHDROP: tts enabled");
       }
-      this.eye_gaze({enable: true});
+//      this.eye_gaze({enable: true});
       if(!CoughDrop.app) {
         window.cough_drop_readiness = true;
       } else {

@@ -20,12 +20,13 @@ import stashes from './_stashes';
 // - click after short timeout even without mouseup should work
 // - too-fast click should not work
 // - painting should work
+// - gaze_linger events should work
 
 var $board_canvas = null;
 
 Ember.$(document).on('mousedown touchstart', function(event) {
   buttonTracker.touch_start(event)  ;
-}).on('gazeover mousemove touchmove mousedown touchstart', function(event) {
+}).on('gazelinger mousemove touchmove mousedown touchstart', function(event) {
   buttonTracker.touch_continue(event);
 }).on('mouseup touchend touchcancel blur', function(event) {
   buttonTracker.touch_release(event);
@@ -73,8 +74,9 @@ Ember.$(document).on('mousedown touchstart', function(event) {
     event.preventDefault();
   }
 }).on('gazedwell', function(event) {
-  if(Ember.$(event.target).closest('.button').lengt) {
-    Ember.$(this).trigger('buttonselect');
+  var element_wrap = buttonTracker.find_selectable_under_event(event);
+  if(element_wrap && element_wrap.button) {
+    element_wrap.trigger('buttonselect');
   } else {
     Ember.$(this).trigger('click');
   }
@@ -174,6 +176,8 @@ var buttonTracker = Ember.Object.extend({
     }
     if(event.type == 'touchstart' || event.type == 'mousedown' || event.type == 'touchmove') {
       buttonTracker.buttonDown = true;
+    } else if(event.type == 'gazelinger') {
+      buttonTracker.gaze_linger(event);
     }
     if(!buttonTracker.buttonDown && !app_state.get('edit_mode')) { 
       var button_wrap = buttonTracker.find_selectable_under_event(event);
@@ -379,22 +383,25 @@ var buttonTracker = Ember.Object.extend({
       // selecting a button
       event.preventDefault();
       var ts = (new Date()).getTime();
-      // Use start, end or average pointer location for selection
-      buttonTracker.activation_location = buttonTracker.activation_location || window.user_preferences.any_user.activation_location;
-      if(buttonTracker.activation_location == 'start') {
-        elem_wrap = buttonTracker.initialTarget;
-      } else if(buttonTracker.activation_location == 'average') {
-        // TODO: implement weighted average. Sample pointer location
-        // from start to release and find the most likely target, ideally
-        // taking into account distance from center of each potential target.
-      } else {
-        if(Ember.$(event.target).closest('.advanced_selection') === 0) {
-          return;
+      
+      if(event.type != 'gazelinger') {
+        // Use start, end or average pointer location for selection
+        buttonTracker.activation_location = buttonTracker.activation_location || window.user_preferences.any_user.activation_location;
+        if(buttonTracker.activation_location == 'start') {
+          elem_wrap = buttonTracker.initialTarget;
+        } else if(buttonTracker.activation_location == 'average') {
+          // TODO: implement weighted average. Sample pointer location
+          // from start to release and find the most likely target, ideally
+          // taking into account distance from center of each potential target.
+        } else {
+          if(Ember.$(event.target).closest('.advanced_selection') === 0) {
+            return;
+          }
         }
-      }
-      // ignore presses that are too short
-      if(buttonTracker.minimum_press && buttonTracker.initialTarget && (ts - buttonTracker.initialTarget.timestamp) < buttonTracker.minimum_press) {
-        elem_wrap = null;
+        // ignore presses that are too short
+        if(buttonTracker.minimum_press && buttonTracker.initialTarget && (ts - buttonTracker.initialTarget.timestamp) < buttonTracker.minimum_press) {
+          elem_wrap = null;
+        }
       }
       
       // logic to prevent quick double-tap, seems like this was a fix for iOS problems
@@ -474,11 +481,108 @@ var buttonTracker = Ember.Object.extend({
       }
     }
   },
-  find_selectable_under_event: function(event) {
+  gaze_linger: function(event) {
+    // - find the nearest selectable, with some liberal tolerance
+    // - if we're already lingering
+    //   - if we're outside the tolerance, start a new linger
+    //   - otherwise average the linger's history and decide on the best candidate
+    // - persist the current linger, record the starting timestamp
+    // - if we're been lingering on the element for more than the cutoff, call element_release
+    var elem_wrap = buttonTracker.find_selectable_under_event(event, true);
+    if(!buttonTracker.gaze_elem) {
+      var elem = document.createElement('div');
+      elem.id = 'linger';
+      document.body.appendChild(elem);
+      buttonTracker.gaze_elem = elem;
+    }
+
+    Ember.run.cancel(buttonTracker.linger_clear_later);
+    buttonTracker.gaze_timeout = buttonTracker.gaze_timeout || 2000;
+    buttonTracker.linger_clear_later = Ember.run.later(function() {
+      buttonTracker.gaze_elem.classList.remove('targeting');
+      buttonTracker.gaze_elem.style.left = '-1000px';
+      buttonTracker.last_gaze_linger = null;
+      // clear the gaze icon
+    }, 500);
+
+    var now = (new Date()).getTime();
+    if(buttonTracker.last_gaze_linger) {
+      // check if we're outside the screen bounds, or the timestamp bounds.
+      // if so clear the object
+      if(buttonTracker.last_gaze_linger.started < now - (buttonTracker.gaze_timeout  + 1000)) {
+        buttonTracker.last_gaze_linger = null;
+      } else if(buttonTracker.last_gaze_linger.updated < now - 500) {
+        buttonTracker.last_gaze_linger = null;
+      } else {
+        var bounds = buttonTracker.last_gaze_linger.loose_bounds();
+        if(event.clientX < bounds.left || event.clientX > bounds.left + bounds.width ||
+              event.clientY < bounds.top || event.clientY > bounds.top + bounds.height) {
+          buttonTracker.last_gaze_linger = null;
+        }
+      }
+    }
+    if(elem_wrap && buttonTracker.last_gaze_linger && elem_wrap.dom == buttonTracker.last_gaze_linger.dom) {
+      // if they're the same, we're rockin'
+      buttonTracker.buttonDown = true;
+    } else if(elem_wrap && buttonTracker.last_gaze_linger && elem_wrap.dom != buttonTracker.last_gaze_linger.dom) {
+      // if there's a valid existing linger for a different element, decide between it and the new linger
+      var old_bounds = buttonTracker.last_gaze_linger.loose_bounds();
+      var new_bounds = elem_wrap.loose_bounds();
+      var avg_x = event.clientX, avg_y = event.clientY;
+      // TODO: need to better factor in gravity of almost-done linger
+      buttonTracker.last_gaze_linger.events.forEach(function(e) {
+        avg_x = avg_x + e.clientX;
+        avg_y = avg_y + e.clientY;
+      });
+      avg_x = avg_x / (buttonTracker.last_gaze_linger.events.length + 1);
+      avg_y = avg_y / (buttonTracker.last_gaze_linger.events.length + 1);
+      // cheap but less-accurate comparison
+      var old_dist = (Math.abs(old_bounds.left + (old_bounds.width / 2) - avg_x) + Math.abs(old_bounds.top + (old_bounds.height / 2) - avg_y)) / 2;
+      var new_dist = (Math.abs(new_bounds.left + (new_bounds.width / 2) - avg_x) + Math.abs(new_bounds.top + (new_bounds.height / 2) - avg_y)) / 2;
+      if(new_dist < old_dist) {
+        buttonTracker.last_gaze_linger = elem_wrap;
+      }
+    } else if(elem_wrap) {
+      buttonTracker.last_gaze_linger = elem_wrap;
+    }
+    if(buttonTracker.last_gaze_linger) {
+      // place the gaze icon in the center of the current linger
+      if(!buttonTracker.last_gaze_linger.started) {
+        // restart the excited doing-something animation
+        buttonTracker.last_gaze_linger.started = now;
+        var bounds = buttonTracker.last_gaze_linger.loose_bounds();
+        buttonTracker.gaze_elem.style.left = (bounds.left + (bounds.width / 2) - 25) + "px";
+        buttonTracker.gaze_elem.style.top = (bounds.top + (bounds.height / 2) - 25) + "px";
+        // restart the animation
+        var clone = buttonTracker.gaze_elem.cloneNode(true);
+        buttonTracker.gaze_elem.parentNode.replaceChild(clone, buttonTracker.gaze_elem);
+        clone.classList.add('targeting');
+        buttonTracker.gaze_elem = clone;
+      }
+      buttonTracker.last_gaze_linger.updated = now;
+      buttonTracker.last_gaze_linger.events = buttonTracker.last_gaze_linger.events || [];
+      buttonTracker.last_gaze_linger.events.push(event);
+      if(buttonTracker.last_gaze_linger.started < now - buttonTracker.gaze_timeout) {
+        buttonTracker.element_release(buttonTracker.last_gaze_linger, event);
+        buttonTracker.last_gaze_linger = null;
+        // TODO: timeout before starting next selection
+      }
+    } else {
+      // stick the gaze icon wherever it goes, with a sad nothing-here styling
+      buttonTracker.gaze_elem.classList.remove('targeting');
+      buttonTracker.gaze_elem.style.left = (event.clientX - 25) + "px";
+      buttonTracker.gaze_elem.style.top = (event.clientY - 25) + "px";
+    }
+  },
+  find_selectable_under_event: function(event, loose) {
     event = buttonTracker.normalize_event(event);
     if(event.clientX === undefined || event.clientY === undefined) { return null; }
     var $target = Ember.$(document.elementFromPoint(event.clientX, event.clientY));
     var region = $target.closest(".advanced_selection")[0];
+    if(!region && loose) {
+      // TODO: check the loose bounds of all the selectable elements, see if
+      // you're close to anything selectable
+    }
     if(region) {
       if(region.id == 'pin') {
         return buttonTracker.element_wrap($target.closest("a")[0]);
@@ -535,6 +639,14 @@ var buttonTracker = Ember.Object.extend({
         trigger_special: function(event, args) {
           app_state.get('board_virtual_dom').trigger(event, elem.id, args);
         },
+        loose_bounds: function() {
+          return {
+            width: elem.width + 100,
+            height: elem.height + 100,
+            top: elem.top - 50,
+            left: elem.left - 50
+          };
+        },
         data: function(attr, val) {
           if(arguments.length == 2) {
             elem.set(attr, val);
@@ -544,24 +656,36 @@ var buttonTracker = Ember.Object.extend({
         }
       };
     } else {
+      var $e = Ember.$(elem);
       res = {
-        id: Ember.$(elem).attr('data-id'),
+        id: $e.attr('data-id'),
         dom: elem,
         addClass: function(str) {
-          Ember.$(elem).addClass(str);
+          $e.addClass(str);
         },
         trigger: function(event) {
-          Ember.$(elem).trigger(event);
+          $e.trigger(event);
         },
         trigger_special: function(event, args) {
           var e = Ember.$.Event( event );
           for(var idx in args) {
             e[idx] = args[idx];
           }
-          Ember.$(elem).trigger(e);
+          $e.trigger(e);
+        },
+        loose_bounds: function() {
+          if(res.cached_loose_bounds) { return res.cached_loose_bounds; }
+          var offset = $e.offset() || {};
+          res.cached_loose_bounds = {
+            width: $e.outerWidth() + 100,
+            height: $e.outerHeight() + 100,
+            top: offset.top - 50,
+            left: offset.left - 50
+          };
+          return res.cached_loose_bounds;
         },
         data: function(attr, val) {
-          return Ember.$(elem).data(attr, val);
+          return $e.data(attr, val);
         }
       };
     }

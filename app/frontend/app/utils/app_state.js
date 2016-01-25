@@ -566,12 +566,14 @@ var app_state = Ember.Object.extend({
         });
 
       }
+      capabilities.eye_gaze.listen();
     } else if(!this.get('speak_mode') && this.get('last_speak_mode') !== undefined) {
       capabilities.wakelock('speak', false);
       stashes.persist('temporary_root_board_state', null);
       stashes.persist('sticky_board', false);
       stashes.persist('speak_mode_user_id', null);
       capabilities.fullscreen(false);
+      capabilities.eye_gaze.stop_listening();
     }
     this.set('last_speak_mode', !!this.get('speak_mode'));
   }.observes('speak_mode', 'currentUser.id', 'currentUser.preferences.logging'),

@@ -208,14 +208,11 @@ var capabilities;
           this.when_client_ready = null;
         }
       },
-      // https://developer.chrome.com/extensions/alarms.html
-      eye_gaze: function(options) {
-        if(options.enable) {
-          eyeTracker.init();
-        } else if(options.disable) {
-          eyeTracker.disable();
+      eye_gaze: {
+        listen: function() {
+        },
+        stop_listening: function() {
         }
-        // TODO: pause in addition to disable
       },
       encrypt: function(obj) {
         if(capabilities.encryption_enabled) {
