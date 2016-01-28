@@ -3,330 +3,111 @@
   {{#if model.preferences.logging}} 
     <h2>{{t "Usage Reports" key='usage_reports'}}</h2>
     {{#if usage_stats}}
-      <div style="margin: 20px 0;">
-        <form class="form-inline">
-          <div class="form-group">
-            {{input type="date" value=usage_stats.start_date_field class="form-control"}}
-          </div>
-            &nbsp;{{t "to" key='to'}}&nbsp;
-          <div class="form-group">
-            {{input type="date" value=usage_stats.end_date_field class="form-control"}}
-          </div>
-          {{#if device_id}}
-            <div class="form-group">
-              {{#link-to 'user.stats' model.user_name (query-params device_id='') class='btn btn-default'}}
-                {{device_name}}
-                <span class="glyphicon glyphicon-remove"></span>
-              {{/link-to}}
-            </div>
-          {{/if}}
-          {{#if location_id}}
-            <div class="form-group">
-              {{#link-to 'user.stats' model.user_name (query-params location_id='') class='btn btn-default'}}
-                {{location_name}}
-                <span class="glyphicon glyphicon-remove"></span>
-              {{/link-to}}
-            </div>
-          {{/if}}
-          <button type="button" {{action "update_filter" "date"}} class="btn btn-default">{{t "Go" key='go'}}</button>
-        </form>
+      <div class="row">
+        {{stats/data-filter usage_stats=usage_stats side_by_side=usage_stats2 app_state=app_state compare_to='compare_to' clear_side='clear_left_side' update_filter='update_left_filter'}}
+        {{#if usage_stats2}}
+          {{stats/data-filter usage_stats=usage_stats2 side_by_side=true right_side=true clear_side='clear_right_side' update_filter='update_right_filter'}}
+        {{/if}}
       </div>
-      {{#if usage_stats.no_data}}
-        {{t "No data available" key='no_data_available'}}
-      {{else}}
-        <div class="row">
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Total sessions" key='total_sessions'}}
-              </div>
-              <div class="panel-body">
-                {{ usage_stats.total_sessions}}
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Total words" key='total_words'}}
-              </div>
-              <div class="panel-body">
-                {{ usage_stats.total_words}}
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Total utterances" key='total_utterances'}}
-              </div>
-              <div class="panel-body">
-                {{ usage_stats.total_utterances}}
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Total buttons" key='total_buttons'}}
-              </div>
-              <div class="panel-body">
-                {{ usage_stats.total_buttons}}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row last_row">
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Words per utterance" key='words_per_utterance'}}
-              </div>
-              <div class="panel-body">
-                {{round usage_stats.words_per_utterance}}
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Words per minute" key='words_per_minute'}}
-              </div>
-              <div class="panel-body">
-                {{round usage_stats.words_per_minute}}
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Utterances per minute" key='utterances_per_minute'}}
-              </div>
-              <div class="panel-body">
-                {{round usage_stats.utterances_per_minute}}
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-3 col-xs-6">
-            <div class="panel panel-default summary">
-              <div class="panel-heading">
-                {{t "Buttons per minute" key='buttons_per_minute'}}
-              </div>
-              <div class="panel-body">
-                {{round usage_stats.buttons_per_minute}}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-8">
-            <h3>{{t "Word Usage" key='word_usage'}}</h3>
-            <div id="daily_stats" style="width: 100%; height: 320px;"></div>
-          </div>
-          <div class="col-sm-4" style="padding-top: 43px;">
-            <table class="table table-hover table-condensed">
-              <thead>
-                <tr>
-                  <th colspan="2">
-                    {{t "Most common words" key='most_common_words'}}
-                    <a href="#" {{action 'word_cloud'}}>{{t "word cloud" key='word_cloud'}}</a>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#if usage_stats.popular_words}}
-                  {{#each usage_stats.popular_words as |word|}}
-                    <tr>
-                      <td>{{word.text}}</td>
-                      <td>{{word.count}}</td>
-                    </tr>
-                  {{/each}}
-                {{else}}
-                  <tr>
-                    <td>{{t "No data available" key='no_data'}}</td>
-                  </tr>
-                {{/if}}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-8">
-            <h3>{{t "Parts of Speech" key='parts_of_speech'}}</h3>
-            <div id="parts_of_speech_combinations" style="width: 100%; height: 300px; margin-bottom: 10px;"></div>
-          </div>
-          <div class="col-sm-4">
-            <div style="margin-top: 56px;">
-              <div id="parts_of_speech" style="width: 100%; height: 300px;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-8">
-            <h3>{{t "Time of Day" key='time_of_day'}}</h3>
-            <div class="time_block_rows">
-              <div style="margin-left: 2%; margin-right: -2%;"> 
-                <div class="time_block_top" style="margin-left: 4%;">1</div>
-                <div class="time_block_top">2</div>
-                <div class="time_block_top">3</div>
-                <div class="time_block_top">4</div>
-                <div class="time_block_top">5</div>
-                <div class="time_block_top">6</div>
-                <div class="time_block_top">7</div>
-                <div class="time_block_top">8</div>
-                <div class="time_block_top">9</div>
-                <div class="time_block_top">10</div>
-                <div class="time_block_top">11</div>
-                <div class="time_block_top">12</div>
-                <div class="time_block_top">1</div>
-                <div class="time_block_top">2</div>
-                <div class="time_block_top">3</div>
-                <div class="time_block_top">4</div>
-                <div class="time_block_top">5</div>
-                <div class="time_block_top">6</div>
-                <div class="time_block_top">7</div>
-                <div class="time_block_top">8</div>
-                <div class="time_block_top">9</div>
-                <div class="time_block_top">10</div>
-                <div class="time_block_top">11</div>
-                <div class="time_block_top">12</div>
-                <div style="clear: left;"></div>
-              </div>
-              {{#each usage_stats.local_time_blocks as |wday|}}
-                <div class="time_block_row">
-                  <div class="time_block_left">
-                    {{wday.day}}
-                  </div>
-                  {{#each wday.blocks as |block|}}
-                    <div class={{block.style_class}} data-toggle="tooltip" data-placement="top" title={{block.tooltip}}>&nbsp;</div>
-                  {{/each}}
-                  <div style="clear: left;"></div>
-                </div>
-              {{/each}}
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div style="margin-top: 30px; max-height: 200px; overflow-y: scroll;">
-              <strong>{{t "Weighted Words" key='weighted_words'}}</strong>
-              <a href="#" {{action 'word_cloud'}}>{{t "word cloud" key='word_cloud'}}</a>
-              <br/>
-              {{#each usage_stats.weighted_words as |word|}}
-                <span class={{word.weight_class}}>{{word.text}}</span>
-              {{/each}}
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          {{#if model.preferences.geo_logging }}
-            <div class="col-sm-8">
-              <h3>{{t "Locations" key='maps'}}</h3>
-              {{#if usage_stats.geo_locations}}
-                {{map-with-markers action="marker_link_select"}}
-              {{else}}
-                <p>{{t "There is not enough data to show geographic locations. Please check back after using CoughDrop a few more times." key='need_more_geo_data'}}</p>
-              {{/if}}
-            </div>
-            <div class="col-sm-4" style="padding-top: 24px; max-height: 350px; overflow: auto;">
-              <table class="table table-hover table-condensed">
-                <thead>
-                  <tr>
-                    <th>
-                      {{t "IP Addresses" key='ip_addresses'}}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#if usage_stats.ip_locations}}
-                    {{#with this as |controller|}}
-                    {{#each usage_stats.ip_locations as |location|}}
-                      <tr>
-                        <td>
-                          <strong>
-                            {{#link-to 'user.stats' model.user_name (query-params location_id=location.id)}}
-                              {{location.readable_ip_address}}
-                            {{/link-to}}
-                          </strong><br/>
-                          <span class="text-muted" style="padding-left: 10px;">{{t "%{term} sessions" key='session_count' term=location.total_sessions}}</span>
-                        </td>
-                      </tr>
-                    {{/each}}
-                    {{/with}}
-                  {{else}}
-                    <tr>
-                      <td>{{t "No data available" key='no_data'}}</td>
-                    </tr>
-                  {{/if}}
-                </tbody>
-              </table>
-            </div>
-          {{else}}
-            <div class="col-sm-8">
-              <h3>{{t "Location-Based Reports" key='location_based_reports'}}</h3>
-              <p>{{t "CoughDrop can show awesome map data on how this user is communicating across different locations, but only if geo-logging is enabled. Right now it's turned off, but you can enable it in your preferences." key='geo_logging_disabled'}}</p>
-              {{#if model.permissions.edit}}
-                <button {{action "enable_geo_logging"}} type="button" class='btn btn-default'>{{t "Enable Geolocation Logging & Reports" key='enable_geo_logging'}}</button>
-              {{/if}}
-            </div>
-          
+    {{/if}}
+    <div class="row">
+      {{stats/load-status status=status side_by_side=usage_stats2}}
+      {{#if usage_stats2}}
+        {{stats/load-status status=status2 side_by_side=true right_side=true}}
+      {{/if}}
+      {{#if some_data}}
+        {{stats/nums-row1 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/nums-row1 usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+        {{stats/nums-row2 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/nums-row2 usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+      {{/if}}
+    </div>
+    {{#if some_data}}
+      <div class="row">
+        {{stats/nums-row3 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/nums-row3 usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+        {{stats/nums-row4 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/nums-row4 usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+      </div>
+      <div class="row">
+        {{stats/word-usage usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/word-usage usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+        {{stats/common-words usage_stats=usage_stats side_by_side=usage_stats2 word_cloud='word_cloud_left'}}
+        {{#if usage_stats2}}
+          {{stats/common-words usage_stats=usage_stats2 side_by_side=true right_side=true word_cloud='word_cloud_right'}}
+        {{/if}}
+      </div>
+      <div class="row">
+        {{stats/parts-of-speech-flow usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/parts-of-speech-flow usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+        {{stats/parts-of-speech-pie usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/parts-of-speech-pie usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+      </div>
+      <div class="row">
+        {{stats/time-of-day usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/time-of-day usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+        {{stats/weighted-words usage_stats=usage_stats side_by_side=usage_stats2 word_cloud='word_cloud_left'}}
+        {{#if usage_stats2}}
+          {{stats/weighted-words usage_stats=usage_stats2 side_by_side=true right_side=true word_cloud='word_cloud_right'}}
+        {{/if}}
+      </div>
+      <div class="row">
+        {{#if model.preferences.geo_logging }}
+          {{stats/geo-locations usage_stats=usage_stats side_by_side=usage_stats2 filter='update_left_filter'}}
+          {{#if usage_stats2}}
+            {{stats/geo-locations usage_stats=usage_stats2 side_by_side=true right_side=true filter='update_right_filter'}}
           {{/if}}
-        </div>
-        <div class="row">
-          <div>
-            <div class="col-sm-8">
-              <h3>{{t "Activation Heat Map" key='heat_map'}}</h3>
-              {{#if usage_stats.max_touches}}
-                <canvas id="touch_locations" width="400" height="200" style="width: 100%; height: 300px; border: 1px solid #ccc; background: #eee;"></canvas>
-              {{else}}
-                <p>{{t "There are no recorded activations or touch events for the current report." key='no_touch_locations'}}</p>
-              {{/if}}
-            </div>
-            <div class="col-sm-2" style="padding-top: 24px; max-height: 350px; overflow: auto;">
-              <table class="table table-hover table-condensed">
-                <thead>
-                  <tr>
-                    <th>
-                      {{t "Devices" key='devices'}}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#if usage_stats.devices}}
-                    {{#each usage_stats.devices as |device|}}
-                      <tr>
-                        <td>
-                          <strong>
-                            {{#link-to 'user.stats' model.user_name (query-params device_id=device.id)}}
-                              {{device.name}}
-                            {{/link-to}}
-                          </strong><br/>
-                          <span class="text-muted" style="padding-left: 10px;">{{t "%{term} sessions" key='session_count' term=device.total_sessions}}</span>
-                        </td>
-                      </tr>
-                    {{/each}}
-                  {{else}}
-                    <tr>
-                      <td>{{t "No data available" key='no_data'}}</td>
-                    </tr>
-                  {{/if}}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+          {{stats/ip-addresses usage_stats=usage_stats side_by_side=usage_stats2 filter='update_left_filter'}}
+          {{#if usage_stats2}}
+            {{stats/ip-addresses usage_stats=usage_stats2 side_by_side=true right_side=true filter='update_right_filter'}}
+          {{/if}}
+        {{else}}
+          {{stats/geo-disabled side_by_side=usage_stats2}}
+          {{#if usage_stats2}}
+            {{stats/geo-disabled side_by_side=true right_side=true}}
+          {{/if}}
+        {{/if}}
+      </div>
+      <div class="row">
+        {{stats/heat-map usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/heat-map usage_stats=usage_stats2 side_by_side=true right_side=true}}
+        {{/if}}
+        {{stats/user-devices usage_stats=usage_stats side_by_side=usage_stats2 filter='update_left_filter'}}
+        {{#if usage_stats2}}
+          {{stats/user-devices usage_stats=usage_stats2 side_by_side=true right_side=true filter='update_right_filter'}}
+        {{/if}}
+      </div>
+      {{#unless usage_stats2}}
         <div class="row" style="margin-top: 10px;">
           <div class="col-sm-12">
             {{#link-to 'user.logs' model.user_name (query-params start=usage_stats.start_date_field end=usage_stats.end_date_field location_id=controller.location_id device_id=controller.device_id type='session') class='btn btn-default'}}
               {{t "Log Entries for this Report" key='log_entries_for_report'}}
             {{/link-to}}
+            {{#if app_state.feature_flags.snapshots}}
+              {{#if model.permissions.edit}}
+                <a href="#" {{action 'save_snapshot'}} class='btn btn-default'>{{t "Save Snapshot" key='save_snapshot'}}</a>
+              {{/if}}
+            {{/if}}
           </div>
         </div>
-      {{/if}}
-    {{else}}
-      {{#if stats_error}}
-        {{t "Reports failed to load" key='reports_failed_to_load'}}
-      {{else}}
-        {{t "Loading..." key='loading'}}
-      {{/if}}
+      {{/unless}}
     {{/if}}
   {{else if model.permissions.edit}}
     <h2>{{t "Usage Reports" key='usage_reports'}}</h2>

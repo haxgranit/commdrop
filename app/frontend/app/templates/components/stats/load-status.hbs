@@ -1,0 +1,13 @@
+{{#if status}}
+  <div class={{if side_by_side "col-sm-6" "col-sm-12"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+    {{#if status.loading}}
+      {{t "Loading..." key='loading'}}
+    {{else if status.error}}
+      {{t "Reports failed to load" key='reports_failed_to_load'}}
+    {{else if status.no_data}}
+      {{t "No data available" key='no_data_available'}}
+    {{else}}
+      {{t "Unknown status" key='unknown_status'}}
+    {{/if}}
+  </div>
+{{/if}}

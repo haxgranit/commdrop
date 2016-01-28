@@ -1,0 +1,40 @@
+<div class={{if side_by_side "col-xs-6" "col-xs-12"}} style={{if right_side "border-left: 1px solid #eee; padding-top: 20px; padding-bottom: 20px;" "padding-top: 20px; padding-bottom: 20px;"}}>
+  {{#if usage_stats}}
+    <form class="form-inline">
+      <div class="form-group">
+        {{input type="date" value=usage_stats.start_date_field class="form-control"}}
+      </div>
+        &nbsp;{{t "to" key='to'}}&nbsp;
+      <div class="form-group">
+        {{input type="date" value=usage_stats.end_date_field class="form-control"}}
+      </div>
+      {{#if usage_stats.device_id}}
+        <div class="form-group">
+          <a href="#" {{action 'update_filter' 'device'}} class='btn btn-default'>
+            {{usage_stats.device_name}}
+            <span class="glyphicon glyphicon-remove"></span>
+          </a>
+        </div>
+      {{/if}}
+      {{#if usage_stats.location_id}}
+        <div class="form-group">
+          <a href="#" {{action 'update_filter' 'location'}} class='btn btn-default'>
+            {{usage_stats.location_name}}
+            <span class="glyphicon glyphicon-remove"></span>
+          </a>
+        </div>
+      {{/if}}
+      <button type="button" {{action "update_filter" "date"}} class="btn btn-default">{{t "Go" key='go'}}</button>
+      {{#unless side_by_side}}
+        {{#if app_state.feature_flags.snapshots}}
+          <span style="margin-left: 10px;" class="hidden-xs">
+            <a href="#" {{action 'compare_to'}}>{{t "compare to..." key='compare_to_ellipsis'}}</a>
+          </span>
+        {{/if}}
+      {{/unless}}
+    </form>
+    {{#if side_by_side}}
+      <a href="#" {{action 'clear_side'}}>{{t "hide this side" key='hide_this_side'}}</a>
+    {{/if}}
+  {{/if}}
+</div>

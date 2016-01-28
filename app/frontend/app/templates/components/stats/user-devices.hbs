@@ -1,0 +1,33 @@
+<div class={{if side_by_side "col-sm-6" "col-sm-2"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+  <div style={{if side_by_side "padding-top: 24px; height: 200px; overflow: auto;" "padding-top: 24px; max-height: 350px; overflow: auto;"}}>
+    <table class="table table-hover table-condensed">
+      <thead>
+        <tr>
+          <th>
+            {{t "Devices" key='devices'}}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if usage_stats.devices}}
+          {{#each usage_stats.devices as |device|}}
+            <tr>
+              <td>
+                <strong>
+                  <a href="#" {{action 'filter' device}}>
+                    {{device.name}}
+                  </a>
+                </strong><br/>
+                <span class="text-muted" style="padding-left: 10px;">{{t "%{term} sessions" key='session_count' term=device.total_sessions}}</span>
+              </td>
+            </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td>{{t "No data available" key='no_data'}}</td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<div class={{if side_by_side "col-sm-6" "col-sm-4"}} style={{if right_side "height: 400px; padding-top: 23px; border-left: 1px solid #eee;" "height: 400px; padding-top: 23px;"}}>
+  <table class="table table-hover table-condensed" style="margin-bottom: 0;">
+    <thead>
+      <tr>
+        <th colspan="2">
+          {{t "Most common words" key='most_common_words'}}
+          <a href="#" {{action 'word_cloud'}}>{{t "word cloud" key='word_cloud'}}</a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#if usage_stats.popular_words}}
+        {{#each usage_stats.popular_words as |word|}}
+          <tr>
+            <td>{{word.text}}</td>
+            <td>{{word.count}}</td>
+          </tr>
+        {{/each}}
+      {{else}}
+        <tr>
+          <td>{{t "No data available" key='no_data'}}</td>
+        </tr>
+      {{/if}}
+    </tbody>
+  </table>
+</div>

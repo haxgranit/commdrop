@@ -302,6 +302,60 @@ CoughDrop.YT = {
 };
 Ember.run.later(CoughDrop.YT.poll, 500);
 
+CoughDrop.Visualizations = {
+  wait: function(callback) {
+    if(!CoughDrop.Visualizations.ready) {
+      CoughDrop.Visualizations.callbacks = CoughDrop.Visualizations.callbacks || [];
+      CoughDrop.Visualizations.callbacks.push(callback);
+      CoughDrop.Visualizations.init();
+    } else {
+      callback();
+    }
+  },
+  handle_callbacks: function() {
+    CoughDrop.Visualizations.initializing = false;
+    CoughDrop.Visualizations.ready = true;
+    (CoughDrop.Visualizations.callbacks || []).forEach(function(callback) {
+      callback();
+    });
+    CoughDrop.Visualizations.callbacks = [];
+  },
+  init: function() {
+    if(CoughDrop.Visualizations.initializing || CoughDrop.Visualizations.ready) { return; }
+    CoughDrop.Visualizations.initializing = true;
+    if(!window.google || !window.google.visualization || !window.google.maps) {
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      
+      var one_done = function(type) {
+        one_done[type] = true;
+        if(one_done.graphs && one_done.maps) {
+          window.google.load("visualization", "1.1", {packages:["corechart", "sankey"], callback: CoughDrop.Visualizations.handle_callbacks});
+        }
+      };
+      
+      window.ready_to_load_graphs = function() {
+        one_done('graphs');
+      };
+      script.src = 'https://www.google.com/jsapi?callback=ready_to_load_graphs';
+      document.body.appendChild(script);
+
+      window.ready_to_do_maps = function() {
+        one_done('maps');
+      };
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      // TODO: pull api keys out into config file?
+      script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&' +
+          'callback=ready_to_do_maps&key=AIzaSyBofHMEAGEILQkXWAgO6fAbsLjw6fNJQwM';
+      document.body.appendChild(script);
+    } else {
+      Ember.run.later(CoughDrop.Visualizations.handle_callbacks);
+    }
+    
+  }
+}
+
 CoughDrop.boxPad = 17;
 CoughDrop.borderPad = 5;
 CoughDrop.labelHeight = 15;

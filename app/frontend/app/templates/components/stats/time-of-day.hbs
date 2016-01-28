@@ -1,0 +1,43 @@
+<div class={{if side_by_side "col-sm-6" "col-sm-8"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+  <h3>{{t "Time of Day" key='time_of_day'}}</h3>
+  <div class="time_block_rows">
+    <div style="margin-left: 2%; margin-right: -2%;"> 
+      <div class="time_block_top" style="margin-left: 4%;">1</div>
+      <div class="time_block_top">2</div>
+      <div class="time_block_top">3</div>
+      <div class="time_block_top">4</div>
+      <div class="time_block_top">5</div>
+      <div class="time_block_top">6</div>
+      <div class="time_block_top">7</div>
+      <div class="time_block_top">8</div>
+      <div class="time_block_top">9</div>
+      <div class="time_block_top">10</div>
+      <div class="time_block_top">11</div>
+      <div class="time_block_top">12</div>
+      <div class="time_block_top">1</div>
+      <div class="time_block_top">2</div>
+      <div class="time_block_top">3</div>
+      <div class="time_block_top">4</div>
+      <div class="time_block_top">5</div>
+      <div class="time_block_top">6</div>
+      <div class="time_block_top">7</div>
+      <div class="time_block_top">8</div>
+      <div class="time_block_top">9</div>
+      <div class="time_block_top">10</div>
+      <div class="time_block_top">11</div>
+      <div class="time_block_top">12</div>
+      <div style="clear: left;"></div>
+    </div>
+    {{#each usage_stats.local_time_blocks as |wday|}}
+      <div class="time_block_row">
+        <div class="time_block_left">
+          {{wday.day}}
+        </div>
+        {{#each wday.blocks as |block|}}
+          <div class={{block.style_class}} data-toggle="tooltip" data-placement="top" title={{block.tooltip}}>&nbsp;</div>
+        {{/each}}
+        <div style="clear: left;"></div>
+      </div>
+    {{/each}}
+  </div>
+</div>

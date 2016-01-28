@@ -1635,10 +1635,6 @@ table>tbody>tr.voice_pad>td {
     }
   }
 }
-.row.last_row .panel.summary {
-  margin-bottom: 0;
-}
-
 .video_box {
   position: relative;
   width: 100%;
@@ -1919,6 +1915,10 @@ table tr.long_delay td {
   }
 }
 
+span.hidden-xs {
+  display: inline!important;
+}
+
 body:fullscreen {
   width: 100%;
 }
@@ -1982,6 +1982,9 @@ body:-ms-fullscreen {
   }
 }
 @media (max-width: 767px) {
+  span.hidden-xs {
+    display: none!important;
+  }
   #index_boards_toggle {
     margin-left: -20px;
     padding-left: 20px;

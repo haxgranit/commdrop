@@ -40,7 +40,7 @@
       {{else}}
         <div class="panel-heading">{{t "Device" key='device'}}</div>
         <div class="panel-body">
-          {{#link-to 'user.stats' user.user_name (query-params start='' end='' location_id='' device_id=model.device.id)}}
+          {{#link-to 'user.stats' user.user_name (query-params start=null end=null location_id=null device_id=model.device.id split=null start2=null end2=null device_id2=null location_id2=null)}}
             {{model.device.name}}
           {{/link-to}}
         </div>
@@ -226,7 +226,7 @@
             {{t "more entries" key='see_more'}}
           {{/link-to}}
           
-          {{#link-to 'user.stats' model.user.user_name (query-params start='' end='' location_id=model.geo_cluster_id device_id='' type='session') class='btn btn-default'}}
+          {{#link-to 'user.stats' model.user.user_name (query-params start=null end=null location_id=model.geo_cluster_id device_id=null split=null start2=null end2=null device_id2=null location_id2=null type='session') class='btn btn-default'}}
             {{t "filtered report" key='see_stats'}}
           {{/link-to}}
         {{/if}}
@@ -242,7 +242,7 @@
               {{t "more entries" key='see_more'}}
             {{/link-to}}
             
-            {{#link-to 'user.stats' model.user.user_name (query-params start='' end='' location_id=model.ip_cluster_id device_id='' type='session') class='btn btn-default'}}
+            {{#link-to 'user.stats' model.user.user_name (query-params start=null end=null location_id=model.ip_cluster_id device_id=null split=null start2=null end2=null device_id2=null location_id2=null type='session') class='btn btn-default'}}
               {{t "filtered report" key='see_stats'}}
             {{/link-to}}
           {{/if}}

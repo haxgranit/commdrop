@@ -6,6 +6,9 @@ CoughDrop.Stats = Ember.Object.extend({
   no_data: function() {
     return this.get('total_sessions') === undefined || this.get('total_sessions') === 0;
   }.property('total_sessions'),
+  has_data: function() {
+    return !this.get('no_data');
+  }.property('no_data'),
   popular_words: function() {
     return (this.get('words_by_frequency') || []).filter(function(word, idx) { return idx < 10 && word['count'] > 1; });
   }.property('words_by_frequency'),
@@ -81,7 +84,31 @@ CoughDrop.Stats = Ember.Object.extend({
   }.property('start_at'),
   end_date_field: function() {
     return (this.get('end_at') || "").substring(0, 10);
-  }.property('end_at')
+  }.property('end_at'),
+  device_name: function() {
+    if(this.get('device_id')) {
+      var stats = this;
+      if(stats.devices && stats.devices[0] && stats.devices[0].name) {
+        return stats.devices[0].name;
+      }
+    }
+    return i18n.t('device', "device");
+  }.property('device_id'),
+  location_name: function() {
+    var location_id = this.get('location_id');
+    var stats = this;
+    if(location_id && stats && stats.locations) {
+      var location = stats.locations.find(function(l) { return l.id == location_id; });
+      if(location) {
+        if(location.type == 'geo') {
+          return location.short_name || i18n.t('geo_location', "geo location");
+        } else if(location.type == 'ip_address') {
+          return location.readable_ip_address || i18n.t('ip_location', "ip address");
+        }
+      }
+    }
+    return i18n.t('location', "location");
+  }.property('location_id'),
 });
 
 export default CoughDrop.Stats;

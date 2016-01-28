@@ -1,0 +1,20 @@
+<div class="col-sm-3 col-xs-6" style={{if right_side "border-left: 1px solid #eee;"}}>
+  <div class="panel panel-default summary">
+    <div class="panel-heading">
+      {{t "Words per utterance" key='words_per_utterance'}}
+    </div>
+    <div class="panel-body">
+      {{round usage_stats.words_per_utterance}}
+    </div>
+  </div>
+</div>
+<div class="col-sm-3 col-xs-6">
+  <div class="panel panel-default summary">
+    <div class="panel-heading">
+      {{t "Words per minute" key='words_per_minute'}}
+    </div>
+    <div class="panel-body">
+      {{round usage_stats.words_per_minute}}
+    </div>
+  </div>
+</div>
