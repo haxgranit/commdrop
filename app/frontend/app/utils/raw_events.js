@@ -216,7 +216,7 @@ var buttonTracker = Ember.Object.extend({
     if(buttonTracker.buttonDown && editManager.paint_mode) {
       // touch drag events don't return the right 'this'.
       var elem_wrap = buttonTracker.button_from_point(event.clientX, event.clientY);
-      if(elem_wrap) {
+      if(elem_wrap && buttonTracker.initialTarget) {
         event.preventDefault();
         event.stopPropagation();
         elem_wrap.trigger('buttonpaint');
