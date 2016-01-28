@@ -68,6 +68,17 @@ var editManager = Ember.Object.extend({
     });
     this.lastChange = {};
     this.bogus_id_counter = 0;
+    if(this.controller && this.controller.get('ordered_buttons')) {
+      var neg_ids = [];
+      this.controller.get('ordered_buttons').forEach(function(row) {
+        row.forEach(function(btn) {
+          if(btn.get('id') < 0) {
+            neg_ids.push(btn.get('id'));
+          }
+        });
+      });
+      this.bogus_id_counter = (Math.min.apply(null, neg_ids) || -999);
+    }
   },
   update_history: function() {
     if(this.controller) {
