@@ -17,7 +17,7 @@
     "jquery-minicolors": "~2.1.10",
     "bootstrap": "~3.3.2",
     "recordrtc": "*",
-    "IndexedDBShim": "1.0.14",
+    "IndexedDBShim": "*",
     "ember-simple-auth": "0.7.3",
     "wordcloud2.js": "*"
   }

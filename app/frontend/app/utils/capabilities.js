@@ -8,7 +8,10 @@ import tts_voices from './tts_voices';
 // iOS8 home screen apps are doing weird things with indexeddb
 var indexedDBSafe = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 if(navigator.standalone) {
-  indexedDBSafe = window.shimIndexedDB;
+  if(window.shimIndexedDB) {
+    window.shimIndexedDB.__useShim();
+  }
+  // indexedDBSafe = window.shimIndexedDB;
 }
 
 var capabilities;
@@ -871,17 +874,20 @@ var capabilities;
     request = request || {};
     request.onerror = function(event) {
       if(!setup_database.already_tried) {
+        console.log('COUGHDROP: db failed once, trying again');
         setup_database.already_tried = true;
         setTimeout(function() {
           setup_database();
-        }, 500);
+        }, 1500);
       } else {
+        console.log(event);
         console.error("COUGHDROP: db failed to initialize");
         capabilities.db_error_event = event;
         capabilities.db = false;
       }
     };
     request.onsuccess = function(event) {
+      console.log("COUGHDROP: db succeeded");
       capabilities.db = request.result;
       setTimeout(function() {
         use_database(capabilities.db);
@@ -889,6 +895,7 @@ var capabilities;
     };
 
     request.onupgradeneeded = function(event) { 
+      console.log("COUGHDROP: db upgrade needed");
       var db = event.target.result;
 
       if(event.oldVersion < 1 || event.oldVersion > 99999) {
