@@ -23,6 +23,11 @@
           <td><a {{action "add_digit" "8" on="select"}}>8</a></td>
           <td><a {{action "add_digit" "9" on="select"}}>9</a></td>
         </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td><a {{action "add_digit" "0" on="select"}}>0</a></td>
+          <td>&nbsp;</td>
+        </tr>
       </table>
       {{#if invalid_pin}}
         <p class="text-danger">{{t "Invalid PIN. Try again!" key='invalid_pin'}}</p>
