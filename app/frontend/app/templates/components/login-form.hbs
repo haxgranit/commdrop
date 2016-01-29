@@ -3,10 +3,10 @@
     <div class='col-md-offset-4 col-md-4 col-sm-offset-3 col-sm-6'>
       <form {{action "authenticate" on='submit'}} autocomplete="off" class="form-horizontal" id="login_form">
         <div class="form-group">
-          {{lowercase-text-field id='identification' class="form-control input-lg" value=identification placeholder='username'}}
+          {{lowercase-text-field id='identification' class="form-control input-lg touchy" value=identification placeholder='username'}}
         </div>
         <div class="form-group">
-          {{input type='password' id='password' class='form-control input-lg' value=password placeholder='password'}}
+          {{input type='password' id='password' class='form-control input-lg touchy' value=password placeholder='password'}}
         </div>
         {{#unless browserless}}
           <div class="form-group">
