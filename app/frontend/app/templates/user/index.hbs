@@ -500,7 +500,8 @@
           {{t "Subscription:" key='subscription_colon'}}
           {{subscription.subscription_plan_description}}
           {{#if model.subscription.expires}}
-            {{t "expires %{exp}" exp=model.subscription.expires key='expires'}}
+            {{t " -- expires" key='dash_expires'}}
+            {{date model.subscription.expires}}
           {{/if}}
           <br/>
           {{#if subscription_settings.type}}
