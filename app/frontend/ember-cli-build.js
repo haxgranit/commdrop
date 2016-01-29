@@ -30,7 +30,7 @@ module.exports = function(defaults) {
   // please specify an object with the list of modules as keys
   // along with the exports of each module as its value.
   app.import('bower_components/IndexedDBShim/dist/indexeddbshim.min.js');
-  app.import('bower_components/hammer-time/dist/hammer-time.min.js');
+//   app.import('bower_components/hammer-time/dist/hammer-time.min.js');
   app.import('bower_components/moment/moment.js');
   app.import('bower_components/tinycolor/tinycolor.js');
   app.import('bower_components/jquery-minicolors/jquery.minicolors.min.js');
@@ -40,7 +40,6 @@ module.exports = function(defaults) {
   app.import('vendor/media_recorder/media_recorder.js');
   app.import('vendor/speak_js/speakClient.js');
   app.import('vendor/speech/speech.js');
-//  app.import('bower_components/hammer-time/hammer-time.js');
 
   return app.toTree();
 };
