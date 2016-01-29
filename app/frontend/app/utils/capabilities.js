@@ -895,6 +895,7 @@ var capabilities;
     };
 
     request.onupgradeneeded = function(event) { 
+      var indexes_allowed = capabilities.system && capabilities.system != 'iOS';
       console.log("COUGHDROP: db upgrade needed");
       var db = event.target.result;
 
@@ -905,44 +906,44 @@ var capabilities;
           if(!store_names.contains('board')) {
             var boards = db.createObjectStore("board", { keyPath: "id" });
             index_names = boards.indexNames || [];
-            if(!index_names.contains('key')) {
+            if(!index_names.contains('key') && indexes_allowed) {
               boards.createIndex("key", "key", {unique: false});
             }
-            if(!index_names.contains('tmp_key')) {
+            if(!index_names.contains('tmp_key') && indexes_allowed) {
               boards.createIndex("tmp_key", "tmp_key", {unique: false});
             }
-            if(!index_names.contains('changed')) {
+            if(!index_names.contains('changed') && indexes_allowed) {
               boards.createIndex("changed", "changed", {unique: false});
             }
           }
           if(!store_names.contains('image')) {
             var images = db.createObjectStore("image", { keyPath: "id" });
             index_names = images.index_names || [];
-            if(!index_names.contains('changed')) {
+            if(!index_names.contains('changed') && indexes_allowed) {
               images.createIndex("changed", "changed", {unique: false});
             }
           }
           if(!store_names.contains('sound')) {
             var sounds = db.createObjectStore("sound", { keyPath: "id" });
             index_names = sounds.index_names || [];
-            if(!index_names.contains('changed')) {
+            if(!index_names.contains('changed') && indexes_allowed) {
               sounds.createIndex("changed", "changed", {unique: false});
             }
           }
           if(!store_names.contains('user')) {
             var users = db.createObjectStore("user", { keyPath: "id" });
             index_names = users.index_names || [];
-            if(!index_names.contains('changed')) {
+            if(!index_names.contains('changed') && indexes_allowed) {
               users.createIndex("changed", "changed", {unique: false});
             }
-            if(!index_names.contains('key')) {
+            if(!index_names.contains('key') && indexes_allowed) {
               users.createIndex("key", "key", {unique: false});
             }
           }
           if(!store_names.contains('settings')) {
             var settings = db.createObjectStore("settings", { keyPath: "storageId" });
             index_names = settings.index_names || [];
-            if(!index_names.contains('changed')) {
+            if(!index_names.contains('changed') && indexes_allowed) {
               settings.createIndex("changed", "changed", {unique: false});
             }
           }
@@ -958,6 +959,16 @@ var capabilities;
           console.error("COUGHDROP: db migrations failed");
           console.error(e);
           request.onerror();
+          db = null;
+        }
+        if(db) {
+          setTimeout(function() {
+            if(!capabilities.db) {
+              capabilities.db = db;
+              console.log("COUGHDROP: db succeeded through onupgradeneeded");
+              use_database(capabilities.db);
+            }
+          }, 100);
         }
       }
 //       setTimeout(function() {
@@ -982,7 +993,11 @@ var capabilities;
     capabilities.db.onerror = function(event) {
       // Generic error handler for all errors targeted at this database's
       // requests!
-      alert("Database error: " + (event.target.errorCode || event.target.error.message));
+      var error = event.target && event.target.errorCode;
+      error = error || (event.target && event.target.error && event.target.error.message);
+      error = error || (event.target && event.target.__versionTransaction && event.target.__versionTransaction.error && event.target.__versionTransaction.error.message);
+      error = error || "unknown error";
+      console.error("Database error: " + error);
       // capabilities.db = false;
     };
 
