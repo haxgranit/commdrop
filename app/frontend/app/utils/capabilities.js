@@ -9,7 +9,7 @@ import tts_voices from './tts_voices';
 var indexedDBSafe = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 if(navigator.standalone) {
   if(window.shimIndexedDB) {
-//    window.shimIndexedDB.__useShim();
+    window.shimIndexedDB.__useShim();
   }
   // indexedDBSafe = window.shimIndexedDB;
 }
@@ -860,7 +860,7 @@ var capabilities;
   function setup_database() {
     delete capabilities['db'];
     var user_name = stashes.get_db_id();
-    var key = "coughDropStorage::" + (user_name || "__") + "==" + capabilities.db_key;
+    var key = "coughDropStorage::" + (user_name || "__") + "===" + capabilities.db_key;
     capabilities.db_name = key;
     var request = {};
     var errored = false;
