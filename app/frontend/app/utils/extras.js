@@ -348,6 +348,9 @@ import capabilities from './capabilities';
     var metas = Ember.$.ajax.metas || [];
     // TODO: pluralize correctly using same ember library
     var url = "/api/v1/" + store + "s";
+    if(capabilities.installed_app && capabilities.api_host) {
+      url = capabilities.api_host + url;
+    }
     if(id) { url = url + "/" + id; }
     metas.forEach(function(meta) {
       if(meta.method == method && (url == meta.url || (store == meta.model && id == meta.id))) {
