@@ -145,7 +145,7 @@ class Api::UsersController < ApplicationController
       progress = Progress.schedule(user, :redeem_gift_token, token['code'])
     elsif params['type'] == 'never_expires' || params['type'] == 'eval' || params['type'] == 'add_1' || params['type'] == 'manual_supporter'
       return unless allowed?(user, 'admin_support_actions')
-      progress = Progress.schedule(user, :subscription_override, params['type'])
+      progress = Progress.schedule(user, :subscription_override, params['type'], @api_user && @api_user.global_id)
     else
       return unless allowed?(user, 'edit')
       progress = Progress.schedule(user, :process_subscription_token, token, params['type'])

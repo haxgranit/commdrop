@@ -292,6 +292,10 @@ export default Ember.Controller.extend({
         this.set('subscription_settings', {action: action, type: i18n.t('eval_device', "Evaluation Device")});
       } else if(action == 'never_expires') {
         this.set('subscription_settings', {action: action, type: i18n.t('never_expires', "Never Expiring Subscription")});
+      } else if(action == 'manual_supporter') {
+        this.set('subscription_settings', {action: action, type: i18n.t('manual_supporter', "Manually Set as Supporter")});
+      } else if(action == 'add_1') {
+        this.set('subscription_settings', {action: action, type: i18n.t('never_expires', "Add 1 Month to Expiration")});
       }
     },    
     reset_password: function(confirm) {

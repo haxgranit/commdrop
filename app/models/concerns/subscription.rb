@@ -172,7 +172,7 @@ module Subscription
     end
   end
   
-  def subscription_override(type)
+  def subscription_override(type, user_id=nil)
     if type == 'never_expires'
       self.process({}, {'premium_until' => 'forever'})
     elsif type == 'eval'
@@ -185,6 +185,9 @@ module Subscription
     elsif type == 'add_1'
       if self.expires_at
         self.expires_at = [self.expires_at, Time.now].max + 1.month
+        self.settings ||= {}
+        self.settings['subscription_adders'] ||= []
+        self.settings['subscription_adders'] << [user_id, Time.now.to_i]
         self.save
       end
     elsif type == 'manual_supporter'
