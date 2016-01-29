@@ -159,7 +159,7 @@
                     {{/if}}
                   {{/if}}
                 {{/if}}
-                {{#if app_state.currentUser.stats.board_set}}
+                {{#if app_state.currentUser.stats.board_set_ids}}
                   <br/>
                   {{#if persistence.sync_progress}}
                     {{persistence.sync_progress.visited}} / 
@@ -167,7 +167,7 @@
                   {{else if persistence.sync_status_error}}
                     {{persistence.sync_status_error}}
                   {{else}}
-                    {{t "board" key='communication_set_board' count=app_state.currentUser.stats.board_set}}
+                    {{t "board" key='communication_set_board' count=app_state.currentUser.stats.board_set_ids}}
                   {{/if}}
                 {{/if}}
                 </span>

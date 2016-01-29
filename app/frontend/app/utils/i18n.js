@@ -135,6 +135,7 @@ var i18n = Ember.Object.extend({
     
     if(options && options.hash && options.hash.count !== undefined) {
       var count = options.hash.count;
+      if(count && count.length) { count = count.length; }
       if(count != 1) { 
         str = count + " " + this.pluralize(str);
       } else {
