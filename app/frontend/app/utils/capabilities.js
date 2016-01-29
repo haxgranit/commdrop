@@ -896,6 +896,7 @@ var capabilities;
 
     request.onupgradeneeded = function(event) { 
       var indexes_allowed = capabilities.system && capabilities.system != 'iOS';
+      var done_after_upgrade = capabilities.system && capabilities.system == 'iOS';
       console.log("COUGHDROP: db upgrade needed");
       var db = event.target.result;
 
@@ -961,7 +962,7 @@ var capabilities;
           request.onerror();
           db = null;
         }
-        if(db) {
+        if(db && done_after_upgrade) {
           setTimeout(function() {
             if(!capabilities.db) {
               capabilities.db = db;
