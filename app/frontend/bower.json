@@ -19,6 +19,7 @@
     "recordrtc": "*",
     "IndexedDBShim": "*",
     "ember-simple-auth": "0.7.3",
-    "wordcloud2.js": "*"
+    "wordcloud2.js": "*",
+    "hammer-time": "*"
   }
 }
