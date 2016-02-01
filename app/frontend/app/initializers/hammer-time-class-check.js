@@ -9,7 +9,7 @@ export default {
         if(element.classList && element.classList.contains('touchy')) {
           return 'none';
         } else {
-          return pre(element);
+          return pre.call(this, element);
         }
       };
     }
