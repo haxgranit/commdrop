@@ -701,7 +701,7 @@ body.pretty_loader #loading_box {
 #sidebar > a:hover {
   text-decoration: none;
 }
-.board.edit.paint .button * {
+.board.edit.paint .button, .board.edit.paint .button * {
   cursor: crosshair;
 }
 .board.edit .button.hidden_button {
