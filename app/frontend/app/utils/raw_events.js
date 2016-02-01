@@ -614,7 +614,9 @@ var buttonTracker = Ember.Object.extend({
     if($target.length > 0) {
       return buttonTracker.element_wrap($target[0]);
     } else {
-      var offset = Ember.$(".board").offset() || {};
+      var $board = Ember.$(".board");
+      if($board.length == 0) { return null; }
+      var offset = $board.offset() || {};
       var top = offset.top;
       if(top) {
         var button = app_state.get('board_virtual_dom').button_from_point(x, y - top - 3);
@@ -676,7 +678,8 @@ var buttonTracker = Ember.Object.extend({
         },
         loose_bounds: function() {
           if(res.cached_loose_bounds) { return res.cached_loose_bounds; }
-          var offset = $e.offset() || {};
+          var offset = {};
+          if($e.length > 0) { offset = $e.offset() || {} };
           res.cached_loose_bounds = {
             width: $e.outerWidth() + 100,
             height: $e.outerHeight() + 100,
@@ -734,17 +737,22 @@ var buttonTracker = Ember.Object.extend({
     }
     if(x && y) {
       var $board = Ember.$(".board");
-      var left = $board.offset().left;
-      var top = $board.offset().top;
-      var sidebar_width = Ember.$("#sidebar").outerWidth() || 0;
-      var width = $board.width() + left + sidebar_width;
-      var height = $board.height() + top;
-      var pct_x = (x - left) / width;
-      var pct_y = (y - top) / height;
-      return {percent_x: pct_x, percent_y: pct_y};
-    } else {
-      return null;
+      if($board.length) {
+        var left = $board.offset().left;
+        var top = $board.offset().top;
+        var $sidebar = Ember.$("#sidebar");
+        var sidebar_width = 0;
+        if($sidebar.length > 0) {
+          sidebar_width = $sidebar.outerWidth() || 0;
+        }
+        var width = $board.width() + left + sidebar_width;
+        var height = $board.height() + top;
+        var pct_x = (x - left) / width;
+        var pct_y = (y - top) / height;
+        return {percent_x: pct_x, percent_y: pct_y};
+      }
     }
+    return null;
   },
   track_drag: function(event) {
     this.startEvent = this.startEvent || event;
