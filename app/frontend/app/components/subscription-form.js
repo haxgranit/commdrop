@@ -75,6 +75,7 @@ export default Ember.Component.extend({
               _this.sendAction('subscription_error', i18n.t('user_subscription_update_failed', "Subscription failed. Please try again or contact support for help."));
               _this.send('reset');
               console.log(event);
+              console.error('purchase_progress_failed');
             } else if(event.status == 'finished') {
               user.reload().then(function() {
                 user.set('preferences.progress.subscription_set', true);
@@ -97,6 +98,9 @@ export default Ember.Component.extend({
       } else {
         Subscription.purchase(subscription).then(function(result) {
           subscribe(result, subscription.get('subscription_amount'));
+        }, function() {
+          modal.error(i18n.t('purchasing_not_completed', "There was an unexpected problem completing your purchase"));
+          console.error('purchase_promise_rejected');
         });
       }
     }

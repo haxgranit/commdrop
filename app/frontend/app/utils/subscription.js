@@ -293,8 +293,22 @@ Subscription.reopenClass({
         Subscription.handler = window.StripeCheckout.configure({
           key: window.stripe_public_key,
           image: '/images/logo-big.png',
+          opened: function() {
+          },
+          closed: function() {
+            var d = Subscription.handler.defer;
+            Ember.run.later(function() {
+              if(Subscription.handler.defer == d) {
+                console.error('purchase_modal_not_resolved');
+                Subscription.handler.defer.reject();
+                Subscription.handler.defer = null;
+              }
+            }, 1000);
+          },
           token: function(result) {
+            console.error('purchase_result');
             Subscription.handler.defer.resolve(result);
+            Subscription.handler.defer = null;
           }
         });
         Subscription.ready = true;
@@ -314,6 +328,9 @@ Subscription.reopenClass({
       return Ember.RSVP.resolve({id: 'free'});
     }
     var defer = Ember.RSVP.defer();
+    if(Subscription.handler.defer) {
+      console.error('purchase_resetting_defer');
+    }
     Subscription.handler.open({
       name: "CoughDrop",
       description: subscription.get('description'),

@@ -14,6 +14,7 @@ export default Ember.Controller.extend({
     },
     subscription_success: function(msg) {
       modal.success(msg);
+      this.get('subscription').reset();
     },
     approve_or_reject_org: function(approve) {
       var user = this.get('model');
