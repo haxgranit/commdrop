@@ -1,7 +1,7 @@
 import CoughDrop from '../app';
 
 export default {
-  name: 'defer_readiness',
+  name: 'hammer-time-class-check',
   initialize: function(container, app) {
     if(window.Hammer && window.Hammer.time && window.Hammer.time.getTouchAction) {
       var pre = window.Hammer.time.getTouchAction;
