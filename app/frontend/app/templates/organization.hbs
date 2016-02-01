@@ -31,8 +31,12 @@
         {{#if model.admin}}
           {{#if model.permissions.manage}}
             <span class="btn btn-default">
-              {{input value=masquerade_user_name placeholder="user name" class="form-control inline inline-masquerade"}}
+              {{input value=masquerade_user_name action='masquerade' placeholder="user name" class="form-control inline inline-masquerade"}}
               <button class="btn btn-default" {{action "masquerade"}}>{{t "masquerade" key='masquerade'}}</button>
+            </span>
+            <span class="btn btn-default">
+              {{input value=search_user action='find_user' placeholder="user name/email" class="form-control inline inline-masquerade"}}
+              <button class="btn btn-default" {{action "find_user"}}>{{t "find user" key='find'}}</button>
             </span>
           {{/if}}
         {{/if}}

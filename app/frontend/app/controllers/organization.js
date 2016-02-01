@@ -28,6 +28,23 @@ export default Ember.Controller.extend({
           modal.error(i18n.t('couldnt_find_user', "Couldn't retrieve user \"%{user_name}\" for masquerading", {user_name: user_name}));
         });
       }
+    },
+    find_user: function() {
+      var q = this.get('search_user');
+      var _this = this;
+      if(q) {
+        CoughDrop.store.query('user', {q: q}).then(function(res) {
+          if(res.content.length == 0) {
+            modal.warning(i18n.t('no_user_result', "No results found for \"%{q}\"", {q: q}));
+          } else if(res.content.length == 1) {
+            _this.transitionToRoute('user.index', res.content[0].record.get('user_name'));
+          } else {
+            modal.open('user-results', {list: res, q: q});
+          }
+        }, function() {
+          modal.error(i18n.t('error_searching', "There was an unexpected error while search for the user"));
+        });
+      }
     }
   }
 });

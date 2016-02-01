@@ -192,7 +192,7 @@ class User < ActiveRecord::Base
   
   def self.find_by_email(email)
     hash = User.generate_email_hash(email)
-    self.where(:email_hash => hash)
+    self.where(:email_hash => hash).order('user_name')
   end
   
   def self.generate_email_hash(email)

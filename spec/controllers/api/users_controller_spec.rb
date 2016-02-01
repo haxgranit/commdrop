@@ -22,6 +22,102 @@ describe Api::UsersController, :type => :controller do
     end
   end
   
+  describe "index" do
+    it "should require api token" do
+      get :index
+      assert_missing_token
+    end
+    
+    it "should require admin manager position" do
+      token_user
+      get :index
+      assert_error 'admins only'
+    end
+    
+    it "should require a query parameter" do
+      token_user
+      o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
+      o.add_manager(@user.user_name, true)
+      get :index
+      assert_error ('q parameter required')
+    end
+    
+    it "should return results" do
+      u = User.create(:user_name => 'bob')
+      u2 = User.create(:user_name => 'bobby')
+
+      token_user
+      o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
+      o.add_manager(@user.user_name, true)
+      get :index, :q => 'bo'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).not_to eq(nil)
+      expect(json['user'].length).to eq(2)
+      expect(json['user'][0]['id']).to eq(u.global_id)
+      expect(json['user'][1]['id']).to eq(u2.global_id)
+    end
+    
+    it "should return email results for an email query" do
+      u = User.create(:user_name => 'bob@example.com')
+      u2 = User.create(:user_name => 'boby', :settings => {'email' => 'bob@example.com'})
+      u3 = User.create(:user_name => 'bobby', :settings => {'email' => 'bob@example.com'})
+
+      token_user
+      o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
+      o.add_manager(@user.user_name, true)
+      get :index, :q => 'bob@example.com'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).not_to eq(nil)
+      expect(json['user'].length).to eq(2)
+      expect(json['user'][0]['id']).to eq(u3.global_id)
+      expect(json['user'][1]['id']).to eq(u2.global_id)
+
+      get :index, :q => 'bob@'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).not_to eq(nil)
+      expect(json['user'].length).to eq(0)
+    end
+    
+    it "should return a single result if perfect match on user_name" do
+      u = User.create(:user_name => 'bob')
+      u2 = User.create(:user_name => 'bobby')
+
+      token_user
+      o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
+      o.add_manager(@user.user_name, true)
+      get :index, :q => 'bob'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).not_to eq(nil)
+      expect(json['user'].length).to eq(1)
+      expect(json['user'][0]['id']).to eq(u.global_id)
+    end
+    
+    it "should paginate results" do
+      us = []
+      30.times do |i|
+        us << User.create(:user_name => "betsy#{i}")
+      end
+      
+      token_user
+      o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
+      o.add_manager(@user.user_name, true)
+      get :index, :q => 'betsy'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).not_to eq(nil)
+      expect(json['user'].length).to eq(25)
+      expect(json['user'][0]['id']).to eq(us[0].global_id)
+      expect(json['user'][1]['id']).to eq(us[1].global_id)
+      expect(json['user'][2]['id']).to eq(us[10].global_id)
+      expect(json['user'][3]['id']).to eq(us[11].global_id)
+      expect(json['user'][4]['id']).to eq(us[12].global_id)
+    end
+  end
+  
   describe "update" do
     it "should not require api token" do
       post :update, :id => 123
@@ -701,22 +797,6 @@ describe Api::UsersController, :type => :controller do
       expect(@user.expires_at).to eq(exp + 3.years.to_i)
     end
     
-#   def subscribe
-#     user = User.find_by_path(params['user_id'])
-#     admin = Organization.admin
-#     token = params['token']
-#     if params['type'] == 'gift_code'
-#       return unless allowed?(user, 'edit')
-#       progress = Progress.schedule(user, :redeem_gift_token, token['code'])
-#     elsif params['type'] == 'never_expires' || params['type'] == 'eval'
-#       return unless allowed?(user, 'admin_support_actions')
-#       progress = Progress.schedule(user, :subscription_override, params['type'])
-#     else
-#       return unless allowed?(user, 'edit')
-#       progress = Progress.schedule(user, :process_subscription_token, token, params['type'])
-#     end
-#     render json: JsonApi::Progress.as_json(progress, :wrapper => true)
-#   end
     it "should let admins set a subscription to never_expires" do
       token_user
       u = User.create

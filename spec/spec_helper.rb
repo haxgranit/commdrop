@@ -59,24 +59,26 @@ def assert_broken
 end
 
 def assert_missing_token
-  expect(response).not_to be_success
-  json = JSON.parse(response.body)
-  expect(json['error']).to eq("Access token required for this endpoint")
-  expect(json['status']).to eq(400)
+  assert_error("Access token required for this endpoint", 400)
 end
 
 def assert_not_found(id=nil)
-  expect(response).not_to be_success
+  assert_error("Record not found", 404)
   json = JSON.parse(response.body)
-  expect(json['error']).to eq("Record not found")
   expect(json['id']).to eq(id)
 end
 
-def assert_unauthorized
+def assert_error(str, code=nil)
   expect(response).not_to be_success
   json = JSON.parse(response.body)
-  expect(json['error']).to eq("Not authorized")
-  expect(json['status']).to eq(400)
+  expect(json['error']).to eq(str)
+  if code
+    expect(json['status']).to eq(code)
+  end
+end
+
+def assert_unauthorized
+  assert_error("Not authorized", 400)
 end
 
 def assert_timestamp(ts, ts2)

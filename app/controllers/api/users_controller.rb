@@ -1,7 +1,7 @@
 class Api::UsersController < ApplicationController
   extend ::NewRelic::Agent::MethodTracer
 
-  before_filter :require_api_token, :except => [:update, :index, :show, :create, :confirm_registration, :forgot_password, :password_reset]
+  before_filter :require_api_token, :except => [:update, :show, :create, :confirm_registration, :forgot_password, :password_reset]
   def show
     user = User.find_by_path(params['id'])
     user_device = @api_user == user && @api_device
@@ -16,6 +16,25 @@ class Api::UsersController < ApplicationController
     end
     
     render json: json.to_json
+  end
+  
+  def index
+    if !Organization.admin_manager?(@api_user)
+      return api_error 400, {error: 'admins only'}
+    end
+    if !params['q']
+      return api_error 400, {error: 'q parameter required'}
+    end
+    users = []
+    if params['q'].match(/@/)
+      users = User.find_by_email(params['q'])
+    else
+      users = User.where(:user_name => params['q'])
+      if users.count == 0
+        users = User.where(["user_name ILIKE ?", "%#{params['q']}%"]).order('user_name')
+      end
+    end
+    render json: JsonApi::User.paginate(params, users)
   end
   
   def update
