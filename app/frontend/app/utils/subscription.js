@@ -312,8 +312,10 @@ Subscription.reopenClass({
           key: window.stripe_public_key,
           image: '/images/logo-big.png',
           opened: function() {
+            console.error('purchase_modal_opened');
           },
           closed: function() {
+            console.error('purchase_modal_closed');
             var d = Subscription.handler.defer;
             Ember.run.later(function() {
               if(Subscription.handler.defer == d) {

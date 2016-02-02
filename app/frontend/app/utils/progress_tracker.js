@@ -4,7 +4,7 @@ import persistence from './persistence';
 
 var progress_tracker = Ember.Object.extend({
   success_wait: 2500,
-  error_wait: 2500,
+  error_wait: 1500,
   track: function(progress, status_callback) {
     this.track_ids = this.track_ids || {};
     var id = null;
@@ -47,7 +47,7 @@ var progress_tracker = Ember.Object.extend({
 //         status: (started|pending|finished|errored)
 //       }
     }, function(err) {
-      if(error_count > 3) {
+      if(error_count > 5) {
         status_callback({
           status: 'errored',
           sub_status: 'server_unresponsive'
