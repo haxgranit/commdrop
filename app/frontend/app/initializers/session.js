@@ -37,6 +37,9 @@ var Store = StoreBase.extend({
           if(data.authenticated !== true) {
             session.invalidate(true);
           }
+          if(data.sale !== undefined) {
+            CoughDrop.sale = !!data.sale;
+          }
           if(data.meta && data.meta.fakeXHR && data.meta.fakeXHR.browserToken) {
             persistence.set('browserToken', data.meta.fakeXHR.browserToken);
           }

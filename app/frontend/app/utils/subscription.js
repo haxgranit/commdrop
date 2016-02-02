@@ -39,6 +39,7 @@ var Subscription = Ember.Object.extend({
     this.set('finalizing_purchase', false);
     this.set('purchase_complete', false);
     this.set('canceling', false);
+    this.set('sale', !!CoughDrop.sale);
     this.set('email', null);
     if(this.get('user')) {
       var u = this.get('user');
@@ -109,6 +110,15 @@ var Subscription = Ember.Object.extend({
       }
     }
   }.property('user_type', 'subscription_type', 'subscription_amount', 'gift_code', 'email'),
+  subscription_amount_plus_trial: function() {
+    if(this.get('discount_period') && ['monthly_4', 'long_term_150'].indexOf(this.get('subscription_amount')) != -1) {
+      return this.get('subscription_amount') + '_plus_trial';
+    }
+    return this.get('subscription_amount');
+  }.property('subscription_amount', 'discount_period'),
+  cheaper_offer: function() {
+    return this.get('sale') || this.get('discount_period');
+  }.property('sale', 'discount_period'),
   set_default_subscription_amount: function() {
     if(this.get('user_type') == 'communicator') {
       if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^(monthly_|long_term_)/)) {
@@ -116,11 +126,19 @@ var Subscription = Ember.Object.extend({
       }
       if(this.get('subscription_type') == 'monthly') {
         if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^monthly_/)) {
-          this.set('subscription_amount', 'monthly_6');
+          if(this.get('cheaper_offer')) {
+            this.set('subscription_amount', 'monthly_4');
+          } else {
+            this.set('subscription_amount', 'monthly_6');
+          }
         }
       } else if(this.get('subscription_type') == 'long_term') {
         if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^long_term_/)) {
-          this.set('subscription_amount', 'long_term_200');
+          if(this.get('cheaper_offer')) {
+            this.set('subscription_amount', 'long_term_150');
+          } else {
+            this.set('subscription_amount', 'long_term_200');
+          }
         }
       }
     } else {

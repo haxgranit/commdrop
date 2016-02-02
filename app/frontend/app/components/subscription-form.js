@@ -97,7 +97,7 @@ export default Ember.Component.extend({
         subscribe({code: subscription.get('gift_code')}, 'gift_code');
       } else {
         Subscription.purchase(subscription).then(function(result) {
-          subscribe(result, subscription.get('subscription_amount'));
+          subscribe(result, subscription.get('subscription_amount_plus_trial'));
         }, function() {
           modal.error(i18n.t('purchasing_not_completed', "There was an unexpected problem completing your purchase"));
           console.error('purchase_promise_rejected');
