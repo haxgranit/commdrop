@@ -51,52 +51,54 @@
           <label>{{t "My Subscription Plan" key='my_subscription_plan'}}</label>
         {{/if}}
         <a href="#" {{action 'toggle_explanation' 'subscription_plan'}} class="glyphicon glyphicon-question-sign"></a><br/>
-        <div class={{if subscription.cheaper_offer "btn-group btn-group-lg quick_money discount" "btn-group btn-group-lg quick_money"}} role="group" aria-label="subscription frequency">
           {{#if subscription.communicator_type}}
-            <button type="button" class={{monthly_subscription_class}} {{action "set_subscription_type" 'monthly'}}>
-              {{#if subscription.cheaper_offer}}
-                <div class="suggested">
-                    {{t "save 25%" key='sale'}}
-                </div>
-                <span style="padding-right: 10px; font-size: 20px;">
-                  $<span style="text-decoration: line-through;">6</span>
-                </span>
-                $<span style="font-size: 50px; vertical-align: middle;">4</span><br/>
-              {{else}}
-                $<span style="font-size: 50px; vertical-align: middle;">6</span><br/>
-              {{/if}}
-              <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">per month</div>
-            </button>
-            <button type="button" class={{long_term_subscription_class}} {{action "set_subscription_type" 'long_term'}}>
-              {{#if subscription.cheaper_offer}}
-                <div class="suggested">
-                    {{t "save 25%" key='sale'}}
-                </div>
-                <span style="padding-right: 10px; font-size: 20px;">
-                  $<span style="text-decoration: line-through;">200</span>
-                </span>
-                $<span style="font-size: 50px; vertical-align: middle;">150</span><br/>
-              {{else}}
-                $<span style="font-size: 50px; vertical-align: middle;">200</span><br/>
-              {{/if}}
-              <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">for 5 years</div>
-            </button>
-            {{#if subscription.gift_type}}
-              <button type="button" class="btn btn-primary active" {{action 'set_subscription_type' 'gift_code'}} style="height: 110px;">
-                {{t "I have a gift code" key='voucher_code'}}
+            <div class={{if subscription.cheaper_offer "btn-group btn-group-lg quick_money discount" "btn-group btn-group-lg quick_money"}} role="group" aria-label="subscription frequency">
+              <button type="button" class={{monthly_subscription_class}} {{action "set_subscription_type" 'monthly'}}>
+                {{#if subscription.cheaper_offer}}
+                  <div class="suggested">
+                      {{t "save 25%" key='sale'}}
+                  </div>
+                  <span style="padding-right: 10px; font-size: 20px;">
+                    $<span style="text-decoration: line-through;">6</span>
+                  </span>
+                  $<span style="font-size: 50px; vertical-align: middle;">4</span><br/>
+                {{else}}
+                  $<span style="font-size: 50px; vertical-align: middle;">6</span><br/>
+                {{/if}}
+                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">per month</div>
               </button>
-            {{/if}}
+              <button type="button" class={{long_term_subscription_class}} {{action "set_subscription_type" 'long_term'}}>
+                {{#if subscription.cheaper_offer}}
+                  <div class="suggested">
+                      {{t "save 25%" key='sale'}}
+                  </div>
+                  <span style="padding-right: 10px; font-size: 20px;">
+                    $<span style="text-decoration: line-through;">200</span>
+                  </span>
+                  $<span style="font-size: 50px; vertical-align: middle;">150</span><br/>
+                {{else}}
+                  $<span style="font-size: 50px; vertical-align: middle;">200</span><br/>
+                {{/if}}
+                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">for 5 years</div>
+              </button>
+              {{#if subscription.gift_type}}
+                <button type="button" class="btn btn-primary active" {{action 'set_subscription_type' 'gift_code'}}>
+                  {{t "I have a gift code" key='voucher_code'}}
+                </button>
+              {{/if}}
+            </div>
           {{else}}
-            <button type="button" class={{slp_long_term_free_class}} {{action "set_subscription" 'slp_long_term_free'}} style="height: 110px; min-width: 200px;">
-              <span style="font-size: 50px; vertical-align: middle;">free</span><br/>
-              <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">thanks for all you do!</div>
-            </button>
-            <button type="button" class={{slp_long_term_50_class}} {{action "set_subscription" 'slp_long_term_50'}} style="height: 110px; min-width: 200px;">
-              $<span style="font-size: 50px; vertical-align: middle;">50</span><br/>
-              <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">funding donation</div>
-            </button>
+            <div class="btn-group btn-group-lg quick_money" role="group" aria-label="subscription frequency">
+              <button type="button" class={{slp_long_term_free_class}} {{action "set_subscription" 'slp_long_term_free'}} style="height: 110px; min-width: 200px;">
+                <span style="font-size: 50px; vertical-align: middle;">free</span><br/>
+                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">thanks for all you do!</div>
+              </button>
+              <button type="button" class={{slp_long_term_50_class}} {{action "set_subscription" 'slp_long_term_50'}} style="height: 110px; min-width: 200px;">
+                $<span style="font-size: 50px; vertical-align: middle;">50</span><br/>
+                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 15px; line-height: 17px;">funding donation for<br/>one free account</div>
+              </button>
+            </div>
           {{/if}}
-        </div>
         {{#unless subscription.gift_type}}
           {{#unless pricing_only}}
             {{#if subscription.communicator_type}}

@@ -38,7 +38,7 @@ var Store = StoreBase.extend({
             session.invalidate(true);
           }
           if(data.sale !== undefined) {
-            CoughDrop.sale = !!data.sale;
+            CoughDrop.sale = parseInt(data.sale, 10) || false;
           }
           if(data.meta && data.meta.fakeXHR && data.meta.fakeXHR.browserToken) {
             persistence.set('browserToken', data.meta.fakeXHR.browserToken);

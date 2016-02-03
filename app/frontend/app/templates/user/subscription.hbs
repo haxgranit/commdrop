@@ -21,7 +21,7 @@
   {{else if subscription.user.subscription.started}}
     {{#if subscription.user_expiring}}
       <span class='glyphicon glyphicon-time' style="float: left; font-size: 30px; margin-right: 10px;"></span>
-      {{t "You were signed up for the monthly subscription plan, <b>%{plan}</b>, but it is no longer in effect, and you should update your subscription. Your premium subscription is set to expire " key='subscription_expires' plan=subscription.subscription_plan_description}} {{date subscription.user.subscription.expires}}.
+      {{t "You were signed up for the monthly subscription plan, <b>%{plan}</b>, but it is no longer in effect, and you should update your subscription. Your premium subscription is set to expire " key='subscription_expires' plan=subscription.subscription_plan_description}} <span style='white-space: nowrap;'>{{date subscription.user.subscription.expires}}</span>.
     {{else}}
       <span class='glyphicon glyphicon-calendar' style="float: left; font-size: 30px; margin-right: 10px;"></span>
       {{t "You are signed up for the monthly subscription plan, <b>%{plan}</b>. We hope everything is going well for you and CoughDrop is making a difference!" key='monthly_plan' plan=subscription.subscription_plan_description}}
@@ -29,14 +29,14 @@
   {{else if subscription.user.subscription.purchased}}
     {{# if subscription.user_expiring}}
       <span class='glyphicon glyphicon-time' style="float: left; font-size: 30px; margin-right: 10px;"></span>
-      {{t "You've purchased CoughDrop using the long-term plan, <b>%{plan}</b>. This plan is going to expire soon, and you should update your subscription. Your current plan is set to expire " key='long_term_expiring' plan=subscription.subscription_plan_description}} {{date subscription.user.subscription.expires}}
+      {{t "You've purchased CoughDrop using the long-term plan, <b>%{plan}</b>. This plan is going to expire soon, and you should update your subscription. Your current plan is set to expire " key='long_term_expiring' plan=subscription.subscription_plan_description}}<span style='white-space: nowrap;'>{{date subscription.user.subscription.expires}}</span>
     {{else}}
       <span class='glyphicon glyphicon-calendar' style="float: left; font-size: 30px; margin-right: 10px;"></span>
-      {{t "You've purchased CoughDrop using the long-term plan, <b>%{plan}</b>. We hope everything is going well for you and CoughDrop is making a difference! Your current plan is set to expire " key='long_term_explanation' plan=subscription.subscription_plan_description}} {{date subscription.user.subscription.expires}}
+      {{t "You've purchased CoughDrop using the long-term plan, <b>%{plan}</b>. We hope everything is going well for you and CoughDrop is making a difference! Your current plan is set to expire " key='long_term_explanation' plan=subscription.subscription_plan_description}} <span style='white-space: nowrap;'>{{date subscription.user.subscription.expires}}</span>
     {{/if}}
   {{else}}
     <span class='glyphicon glyphicon-info-sign' style="float: left; font-size: 30px; margin-right: 10px;"></span>
-    {{t "You haven't signed up for a CoughDrop subscription yet. Currently you're running a free trial, hopefully you're learning a lot and getting excited for what CoughDrop can do! Your trial will end" key='trial_ending'}} {{date subscription.user.subscription.expires}}.
+    {{t "You haven't signed up for a CoughDrop subscription yet. Currently you're running a free trial, hopefully you're learning a lot and getting excited for what CoughDrop can do! Your trial will end" key='trial_ending'}} <span style='white-space: nowrap;'>{{date subscription.user.subscription.expires}}</span>.
   {{/if}}
   <div style="clear: left;"></div>
   <p style="margin-top: 10px;">
@@ -79,6 +79,23 @@
         {{/if}}
       </div>
     {{else}}
+      {{#if subscription.discount_period}}
+        <div class="row">
+          <div class="col-sm-9">
+            <strong>{{t "Discount available!" key='temporary_discount'}}</strong>
+            {{t "When you purchase a CoughDrop communicator account within 24 hours after signing up, you'll receive a 25% discount. If you sign up for a monthly account we won't start charging for 2 months, and a long-term purchase will still get your 2 free months as well, so feel free to sign up now!" key='temporary_discount_explanation'}}
+          </div>
+        </div>
+      {{else if subscription.sale}}
+        <div class="row">
+          <div class="col-sm-9">
+            <strong>{{t "CoughDrop is currently on sale!" key='on_sale'}}</strong>
+            {{t "You can purchase a communicator account right now at a discount! This sale ends" key='on_sale_explanation'}}
+            {{date subscription.sale_ends 'day'}}
+            {{t "so sign up now or help spread the word!" key='on_sale_explanation2'}}
+          </div>
+        </div>
+      {{/if}}
       {{subscription-form user=model subscription=subscription subscription_error='subscription_error' subscription_success='subscription_success'}}
     {{/if}}
   {{/unless}}

@@ -111,6 +111,13 @@ CoughDrop.User = DS.Model.extend({
     var expires = window.moment(this.get('subscription.expires'));
     return (expires < now);
   }.property('membership_type', 'app_state.refresh_stamp', 'subscription.expires'),
+  joined_within_24_hours: function() {
+    var one_day_ago = window.moment().add(-1, 'day');
+    if(this.get('joined') && this.get('joined') > one_day_ago) {
+      return true;
+    }
+    return false;
+  }.property('app_state.refresh_stamp', 'joined'),
   really_expired: function() {
     if(!this.get('expired')) { return false; }
     var now = window.moment();

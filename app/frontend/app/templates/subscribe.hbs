@@ -11,8 +11,18 @@
       <p>
         {{t "Welcome to CoughDrop, we're excited you're here! Before you get started, please take a minute to select a subscription plan that works for you." key='welcome_fill_out_subscription'}}
       </p>
+      {{#if model.subscription.discount_period}}
+        <p>
+          {{t "<strong>Discount available!</strong> If you purchase within the first 24 hours after signing up you're eligible for a <strong>25% discount</strong> on your account. You'll still get your 2-month trial included as well." key='welcome_fill_out_subscription_free_trial'}}
+        </p>
+      {{else if model.subscription.sale}}
+        <p>
+          {{t "<strong>CoughDrop is on sale!</strong> Sign up now to receive a discount, the sale ends" key='welcome_fill_out_subscription_sale'}}
+          {{date model.subscription.sale_ends 'day'}}{{t "." key='period'}}
+        </p>
+      {{/if}}
     {{/if}}
-    {{#if subscription.finalizing_purchase}}
+    {{#if model.subscription.finalizing_purchase}}
       <h4>{{t "Confirming subscription update..." key='finalizing_subscription'}}</h4>
     {{else if error}}
       <h4 class='text-danger'>{{error}}</h4>

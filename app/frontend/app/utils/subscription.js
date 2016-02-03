@@ -39,7 +39,13 @@ var Subscription = Ember.Object.extend({
     this.set('finalizing_purchase', false);
     this.set('purchase_complete', false);
     this.set('canceling', false);
-    this.set('sale', !!CoughDrop.sale);
+    
+    var now = window.moment()._d;
+    var sale = new Date(CoughDrop.sale * 1000);
+    if(sale && now && sale > now) {
+      this.set('sale', !!CoughDrop.sale);
+      this.set('sale_ends', sale);
+    }
     this.set('email', null);
     if(this.get('user')) {
       var u = this.get('user');
@@ -91,6 +97,9 @@ var Subscription = Ember.Object.extend({
     }
     this.set_default_subscription_amount();
   },
+  discount_period: function() {
+    return !!this.get('user.joined_within_24_hours');
+  }.property('user.joined_within_24_hours'),
   valid: function() {
     if(this.get('subscription_type') == 'gift_code') {
       return !!this.get('gift_code');

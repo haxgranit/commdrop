@@ -16,13 +16,14 @@ module Purchasing
       if event['type'] == 'charge.succeeded'
         valid = object['metadata'] && object['metadata']['user_id'] && object['metadata']['plan_id']
         if valid
+          time = 5.years.to_i
           User.subscription_event({
             'purchase' => true,
             'user_id' => object['metadata'] && object['metadata']['user_id'],
             'purchase_id' => object['id'],
             'customer_id' => object['customer'],
             'plan_id' => object['metadata'] && object['metadata']['plan_id'],
-            'seconds_to_add' => 5.years.to_i
+            'seconds_to_add' => time
           })
         end
         data = {:purchase => true, :purchase_id => object['id'], :valid => !!valid}
@@ -177,6 +178,7 @@ module Purchasing
             'plan_id' => plan_id
           }
         })
+        time = 5.years.to_i
         User.subscription_event({
           'purchase' => true,
           'user_id' => user.global_id,
@@ -184,7 +186,7 @@ module Purchasing
           'customer_id' => charge['customer'],
           'token_summary' => token['summary'],
           'plan_id' => plan_id,
-          'seconds_to_add' => 5.years.to_i
+          'seconds_to_add' => time
         })
         cancel_other_subscriptions(user, 'all')
       else
