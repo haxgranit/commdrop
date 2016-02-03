@@ -17,7 +17,7 @@ export default Ember.Component.extend({
             pre: Math.round(pre_percent * 1000) / 10.0,
             post: Math.round(post_percent * 1000) / 10.0
           };
-          if(post_percent == 0) {
+          if(post_percent === 0) {
             res.gone = true;
             res.multiplier = pre_percent * 100;
           }
@@ -46,7 +46,7 @@ export default Ember.Component.extend({
             pre: Math.round(pre_percent * 1000) / 10.0,
             post: Math.round(post_percent * 1000) / 10.0
           };
-          if(pre_percent == 0) {
+          if(pre_percent === 0) {
             res['new'] = true;
             res.multiplier = post_percent * 100;
           }

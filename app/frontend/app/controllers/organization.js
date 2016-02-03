@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import modal from '../utils/modal';
 import i18n from '../utils/i18n';
+import CoughDrop from '../app';
 
 export default Ember.Controller.extend({
   actions: {
@@ -34,7 +35,7 @@ export default Ember.Controller.extend({
       var _this = this;
       if(q) {
         CoughDrop.store.query('user', {q: q}).then(function(res) {
-          if(res.content.length == 0) {
+          if(res.content.length === 0) {
             modal.warning(i18n.t('no_user_result', "No results found for \"%{q}\"", {q: q}));
           } else if(res.content.length == 1) {
             _this.transitionToRoute('user.index', res.content[0].record.get('user_name'));

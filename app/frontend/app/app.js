@@ -356,7 +356,7 @@ CoughDrop.Visualizations = {
     }
     
   }
-}
+};
 
 CoughDrop.boxPad = 17;
 CoughDrop.borderPad = 5;
