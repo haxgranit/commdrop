@@ -31,7 +31,7 @@ export default Ember.Component.extend({
     return null;
   }.property('usage_stats', 'ref_stats'),
   gained_words: function() {
-    if(this.get('usage_stats') && this.get('ref_stats') && !this.get('this_before_that')) {
+    if(this.get('usage_stats') && this.get('ref_stats') && this.get('that_before_this')) {
       var percents = [];
       var _this = this;
       this.get('usage_stats.words_by_frequency').forEach(function(word) {
@@ -62,6 +62,12 @@ export default Ember.Component.extend({
   this_before_that: function() {
     if(this.get('usage_stats') && this.get('ref_stats')) {
       return this.get('usage_stats').comes_before(this.get('ref_stats'));
+    }
+    return false;
+  }.property('usage_stats', 'ref_stats'),
+  that_before_this: function() {
+    if(this.get('usage_stats') && this.get('ref_stats')) {
+      return this.get('ref_stats').comes_before(this.get('usage_stats'));
     }
     return false;
   }.property('usage_stats', 'ref_stats'),

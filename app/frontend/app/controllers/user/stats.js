@@ -61,7 +61,14 @@ export default Ember.Controller.extend({
     }
   }.observes('split', 'usage_stats', 'usage_stats2'),
   different_dates: function() {
-    return true;
+    if(this.get('usage_stats') && this.get('usage_stats2')) {
+      if(this.get('usage_stats').comes_before(this.get('usage_stats2'))) {
+        return true;
+      } else if(this.get('usage_stats2').comes_before(this.get('usage_stats'))) {
+        return true;
+      }
+    }
+    return false;
   }.property('usage_stats', 'usage_stats2'),
   draw_charts: function() {
     var stats = this.get('usage_stats');
@@ -217,10 +224,11 @@ export default Ember.Controller.extend({
       }
     },
     word_cloud_left: function() {
-      modal.open('word-cloud', {stats: this.get('usage_stats'), user: this.get('model')});
+      modal.open('word-cloud', {stats: this.get('usage_stats'), stats2: this.get('usage_stats2'), user: this.get('model')});
     },
     word_cloud_right: function() {
-      modal.open('word-cloud', {stats: this.get('usage_stats2'), user: this.get('model')});
+      modal.open('word-cloud', {stats: this.get('usage_stats'), stats2: this.get('usage_stats2'), user: this.get('model')});
+//       modal.open('word-cloud', {stats: this.get('usage_stats2'), user: this.get('model')});
     },
   }
 });

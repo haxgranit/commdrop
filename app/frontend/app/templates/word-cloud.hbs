@@ -1,4 +1,4 @@
-{{#modal-dialog action="close" opening='opening' closing='closing'}}
+{{#modal-dialog stretch_ratio=stretch_ratio action="close" opening='opening' closing='closing'}}
   <div class="modal-header">
     <button type="button" class="close" {{action 'close'}}>&times;</button>
     <h3>
@@ -11,7 +11,20 @@
     </h3>
   </div>
   <div class="modal-body" id="button_settings">
-    <canvas id='word_cloud' width='1024' height='768' style='width: 100%; height: 400px;'></canvas>
+    <div class="row">
+      <div class={{if model.stats2 'col-sm-6' 'col-sm-12'}}>
+        {{#if model.stats2}}
+          <strong>{{model.stats.label}}</strong>
+        {{/if}}
+        {{stats/word-cloud stats=model.stats zoom=zoom word_cloud_id=word_cloud_id}}
+      </div>
+      {{#if model.stats2}}
+        <div class='col-sm-6'>
+          <strong>{{model.stats2.label}}</strong>
+          {{stats/word-cloud stats=model.stats2 zoom=zoom word_cloud_id=word_cloud_id}}
+        </div>
+      {{/if}}
+    </div>
     <em>{{t "Right-click or long-press for options on saving this image" key='press_to_save'}}</em>
   </div>
 {{/modal-dialog}}

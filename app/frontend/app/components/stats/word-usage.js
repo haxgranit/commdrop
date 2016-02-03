@@ -20,9 +20,11 @@ export default Ember.Component.extend({
           raw_data.push([day, day_data.total_words, day_data.unique_words]);
           max_words = Math.max(max_words, day_data.total_words || 0);
         }
-        for(var day in ref_stats.get('days')) {
-          var day_data = ref_stats.get('days')[day];
-          max_words = Math.max(max_words, day_data.total_words || 0);
+        if(ref_stats) {
+          for(var day in ref_stats.get('days')) {
+            var day_data = ref_stats.get('days')[day];
+            max_words = Math.max(max_words, day_data.total_words || 0);
+          }
         }
         var data = window.google.visualization.arrayToDataTable(raw_data);
 

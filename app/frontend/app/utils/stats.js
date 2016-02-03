@@ -39,6 +39,9 @@ CoughDrop.Stats = Ember.Object.extend({
       if(a_text < b_text) { return -1; } else if(a_text > b_text) { return 1; } else { return 0; } 
     });
   }.property('words_by_frequency'),
+  label: function() {
+    return Ember.templateHelpers.date(this.get('started_at'), 'day') + " " + i18n.t('to', "to") + " " + Ember.templateHelpers.date(this.get('ended_at'), 'day');
+  }.property('started_at', 'ended_at'),
   geo_locations: function() {
     return (this.get('locations') || []).filter(function(location) { return location.type == 'geo'; });
   }.property('locations'),

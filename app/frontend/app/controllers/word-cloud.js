@@ -6,24 +6,11 @@ export default modal.ModalController.extend({
     this.render_cloud();
   },
   zoom: 1.0,
+  stretch_ratio: function() {
+    return this.get('model.stats2') ? 2.0 : null;
+  }.property('model.stats2'),
   render_cloud: function() {
-    var list = [];
-    var max = 1;
-    (this.get('model.stats.words_by_frequency') || []).forEach(function(obj) {
-      if(!obj.text.match(/^[\+:]/)) {
-        max = Math.max(max, obj.count);
-        list.push([obj.text, obj.count]);
-      }
-    });
-    var _this = this;
-    console.log(this.get('zoom'));
-    window.WordCloud(document.getElementById('word_cloud'), {
-      list: list,
-      gridSize: 16,
-      weightFactor: function (size) {
-        return ((size / max) * 245 * _this.get('zoom')) + 5;
-      }
-    });
+    this.set('word_cloud_id', Math.random());
   },
   actions: {
     refresh: function() {
