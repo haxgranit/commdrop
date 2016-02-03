@@ -4,9 +4,9 @@
     <h2>{{t "Usage Reports" key='usage_reports'}}</h2>
     {{#if usage_stats}}
       <div class="row">
-        {{stats/data-filter usage_stats=usage_stats side_by_side=usage_stats2 app_state=app_state compare_to='compare_to' clear_side='clear_left_side' update_filter='update_left_filter'}}
+        {{stats/data-filter usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 app_state=app_state compare_to='compare_to' clear_side='clear_left_side' update_filter='update_left_filter'}}
         {{#if usage_stats2}}
-          {{stats/data-filter usage_stats=usage_stats2 side_by_side=true right_side=true clear_side='clear_right_side' update_filter='update_right_filter'}}
+          {{stats/data-filter usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true clear_side='clear_right_side' update_filter='update_right_filter'}}
         {{/if}}
       </div>
     {{/if}}
@@ -16,66 +16,72 @@
         {{stats/load-status status=status2 side_by_side=true right_side=true}}
       {{/if}}
       {{#if some_data}}
-        {{stats/nums-row1 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/nums-row1 usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/nums-row1 usage_stats=usage_stats2 side_by_side=true right_side=true}}
+          {{stats/nums-row1 usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
         {{/if}}
-        {{stats/nums-row2 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/nums-row2 usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/nums-row2 usage_stats=usage_stats2 side_by_side=true right_side=true}}
+          {{stats/nums-row2 usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
         {{/if}}
       {{/if}}
     </div>
     {{#if some_data}}
       <div class="row">
-        {{stats/nums-row3 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/nums-row3 usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/nums-row3 usage_stats=usage_stats2 side_by_side=true right_side=true}}
+          {{stats/nums-row3 usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
         {{/if}}
-        {{stats/nums-row4 usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/nums-row4 usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/nums-row4 usage_stats=usage_stats2 side_by_side=true right_side=true}}
-        {{/if}}
-      </div>
-      <div class="row">
-        {{stats/word-usage usage_stats=usage_stats side_by_side=usage_stats2}}
-        {{#if usage_stats2}}
-          {{stats/word-usage usage_stats=usage_stats2 side_by_side=true right_side=true}}
-        {{/if}}
-        {{stats/common-words usage_stats=usage_stats side_by_side=usage_stats2 word_cloud='word_cloud_left'}}
-        {{#if usage_stats2}}
-          {{stats/common-words usage_stats=usage_stats2 side_by_side=true right_side=true word_cloud='word_cloud_right'}}
+          {{stats/nums-row4 usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
         {{/if}}
       </div>
       <div class="row">
-        {{stats/parts-of-speech-flow usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/word-usage usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/parts-of-speech-flow usage_stats=usage_stats2 side_by_side=true right_side=true}}
+          {{stats/word-usage usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
         {{/if}}
-        {{stats/parts-of-speech-pie usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/common-words usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 word_cloud='word_cloud_left'}}
         {{#if usage_stats2}}
-          {{stats/parts-of-speech-pie usage_stats=usage_stats2 side_by_side=true right_side=true}}
+          {{stats/common-words usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true word_cloud='word_cloud_right'}}
+        {{/if}}
+        {{#if usage_stats2}}
+          {{#if different_dates}}
+            {{stats/lost-or-gained-words usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=true}}
+            {{stats/lost-or-gained-words usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
+          {{/if}}
         {{/if}}
       </div>
       <div class="row">
-        {{stats/time-of-day usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/parts-of-speech-flow usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/time-of-day usage_stats=usage_stats2 side_by_side=true right_side=true}}
+          {{stats/parts-of-speech-flow usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
         {{/if}}
-        {{stats/weighted-words usage_stats=usage_stats side_by_side=usage_stats2 word_cloud='word_cloud_left'}}
+        {{stats/parts-of-speech-pie usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/weighted-words usage_stats=usage_stats2 side_by_side=true right_side=true word_cloud='word_cloud_right'}}
+          {{stats/parts-of-speech-pie usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
+        {{/if}}
+      </div>
+      <div class="row">
+        {{stats/time-of-day usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
+        {{#if usage_stats2}}
+          {{stats/time-of-day usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
+        {{/if}}
+        {{stats/weighted-words usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 word_cloud='word_cloud_left'}}
+        {{#if usage_stats2}}
+          {{stats/weighted-words usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true word_cloud='word_cloud_right'}}
         {{/if}}
       </div>
       <div class="row">
         {{#if model.preferences.geo_logging }}
-          {{stats/geo-locations usage_stats=usage_stats side_by_side=usage_stats2 filter='update_left_filter'}}
+          {{stats/geo-locations usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 filter='update_left_filter'}}
           {{#if usage_stats2}}
-            {{stats/geo-locations usage_stats=usage_stats2 side_by_side=true right_side=true filter='update_right_filter'}}
+            {{stats/geo-locations usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true filter='update_right_filter'}}
           {{/if}}
-          {{stats/ip-addresses usage_stats=usage_stats side_by_side=usage_stats2 filter='update_left_filter'}}
+          {{stats/ip-addresses usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 filter='update_left_filter'}}
           {{#if usage_stats2}}
-            {{stats/ip-addresses usage_stats=usage_stats2 side_by_side=true right_side=true filter='update_right_filter'}}
+            {{stats/ip-addresses usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true filter='update_right_filter'}}
           {{/if}}
         {{else}}
           {{stats/geo-disabled side_by_side=usage_stats2}}
@@ -85,13 +91,13 @@
         {{/if}}
       </div>
       <div class="row">
-        {{stats/heat-map usage_stats=usage_stats side_by_side=usage_stats2}}
+        {{stats/heat-map usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
         {{#if usage_stats2}}
-          {{stats/heat-map usage_stats=usage_stats2 side_by_side=true right_side=true}}
+          {{stats/heat-map usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
         {{/if}}
-        {{stats/user-devices usage_stats=usage_stats side_by_side=usage_stats2 filter='update_left_filter'}}
+        {{stats/user-devices usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 filter='update_left_filter'}}
         {{#if usage_stats2}}
-          {{stats/user-devices usage_stats=usage_stats2 side_by_side=true right_side=true filter='update_right_filter'}}
+          {{stats/user-devices usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true filter='update_right_filter'}}
         {{/if}}
       </div>
       {{#unless usage_stats2}}

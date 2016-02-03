@@ -1,0 +1,47 @@
+<div class={{if side_by_side "col-sm-6" "col-sm-4"}} style={{if right_side "height: 400px; padding-top: 23px; border-left: 1px solid #eee;" "height: 400px; padding-top: 23px;"}}>
+  <table class="table table-hover table-condensed" style="margin-bottom: 0;">
+    <thead>
+      <tr>
+        <th colspan="2">
+          {{#if lost_words.some}}
+            {{t "Lost words (compared)" key='lost_words'}}
+          {{else if gained_words.some}}
+            {{t "Gained words (compared)" key='gained_words'}}
+          {{else}}
+            {{t "Words (compared)" key='words_compared'}}
+          {{/if}}
+          <a href="#" {{action 'word_cloud'}}>{{t "word cloud" key='word_cloud'}}</a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#if lost_words}}
+        {{#each lost_words as |word|}}
+          <tr>
+            <td>{{word.text}}</td>
+            {{#if word.gone}}
+              <td>{{t "gone, was %{pct}%" key='lost_from_pct' pct=word.pre}}</td>
+            {{else}}
+              <td>{{t "-" key='minus'}}{{word.multiplier}}{{t "x" key='mult'}}</td>
+            {{/if}}
+          </tr>
+        {{/each}}
+      {{else if gained_words}}
+        {{#each gained_words as |word|}}
+          <tr>
+            <td>{{word.text}}</td>
+            {{#if word.new}}
+              <td>{{t "new with %{pct}%" key='new_with_pct' pct=word.post}}</td>
+            {{else}}
+              <td>{{t "+" key='plus'}}{{word.multiplier}}{{t "x" key='mult'}}</td>
+            {{/if}}
+          </tr>
+        {{/each}}
+      {{else}}
+        <tr>
+          <td>{{t "No data available" key='no_data'}}</td>
+        </tr>
+      {{/if}}
+    </tbody>
+  </table>
+</div>

@@ -60,6 +60,9 @@ export default Ember.Controller.extend({
       this.draw_charts();
     }
   }.observes('split', 'usage_stats', 'usage_stats2'),
+  different_dates: function() {
+    return true;
+  }.property('usage_stats', 'usage_stats2'),
   draw_charts: function() {
     var stats = this.get('usage_stats');
     var controller = this;

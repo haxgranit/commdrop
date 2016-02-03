@@ -9,6 +9,21 @@ CoughDrop.Stats = Ember.Object.extend({
   has_data: function() {
     return !this.get('no_data');
   }.property('no_data'),
+  comes_before: function(stats) {
+    if(!stats || !stats.get('started_at') || !stats.get('ended_at') || !this.get('started_at') || !this.get('ended_at')) {
+      return false;
+    } else if(this.get('ended_at') <= stats.get('ended_at') && this.get('started_at') < stats.get('started_at')) {
+      return true;
+    } else if(this.get('ended_at') < stats.get('ended_at') && this.get('started_at') <= stats.get('started_at')) {
+      return true;
+    } else if(this.get('ended_at') <= stats.get('started_at') && this.get('started_at') < stats.get('started_at')) {
+      return true;
+    } else if(this.get('ended_at') > stats.get('ended_at') && this.get('started_at') < stats.get('started_at')) {
+      return true;
+    } else {
+      return false;
+    }
+  },
   popular_words: function() {
     return (this.get('words_by_frequency') || []).filter(function(word, idx) { return idx < 10 && word['count'] > 1; });
   }.property('words_by_frequency'),
@@ -37,6 +52,9 @@ CoughDrop.Stats = Ember.Object.extend({
     var new_blocks = {};
     var offset = this.tz_offset() / 15;
     var max = this.get('max_time_block');
+    if(this.get('ref_max_time_block')) {
+      max = Math.max(max, this.get('ref_max_time_block'))
+    }
     var blocks = this.get('time_offset_blocks');
     var mod = (7 * 24 * 4);
     for(var idx in blocks) {
@@ -78,7 +96,7 @@ CoughDrop.Stats = Ember.Object.extend({
       res.push(day);
     }
     return res;
-  }.property('time_offset_blocks', 'max_block'),
+  }.property('time_offset_blocks', 'max_time_block', 'ref_max_time_block'),
   start_date_field: function() {
     return (this.get('start_at') || "").substring(0, 10);
   }.property('start_at'),
