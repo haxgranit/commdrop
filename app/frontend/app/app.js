@@ -15,9 +15,11 @@ Ember.onerror = function(err) {
   if(err.stack) {
     console.error(err.stack);
   } else {
-    if(err.fakeXHR && err.fakeXHR.status == 400) {
+    if(err.fakeXHR && (err.fakeXHR.status == 400 || err.fakeXHR.status == 404)) {
       // should already be logged via "ember ajax error"
-    } else if(err.status == 400) {
+    } else if(err.status == 400 || err.status == 404) {
+      // should already be logged via "ember ajax error"
+    } else if(err._result && err._result.fakeXHR && (err._result.fakeXHR.status == 400 || err._result.fakeXHR.status == 404)) {
       // should already be logged via "ember ajax error"
     } else {
       console.error(JSON.stringify(err));
