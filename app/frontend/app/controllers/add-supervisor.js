@@ -53,7 +53,8 @@ export default modal.ModalController.extend({
           }
           modal.close();
         }, function() {
-          return Ember.RSVP.reject(i18n.t('adding_supervisor_failed_explanation', "The user name provided was not valid, or can't be added to this account."));
+          controller.set('linking', false);
+          controller.set('error', i18n.t('adding_supervisor_failed_explanation', "The user name provided was not valid, or can't be added to this account."));
         });
       }, function(err) {
           controller.set('linking', false);
