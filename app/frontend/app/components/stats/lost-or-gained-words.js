@@ -19,7 +19,7 @@ export default Ember.Component.extend({
           };
           if(post_percent === 0) {
             res.gone = true;
-            res.multiplier = pre_percent * 100;
+            res.multiplier = pre_percent * 100 * 10;
           }
           percents.push(res);
         }
@@ -48,7 +48,7 @@ export default Ember.Component.extend({
           };
           if(pre_percent === 0) {
             res['new'] = true;
-            res.multiplier = post_percent * 100;
+            res.multiplier = post_percent * 100 * 10;
           }
           percents.push(res);
         }
