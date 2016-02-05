@@ -10,7 +10,7 @@ export default Ember.Component.extend({
     var stats = this.get('usage_stats');
     var elem = this.get('element').getElementsByClassName('touch_locations')[0];
     
-    CoughDrop.Visualizations.wait(function() {
+    CoughDrop.Visualizations.wait('heat-map', function() {
       if(elem && stats && stats.get('touch_locations')) {
         var touch_locations = {};
         var max = 0;

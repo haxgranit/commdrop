@@ -305,10 +305,16 @@ CoughDrop.YT = {
 Ember.run.later(CoughDrop.YT.poll, 500);
 
 CoughDrop.Visualizations = {
-  wait: function(callback) {
+  wait: function(name, callback) {
     if(!CoughDrop.Visualizations.ready) {
       CoughDrop.Visualizations.callbacks = CoughDrop.Visualizations.callbacks || [];
-      CoughDrop.Visualizations.callbacks.push(callback);
+//       var found = CoughDrop.Visualizations.callbacks.find(function(cb) { return cb.name == name; });
+//       if(!found) {
+        CoughDrop.Visualizations.callbacks.push({
+          name: name,
+          callback: callback
+        });
+//       }
       CoughDrop.Visualizations.init();
     } else {
       callback();
@@ -317,8 +323,8 @@ CoughDrop.Visualizations = {
   handle_callbacks: function() {
     CoughDrop.Visualizations.initializing = false;
     CoughDrop.Visualizations.ready = true;
-    (CoughDrop.Visualizations.callbacks || []).forEach(function(callback) {
-      callback();
+    (CoughDrop.Visualizations.callbacks || []).forEach(function(obj) {
+      obj.callback();
     });
     CoughDrop.Visualizations.callbacks = [];
   },

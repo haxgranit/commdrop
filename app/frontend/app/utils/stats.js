@@ -9,6 +9,57 @@ CoughDrop.Stats = Ember.Object.extend({
   has_data: function() {
     return !this.get('no_data');
   }.property('no_data'),
+  date_strings: function() {
+    var today_date = window.moment();
+    var today = today_date.format('YYYY-MM-DD');
+    var two_months_ago = today_date.add(-2, 'month').format("YYYY-MM-DD");
+    var four_months_ago = today_date.add(-2, 'month').format("YYYY-MM-DD");
+    var six_months_ago = today_date.add(-2, 'month').format("YYYY-MM-DD");
+    return {
+      today: today,
+      two_months_ago: two_months_ago,
+      four_months_ago: four_months_ago,
+      six_months_ago: six_months_ago
+    };
+  },
+  check_known_filter: function() {
+    var date_strings = this.date_strings();
+    if(this.get('start') && this.get('end')) {
+      if(!this.get('location_id') && !this.get('device_id')) {
+        if(this.get('start') == date_strings.two_months_ago && this.get('end') == date_strings.today) {
+          this.set('filter', 'last_2_months');
+          return;
+        } else if(this.get('start') == date_strings.four_months_ago && this.get('end') == date_strings.two_months_ago) {
+          this.set('filter', '2_4_months_ago');
+          return;
+        }
+      }
+      this.set('filter', 'custom');
+    }
+  }.observes('start', 'end', 'started_at', 'ended_at', 'location_id', 'device_id'),
+  filtered_start_date: function() {
+    var date_strings = this.date_strings();
+    if(this.get('filter') == 'last_2_months') {
+      return date_strings.two_months_ago;
+    } else if(this.get('filter') == '2_4_months_ago') {
+      return date_strings.four_months_ago;
+    } else {
+      return this.get('start_date_field');
+    }
+  }.property('start_date_field', 'filter'),
+  filtered_end_date: function() {
+    var date_strings = this.date_strings();
+    if(this.get('filter') == 'last_2_months') {
+      return date_strings.today;
+    } else if(this.get('filter') == '2_4_months_ago') {
+      return date_strings.two_months_ago;
+    } else {
+      return this.get('start_date_field');
+    }
+  }.property('end_date_field', 'filter'),
+  custom_filter: function() {
+    return this.get('filter') == 'custom';
+  }.property('filter'),
   comes_before: function(stats) {
     if(!stats || !stats.get('started_at') || !stats.get('ended_at') || !this.get('started_at') || !this.get('ended_at')) {
       return false;
@@ -28,6 +79,7 @@ CoughDrop.Stats = Ember.Object.extend({
     return (this.get('words_by_frequency') || []).filter(function(word, idx) { return idx < 10 && word['count'] > 1; });
   }.property('words_by_frequency'),
   weighted_words: function() {
+    // TODO: weight correctly for side_by_side view
     var max = ((this.get('words_by_frequency') || [])[0] || {}).count || 0;
     var res = (this.get('words_by_frequency') || []).filter(function(word) { return !word.text.match(/^[\+:]/); }).map(function(word) {
       var weight = "weight_" + Math.ceil(word.count / max * 10);

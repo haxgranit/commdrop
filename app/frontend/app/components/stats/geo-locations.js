@@ -10,7 +10,7 @@ export default Ember.Component.extend({
     var stats = this.get('usage_stats');
     var elem = this.get('element').getElementsByClassName('geo_map')[0];
     
-    CoughDrop.Visualizations.wait(function() {
+    CoughDrop.Visualizations.wait('geo', function() {
       if(elem && stats && stats.get('geo_locations')) {
         var current_info = null;
         if(elem) {

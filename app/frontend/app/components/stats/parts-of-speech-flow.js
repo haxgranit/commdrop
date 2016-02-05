@@ -10,7 +10,7 @@ export default Ember.Component.extend({
     var stats = this.get('usage_stats');
     var elem = this.get('element').getElementsByClassName('parts_of_speech_combinations')[0];
     
-    CoughDrop.Visualizations.wait(function() {
+    CoughDrop.Visualizations.wait('speech-flow', function() {
       if(elem && stats && stats.get('parts_of_speech_combinations')) {
         var data = new window.google.visualization.DataTable();
         data.addColumn('string', 'From');

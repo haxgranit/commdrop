@@ -11,7 +11,7 @@ export default Ember.Component.extend({
     var ref_stats = this.get('ref_stats');
     var elem = this.get('element').getElementsByClassName('daily_stats')[0];
     
-    CoughDrop.Visualizations.wait(function() {
+    CoughDrop.Visualizations.wait('word-graph', function() {
       if(elem && stats && stats.get('days')) {
         var raw_data = [[i18n.t('day', "Day"), i18n.t('total_words', "Total Words"), i18n.t('unique_words', "Unique Words")]];
         var max_words = 0;

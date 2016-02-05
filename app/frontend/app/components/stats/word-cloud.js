@@ -18,6 +18,13 @@ export default Ember.Component.extend({
           list.push([obj.text, obj.count]);
         }
       });
+      if(this.get('ref_stats')) {
+        (this.get('ref_stats.words_by_frequency') || []).forEach(function(obj) {
+          if(!obj.text.match(/^[\+:]/)) {
+            max = Math.max(max, obj.count);
+          }
+        });
+      }
       window.WordCloud(elem, {
         list: list,
         gridSize: 16,
@@ -26,5 +33,5 @@ export default Ember.Component.extend({
         }
       });
     }
-  }.observes('stats', 'zoom', 'word_cloud_id')
+  }.observes('stats', 'ref_stats', 'zoom', 'word_cloud_id')
 });

@@ -8,7 +8,9 @@ export default Ember.Component.extend({
   },
   draw: function() {
     var $elem = Ember.$(this.get('element'));
-    this.set('usage_stats.ref_max_time_block', this.get('ref_stats.max_time_block'));
+    if(this.get('ref_stats') && this.get('usage_stats')) {
+      this.set('usage_stats.ref_max_time_block', this.get('ref_stats.max_time_block'));
+    }
     $elem.find(".time_block").tooltip({container: 'body'});
   }.observes('usage_stats.draw_id', 'ref_stats.draw_id')
 });

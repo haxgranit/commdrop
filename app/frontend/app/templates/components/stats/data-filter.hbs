@@ -1,28 +1,35 @@
 <div class={{if side_by_side "col-xs-6" "col-xs-12"}} style={{if right_side "border-left: 1px solid #eee; padding-top: 20px; padding-bottom: 20px;" "padding-top: 20px; padding-bottom: 20px;"}}>
   {{#if usage_stats}}
-    <form class="form-inline">
+    <form class="form-inline" style={{if tall_filter 'height: 110px; line-height: 37px; margin-top: -20px;' 'line-height: 37px; margin-top: -20px;'}}>
       <div class="form-group">
-        {{input type="date" value=usage_stats.start_date_field class="form-control"}}
+        {{bound-select select_class="form-control" select_id="filter" content=filter_list selection=usage_stats.filter action=(action (mut usage_stats.filter)) }}
       </div>
-        &nbsp;{{t "to" key='to'}}&nbsp;
-      <div class="form-group">
-        {{input type="date" value=usage_stats.end_date_field class="form-control"}}
-      </div>
-      {{#if usage_stats.device_id}}
+      {{#if usage_stats.custom_filter}}
+        {{#if usage_stats.device_id}}
+          <div class="form-group">
+            <a href="#" {{action 'update_filter' 'device'}} class='btn btn-default'>
+              {{usage_stats.device_name}}
+              <span class="glyphicon glyphicon-remove"></span>
+            </a>
+          </div>
+        {{/if}}
+        {{#if usage_stats.location_id}}
+          <div class="form-group">
+            <a href="#" {{action 'update_filter' 'location'}} class='btn btn-default'>
+              {{usage_stats.location_name}}
+              <span class="glyphicon glyphicon-remove"></span>
+            </a>
+          </div>
+        {{/if}}
+        <span style="white-space: nowrap;">
         <div class="form-group">
-          <a href="#" {{action 'update_filter' 'device'}} class='btn btn-default'>
-            {{usage_stats.device_name}}
-            <span class="glyphicon glyphicon-remove"></span>
-          </a>
+          {{input type="date" value=usage_stats.start_date_field class="form-control"}}
         </div>
-      {{/if}}
-      {{#if usage_stats.location_id}}
+          &nbsp;{{t "to" key='to'}}&nbsp;
         <div class="form-group">
-          <a href="#" {{action 'update_filter' 'location'}} class='btn btn-default'>
-            {{usage_stats.location_name}}
-            <span class="glyphicon glyphicon-remove"></span>
-          </a>
+          {{input type="date" value=usage_stats.end_date_field class="form-control"}}
         </div>
+        </span>
       {{/if}}
       <button type="button" {{action "update_filter" "date"}} class="btn btn-default">{{t "Go" key='go'}}</button>
       {{#unless side_by_side}}

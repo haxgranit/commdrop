@@ -42,14 +42,7 @@ export default Ember.Controller.extend({
   }.observes('start2', 'end2', 'location_id2', 'device_id2', 'model.id'),
   handle_split: function() {
     if(this.get('split') && this.get('usage_stats') && !this.get('usage_stats2')) {
-      var stats = Stats.create(this.get('usage_stats.raw'));
-      stats.set('raw', this.get('usage_stats.raw'));
-      stats.set('device_id', stats.get('device_id'));
-      stats.set('location_id', stats.get('location_id'));
-      stats.set('start', stats.get('start'));
-      stats.set('end', stats.get('end'));
-      this.set('usage_stats2', stats);
-      this.draw_charts();
+      this.load_right_charts();
     } else if(!this.get('split')) {
       this.set('usage_stats2', null);
       this.set('status2', null);
@@ -155,7 +148,6 @@ export default Ember.Controller.extend({
       stats.set('end', args.end);
       controller.set(status_key, null);
       controller.set(stats_key, stats);
-      controller.draw_charts();
     }, function() {
       controller.set(status_key + '.loading', false);
       controller.set(status_key + '.error', true);
@@ -201,8 +193,8 @@ export default Ember.Controller.extend({
     },
     update_left_filter: function(filter_type, id) {
       if(filter_type == 'date') {
-        var start = this.get('usage_stats.start_date_field');
-        var end = this.get('usage_stats.end_date_field');
+        var start = this.get('usage_stats.filtered_start_date');
+        var end = this.get('usage_stats.filtered_end_date');
         this.set('start', start);
         this.set('end', end);
       } else if(filter_type == 'device') {
@@ -213,8 +205,8 @@ export default Ember.Controller.extend({
     },
     update_right_filter: function(filter_type, id) {
       if(filter_type == 'date') {
-        var start = this.get('usage_stats2.start_date_field');
-        var end = this.get('usage_stats2.end_date_field');
+        var start = this.get('usage_stats2.filtered_start_date');
+        var end = this.get('usage_stats2.filtered_end_date');
         this.set('start2', start);
         this.set('end2', end);
       } else if(filter_type == 'device') {

@@ -10,7 +10,7 @@ export default Ember.Component.extend({
     var stats = this.get('usage_stats');
     var elem = this.get('element').getElementsByClassName('parts_of_speech')[0];
     
-    CoughDrop.Visualizations.wait(function() {
+    CoughDrop.Visualizations.wait('pie-chart', function() {
       if(elem && stats && stats.get('parts_of_speech')) {
         var table = [
           ['Task', 'Instances']
@@ -25,7 +25,6 @@ export default Ember.Component.extend({
           slices[slice_idx] = {color: (color || {border: "#ccc"}).border};
           slice_idx++;
         }
-        console.log(slices);
         var data = window.google.visualization.arrayToDataTable(table);
 
         var options = {
