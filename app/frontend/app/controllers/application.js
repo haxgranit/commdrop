@@ -305,7 +305,7 @@ export default Ember.Controller.extend({
       editManager.clear_paint_mode();
     },
     paint: function(fill, border, parts_of_speech) {
-      var part_of_speech = parts_of_speech[0];
+      var part_of_speech = (parts_of_speech || [])[0];
       editManager.set_paint_mode(fill, border, part_of_speech);
     },
     star: function() {
