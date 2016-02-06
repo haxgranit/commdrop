@@ -50,6 +50,7 @@ module JsonApi::Board
     end
     
     if json['permissions'] && json['permissions']['edit']
+      json['non_author_starred'] = board.non_author_starred?
       self.trace_execution_scoped(['json/board/share_users']) do
         shared_users = board.shared_users
         json['shared_users'] = shared_users

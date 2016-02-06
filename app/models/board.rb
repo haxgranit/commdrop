@@ -71,6 +71,10 @@ class Board < ActiveRecord::Base
     self.save
   end
   
+  def non_author_starred?
+    self.user && (self.settings || {})['starred_user_ids'].any?{|s| s != self.user.global_id }
+  end
+  
   def stars
     (self.settings || {})['stars'] || 0
   end

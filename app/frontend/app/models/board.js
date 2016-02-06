@@ -21,7 +21,8 @@ CoughDrop.Board = DS.Model.extend({
   full_set_revision: DS.attr('string'),
   for_user_id: DS.attr('string'),
   could_be_in_use: function() {
-    return this.get('non_author_uses') > 0 || (this.get('public') && this.get('brand_new')) || this.get('stars') > 0;
+    // no longer using (this.get('public') && this.get('brand_new'))
+    return this.get('non_author_uses') > 0 || this.get('non_author_starred');
   }.property('non_author_uses', 'public', 'brand_new', 'stars'),
   definitely_in_use: function() {
     return this.get('non_author_uses') > 0 || this.get('stars') > 0;
@@ -236,6 +237,7 @@ CoughDrop.Board = DS.Model.extend({
   sharing_key: DS.attr('string'),
   starred: DS.attr('boolean'),
   stars: DS.attr('number'),
+  non_author_starred: DS.attr('boolean'),
   star_or_unstar: function(star) {
     var _this = this;
     console.log(star);
