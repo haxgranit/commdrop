@@ -16,6 +16,8 @@ export default Ember.Controller.extend({
   reset_params: function() {
     var _this = this;
     _this.set('model', {});
+    _this.set('usage_stats', null);
+    _this.set('usage_stats2', null);
     this.get('queryParams').forEach(function(param) {
       _this.set(param, null);
     });
@@ -134,6 +136,11 @@ export default Ember.Controller.extend({
         args[key] = controller.get(lookup);
       }
     });
+    if(side == 'right' && this.get('usage_stats.filter') == 'last_2_months' && !args.start2 && !args.end2) {
+      var dates = this.get('usage_stats').date_strings();
+      args.start = dates.four_months_ago;
+      args.end = dates.two_months_ago;
+    }
     
     var status = Ember.$.extend({}, args, {loading: true});
     var status_key = side == 'left' ? 'status' : 'status2';

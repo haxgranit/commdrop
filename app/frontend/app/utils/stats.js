@@ -54,7 +54,7 @@ CoughDrop.Stats = Ember.Object.extend({
     } else if(this.get('filter') == '2_4_months_ago') {
       return date_strings.two_months_ago;
     } else {
-      return this.get('start_date_field');
+      return this.get('end_date_field');
     }
   }.property('end_date_field', 'filter'),
   custom_filter: function() {
