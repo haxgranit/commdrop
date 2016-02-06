@@ -3,6 +3,7 @@ import DS from 'ember-data';
 import CoughDrop from '../app';
 import i18n from '../utils/i18n';
 import persistence from '../utils/persistence';
+import stashes from '../utils/_stashes';
 import Utils from '../utils/misc';
 
 CoughDrop.Buttonset = DS.Model.extend({
@@ -15,9 +16,10 @@ CoughDrop.Buttonset = DS.Model.extend({
     
     var matching_buttons = [];
     var re = new RegExp("\\b" + str, 'i');
+    var all_buttons_enabled = stashes.get('all_buttons_enabled');
     buttons.forEach(function(button, idx) {
       // TODO: optionally show buttons on link-disabled boards
-      if(!button.hidden) {
+      if(!button.hidden || all_buttons_enabled) {
         if((button.label && button.label.match(re)) || (button.vocalization && button.vocalization.match(re))) {
           var image = images.findBy('id', button.image_id);
           if(image) {
@@ -31,7 +33,7 @@ CoughDrop.Buttonset = DS.Model.extend({
           var allow_unpreferred = false;
           var button_to_get_here = null;
           var check_for_match = function(parent_button) {
-            if(!button_to_get_here && !parent_button.link_disabled && !parent_button.hidden) {
+            if(!button_to_get_here && !parent_button.link_disabled && (!parent_button.hidden || all_buttons_enabled)) {
               if(parent_button.linked_board_id == ref_button.board_id && (allow_unpreferred || parent_button.preferred_link)) {
                 button_to_get_here = parent_button;
               }

@@ -92,6 +92,14 @@ export default Ember.Controller.extend({
         }
       }
     },
+    toggle_all_buttons: function() {
+      var state = stashes.get('all_buttons_enabled');
+      if(state) {
+        stashes.persist('all_buttons_enabled', null);
+      } else {
+        stashes.persist('all_buttons_enabled', true);
+      }
+    },
     home: function() {
       var state = stashes.get('temporary_root_board_state') || stashes.get('root_board_state');
       var current = app_state.get('currentBoardState');

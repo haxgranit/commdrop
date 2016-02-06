@@ -508,6 +508,9 @@ export default Ember.Controller.extend({
     if(this.get('stashes.current_mode')) {
       res = res + this.get('stashes.current_mode')  + " ";
     }
+    if(this.get('stashes.all_buttons_enabled')) {
+      res = res + 'show_all_buttons ';
+    }
     if(this.get('paint_mode')) {
       res = res + "paint ";
     }
@@ -534,7 +537,7 @@ export default Ember.Controller.extend({
 //     {name: i18n.t('comic_sans_small', "Comic Sans, All Lowercase"), id: "comic_sans_small"},
     }
     return res;
-  }.property('stashes.current_mode', 'paint_mode', 'border_style', 'text_style', 'model.finding_target'),
+  }.property('stashes.all_buttons_enabled', 'stashes.current_mode', 'paint_mode', 'border_style', 'text_style', 'model.finding_target'),
   button_symbol_class: function() {
     var res = "button-label-holder ";
     if(this.get('app_state.currentUser.hide_symbols')) {

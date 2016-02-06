@@ -4,6 +4,7 @@ import boundClasses from './bound_classes';
 import app_state from './app_state';
 import persistence from './persistence';
 import i18n from './i18n';
+import stashes from './_stashes';
 
 var Button = Ember.Object.extend({
   init: function() {
@@ -11,6 +12,7 @@ var Button = Ember.Object.extend({
     this.add_classes();
     this.set_video_url();
     this.findContentLocally();
+    this.set('stashes', stashes);
   },
   buttonAction: 'talk',
   updateAction: function() {
@@ -117,8 +119,8 @@ var Button = Ember.Object.extend({
     return this.get('buttonAction') == 'app';
   }.property('buttonAction'),
   empty_or_hidden: function() {
-    return !!(this.get('empty') || this.get('hidden'));
-  }.property('empty', 'hidden'),
+    return !!(this.get('empty') || (this.get('hidden') && !this.get('stashes.all_buttons_enabled')));
+  }.property('empty', 'hidden', 'stashes.all_buttons_enabled'),
   add_classes: function() {
     boundClasses.add_rule(this);
     boundClasses.add_classes(this);

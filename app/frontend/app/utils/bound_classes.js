@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import $ from 'jquery';
 
+
 var boundClasses = {};
 // TODO: need to periodically clear out CSS rule sheet or it will get big over time... maybe on new board view?
 (function() {

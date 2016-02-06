@@ -572,6 +572,7 @@ var app_state = Ember.Object.extend({
       stashes.persist('temporary_root_board_state', null);
       stashes.persist('sticky_board', false);
       stashes.persist('speak_mode_user_id', null);
+      stashes.persist('all_buttons_enabled', null);
       capabilities.fullscreen(false);
       capabilities.eye_gaze.stop_listening();
     }

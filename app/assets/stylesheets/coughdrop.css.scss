@@ -594,6 +594,9 @@ footer .wide_links {
 .button.hidden_button, .button.empty {
   visibility: hidden;
 }
+.board.show_all_buttons .button.hidden_button {
+  visibility: visible;
+}
 .button.swapping {
   opacity: 0.5;
 }
