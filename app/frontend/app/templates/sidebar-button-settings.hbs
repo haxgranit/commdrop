@@ -36,14 +36,16 @@
           {{icon-select selection=model.button.image action=(action (mut model.button.image)) }}
         </div>
       </div>
-      <div class="form-group">
-        <div class="col-sm-10 col-sm-offset-2">
-          <label>
-            {{input type='checkbox' checked=model.button.home_lock}}
-            {{t "Set as temporary Home when loaded from the sidebar" key='set_home_lock'}}
-          </label>
+      {{#unless model.button.alert}}
+        <div class="form-group">
+          <div class="col-sm-10 col-sm-offset-2">
+            <label>
+              {{input type='checkbox' checked=model.button.home_lock}}
+              {{t "Set as temporary Home when loaded from the sidebar" key='set_home_lock'}}
+            </label>
+          </div>
         </div>
-      </div>
+      {{/unless}}
     </form>
   </div>
   <div class="modal-footer">
