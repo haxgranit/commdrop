@@ -499,9 +499,8 @@ var persistence = Ember.Object.extend({
   },
   sync: function(user_id, force, ignore_supervisees) {
     if(!window.coughDropExtras || !window.coughDropExtras.ready) {
-      return Ember.RSVP.reject();
       Ember.run.later(function() {
-        persistence.sync(user_id, force_ignore_supervisees).then(null, function() { });
+        persistence.sync(user_id, force, ignore_supervisees).then(null, function() { });
       }, 100);
     }
     

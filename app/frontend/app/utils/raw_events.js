@@ -615,7 +615,7 @@ var buttonTracker = Ember.Object.extend({
       return buttonTracker.element_wrap($target[0]);
     } else {
       var $board = Ember.$(".board");
-      if($board.length == 0) { return null; }
+      if($board.length === 0) { return null; }
       var offset = $board.offset() || {};
       var top = offset.top;
       if(top) {
@@ -679,7 +679,7 @@ var buttonTracker = Ember.Object.extend({
         loose_bounds: function() {
           if(res.cached_loose_bounds) { return res.cached_loose_bounds; }
           var offset = {};
-          if($e.length > 0) { offset = $e.offset() || {} };
+          if($e.length > 0) { offset = $e.offset() || {}; }
           res.cached_loose_bounds = {
             width: $e.outerWidth() + 100,
             height: $e.outerHeight() + 100,

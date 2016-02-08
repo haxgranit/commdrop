@@ -72,7 +72,7 @@ describe('progress_tracker', function() {
       }, null, 'abc');
       waitsFor(function() { return error; });
       runs(function() {
-        expect(calls.length).toEqual(5);
+        expect(calls.length).toEqual(7);
         expect(statuses.length).toEqual(1);
       });
     });

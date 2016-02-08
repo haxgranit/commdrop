@@ -108,7 +108,7 @@ CoughDrop.Stats = Ember.Object.extend({
     var offset = this.tz_offset() / 15;
     var max = this.get('max_time_block');
     if(this.get('ref_max_time_block')) {
-      max = Math.max(max, this.get('ref_max_time_block'))
+      max = Math.max(max, this.get('ref_max_time_block'));
     }
     var blocks = this.get('time_offset_blocks');
     var mod = (7 * 24 * 4);
