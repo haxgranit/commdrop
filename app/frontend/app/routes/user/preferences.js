@@ -6,5 +6,9 @@ export default Ember.Route.extend({
     var user = this.modelFor('user');
     user.set('subroute_name', i18n.t('preferences', 'preferences'));
     return user;
+  },
+  setupController: function(controller, model) {
+    controller.set('model', model); 
+    controller.check_voices_available();
   }
 });

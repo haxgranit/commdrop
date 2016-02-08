@@ -139,7 +139,7 @@ var speecher = Ember.Object.extend({
       };
       
       if(voice && voice.voiceURI && voice.voiceURI.match(/^extra:/)) {
-        var voice_id = voice.voiceURI.split(/:/, 2)[1];
+        var voice_id = voice.voiceURI.replace(/^extra:/, '')
         Ember.run.later(function() {
           capabilities.tts.speak_text(text, {
             voice_id: voice_id,
