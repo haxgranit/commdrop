@@ -19,6 +19,9 @@ export default modal.ModalController.extend({
       this.set('pin', '');
     }
   }.observes('pin'),
+  opening: function() {
+    this.set('pin', '');
+  },
   actions: {
     add_digit: function(digit) {
       var pin = this.get('pin') || "";
