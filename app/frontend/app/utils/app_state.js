@@ -141,7 +141,7 @@ var app_state = Ember.Object.extend({
     // On desktop, setting too soon causes a re-render, but on mobile
     // calling it too late does.
     if(capabilities.mobile) {
-      app_state.set('index_view', transition.targetName == 'index');
+//       app_state.set('index_view', transition.targetName == 'index');
     }
     if(transition.targetName == 'board.index') {
       boundClasses.setup();
@@ -168,7 +168,7 @@ var app_state = Ember.Object.extend({
     app_state.set('already_homed', true);
     Ember.run.next(function() {
       var target = app_state.get('controller.currentRouteName');
-      app_state.set('index_view', target == 'index');
+//       app_state.set('index_view', target == 'index');
     });
     // footer was showing up too quickly and looking weird when the rest of the page hadn't
     // re-rendered yet.

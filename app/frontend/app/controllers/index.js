@@ -283,6 +283,12 @@ export default Ember.Controller.extend({
     },
     intro_video: function(url) {
       modal.open('inline-video', {video: {url: url}, hide_overlay: true});
+    },
+    opening_index: function() {
+      app_state.set('index_view', true);
+    },
+    closing_index: function() {
+      app_state.set('index_view', false);
     }
   }
 });
