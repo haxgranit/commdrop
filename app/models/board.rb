@@ -72,7 +72,7 @@ class Board < ActiveRecord::Base
   end
   
   def non_author_starred?
-    self.user && (self.settings || {})['starred_user_ids'].any?{|s| s != self.user.global_id }
+    self.user && ((self.settings || {})['starred_user_ids'] || []).any?{|s| s != self.user.global_id }
   end
   
   def stars
@@ -303,7 +303,7 @@ class Board < ActiveRecord::Base
 
     images = []
     sounds = []
-    (self.settings['buttons'] || []).each do |button|
+    ((self.settings || {})['buttons'] || []).each do |button|
       images << {:id => button['image_id'], :label => button['label']} if button['image_id']
       sounds << {:id => button['sound_id']} if button['sound_id']
     end
