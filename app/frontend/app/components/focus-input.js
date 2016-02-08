@@ -3,7 +3,7 @@ import capabilities from '../utils/capabilities';
 
 export default Ember.TextField.extend({
   becomeFocused: function() {
-    if(!capabilities.mobile) {
+    if(!capabilities.mobile || this.get('force')) {
       this.$().focus().select();
     }
   }.on('didInsertElement'),
