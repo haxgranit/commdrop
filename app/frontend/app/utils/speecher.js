@@ -16,6 +16,11 @@ var speecher = Ember.Object.extend({
       var more_voices = [];
       voices.forEach(function(voice) {
         if(voice.active) {
+          var ref_voice = tts_voices.find_voice(voice.voice_id);
+          if(ref_voice) {
+            voice.name = ref_voice.name;
+            voice.locale = ref_voice.locale;
+          }
           more_voices.push({
             lang: voice.locale,
             name: voice.name,
