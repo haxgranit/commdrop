@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import capabilities from './capabilities';
 import persistence from './persistence';
+import tts_voices from './tts_voices';
 
 var speecher = Ember.Object.extend({
   beep_url: "https://opensymbols.s3.amazonaws.com/beep.mp3",
