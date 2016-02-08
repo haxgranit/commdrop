@@ -299,7 +299,7 @@ var capabilities;
           );
         },
         delete_voice: function(voice_id) {
-          var voice = capabilities.tts.downloadable_voices().find(function(v) { return v.voice_id == voice_id; });
+          var voice = tts_voices.find_voice(voice_id);
           if(voice) {
             return capabilities.tts.tts_exec('deleteVoice',
             {

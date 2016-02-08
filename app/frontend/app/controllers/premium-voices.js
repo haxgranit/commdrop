@@ -4,6 +4,7 @@ import speecher from '../utils/speecher';
 import capabilities from '../utils/capabilities';
 import i18n from '../utils/i18n';
 import persistence from '../utils/persistence';
+import tts_voices from '../utils/tts_voices';
 
 export default modal.ModalController.extend({
   opening: function() {
@@ -35,7 +36,8 @@ export default modal.ModalController.extend({
     capabilities.tts.available_voices().then(function(voices) {
       var set_voices = _this.get('voices') || [];
       voices.forEach(function(voice) {
-        var found_voice = set_voices.find(function(v) { return v.get('voice_id') == voice.voice_id; });
+        var ref_voice = tts_voices.find_voice(voice.voice_id) || voice;
+        var found_voice = set_voices.find(function(v) { return v.get('voice_id') == ref_voice.voice_id; });
         if(found_voice) {
           found_voice.set('active', true);
         }
