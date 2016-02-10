@@ -81,16 +81,7 @@ export default Ember.Controller.extend({
       utterance.clear();
     },
     toggle_home_lock: function() {
-      var state = stashes.get('root_board_state');
-      var current = app_state.get('currentBoardState');
-      if(stashes.get('temporary_root_board_state')) {
-        stashes.persist('temporary_root_board_state', null);
-      } else {
-        if(state && current && state.key != current.key) {
-          stashes.persist('temporary_root_board_state', app_state.get('currentBoardState'));
-          app_state.set_history([]);
-        }
-      }
+      app_state.toggle_home_lock();
     },
     toggle_all_buttons: function() {
       var state = stashes.get('all_buttons_enabled');
@@ -103,6 +94,11 @@ export default Ember.Controller.extend({
     home: function() {
       var state = stashes.get('temporary_root_board_state') || stashes.get('root_board_state');
       var current = app_state.get('currentBoardState');
+      // if you're on a temporary home board and you hit home, it should take you to the real home
+      if(state && current && state.key == current.key && stashes.get('temporary_root_board_state')) {
+        stashes.persist('temporary_root_board_state', null);
+        state = stashes.get('root_board_state');
+      }
       if(state && current && state.key == current.key) {
         editManager.clear_history();
         if(state == stashes.get('temporary_root_board_state')) {
@@ -118,9 +114,10 @@ export default Ember.Controller.extend({
         }
       }
     },
-    jump: function(path) {
+    jump: function(path, source, board) {
       this.jumpToBoard({
-        key: path
+        key: path,
+        home_lock: board.home_lock
       });
     },
     setAsHome: function() {

@@ -475,13 +475,17 @@
     {{#each app_state.currentUser.sidebar_boards_with_fallbacks as |board|}}
       {{#if board.alert}}
         <a href="#" {{action 'alert' 'sidebar'}}>
-          {{board.name}}
+          <span class="glyphicon glyphicon-bullhorn"></span>
           <img src={{board.image}} style="width: 50px;" alt=""/>
+          {{board.name}}
         </a>
       {{else}}
-        <a href={{board.key}} {{action 'jump' board.key 'sidebar'}}>
-          {{board.name}}
+        <a href={{board.key}} {{action 'jump' board.key 'sidebar' board}}>
+          {{#if board.home_lock}}
+            <span class="glyphicon glyphicon-home"></span>
+          {{/if}}
           <img src={{board.image}} style="width: 50px;" alt=""/>
+          {{board.name}}
         </a>
       {{/if}}
     {{/each}}

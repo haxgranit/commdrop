@@ -208,9 +208,33 @@ var app_state = Ember.Object.extend({
       previous_key: old_state,
       new_id: new_state
     });
+    if(new_state && new_state.home_lock) {
+      this.set('temporary_root_board_key', new_state.key);
+    }
     this.controller.send('hide_temporary_sidebar');
     this.set_history([].concat(history));
     this.controller.transitionToRoute('board', new_state.key);
+  },
+  check_for_lock_on_board_state: function() {
+    var state = this.get('currentBoardState');
+    if(state && state.key) {
+      if(state.key == this.get('temporary_root_board_key')) {
+        this.toggle_home_lock(true);
+      }
+      this.set('temporary_root_board_key', null);
+    }
+  }.observes('currentBoardState'),
+  toggle_home_lock: function(force) {
+    var state = stashes.get('root_board_state');
+    var current = app_state.get('currentBoardState');
+    if(force === false || (stashes.get('temporary_root_board_state') && force !== true)) {
+      stashes.persist('temporary_root_board_state', null);
+    } else {
+      if(state && current && state.key != current.key) {
+        stashes.persist('temporary_root_board_state', app_state.get('currentBoardState'));
+        app_state.set_history([]);
+      }
+    }
   },
   back_one_board: function() {
     buttonTracker.transitioning = true;
