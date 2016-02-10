@@ -31,6 +31,12 @@ var speecher = Ember.Object.extend({
       });
       _this.set('voices', more_voices.concat(list));
     }, function() { });
+    if(list.length == 0) {
+      list.push({
+        name: "Default Voice",
+        voiceURI: ""
+      });
+    }
     if(!this.get('voices') || this.get('voices').length === 0) {
       this.set('voices', list);
     }
