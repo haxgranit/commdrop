@@ -285,6 +285,27 @@ describe('utterance', function() {
       utterance.backspace();
       expect(logged).toEqual(true);
     });
+    
+    it('should not remove the last button if a ghost vocalization', function() {
+      utterance.set('rawButtonList', [{label: "cow"}, {label: "fries"}]);
+      utterance.set('list_vocalized', true);
+      utterance.backspace();
+      expect(utterance.get('rawButtonList').length).toEqual(2);
+      utterance.backspace();
+      expect(utterance.get('rawButtonList')[0]).toEqual({label: "cow"});
+      utterance.backspace();
+      expect(utterance.get('rawButtonList').length).toEqual(0);
+      utterance.backspace();
+      expect(utterance.get('rawButtonList').length).toEqual(0);
+    });
+    
+    it('should un-ghost the vocalization if a ghost vocalization', function() {
+      utterance.set('rawButtonList', [{label: "cow"}, {label: "fries"}]);
+      utterance.set('list_vocalized', true);
+      utterance.backspace();
+      expect(utterance.get('rawButtonList').length).toEqual(2);
+      expect(utterance.get('list_vocalized')).toEqual(false);
+    });
   });
   
   describe("set_and_say_buttons", function() {

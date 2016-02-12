@@ -229,7 +229,12 @@ var utterance = Ember.Object.extend({
   },
   backspace: function() {
     var list = this.get('rawButtonList');
-    list.popObject();
+    // if the list is vocalized, backspace should take it back into building-mode
+    if(!this.get('list_vocalized')) {
+      list.popObject();
+    } else {
+      speecher.stop('all');
+    }
     stashes.log({
       action: 'backspace'
     });
