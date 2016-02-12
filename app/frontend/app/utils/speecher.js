@@ -31,7 +31,7 @@ var speecher = Ember.Object.extend({
       });
       _this.set('voices', more_voices.concat(list));
     }, function() { });
-    if(list.length == 0) {
+    if(list.length === 0) {
       list.push({
         name: "Default Voice",
         voiceURI: ""
@@ -151,7 +151,7 @@ var speecher = Ember.Object.extend({
       };
       
       if(voice && voice.voiceURI && voice.voiceURI.match(/^extra:/)) {
-        var voice_id = voice.voiceURI.replace(/^extra:/, '')
+        var voice_id = voice.voiceURI.replace(/^extra:/, '');
         Ember.run.later(function() {
           capabilities.tts.speak_text(text, {
             voice_id: voice_id,
