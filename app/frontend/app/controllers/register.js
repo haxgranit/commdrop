@@ -23,5 +23,8 @@ export default Ember.Controller.extend({
     var name = this.get('model.name');
     var user_name = this.get('model.user_name');
     return this.get('triedToSave') && !name && !user_name;
-  }.property('model.name', 'model.user_name', 'triedToSave')
+  }.property('model.name', 'model.user_name', 'triedToSave'),
+  noSpacesName: function() {
+    return !!(this.get('user.user_name') || '').match(/\s/);
+  }.property('user.user_name'),
 });

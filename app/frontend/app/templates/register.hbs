@@ -15,11 +15,13 @@
         <label for="user_name" class="col-sm-4 control-label">{{t "Username" key='username'}}</label>
         <div class="col-sm-8">
           {{input value=model.user_name class="form-control" id="user_name" placeholder="unique_name (optional)"}}
-          {{#if user.user_name_check.checking}}
+          {{#if noSpacesName}}
+            <span class='text-danger'>{{t "user names can't have spaces" key='no_spaces_user_name'}}</span>
+          {{else if user.user_name_check.checking}}
           {{else if user.user_name_check.exists}}
-            {{t '"%{user_name}" already exists' user_name=user.user_name}}
+            <span class='text-danger'>{{t '"%{user_name}" already exists' user_name=user.user_name}}</span>
           {{else if noName}}
-            {{t "name or username is required" key='name_or_username_required'}}
+            <span class='text-danger'>{{t "name or username is required" key='name_or_username_required'}}</span>
           {{/if}}
         </div>
       </div>
@@ -28,7 +30,7 @@
         <div class="col-sm-8">
           {{input value=model.email class="form-control" id="email" placeholder=""}}
           {{#if badEmail}}
-            {{t "email required" key='email_required'}}
+            <span class='text-danger'>{{t "email required" key='email_required'}}</span>
           {{/if}}
         </div>
       </div>
@@ -56,10 +58,10 @@
             &nbsp;
             {{input type="password" value=model.password2 class="form-control" id="password2" placeholder=""}}
             {{#if shortPassword}}
-              {{t "password must be at least 6 characters" key='min_password'}}<br/>
+              <span class='text-danger'>{{t "password must be at least 6 characters" key='min_password'}}</span><br/>
             {{/if}}
             {{#if passwordMismatch}}
-              {{t "passwords don't match" key='password_mismatch'}}
+              <span class='text-danger'>{{t "passwords don't match" key='password_mismatch'}}</span>
             {{/if}}
         </div>
       </div>

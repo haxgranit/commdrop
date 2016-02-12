@@ -29,6 +29,9 @@ export default Ember.Controller.extend({
     var user_name = this.get('user.user_name');
     return this.get('triedToSave') && !name && !user_name;
   }.property('user.name', 'user.user_name', 'triedToSave'),
+  noSpacesName: function() {
+    return !!(this.get('user.user_name') || '').match(/\s/);
+  }.property('user.user_name'),
   blank_slate: function() {
     var progress = this.get('app_state.currentUser.preferences.progress');
     // TODO: eventually this should go away, maybe after a few weeks of active use or something

@@ -17,7 +17,7 @@ export default Ember.Route.extend({
       var user = controller.get('model');
       controller.set('triedToSave', true);
       if(!user.get('terms_agree')) { return; }
-      if(controller.get('badEmail') || controller.get('passwordMismatch') || controller.get('shortPassword') || controller.get('noName')) { 
+      if(controller.get('badEmail') || controller.get('passwordMismatch') || controller.get('shortPassword') || controller.get('noName')|| controller.get('noSpacesName')) { 
         return;
       }
       var _this = this;
