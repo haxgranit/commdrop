@@ -337,12 +337,22 @@ export default Ember.Controller.extend({
       var _this = this;
       if(buttons && buttons.length > 0) {
         var button = buttons[0];
-        if(button == 'home') {
+        if(button.pre == 'home' || button.pre == 'sidebar') {
           buttons.shift();
           this.set('button_highlights', buttons);
           var $button = Ember.$("#speak > button:first");
+          if(button.pre == 'sidebar') {
+            $button = Ember.$("#sidebar a[data-key='" + button.linked_board_key + "']");
+          }
           modal.highlight($button).then(function() {
-            _this.send('home');
+            if(button.pre == 'home') {
+              _this.send('home');
+            } else {
+              _this.jumpToBoard({
+                key: button.linked_board_key,
+                home_lock: button.home_lock
+              });
+            }
           });
         } else if(button && button.board_id == this.get('board.model').get('id')) {
           var findButtonElem = function() {

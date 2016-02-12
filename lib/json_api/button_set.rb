@@ -11,6 +11,7 @@ module JsonApi::ButtonSet
     json['id'] = board.global_id
     json['key'] = board.key
     json['buttons'] = button_set.data['buttons']
+    json['name'] = board.settings && board.settings['name']
 
     json
   end

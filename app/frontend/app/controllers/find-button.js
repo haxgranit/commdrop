@@ -23,7 +23,9 @@ export default modal.ModalController.extend({
       // TODO: only show other boards if in speak mode!
       var include_other_boards = this.get('model.include_other_boards');
       if(board.get('button_set')) {
-        board.get('button_set').find_buttons(this.get('searchString')).then(function(results) {
+        var user = app_state.get('currentUser');
+        var include_home = app_state.get('speak_mode');
+        board.get('button_set').find_buttons(this.get('searchString'), user, include_home).then(function(results) {
           if(persistence.get('online')) {
             _this.set('results', results);
             _this.set('loading', false);

@@ -2,7 +2,7 @@ import DS from 'ember-data';
 import Ember from 'ember';
 import { test, moduleForModel } from 'ember-qunit';
 import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } from 'frontend/tests/helpers/jasmine';
-import { db_wait, queue_promise } from 'frontend/tests/helpers/ember_helper';
+import { queryLog, db_wait, queue_promise } from 'frontend/tests/helpers/ember_helper';
 import CoughDrop from '../../app';
 import persistence from '../../utils/persistence';
 import modal from '../../utils/modal';
@@ -437,6 +437,417 @@ describe('Buttonset', function() {
         expect(res[6].label).toEqual('apatosaur');
         expect(res[7].label).toEqual('asking');
         expect(res[8].label).toEqual('axed');
+      });
+    });
+    
+    it('should include home board search results if specified', function() {
+      var bs = CoughDrop.store.createRecord('buttonset', {
+        buttons: [
+          {label: 'hat', depth: 0, board_id: '1', linked_board_id: '2'},
+          {label: 'box', depth: 0},
+          {label: 'can', depth: 1, board_id: '2', linked_board_id: '3'},
+          {label: 'friend', depth: 2, board_id: '3', linked_board_id: '4'},
+          {label: 'quarter', depth: 3, board_id: '4', linked_board_id: '5'},
+          {label: 'olive', depth: 4, board_id: '5'}
+        ]
+      });
+      
+      var user = CoughDrop.store.createRecord('user', {
+        preferences: {
+          home_board: {
+            id: '123',
+            key: 'a/a'
+          },
+          sidebar_boards: [
+            {key: 'a/b', id: 124},
+            {key: 'b/c', id: 125}
+          ]
+        }
+      });
+
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '123',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '123', 
+            key: 'a/a',
+            buttons: [
+              {label: 'hand', depth: 0, board_id: '123', linked_board_id: '1232'},
+              {label: 'half', depth: 1, board_id: '1232', linked_board_id: '1233'}
+            ]
+          }
+        })
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '124',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '124', 
+            key: 'a/b',
+            buttons: [
+            ]
+          }
+        })
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '125',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '125', 
+            key: 'a/c',
+            buttons: [
+            ]
+          }
+        })
+      });
+      queue_promise(bs.find_buttons('h', user, true)).then(function(res) {
+        expect(res.length).toEqual(3);
+        expect(res[0].label).toEqual('hat');
+        expect(res[0].current_depth).toEqual(0);
+        expect(res[0].pre_buttons).toEqual([]);
+        expect(res[1].label).toEqual('half');
+        expect(res[1].current_depth).toEqual(2);
+        expect(res[1].pre_buttons).toEqual([{
+          board_id: 'home',
+          board_key: 'home',
+          home_lock: undefined,
+          id: -1,
+          label: "Home",
+          linked_board_id: "123",
+          linked_board_key: "a/a",
+          pre: 'home'
+        }, {
+          board_id: '123',
+          depth: 0,
+          label: 'hand',
+          linked_board_id: '1232'
+        }]);
+        expect(res[2].label).toEqual('hand');
+        expect(res[2].current_depth).toEqual(1);
+        expect(res[2].pre_buttons).toEqual([{
+          board_id: 'home',
+          board_key: 'home',
+          home_lock: undefined,
+          id: -1,
+          label: "Home",
+          linked_board_id: "123",
+          linked_board_key: "a/a",
+          pre: 'home'
+        }]);
+      });
+    });
+    
+    it('should include sidebar board search results if specified', function() {
+      var bs = CoughDrop.store.createRecord('buttonset', {
+        buttons: [
+          {label: 'hat', depth: 0, board_id: '1', linked_board_id: '2'},
+          {label: 'box', depth: 0},
+          {label: 'can', depth: 1, board_id: '2', linked_board_id: '3'},
+          {label: 'friend', depth: 2, board_id: '3', linked_board_id: '4'},
+          {label: 'quarter', depth: 3, board_id: '4', linked_board_id: '5'},
+          {label: 'olive', depth: 4, board_id: '5'}
+        ]
+      });
+      
+      var user = CoughDrop.store.createRecord('user', {
+        preferences: {
+          home_board: {
+            id: '123',
+            key: 'a/a'
+          },
+          sidebar_boards: [
+            {key: 'a/b', id: 124, home_lock: true},
+            {key: 'b/c', id: 125}
+          ]
+        }
+      });
+
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '123',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '123', 
+            key: 'a/a',
+            buttons: [
+            ]
+          }
+        })
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '124',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '124', 
+            key: 'a/b',
+            name: 'friends',
+            buttons: [
+              {label: 'hand', depth: 0, board_id: '123', linked_board_id: '1232'},
+              {label: 'half', depth: 1, board_id: '1232', linked_board_id: '1233'}
+            ]
+          }
+        })
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '125',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '125', 
+            key: 'a/c',
+            name: 'chicken',
+            buttons: [
+            ]
+          }
+        })
+      });
+      queue_promise(bs.find_buttons('h', user, true)).then(function(res) {
+        expect(res.length).toEqual(3);
+        expect(res[0].label).toEqual('hat');
+        expect(res[0].current_depth).toEqual(0);
+        expect(res[0].pre_buttons).toEqual([]);
+        expect(res[1].label).toEqual('half');
+        expect(res[1].current_depth).toEqual(2);
+        expect(res[1].pre_buttons).toEqual([{
+          board_id: 'sidebar',
+          board_key: 'sidebar',
+          home_lock: true,
+          id: -1,
+          label: "Sidebar, friends",
+          linked_board_id: "124",
+          linked_board_key: "a/b",
+          pre: 'sidebar'
+        }, {
+          board_id: '123',
+          depth: 0,
+          label: 'hand',
+          linked_board_id: '1232'
+        }]);
+        expect(res[2].label).toEqual('hand');
+        expect(res[2].current_depth).toEqual(1);
+        expect(res[2].pre_buttons).toEqual([{
+          board_id: 'sidebar',
+          board_key: 'sidebar',
+          home_lock: true,
+          id: -1,
+          label: "Sidebar, friends",
+          linked_board_id: "124",
+          linked_board_key: "a/b",
+          pre: 'sidebar'
+        }]);
+      });
+    });
+    
+    it('should not duplicate results when a linked board matches the home board or sidebar board', function() {
+      var bs = CoughDrop.store.createRecord('buttonset', {
+        buttons: [
+          {label: 'hat', depth: 0, board_id: '1', linked_board_id: '2'},
+          {label: 'box', depth: 0},
+          {label: 'can', depth: 1, board_id: '2', linked_board_id: '3'},
+          {label: 'friend', depth: 2, board_id: '3', linked_board_id: '4'},
+          {label: 'quarter', depth: 3, board_id: '4', linked_board_id: '5'},
+          {label: 'olive', depth: 4, board_id: '5'}
+        ]
+      });
+      
+      var user = CoughDrop.store.createRecord('user', {
+        preferences: {
+          home_board: {
+            id: '123',
+            key: 'a/a'
+          },
+          sidebar_boards: [
+            {key: 'a/b', id: 124, home_lock: true},
+            {key: 'b/c', id: 125}
+          ]
+        }
+      });
+
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '123',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '123', 
+            key: 'a/a',
+            buttons: [
+              {label: 'hand', depth: 0, board_id: '123', linked_board_id: '1232'},
+              {label: 'half', depth: 1, board_id: '1232', linked_board_id: '1233'}
+            ]
+          }
+        })
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '124',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '124', 
+            key: 'a/b',
+            name: 'friends',
+            buttons: [
+              {label: 'hand', depth: 0, board_id: '123', linked_board_id: '1232'},
+              {label: 'half', depth: 1, board_id: '1232', linked_board_id: '1233'}
+            ]
+          }
+        })
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '125',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '125', 
+            key: 'a/c',
+            name: 'chicken',
+            buttons: [
+              {label: 'hand', depth: 0, board_id: '123', linked_board_id: '1232'},
+              {label: 'half', depth: 1, board_id: '1232', linked_board_id: '1233'}
+            ]
+          }
+        })
+      });
+      queue_promise(bs.find_buttons('h', user, true)).then(function(res) {
+        expect(res.length).toEqual(3);
+        expect(res[0].label).toEqual('hat');
+        expect(res[0].current_depth).toEqual(0);
+        expect(res[0].pre_buttons).toEqual([]);
+        expect(res[1].label).toEqual('half');
+        expect(res[1].current_depth).toEqual(2);
+        expect(res[1].pre_buttons).toEqual([{
+          board_id: 'home',
+          board_key: 'home',
+          home_lock: undefined,
+          id: -1,
+          label: "Home",
+          linked_board_id: "123",
+          linked_board_key: "a/a",
+          pre: 'home'
+        }, {
+          board_id: '123',
+          depth: 0,
+          label: 'hand',
+          linked_board_id: '1232'
+        }]);
+        expect(res[2].label).toEqual('hand');
+        expect(res[2].current_depth).toEqual(1);
+        expect(res[2].pre_buttons).toEqual([{
+          board_id: 'home',
+          board_key: 'home',
+          home_lock: undefined,
+          id: -1,
+          label: "Home",
+          linked_board_id: "123",
+          linked_board_key: "a/a",
+          pre: 'home'
+        }]);
+      });
+    });
+    
+    it('should show the shortest path to a home-linked button, even after a longer path is found via a sidebar board', function() {
+      var bs = CoughDrop.store.createRecord('buttonset', {
+        buttons: [
+          {label: 'hat', depth: 0, board_id: '1', linked_board_id: '2'},
+          {label: 'box', depth: 0},
+          {label: 'can', depth: 1, board_id: '2', linked_board_id: '3'},
+          {label: 'friend', depth: 2, board_id: '3', linked_board_id: '4'},
+          {label: 'quarx', depth: 3, board_id: '4', linked_board_id: '5'},
+          {label: 'olive', depth: 4, board_id: '5'}
+        ]
+      });
+      
+      var user = CoughDrop.store.createRecord('user', {
+        preferences: {
+          home_board: {
+            id: '123',
+            key: 'a/a'
+          },
+          sidebar_boards: [
+            {key: 'a/b', id: 124, home_lock: true},
+            {key: 'b/c', id: 125}
+          ]
+        }
+      });
+
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '123',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '123', 
+            key: 'a/a',
+            buttons: [
+              {label: 'hat', depth: 0, board_id: '1', linked_board_id: '2'},
+              {label: 'quart', depth: 0, board_id: '5'}
+            ]
+          }
+        })
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'buttonset',
+        id: '124',
+        response: Ember.RSVP.resolve({
+          buttonset: {
+            id: '124', 
+            key: 'a/b',
+            name: 'friends',
+            buttons: [
+              {label: 'hand', depth: 0, board_id: '123', linked_board_id: '2'},
+              {label: 'mask', depth: 0, board_id: '123', linked_board_id: '5'},
+              {label: 'can', depth: 1, board_id: '2', linked_board_id: '3'},
+              {label: 'quart', depth: 1, board_id: '5'}
+            ]
+          }
+        })
+      });
+      queue_promise(bs.find_buttons('hat', user, true)).then(function(res) {
+        expect(res.length).toEqual(1);
+        expect(res[0].label).toEqual('hat');
+        expect(res[0].current_depth).toEqual(0);
+        expect(res[0].pre_buttons).toEqual([]);
+      });
+
+      queue_promise(bs.find_buttons('can', user, true)).then(function(res) {
+        expect(res.length).toEqual(1);
+        expect(res[0].label).toEqual('can');
+        expect(res[0].current_depth).toEqual(1);
+        expect(res[0].pre_buttons).toEqual([{
+          board_id: '1',
+          depth: 0,
+          label: "hat",
+          linked_board_id: "2"
+        }]);
+      });
+
+      queue_promise(bs.find_buttons('quart', user, true)).then(function(res) {
+        expect(res.length).toEqual(1);
+        expect(res[0].label).toEqual('quart');
+        expect(res[0].current_depth).toEqual(1);
+        expect(res[0].pre_buttons).toEqual([{
+          board_id: 'home',
+          board_key: 'home',
+          home_lock: undefined,
+          id: -1,
+          label: "Home",
+          linked_board_id: "123",
+          linked_board_key: "a/a",
+          pre: 'home'
+        }]);
       });
     });
   });

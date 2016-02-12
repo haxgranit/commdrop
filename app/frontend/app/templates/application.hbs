@@ -480,7 +480,7 @@
           {{board.name}}
         </a>
       {{else}}
-        <a href={{board.key}} {{action 'jump' board.key 'sidebar' board}}>
+        <a href={{board.key}} {{action 'jump' board.key 'sidebar' board}} data-key={{board.key}}>
           {{#if board.home_lock}}
             <span class="glyphicon glyphicon-home"></span>
           {{/if}}
