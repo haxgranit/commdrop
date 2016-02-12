@@ -10,12 +10,10 @@ module JsonApi::User
     
     json['id'] = user.global_id
     json['user_name'] = user.user_name
-    email_hash = Digest::MD5.hexdigest(user.settings['email'] || "none")
 
     # TODO: find a better home for this
-    bucket = ENV['STATIC_S3_BUCKET'] || "coughdrop"
-    fallback = "https://s3.amazonaws.com/#{bucket}/avatars/avatar-#{user.id % 10}.png"
-    json['avatar_url'] = fallback
+    json['avatar_url'] = user.generated_avatar_url('fallback')
+    json['fallback_avatar_url'] = json['avatar_url']
     json['link'] = "#{JsonApi::Json.current_host}/#{user.user_name}"
     
     
@@ -31,6 +29,7 @@ module JsonApi::User
       end
       json['preferences']['progress'] = user.settings['preferences']['progress']
       json['feature_flags'] = FeatureFlags.frontend_flags_for(user)
+      json['prior_avatar_urls'] = user.prior_avatar_urls
       
       json['preferences']['sidebar_boards'] = user.settings['preferences']['sidebar_boards'] || []
       json['preferences']['sidebar_boards'] = User.default_sidebar_boards if json['preferences']['sidebar_boards'].length == 0
@@ -94,7 +93,7 @@ module JsonApi::User
     
     if args[:limited_identity]
       json['name'] = user.settings['name']
-      json['avatar_url'] = "https://www.gravatar.com/avatar/#{email_hash}?s=100&d=#{CGI.escape(fallback)}"    
+      json['avatar_url'] = user.generated_avatar_url
       json['unread_messages'] = user.settings['unread_messages'] || 0
       if args[:supervisor]
         json['edit_permission'] = args[:supervisor].edit_permission_for?(user)
@@ -112,7 +111,7 @@ module JsonApi::User
         end
       end
     elsif user.settings['public'] || (json['permissions'] && json['permissions']['view_detailed'])
-      json['avatar_url'] = "https://www.gravatar.com/avatar/#{email_hash}?s=100&d=#{CGI.escape(fallback)}"
+      json['avatar_url'] = user.generated_avatar_url
       json['joined'] = user.created_at.iso8601
       json['email'] = user.settings['email'] 
       json.merge! user.settings.slice('name', 'public', 'description', 'details_url', 'location')

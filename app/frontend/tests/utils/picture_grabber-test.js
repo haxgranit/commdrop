@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } from 'frontend/tests/helpers/jasmine';
-import { fakeRecorder, fakeCanvas, queryLog, easyPromise } from 'frontend/tests/helpers/ember_helper';
+import { fakeRecorder, fakeCanvas, queryLog, easyPromise, queue_promise } from 'frontend/tests/helpers/ember_helper';
 import contentGrabbers from '../../utils/content_grabbers';
 import editManager from '../../utils/edit_manager';
 import persistence from '../../utils/persistence';
@@ -110,6 +110,48 @@ describe('pictureGrabber', function() {
       runs(function() {
         expect(controller.get('image_preview.name')).toEqual('pic.png');
         expect(controller.get('image_preview.url')).toEqual('data:image/png;base64,MA==');
+      });
+    });
+    
+    it('should trigger avatar callbacks for avatar file selection events', function() {
+      var results = [];
+      pictureGrabber.setup(button, controller);
+      var file = new window.Blob([0], {type: 'image/png'});
+      file.name = "pic.png";
+
+      contentGrabbers.avatar_result = function(bool, str) {
+        results.push([bool, str]);
+      };
+      stub(contentGrabbers, 'read_file', function(f) {
+        expect(f).toEqual(file);
+        return Ember.RSVP.resolve({
+          target: {
+            result: 'haha'
+          }
+        });
+      });
+      stub(pictureGrabber, 'size_image', function(str) {
+        expect(str).toEqual('haha');
+        return Ember.RSVP.resolve({
+          url: 'data:image/png;000000',
+          width: 200,
+          height: 200
+        });
+      });
+      stub(contentGrabbers, 'save_record', function(rec) {
+        expect(!!rec.get('url').match(/data/)).toEqual(true);
+        expect(rec.get('width')).toEqual(200);
+        expect(rec.get('height')).toEqual(200);
+        expect(rec.get('avatar')).toEqual(true);
+        return Ember.RSVP.resolve('whatever');
+      });
+      pictureGrabber.file_selected(file, 'avatar');
+      expect(results.length).toEqual(1);
+      expect(results[0]).toEqual([true, 'loading']);
+      
+      waitsFor(function() { return results.length >= 2; });
+      runs(function() {
+        expect(results[1]).toEqual([true, 'whatever']);
       });
     });
   });
@@ -584,6 +626,39 @@ describe('pictureGrabber', function() {
       pictureGrabber.clear();
       expect(mr.stopped).toEqual(true);
       expect(controller.get('webcam')).toEqual(null);
+    });
+  });
+  
+  describe('size_image', function() {
+    var small = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AIMFB0sPB1WqQAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAA+klEQVR42u3b0QnAIAxF0ej+O+sEfohiwJwzwoPbQEsjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACKaibYMmwpEPbCsKlAxGFXgXAnDtsKRBz2raGbADzhMq6HjV0QEAgIBBAICAQEAg94BbnmQyEuCHjC5VwR2wpEJHYVCP4HEQjHodgSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAr0yqXwscCyzAvgAAAABJRU5ErkJggg==";
+    var bigger = "data:image/png;base64,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";
+    
+    it('should resolve with an image object', function() {
+      queue_promise(pictureGrabber.size_image(small).then(function(res) {
+        expect(res.width).toEqual(200);
+        expect(res.url).toNotEqual(null);
+      }, function() { expect(true).toEqual(false); }));
+    });
+    
+    it('should do nothing if a url', function() {
+      queue_promise(pictureGrabber.size_image("http://www.example.com/pic.png").then(function(res) {
+        expect(res.url).toEqual("http://www.example.com/pic.png");
+        expect(res.width).toEqual(undefined);
+      }, function() { expect(true).toEqual(false); }));
+    });
+    
+    it('should resize if a data uri larger than the default size', function() {
+      queue_promise(pictureGrabber.size_image(bigger).then(function(res) {
+        expect(res.width).toEqual(300);
+        expect(res.url).toNotEqual(null);
+      }, function() { expect(true).toEqual(false); }));
+    });
+    
+    it('should not resize if a data uri smaller than the default size', function() {
+      queue_promise(pictureGrabber.size_image(small).then(function(res) {
+        expect(res.width).toEqual(200);
+        expect(res.url).toNotEqual(null);
+      }, function() { expect(true).toEqual(false); }));
     });
   });
   

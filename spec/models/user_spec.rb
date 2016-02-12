@@ -764,6 +764,111 @@ describe User, :type => :model do
       expect(u.settings['preferences']['prior_sidebar_boards'].length).to eq(3)
     end
   end
+  
+  describe "avatars" do
+    describe "generated_avatar_url" do
+      it "should use the fallback if specified" do
+        u = User.new
+        u.id = 199
+        expect(u.generated_avatar_url('fallback')).to eq('https://s3.amazonaws.com/coughdrop/avatars/avatar-9.png')
+        u.settings = {'email' => 'bob@example.com'}
+        expect(u.generated_avatar_url('fallback')).to eq('https://s3.amazonaws.com/coughdrop/avatars/avatar-9.png')
+        u.settings['avatar_url'] = 'http://www.example.com/pic.png'
+      end
+      
+      it "should use the default if specified" do
+        u = User.new
+        u.id = 199
+        u.settings = {'email' => 'bob@example.com'}
+        expect(u.generated_avatar_url('default')).to eq('https://www.gravatar.com/avatar/4b9bb80620f03eb3719e0a061c14283d?s=100&d=https%3A%2F%2Fs3.amazonaws.com%2Fcoughdrop%2Favatars%2Favatar-9.png');
+        u.settings['avatar_url'] = 'http://www.example.com/pic.png'
+        expect(u.generated_avatar_url('default')).to eq('https://www.gravatar.com/avatar/4b9bb80620f03eb3719e0a061c14283d?s=100&d=https%3A%2F%2Fs3.amazonaws.com%2Fcoughdrop%2Favatars%2Favatar-9.png');
+      end
+      
+      it "should use the passed-in url if specified" do
+        u = User.new
+        u.id = 199
+        u.settings = {'email' => 'bob@example.com'}
+        u.settings['avatar_url'] = 'http://www.example.com/pic.png'
+        expect(u.generated_avatar_url('http://www.example.com/pic2.png')).to eq('http://www.example.com/pic2.png');
+      end
+      
+      it "should use the user-saved url if set" do
+        u = User.new
+        u.id = 199
+        u.settings = {'email' => 'bob@example.com'}
+        u.settings['avatar_url'] = 'http://www.example.com/pic.png'
+        expect(u.generated_avatar_url).to eq('http://www.example.com/pic.png');
+      end
+    end
+
+#   def prior_avatar_urls
+#     res = self.settings && self.settings['prior_avatar_urls']
+#     current = generated_avatar_url
+#     default = generated_avatar_url('default')
+#     if (res && res.length > 0) || current != default
+#       res = res || []
+#       res.push(default)
+#     end
+#     res
+#   end    
+    describe "prior_avatar_urls" do
+      it "should add the current avatar url to the list when changed" do
+        u = User.new
+        u.settings = {}
+        expect(u.prior_avatar_urls).to eq(nil)
+        u.process({'avatar_url' => 'http://www.example.com/pic.png'})
+        expect(u.generated_avatar_url).to eq('http://www.example.com/pic.png');
+        expect(u.prior_avatar_urls).to eq([u.generated_avatar_url('default')])
+        u.process({'avatar_url' => 'http://www.example.com/pic2.png'})
+        expect(u.prior_avatar_urls).to eq(['http://www.example.com/pic.png', u.generated_avatar_url('default')])
+      end
+      
+      it "should not add the current avatar url to the list if 'fallback'" do
+        u = User.new
+        u.settings = {}
+        expect(u.prior_avatar_urls).to eq(nil)
+        u.process({'avatar_url' => 'fallback'})
+        expect(u.generated_avatar_url).to eq(u.generated_avatar_url('fallback'));
+        expect(u.prior_avatar_urls).to eq([u.generated_avatar_url('default')])
+        u.process({'avatar_url' => 'http://www.example.com/pic2.png'})
+        expect(u.prior_avatar_urls).to eq([u.generated_avatar_url('default')])
+      end
+      
+      it "should not add the current avatar url to the list if 'default'" do
+        u = User.new
+        u.settings = {}
+        expect(u.prior_avatar_urls).to eq(nil)
+        u.process({'avatar_url' => 'default'})
+        expect(u.generated_avatar_url).to eq(u.generated_avatar_url('default'));
+        expect(u.prior_avatar_urls).to eq(nil)
+        u.process({'avatar_url' => 'http://www.example.com/pic2.png'})
+        expect(u.prior_avatar_urls).to eq([u.generated_avatar_url('default')])
+      end
+      
+      it "should return a list of prior avatar urls" do
+        u = User.new
+        u.settings = {}
+        expect(u.prior_avatar_urls).to eq(nil)
+        u.process({'avatar_url' => 'http://www.example.com/pic.png'})
+        expect(u.generated_avatar_url).to eq('http://www.example.com/pic.png');
+        expect(u.prior_avatar_urls).to eq([u.generated_avatar_url('default')])
+        u.process({'avatar_url' => 'http://www.example.com/pic2.png'})
+        expect(u.prior_avatar_urls).to eq(['http://www.example.com/pic.png', u.generated_avatar_url('default')])
+      end
+      
+      it "should include the default avatar url only if different than the current avatar url" do
+        u = User.create
+        u.settings = {}
+        expect(u.prior_avatar_urls).to eq(nil)
+        u.process({'avatar_url' => u.generated_avatar_url('default')})
+        expect(u.generated_avatar_url).to eq(u.generated_avatar_url('default'));
+        expect(u.prior_avatar_urls).to eq(nil)
+        u.process({'avatar_url' => 'http://www.example.com/pic2.png'})
+        expect(u.prior_avatar_urls).to eq([u.generated_avatar_url('default')])
+      end
+    end
+  end
 
   it "should securely serialize settings" do
     u = User.new(:settings => {:a => 2})

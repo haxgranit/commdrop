@@ -95,8 +95,8 @@
   <label for="location" class="col-sm-3 control-label">{{t "Avatar" key='avatar'}}</label>
   <div class="col-sm-5">
     <img src={{model.avatar_url_with_fallback}} style="max-height: 30px;"/> 
-    <a href="http://www.gravatar.com" target="_blank">{{t "Change your avatar at Gravatar.com" key='change_at_gravatar'}}</a>
-    <!-- TODO: include better not that it's based on email address -->
+    <a href="#" {{action 'pick_avatar'}}>{{t "Choose a different profile pic" key='choose_a_different_profile_pic'}}</a>
+    <a href="http://www.gravatar.com" target="_blank" style="display: none;">{{t "Change your avatar at Gravatar.com" key='change_at_gravatar'}}</a>
   </div>
 </div>
 <div class="form-group">

@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import capabilities from '../utils/capabilities';
 
 export default Ember.Component.extend({
   didInsertElement: function() {
@@ -7,12 +8,14 @@ export default Ember.Component.extend({
       this.set('already_opened', true);
       this.sendAction('opening');
     }
-//     var height = Ember.$(window).height() - 50;
-//     Ember.$(this.get('parentView').get('element')).find(".modal-content").css('maxHeight', height);
+//     if(capabilities.mobile) {
+      var height = Ember.$(window).height() - 50;
+      Ember.$(this.get('element')).find(".modal-content").css('maxHeight', height).css('overflow', 'auto');
+//     }
   },
   stretch: function() {
     if(this.get('stretch_ratio')) {
-      var height = Ember.$(window).height();
+      var height = Ember.$(window).height() - 50;
       var width = Ember.$(window).width();
       var modal_width = (width * 0.9);
       if(modal_width > height * this.get('stretch_ratio') * 0.9) {

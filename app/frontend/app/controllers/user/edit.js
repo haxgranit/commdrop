@@ -9,6 +9,9 @@ export default Ember.Controller.extend({
     return "Edit " + this.get('model.user_name');
   }.property('model.user_name'),
   actions: {
+    pick_avatar: function() {
+      modal.open('pick-avatar', {user: this.get('model')});
+    },
     enable_change_password: function() {
       this.set('change_password', true);
     },

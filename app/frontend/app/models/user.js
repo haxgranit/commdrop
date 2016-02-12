@@ -26,6 +26,8 @@ CoughDrop.User = DS.Model.extend({
   description: DS.attr('string'),
   details_url: DS.attr('string'),
   avatar_url: DS.attr('string'),
+  fallback_avatar_url: DS.attr('string'),
+  prior_avatar_urls: DS.attr('raw'),
   location: DS.attr('string'),
   permissions: DS.attr('raw'),
   unread_messages: DS.attr('number'),

@@ -144,9 +144,9 @@ var contentGrabbers = Ember.Object.extend({
         }
       }
     }
-    if(type == 'image') {
+    if(type == 'image' || type == 'avatar') {
       if(image) {
-        pictureGrabber.file_selected(image);
+        pictureGrabber.file_selected(image, type);
       } else {
         alert(i18n.t('no_valid_image_found', "No valid image found"));
       }
@@ -242,13 +242,15 @@ var pictureGrabber = Ember.Object.extend({
     });
     _this.controller.addObserver('image_preview', _this, _this.default_image_preview_license);
   },
+  default_size: 300,
   size_image: function(data_url) {
+    var _this = this;
     return new Ember.RSVP.Promise(function(resolve, reject) {
-      if(data_url.match(/^http/)) { return resolve(data_url); }
+      if(data_url.match(/^http/)) { return resolve({url: data_url}); }
       if(!window.scratch_canvas) {
         window.scratch_canvas = document.createElement('canvas');
-        window.scratch_canvas.width = 300;
-        window.scratch_canvas.height = 300;
+        window.scratch_canvas.width = _this.default_size;
+        window.scratch_canvas.height = _this.default_size;
       }
       var context = window.scratch_canvas.getContext('2d');
       var img = document.createElement('img');
@@ -256,8 +258,8 @@ var pictureGrabber = Ember.Object.extend({
       var canvas = window.scratch_canvas;
       img.onload = function() {
         Ember.run(function() {
-          if(img.width < 300 && img.height < 300) {
-            return resolve(data_url);
+          if(img.width < _this.default_size && img.height < _this.default_size) {
+            return resolve({url: data_url, width: img.width, height: img.height});
           }
           var pct = img.width / img.height;
           var width = canvas.width, height = canvas.height, x = 0, y = 0;
@@ -278,13 +280,17 @@ var pictureGrabber = Ember.Object.extend({
           try {
             result = canvas.toDataURL();
           } catch(e) { }
-          resolve(result || data_url);
+          if(result) {
+            resolve({url: result, width: _this.default_size, height: _this.default_size});
+          } else {
+            resolve({url: data_url});
+          }
         });
       };
       img.onready = img.onload;
       img.onerror = function() {
         Ember.run(function() {
-          resolve(data_url);
+          resolve({url: data_url});
         });
       };
       img.src = data_url;
@@ -296,24 +302,58 @@ var pictureGrabber = Ember.Object.extend({
   web_image_dropped: function(drop) {
     var _this = this;
     var sizer = pictureGrabber.size_image(drop.file.url);
-    sizer.then(function(url) {
+    sizer.then(function(res) {
+      var url = res.url;
       drop.file.url = url;
       _this.controller.set('model.image_field', drop.file.url);
       _this.find_picture(drop.file.url);
     });
   },
-  file_selected: function(file) {
+  file_selected: function(file, type) {
     var _this = this;
     var reader = contentGrabbers.read_file(file);
+    if(type == 'avatar' && contentGrabbers.avatar_result) {
+      contentGrabbers.avatar_result(true, 'loading');
+    }
     var sizer = reader.then(function(data) {
+      console.log(data.target.result);
+      window.result = data.target.result;
       return pictureGrabber.size_image(data.target.result);
     });
-    sizer.then(function(url) {
-      _this.controller.set('image_preview', {
-        url: url,
-        name: file.name,
-        editor: null
-      });
+    sizer.then(function(res) {
+      var url = res.url;
+      if(type == 'avatar') {
+        var content_type = (url.split(/:/)[1] || "").split(/;/)[0];
+        var image = CoughDrop.store.createRecord('image', {
+          url: url,
+          content_type: content_type,
+          width: res.width || pictureGrabber.default_size,
+          height: res.height || pictureGrabber.default_size,
+          avatar: true,
+          license: {
+            type: 'private'
+          }
+        });
+        contentGrabbers.save_record(image).then(function(res) {
+          if(contentGrabbers.avatar_result) {
+            contentGrabbers.avatar_result(true, res);
+          } else {
+            console.error("nothing to handle successful avatar upload");
+          }
+        }, function(err) {
+          if(contentGrabbers.avatar_result) {
+            contentGrabbers.avatar_result(false, err);
+          } else {
+            console.error("nothing to handle failed avatar upload");
+          }
+        });
+      } else {
+        _this.controller.set('image_preview', {
+          url: url,
+          name: file.name,
+          editor: null
+        });
+      }
     });
   },
   clear: function() {
@@ -435,7 +475,8 @@ var pictureGrabber = Ember.Object.extend({
 
     var _this = this;
     var sizer = pictureGrabber.size_image(image.get('url'));
-    sizer.then(function(url) {
+    sizer.then(function(res) {
+      var url = res.url;
       _this.controller.set('image_preview', {
         url: url,
         content_type: image.get('content_type'),
@@ -1171,10 +1212,11 @@ var linkGrabber = Ember.Object.extend({
   }
 }).create();
 
-Ember.$(document).on('change', '#image_upload,#sound_upload,#board_upload', function(event) {
+Ember.$(document).on('change', '#image_upload,#sound_upload,#board_upload,#avatar_upload', function(event) {
   var type = 'image';
   if(event.target.id == 'sound_upload') { type = 'sound'; }
   if(event.target.id == 'board_upload') { type = 'board'; }
+  if(event.target.id == 'avatar_upload') { type = 'avatar'; }
   var files = event.target.files;
   contentGrabbers.file_selected(type, files);
 }).on('drop', '.button_container', function(event) {

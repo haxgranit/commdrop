@@ -199,6 +199,35 @@ class User < ActiveRecord::Base
     Digest::MD5.hexdigest((email || "none").to_s)
   end
   
+  def generated_avatar_url(override_url=nil)
+    bucket = ENV['STATIC_S3_BUCKET'] || "coughdrop"
+    id = self.id || 0
+    fallback = "https://s3.amazonaws.com/#{bucket}/avatars/avatar-#{id % 10}.png"
+    url = self.settings && self.settings['avatar_url']
+    url = override_url if override_url
+    if url == 'fallback'
+      fallback
+    elsif url && url != 'default'
+      # TODO: somewhere we should enforce that it's coming from a reliable location, or provide a fallback
+      url
+    else
+      email_md5 = Digest::MD5.hexdigest(self.settings['email'] || "none")
+      "https://www.gravatar.com/avatar/#{email_md5}?s=100&d=#{CGI.escape(fallback)}"
+    end
+  end
+  
+  def prior_avatar_urls
+    res = self.settings && self.settings['prior_avatar_urls']
+    current = generated_avatar_url
+    default = generated_avatar_url('default')
+    if (res && res.length > 0) || current != default
+      res = res || []
+      res.push(default)
+      res.uniq!
+    end
+    res
+  end
+  
   # frd == "For Reals, Dude" obviously. It's a thing, I guess you just didn't know about it.
   # TODO: add "frd" to urban dictionary
   def track_boards(frd=false)
@@ -303,6 +332,14 @@ class User < ActiveRecord::Base
     end
     if params['terms_agree']
       self.settings['terms_agreed'] = Time.now.to_i
+    end
+    if params['avatar_url'] && (params['avatar_url'].match(/^http/) || params['avatar_url'] == 'fallback')
+      if self.settings['avatar_url'] && self.settings['avatar_url'] != 'fallback'
+        self.settings['prior_avatar_urls'] ||= []
+        self.settings['prior_avatar_urls'] << self.settings['avatar_url']
+        self.settings['prior_avatar_urls'].uniq!
+      end
+      self.settings['avatar_url'] = params['avatar_url']
     end
     if params['email'] && params['email'] != self.settings['email']
       if self.settings['email']
