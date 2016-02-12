@@ -7,7 +7,7 @@ import CoughDrop from '../app';
 // non-critical, so for example if one attribute got renamed it would not
 // break anything, or affect any other value.
 var memory_stash = {};
-var capabilities = null;
+var stash_capabilities = null;
 var stashes = Ember.Object.extend({
   connect: function(container, application) {
     application.register('cough_drop:stashes', stashes, { instantiate: false, singleton: true });
@@ -16,8 +16,9 @@ var stashes = Ember.Object.extend({
     });
   },
   db_connect: function(cap) {
-    capabilities = cap;
-    capabilities.storage_find({store: 'settings', key: 'stash'}).then(function(stash) {
+    stash_capabilities = cap;
+    if(!cap.dbman) { return; }
+    stash_capabilities.storage_find({store: 'settings', key: 'stash'}).then(function(stash) {
       for(var idx in stash) {
         if(idx != 'raw' && idx != 'storageId' && idx != 'changed' && stash[idx] !== undefined) {
           memory_stash[idx] = JSON.parse(stash[idx]);
@@ -112,7 +113,7 @@ var stashes = Ember.Object.extend({
 
     if(memory_stash[key] != obj) {
       memory_stash[key] = obj;
-      if(capabilities) {
+      if(stash_capabilities && stash_capabilities.dbman) {
         var stringed_stash = {};
         for(var idx in memory_stash) {
           stringed_stash[idx] = JSON.stringify(memory_stash[idx]);
@@ -121,7 +122,7 @@ var stashes = Ember.Object.extend({
         // I intended for this to be a fallback in case localStorage data got lost
         // somehow, which is why the db id is also being stored in the cookie
         // as a fallback for the db id which is usually kept in localStorage.
-        capabilities.storage_store({store: 'settings', id: 'stash', record: stringed_stash});
+        stash_capabilities.storage_store({store: 'settings', id: 'stash', record: stringed_stash});
       }
     }
   },

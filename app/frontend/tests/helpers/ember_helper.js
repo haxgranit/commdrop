@@ -133,11 +133,9 @@ var fake_dbman = function() {
       wait_call(error, {error: "no record found"});
     },
     store_internal: function(store, record, success, error) {
-      console.log("store " + record.id);
       repo[store] = repo[store] || [];
       
       var original_id = record[index_id(store)].replace(new RegExp("^" + store + "::"), '');
-      console.log("remove " + original_id);
       result.remove(store, original_id, function() {
         var new_record = {};
         for(var k in record) {

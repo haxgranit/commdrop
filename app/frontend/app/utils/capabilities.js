@@ -1079,8 +1079,9 @@ var capabilities;
     },
     find_one: function(store, key, success, error) {
       key = capabilities.dbman.uniqify_key(key, store, 'id');
+      var normalize = capabilities.dbman.normalize_record;
       capabilities.dbman.find_one_internal(store, key, function(record) {
-        success(capabilities.dbman.normalize_record(record, store));
+        success(normalize(record, store));
       }, error);
     },
     find_one_internal: function(store, key, success, error) {
@@ -1126,8 +1127,10 @@ var capabilities;
       record.persisted = record.persisted || (new Date()).getTime();
       record.raw = capabilities.encrypt(record.raw);
       record.changed = record.changed || false;
+      
+      var normalize = capabilities.dbman.normalize_record;
       capabilities.dbman.store_internal(store, record, function(new_record) {
-        success(capabilities.dbman.normalize_record(record, store));
+        success(normalize(record, store));
       }, error);
     },
     store_internal: function(store, record, success, error) {
@@ -1186,12 +1189,13 @@ var capabilities;
       success = success || capabilities.dbman.success;
       error = error || capabilities.dbman.error;
       key = capabilities.dbman.uniqify_key(key, store, index);
+      var normalize = capabilities.dbman.normalize_record;
       capabilities.dbman.find_all_internal(store, index, key, function(list) {
         var new_list = [];
         list.forEach(function(record) {
           var new_result = {
             store: record.store,
-            data: capabilities.dbman.normalize_record(record.data, store)
+            data: normalize(record.data, store)
           };
           new_list.push(new_result);
         });
