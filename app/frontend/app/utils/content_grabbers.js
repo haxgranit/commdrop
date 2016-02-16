@@ -584,7 +584,7 @@ var pictureGrabber = Ember.Object.extend({
     }
   },
   webcam_available: function() {
-    return !!(navigator.getUserMedia || (navigator.device && navigator.device.capture && navigator.device.captureImage));
+    return !!(navigator.getUserMedia || (navigator.device && navigator.device.capture && navigator.device.capture.captureImage));
   },
   user_media_ready: function(stream, stream_id) {
     var video = document.querySelector('#webcam_video');
@@ -628,12 +628,7 @@ var pictureGrabber = Ember.Object.extend({
   start_webcam: function() {
     var _this = this;
     // TODO: cross-browser
-    if(navigator.device && navigator.device.capture && navigator.device.captureImage) {
-      navigator.device.captureImage(function(files) {
-        var file = files[0];
-        _this.file_selected(file);
-      }, function() { }, {limit: 1});
-    } else {
+    if(navigator.getUserMedia) {
       var last_stream_id = stashes.get('last_stream_id');
       var constraints = {video: true};
       if(last_stream_id) {
@@ -648,6 +643,12 @@ var pictureGrabber = Ember.Object.extend({
       }, function() {
         console.log("permission not granted");
       });
+    } else if(navigator.device && navigator.device.capture && navigator.device.capture.captureImage) {
+      navigator.device.capture.captureImage(function(files) {
+        var media_file = files[0];
+        var file = new File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
+        _this.file_selected(file);
+      }, function() { }, {limit: 1});
     }
   },
   swap_streams: function() {
@@ -769,7 +770,7 @@ var soundGrabber = Ember.Object.extend({
     });
   },
   recorder_available: function() {
-    return !!(navigator.getUserMedia || (navigator.device && navigator.device.capture && navigator.device.captureAudio));
+    return !!(navigator.getUserMedia || (navigator.device && navigator.device.capture && navigator.device.capture.captureAudio));
   },
   record_sound: function() {
     var _this = this;
@@ -807,12 +808,7 @@ var soundGrabber = Ember.Object.extend({
       return mr;
     }
     
-    if(navigator.device && navigator.device.capture && navigator.device.captureAudio) {
-      navigator.device.captureAudio(function(files) {
-        var file = files[0];
-        _this.file_selected(file);
-      }, function() { }, {limit: 1});
-    } else {
+    if(navigator.getUserMedia) {
       if(this.controller.get('sound_recording.stream')) {
         stream_ready(this.controller.get('sound_recording.stream'));
         return;
@@ -865,6 +861,12 @@ var soundGrabber = Ember.Object.extend({
       }, function() {
         console.log("permission not granted");
       });
+    } else if(navigator.device && navigator.device.capture && navigator.device.capture.captureAudio) {
+      navigator.device.capture.captureAudio(function(files) {
+        var media_file = files[0];
+        var file = new File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
+        _this.file_selected(file);
+      }, function() { }, {limit: 1});
     }
   },
   toggle_recording_sound: function(action) {
