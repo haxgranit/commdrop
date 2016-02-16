@@ -44,6 +44,23 @@ var app_state = Ember.Object.extend({
     } else {
       this.set('version', window.app_version || 'unknown');
     }
+    var _this = this;
+    capabilities.battery.listen(function(battery) {
+      battery.level = Math.round(battery.level * 100);
+      if(battery.level != _this.get('battery.level') || battery.charging !== _this.get('battery.charging')) {
+        _this.set('battery', battery);
+        _this.set('battery.progress_style', new Ember.Handlebars.SafeString("width: " + parseInt(battery.level) + "%;"));
+        _this.set('battery.low', battery.level < 15);
+        _this.set('battery.really_low', battery.level < 10);
+        if(battery.level <= 10 && !battery.charging) {
+          _this.set('battery.progress_class', "progress-bar progress-bar-danger");
+        } else if(battery.level <= 20 && !battery.charging) {
+          _this.set('battery.progress_class', "progress-bar progress-bar-warning");
+        } else {
+          _this.set('battery.progress_class', "progress-bar progress-bar-success");
+        }
+      }
+    });
     this.refresh_user();
   },
   reset: function() {
@@ -672,6 +689,9 @@ var app_state = Ember.Object.extend({
   logging_paused: function() {
     return !!stashes.get('logging_paused_at');
   }.property('stashes.logging_paused_at'),
+  current_time: function() {
+    return (this.get('short_refresh_stamp') || new Date());
+  }.property('short_refresh_stamp'),
   board_virtual_dom: function() {
     var _this = this;
     var dom = {
@@ -777,6 +797,9 @@ if(!app_state.get('testing')) {
   setInterval(function() {
     app_state.set('refresh_stamp', new Date());
   }, 5*60*1000);
+  setInterval(function() {
+    app_state.set('short_refresh_stamp', new Date());
+  }, 500);
 }
 
 app_state.ScrollTopRoute = Ember.Route.extend({

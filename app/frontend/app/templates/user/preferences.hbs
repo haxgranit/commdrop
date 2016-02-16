@@ -123,6 +123,17 @@
   </div>
 </div>
 <div class="form-group">
+  <label for="auto_home_return" class="col-sm-3 control-label">{{t "Status" key='status'}}</label>
+  <div class="col-sm-5">
+    <div class="checkbox">
+      <label>
+        {{input type="checkbox" checked=model.preferences.blank_status id="blank_status"}}
+        {{t "Show time and device status when vocalization window is empty" key='blank_status'}}
+      </label>
+    </div>
+  </div>
+</div>
+<div class="form-group">
   <label for="sharing" class="col-sm-3 control-label">{{t "Sharing" key='sharing'}}</label>
   <div class="col-sm-5">
     <div class="checkbox">

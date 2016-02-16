@@ -13,6 +13,12 @@ Ember.templateHelpers.date = function(date, precision) {
   }
 };
 
+Ember.templateHelpers.time = function(date) {
+  date = date || new Date();
+  var moment = window.moment(date);
+  return moment.format('h:mma');
+};
+
 Ember.templateHelpers.date_ago = function(date, precision) {
   var moment = window.moment(date);
   if(precision == 'day') {

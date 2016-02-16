@@ -333,6 +333,55 @@ var capabilities;
           });
         }
       },
+      battery: {
+        listen: function(callback) {
+          capabilities.battery_callbacks = capabilities.battery_callbacks || [];
+          var start_listening = capabilities.battery_callbacks.length == 0
+          capabilities.battery_callbacks.push(callback);
+          if(start_listening) {
+            var notify = function() {
+              if(capabilities.battery_callbacks.last_result) {
+                var res = {
+                  level: capabilities.battery_callbacks.last_result.level,
+                  charging: capabilities.battery_callbacks.last_result.charging
+                };
+                capabilities.battery_callbacks.forEach(function(cb) {
+                  cb(res);
+                });
+              }
+            };
+            if(navigator.getBattery) {
+              navigator.getBattery().then(function(battery) {
+                battery.addEventListener('chargingchange', function() {
+                  capabilities.battery_callbacks.last_result = capabilities.battery_callbacks.last_result || {};
+                  capabilities.battery_callbacks.last_result.charging = battery.charging;
+                  notify();
+                });
+                battery.addEventListener('levelchange', function() {
+                  capabilities.battery_callbacks.last_result = capabilities.battery_callbacks.last_result || {};
+                  capabilities.battery_callbacks.last_result.level = battery.level;
+                  notify();
+                });
+                if(battery.level) {
+                  capabilities.battery_callbacks.last_result = capabilities.battery_callbacks.last_result || {};
+                  capabilities.battery_callbacks.last_result.level = battery.level;
+                  capabilities.battery_callbacks.last_result.charging = battery.charging;
+                  notify();
+                }
+              });
+            }
+            window.addEventListener('batterystatus', function(data) {
+              capabilities.battery_callbacks.last_result = capabilities.battery_callbacks.last_result || {};
+              capabilities.battery_callbacks.last_result.level = data.level / 100;
+              capabilities.battery_callbacks.last_result.charging = data.isPlugged ? true : undefined;
+              notify();
+            }, false);
+          }
+          if(capabilities.battery_callbacks.last_result) {
+            callback(last_result);
+          }
+        }
+      },
       wakelock_capable: function() {
         return !!(window.chrome && window.chrome.power && window.chrome.power.requestKeepAwake);
       },

@@ -48,6 +48,23 @@ header {
       }
     }
   }
+  #blank_status {
+    text-align: left; 
+    padding-top: 5px; 
+    padding-left: 10px; 
+    font-size: 16px; 
+    opacity: 1.0;
+    .progress {
+      width: 50px;
+      text-align: center;
+      margin: 0;
+    }
+    .eye_status {
+      display: none;
+      color: #aaa;
+      margin-top: 3px;
+    }
+  }
   #speak {
     width: -webkit-calc(100% - 62px);
     width: calc(100% - 62px);
@@ -84,6 +101,17 @@ header {
           img {
             height: 26px; 
             max-width: 30px;
+          }
+        }
+      }
+      #blank_status {
+        font-size: 12px;
+        .progress {
+          width: 40px;
+          height: 15px;
+          font-size: 10px;
+          .progress-bar {
+            font-size: 10px;
           }
         }
       }
@@ -151,6 +179,16 @@ header {
           }
         }
       }
+      #blank_status {
+        font-size: 18px;
+        .progress {
+          width: 60px;
+          font-size: 16px;
+        }
+        .eye_status {
+          display: block;
+        }
+      }
       #identity .btn {
         width: 78px;
         .unread {
@@ -209,6 +247,21 @@ header {
             height: 100px; 
             max-width: 140px;
           }
+        }
+      }
+      #blank_status {
+        font-size: 22px;
+        .progress {
+          width: 70px;
+          > .glyphicon {
+            font-size: 16px;
+            vertical-align: top;
+            line-height: 18px;
+          }
+          
+        }
+        .eye_status {
+          display: block;
         }
       }
       #identity .btn {
@@ -271,6 +324,21 @@ header {
             height: 100px; 
             max-width: 140px;
           }
+        }
+      }
+      #blank_status {
+        font-size: 26px;
+        .progress {
+          width: 85px;
+          height: 25px;
+          font-size: 20px;
+          .progress-bar {
+            font-size: 16px;
+            line-height: 28px;
+          }
+        }
+        .eye_status {
+          display: block;
         }
       }
       #identity .btn {

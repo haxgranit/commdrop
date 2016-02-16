@@ -20,6 +20,37 @@
         </button>
       {{/unless}}
       <div tabindex="0" id="button_list" class={{button_list_class}} {{ action "vocalize" on="select"}} data-placement="bottom" data-trigger="manual">
+        {{#unless app_state.button_list}}
+          {{#if app_state.currentUser.preferences.blank_status}}
+            <div id="blank_status" class='text-muted'>
+              {{time app_state.current_time}}
+              {{#if app_state.battery.level}}
+                <div class="progress">
+                  <div class={{app_state.battery.progress_class}} role="progressbar" aria-valuenow={{app_state.battery.level}} aria-valuemin="0" aria-valuemax="100" style={{app_state.battery.progress_style}}>
+                    {{#if app_state.battery.charging}}
+                      <span class="glyphicon glyphicon-flash"></span>
+                    {{/if}}
+                    <span class="sr-only">{{t "%{pct}% battery" key='percent_battery' pct=app_state.battery.level}} {{#if app_state.battery.charging}}{{t "charging" key='charging'}}{{/if}}</span>
+                  </div>
+                  {{#if app_state.battery.low}}
+                    {{#unless app_state.battery.charging}}
+                      <span class="glyphicon glyphicon-exclamation-sign" style="margin-top: 2px;"></span>
+                    {{/unless}}
+                  {{/if}}
+                </div>
+              {{/if}}
+              {{#if app_state.eye_tracking}}
+                <div class="eye_status">
+                  {{#if app_state}}
+                    <span class="glyphicon glyphicon-eye-close"></span>
+                  {{else}}
+                    <span class="glyphicon glyphicon-eye-open"></span>
+                  {{/if}}
+                </div>
+              {{/if}}
+            </div>
+          {{/if}}
+        {{/unless}}
         {{#with app_state.button_list as |button_list|}}
           {{partial "button-list"}}
         {{/with}}
