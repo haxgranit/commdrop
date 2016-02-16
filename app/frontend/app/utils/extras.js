@@ -255,6 +255,7 @@ import capabilities from './capabilities';
           options.headers = options.headers || {};
           options.headers['Authorization'] = "Bearer " + capabilities.access_token;
           options.headers['X-Device-Id'] = device_id;
+          options.headers['X-CoughDrop-Version'] = window.CoughDrop.VERSION;
         }
         if(CoughDrop.session && CoughDrop.session.get('as_user_id')) {
           options.headers = options.headers || {};

@@ -82,19 +82,27 @@ class Device < ActiveRecord::Base
     self.settings['keys'] = keys
   end
   
-  def valid_token?(token)
+  def valid_token?(token, app_version=nil)
     clean_old_keys
     keys = (self.settings && self.settings['keys']) || []
     key = keys.detect{|k| k['value'] == token }
+    do_save = false
     if key && key['last_timestamp'] < 30.minutes.ago.to_i
       key['last_timestamp'] = Time.now.to_i
       self.settings['keys'].each_with_index do |key, idx|
         if key['token'] == token
           self.settings['keys'][idx] = key
+          do_save = true
         end
       end
-      self.save
     end
+    if app_version && self.settings['app_version'] != app_version
+      self.settings['app_version'] = app_version
+      self.settings['app_versions'] ||= []
+      self.settings['app_versions'] << [app_version, Time.now.to_i]
+      do_save = true
+    end
+    self.save if do_save
     !!key
   end
   

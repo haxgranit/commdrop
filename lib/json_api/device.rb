@@ -10,6 +10,8 @@ module JsonApi::Device
     json['id'] = device.global_id
     json['name'] = device.settings['name']
     json['ip_address'] = device.settings['ip_address']
+    json['app_version'] = device.settings['app_version']
+    json['user_agent'] = device.settings['user_agent']
     json['mobile'] = true if device.settings['mobile']
     json['last_used'] = device.last_used_at.iso8601
     json['hidden'] = true if device.hidden?

@@ -142,7 +142,7 @@ class SessionController < ApplicationController
   def token_check
     set_browser_token_header
     if @api_user
-      valid = @api_device.valid_token?(params['access_token'])
+      valid = @api_device.valid_token?(params['access_token'], request.headers['X-CoughDrop-Version'])
       render json: {authenticated: valid, user_name: @api_user.user_name, sale: ENV['CURRENT_SALE']}.to_json
     else
       render json: {authenticated: false, sale: ENV['CURRENT_SALE']}.to_json

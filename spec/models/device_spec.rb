@@ -210,6 +210,30 @@ describe Device, :type => :model do
       expect(d.valid_token?('bob')).to eq(true)
       expect(d.settings['keys'][0]['last_timestamp']).to be > 10.seconds.ago.to_i
     end
+    
+    it "should update the app version if passed in" do
+      d = Device.new
+      d.settings = {}
+      d.settings['keys'] = [{'value' => 'bob', 'last_timestamp' => 35.minutes.ago.to_i}]
+      expect(d.valid_token?('bob', '2011.01.01')).to eq(true)
+      d.reload
+      expect(d.settings['keys'][0]['last_timestamp']).to be > 10.seconds.ago.to_i
+      expect(d.settings['app_version']).to eq('2011.01.01')
+      expect(d.settings['app_versions']).not_to eq(nil)
+      expect(d.settings['app_versions'].length).to eq(1)
+      expect(d.settings['app_versions'][0][0]).to eq('2011.01.01')
+      expect(d.settings['app_versions'][0][1]).to be > Time.now.to_i - 5
+      expect(d.settings['app_versions'][0][1]).to be < Time.now.to_i + 5
+
+      expect(d.valid_token?('bob')).to eq(true)
+      expect(d.settings['app_versions'].length).to eq(1)
+
+      expect(d.valid_token?('bob', '2012.01.01')).to eq(true)
+      expect(d.settings['app_versions'].length).to eq(2)
+      expect(d.settings['app_versions'][1][0]).to eq('2012.01.01')
+      expect(d.settings['app_versions'][1][1]).to be > Time.now.to_i - 5
+      expect(d.settings['app_versions'][1][1]).to be < Time.now.to_i + 5
+    end
   end
 
   describe "token" do

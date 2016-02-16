@@ -36,7 +36,7 @@ class ApplicationController < ActionController::Base
       id = token.split(/~/)[0]
       @api_device = Device.find_by_global_id(id)
       if !['/api/v1/token_check'].include?(request.path)
-        if !@api_device || !@api_device.valid_token?(token)
+        if !@api_device || !@api_device.valid_token?(token, request.headers['X-CoughDrop-Version'])
           @api_device = nil
           set_browser_token_header
           api_error 400, {error: "Invalid token", token: token}

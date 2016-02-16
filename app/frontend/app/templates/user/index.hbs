@@ -496,32 +496,70 @@
           <a href="#" {{action 'reset_password'}} class="btn btn-default">{{t "Reset Password" key='reset_password'}}</a>
         {{/if}}
         {{#if model.permissions.admin_support_actions}}
-          <br/><br/>
-          {{t "Subscription:" key='subscription_colon'}}
-          {{subscription.subscription_plan_description}}
-          {{#if model.subscription.expires}}
-            {{t " -- expires" key='dash_expires'}}
-            {{date model.subscription.expires}}
-          {{/if}}
-          <br/>
-          {{#if subscription_settings.type}}
-            <div>
-              {{#if subscription_settings.loading}}
-                {{t "Updating subscription..." key='updating_subscription'}}
-              {{else if subscription_settings.error}}
-                {{subscription_settings.error}}
-              {{else}}
-                {{t "Are you sure you want to set this user as a %{type}?" type=subscription_settings.type key='confirm_subscription_set'}}<br/>
-                <button class='btn btn-default' {{action 'set_subscription' 'confirm'}}>{{t "Update Subscription" key='update_subscription'}}</button>
-                <button class='btn btn-default' {{action 'set_subscription' 'cancel'}}>{{t "Cancel" key='cancel'}}</button>
-              {{/if}}
+          <h5 style="margin-top: 20px;">{{t "Subscription:" key='subscription_colon'}}</h5>
+          <div class="well" style="max-width: 400px;">
+            <span class="glyphicon glyphicon-usd" style="font-size: 50px; float: left;"></span>
+            <div style="margin-bottom: 5px; margin-top: -5px;">
+            {{subscription.subscription_plan_description}}
+            {{#if model.subscription.expires}}
+              {{t " -- expires" key='dash_expires'}}
+              {{date model.subscription.expires}}
+            {{/if}}
             </div>
-          {{else}}
-            <a href="#" {{action 'set_subscription' 'eval'}} class="btn btn-default">{{t "Set as Eval Account" key='set_as_eval'}}</a>
-            <a href="#" {{action 'set_subscription' 'never_expires'}} class="btn btn-default">{{t "Set as Free Forever" key='set_as_free_forever'}}</a>
-            <a href="#" {{action 'set_subscription' 'manual_supporter'}} class="btn btn-default">{{t "Set as Free Supporter" key='set_as_free_supporter'}}</a>
-            <a href="#" {{action 'set_subscription' 'add_1'}} class="btn btn-default">{{t "Add 1 Month" key='add_one_month'}}</a><br/>
-          {{/if}}
+            {{#if subscription_settings.type}}
+              <div>
+                {{#if subscription_settings.loading}}
+                  {{t "Updating subscription..." key='updating_subscription'}}
+                {{else if subscription_settings.error}}
+                  {{subscription_settings.error}}
+                {{else}}
+                  {{t "Are you sure you want to set this user as a %{type}?" type=subscription_settings.type key='confirm_subscription_set'}}<br/>
+                  <button class='btn btn-default' {{action 'set_subscription' 'confirm'}}>{{t "Update Subscription" key='update_subscription'}}</button>
+                  <button class='btn btn-default' {{action 'set_subscription' 'cancel'}}>{{t "Cancel" key='cancel'}}</button>
+                {{/if}}
+              </div>
+            {{else}}
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  {{t "Modify Subscription" key='modify_subscription'}} <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a href="#" {{action 'set_subscription' 'eval'}}>{{t "Set as Eval Account" key='set_as_eval'}}</a></li>
+                  <li><a href="#" {{action 'set_subscription' 'never_expires'}}>{{t "Set as Free Forever" key='set_as_free_forever'}}</a></li>
+                  <li><a href="#" {{action 'set_subscription' 'manual_supporter'}}>{{t "Set as Free Supporter" key='set_as_free_supporter'}}</a></li>
+                  <li><a href="#" {{action 'set_subscription' 'add_1'}}>{{t "Add 1 Month" key='add_one_month'}}</a></li>
+                </ul>
+              </div>
+            {{/if}}
+          </div>
+          
+          <h5 style="margin-top: 20px;">{{t "Devices:" key='devices_colon'}}</h5>
+            {{#if model.devices}}
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>{{t "Name" key='name'}}</th>
+                    <th>{{t "V" key='V'}}</th>
+                    <th>{{t "User Agent" key='user_agent'}}</th>
+                    <th>{{t "IP" key='ip'}}</th>
+                    <th>{{t "Date" key='date'}}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each model.devices as |device|}}
+                    <tr>
+                      <td>{{device.name}}</td>
+                      <td>{{device.app_version}}</td>
+                      <td style='width: 30%; font-size: 10px;'>{{device.user_agent}}</td>
+                      <td>{{device.ip_address}}</td>
+                      <td>{{date device.last_used}}</td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              {{t "None found" key='none_found'}}
+            {{/if}}
         {{/if}}
       </div>
     </div>

@@ -89,6 +89,8 @@ module JsonApi::User
       end
     elsif json['permissions'] && json['permissions']['admin_support_actions']
       json['subscription'] = user.subscription_hash
+      ::Device.where(:user_id => user.id).sort_by{|d| (d.settings['token_history'] || [])[-1] || 0 }.reverse
+      json['devices'] = devices.select{|d| !d.hidden? }.map{|d| JsonApi::Device.as_json(d, :current_device => args[:device]) }
     end
     
     if args[:limited_identity]
