@@ -69,7 +69,7 @@ var editManager = Ember.Object.extend({
     this.lastChange = {};
     this.bogus_id_counter = 0;
     if(this.controller && this.controller.get('ordered_buttons')) {
-      var neg_ids = [];
+      var neg_ids = [0];
       this.controller.get('ordered_buttons').forEach(function(row) {
         row.forEach(function(btn) {
           var num_id = parseInt(btn.get('id'), 10) || 0;
