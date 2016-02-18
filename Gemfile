@@ -24,7 +24,7 @@ gem 'aws-ses'
 gem 'resque'
 gem 'rails_12factor', group: :production
 gem 'heroku-deflater', :group => :production
-gem 'unicorn'
+gem 'puma'
 gem 'rack-offline'
 gem 'paper_trail'
 gem 'geokit'
