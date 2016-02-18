@@ -324,6 +324,7 @@ describe Organization, :type => :model do
       expect(o.permissions_for(nil)).to eq({'user_id' => nil})
       
       o.settings['public'] = true
+      o.updated_at = Time.now
       expect(o.permissions_for(nil)).to eq({'user_id' => nil, 'view' => true})
     end
     
@@ -415,6 +416,34 @@ describe Organization, :type => :model do
       expect(Organization.manager_for?(m, u2)).to eq(true)
       expect(Organization.manager_for?(u, m)).to eq(false)
       expect(Organization.manager_for?(u2, m)).to eq(false)
+    end
+  end
+  
+  describe "permissions cache" do
+    it "should invalidate the cache when a manager is added" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      u2 = User.create
+      Organization.where(:id => o.id).update_all(:updated_at => 2.weeks.ago)
+      expect(o.reload.updated_at).to be < 1.hour.ago
+      o.add_user(u.user_name, false)
+      expect(o.reload.updated_at).to be < 1.hour.ago
+      o.add_manager(u2.user_name)
+      expect(o.reload.updated_at).to be > 1.hour.ago
+    end
+    
+    it "should invalidate the cache when a manager is removed" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      u2 = User.create
+      o.add_user(u.user_name, false)
+      o.add_manager(u2.user_name)
+      Organization.where(:id => o.id).update_all(:updated_at => 2.weeks.ago)
+      expect(o.reload.updated_at).to be < 1.hour.ago
+      o.remove_user(u.user_name)
+      expect(o.reload.updated_at).to be < 1.hour.ago
+      o.remove_manager(u2.user_name)
+      expect(o.reload.updated_at).to be > 1.hour.ago
     end
   end
   

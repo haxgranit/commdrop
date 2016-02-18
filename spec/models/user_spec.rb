@@ -21,6 +21,7 @@ describe User, :type => :model do
       expect(u.allows?(u, 'view_detailed')).to eq(true)
       expect(u.allows?(u2, 'view_detailed')).to eq(false)
       u.settings['public'] = true
+      u.updated_at = Time.now
       expect(u.allows?(nil, 'view_detailed')).to eq(true)
       expect(u.allows?(u, 'view_detailed')).to eq(true)
       expect(u.allows?(u2, 'view_detailed')).to eq(true)
@@ -33,6 +34,7 @@ describe User, :type => :model do
       expect(u.allows?(u, 'edit')).to eq(true)
       expect(u.allows?(u2, 'edit')).to eq(false)
       u.settings['public'] = true
+      u.updated_at = Time.now
       expect(u.allows?(nil, 'edit')).to eq(false)
       expect(u.allows?(u, 'edit')).to eq(true)
       expect(u.allows?(u2, 'edit')).to eq(false)
@@ -49,6 +51,46 @@ describe User, :type => :model do
       o = Organization.create(:admin => true)
       o.add_manager(u3.user_name, true)
       expect(u.allows?(u3.reload, 'view_deleted_boards')).to eq(true)
+    end
+  end
+  
+  describe "permissions cache" do
+    it "should invalidate the cache when a supervisor is added" do
+      sup = User.create
+      user = User.create
+      User.where(:id => [user.id, sup.id]).update_all(:updated_at => 2.months.ago)
+      expect(user.reload.updated_at).to be < 1.hour.ago
+      User.link_supervisor_to_user(sup, user)
+      expect(user.reload.updated_at).to be > 1.hour.ago
+    end
+    
+    it "should invalidate the cache when a supervisor is removed" do
+      sup = User.create
+      user = User.create
+      User.link_supervisor_to_user(sup, user)
+      User.where(:id => [user.id, sup.id]).update_all(:updated_at => 2.months.ago)
+      expect(user.reload.updated_at).to be < 1.hour.ago
+      User.unlink_supervisor_from_user(sup, user)
+      expect(user.reload.updated_at).to be > 1.hour.ago
+    end
+    
+    it "should invalidate the cache when a supervisee is added" do
+      sup = User.create
+      user = User.create
+      User.where(:id => [user.id, sup.id]).update_all(:updated_at => 2.months.ago)
+      expect(sup.reload.updated_at).to be < 1.hour.ago
+      User.link_supervisor_to_user(sup, user)
+      expect(sup.reload.updated_at).to be > 1.hour.ago
+    end
+    
+    it "should invalidate the cache when a supervisee is removed" do
+      sup = User.create
+      user = User.create
+      User.link_supervisor_to_user(sup, user)
+      User.where(:id => [user.id, sup.id]).update_all(:updated_at => 2.months.ago)
+      expect(sup.reload.updated_at).to be < 1.hour.ago
+      User.unlink_supervisor_from_user(sup, user)
+      expect(sup.reload.updated_at).to be > 1.hour.ago
     end
   end
   

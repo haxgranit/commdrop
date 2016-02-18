@@ -3,13 +3,14 @@ module Permissions
   
   included do
     cattr_accessor :permissions_lookup
-    cattr_accessor :cache_permissions
+    cattr_accessor :allow_cached_permissions
     self.permissions_lookup = []
   end
   
   def cache_key(prefix=nil)
-    return nil unless self.id
-    key = "#{self.class.to_s}#{self.id}-#{self.updated_at.to_f}"
+    id = self.id || 'nil'
+    updated = (self.updated_at || Time.now).to_f
+    key = "#{self.class.to_s}#{id}-#{updated}:#{RedisInit.cache_token}"
     if prefix
       key = prefix + "/" + key
     end
@@ -31,7 +32,7 @@ module Permissions
   end
   
   def allows?(user, action)
-    if false && self.class.cache_permissions
+    if self.class.allow_cached_permissions
       # check for an existing result keyed off the record's id and updated_at
       permissions = permissions_for(user)
       
@@ -48,13 +49,12 @@ module Permissions
   end
   
   def permissions_for(user)
-    cache_key = (user && user.cache_key) || 'nobody'
-    permissions = get_cached("permissions-for/#{cache_key}")
-    return permissions if permissions
+    if self.class.allow_cached_permissions
+      cache_key = (user && user.cache_key) || "nobody"
+      permissions = get_cached("permissions-for/#{cache_key}")
+      return permissions if permissions
+    end
 
-    all_permissions = []
-    permissions_lookup.each{|actions, block| all_permissions += actions }
-    all_permissions = all_permissions.uniq.sort
     granted_permissions = {
       'user_id' => (user && user.global_id)
     }.with_indifferent_access
@@ -69,13 +69,13 @@ module Permissions
       end
     end
     # cache the result with a 30-minute expiration keyed off the id and updated_at
-    set_cached("permissions-for/#{cache_key}", granted_permissions)
+    set_cached("permissions-for/#{cache_key}", granted_permissions) if self.class.allow_cached_permissions
     granted_permissions
   end
   
   module ClassMethods
     def cache_permissions
-      self.cache_permissions = true
+      self.allow_cached_permissions = true
     end
     
     def add_permissions(*actions, &block)

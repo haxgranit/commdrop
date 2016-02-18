@@ -47,6 +47,7 @@ describe JsonApi::User do
       expect(json['membership_type']).to eq('premium')
       
       u.settings['public'] = false
+      u.updated_at = Time.now
       json = JsonApi::User.build_json(u, permissions: nil)
       expect(json['membership_type']).to eq(nil)
     end

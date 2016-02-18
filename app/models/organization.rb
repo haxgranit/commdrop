@@ -8,11 +8,14 @@ class Organization < ActiveRecord::Base
   has_many :users, :foreign_key => :managing_organization_id
   has_many :managers, :class_name => User, :foreign_key => :managed_organization_id
   
+  # cache should be invalidated if:
+  # - a manager/assistant is added or removed
   add_permissions('view') { self.settings && self.settings['public'] == true }
   add_permissions('view', 'edit') {|user| self.assistant?(user) }
   add_permissions('view', 'edit', 'manage') {|user| self.manager?(user) }
   add_permissions('view', 'edit', 'manage', 'update_licenses') {|user| Organization.admin && Organization.admin.manager?(user) }
   add_permissions('delete') {|user| Organization.admin && !self.admin && Organization.admin.manager?(user) }
+  cache_permissions
 
   def generate_defaults
     self.settings ||= {}
@@ -44,6 +47,7 @@ class Organization < ActiveRecord::Base
     end
     # TODO: trigger notification
     user.save
+    self.touch
     true
   end
   
@@ -56,6 +60,7 @@ class Organization < ActiveRecord::Base
     user.settings['full_manager'] = false
     # TODO: trigger notification
     user.save
+    self.touch
     true
   end
   

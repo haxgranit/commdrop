@@ -51,6 +51,7 @@ RSpec.configure do |config|
     Time.zone = nil
     Worker.flush_queues
     PaperTrail.whodunnit = nil
+    RedisInit.cache_token = "#{rand(999)}.#{Time.now.to_f}"
   end
 end
 

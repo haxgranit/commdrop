@@ -31,6 +31,11 @@ class Board < ActiveRecord::Base
   has_paper_trail :only => [:current_revision, :settings, :name, :key, :public, :parent_board_id, :user_id]
   secure_serialize :settings
 
+  # cache should be invalidated if:
+  # - it is shared or unshared (including upstream)
+  # - an author is added or removed (via sharing)
+  # - it gains a new upstream link
+  # - the author's supervision settings change
   # public boards anyone can view
   add_permissions('view') { self.public }
   # explicitly-shared boards are viewable

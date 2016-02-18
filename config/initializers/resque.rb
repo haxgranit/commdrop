@@ -1,4 +1,6 @@
 module RedisInit
+  cattr_accessor :cache_token
+  
   def self.redis_uri
     redis_url = ENV["REDISCLOUD_URL"] || ENV["OPENREDIS_URL"] || ENV["REDISGREEN_URL"] || ENV["REDISTOGO_URL"] || ENV["REDIS_URL"]
     return nil unless redis_url
@@ -16,6 +18,7 @@ module RedisInit
     redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
     @default = Redis::Namespace.new("coughdrop-stash", :redis => redis)
     @permissions = Redis::Namespace.new("coughdrop-permissions", :redis => redis)
+    self.cache_token = 'abc'
   end
   
   def self.default

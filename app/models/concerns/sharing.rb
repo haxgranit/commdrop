@@ -89,6 +89,7 @@ module Sharing
     user.settings['boards_shared_with_me'] = list
     author.save
     user.save
+    schedule(:touch_downstreams)
     true
   end
   

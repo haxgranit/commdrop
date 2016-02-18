@@ -10,6 +10,7 @@ describe Supervising, :type => :model do
         'view_existence' => true
       })
       u.settings['supervisors'] = [{'user_id' => u2.global_id}]
+      u.updated_at = Time.now
       expect(u.permissions_for(u2)).to eq({
         'user_id' => u2.global_id,
         'view_existence' => true,
@@ -18,6 +19,7 @@ describe Supervising, :type => :model do
         'supervise' => true
       })
       u.settings['supervisors'] = [{'user_id' => u2.global_id, 'edit_permission' => true}]
+      u.updated_at = Time.now
       expect(u.permissions_for(u2)).to eq({
         'user_id' => u2.global_id,
         'manage_supervision' => true,

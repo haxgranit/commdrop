@@ -27,6 +27,8 @@ class User < ActiveRecord::Base
   # doesn't redirect on old usernames, but I think it does on old
   # repo names, at least until they're replaces by a same-named repo.
 
+  # cache should be invalidated if:
+  # - a supervisor is added or removed
   add_permissions('view_existence') { true } # anyone can get basic information
   add_permissions('view_existence', 'view_detailed', 'supervise', 'edit', 'manage_supervision', 'delete', 'view_deleted_boards') {|user| user.id == self.id }
   add_permissions('view_existence', 'view_detailed') { self.settings && self.settings['public'] == true }

@@ -17,12 +17,14 @@ describe JsonApi::Device do
     
     it "should return appropriate attributes" do
       u = User.create
-      d = Device.create(:settings => {'name' => 'cool device'})
+      d = Device.create(:settings => {'name' => 'cool device', 'app_version' => 'asdf'})
       expect(JsonApi::Device.build_json(d)).to eq({
         'id' => d.global_id,
         'name' => 'cool device',
         'ip_address' => nil,
-        'last_used' => d.created_at.iso8601
+        'last_used' => d.created_at.iso8601,
+        'app_version' => 'asdf',
+        'user_agent' => nil
       })
     end
   end

@@ -109,17 +109,17 @@ describe Permissions, :type => :model do
   describe "cache_key" do
     it "should not require a parameter" do
       u = User.create
-      expect(u.cache_key).to eq("User#{u.id}-#{u.updated_at.to_f}")
+      expect(u.cache_key).to eq("User#{u.id}-#{u.updated_at.to_f}:#{RedisInit.cache_token}")
     end
     
     it "should append a passed parameter" do
       u = User.create
-      expect(u.cache_key('bacon')).to eq("bacon/User#{u.id}-#{u.updated_at.to_f}")
+      expect(u.cache_key('bacon')).to eq("bacon/User#{u.id}-#{u.updated_at.to_f}:#{RedisInit.cache_token}")
     end
     
     it "should return nil on an unsaved record" do
-      u = User.new
-      expect(u.cache_key).to eq(nil)
+      u = User.new(:updated_at => Time.now)
+      expect(u.cache_key).to eq("Usernil-#{u.updated_at.to_f}:#{RedisInit.cache_token}")
     end
   end
 end

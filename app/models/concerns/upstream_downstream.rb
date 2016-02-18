@@ -3,7 +3,9 @@ module UpstreamDownstream
   
   def track_downstream_boards!(already_visited_ids=[], buttons_changed=false)
     @track_downstream_boards = true
+    self.touch_downstreams
     self.track_downstream_boards(already_visited_ids, buttons_changed)
+    self.touch_downstreams
     @track_downstream_boards = false
     true
   end
@@ -122,6 +124,13 @@ module UpstreamDownstream
   def update_any_upstream
     self.any_upstream = (self.settings['immediately_upstream_board_ids'] || []).length > 0
     self.save
+  end
+  
+  def touch_downstreams
+    ids = [self.global_id] + ((self.settings || {})['downstream_board_ids'] || [])
+    # TODO: sharding
+    db_ids = self.class.local_ids(ids)
+    Board.where(:id => db_ids).update_all(:updated_at => Time.now)
   end
   
   def schedule_downstream_checks

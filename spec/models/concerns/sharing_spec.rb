@@ -703,6 +703,96 @@ describe Sharing, :type => :model do
     end
   end
   
+  describe "permission cache invalidating" do
+    it "should invalidate the cache of all downstream boards when a board is shared" do
+      u = User.create
+      u2 = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b2.global_id}}]
+      b.save
+      Worker.process_queues
+      Board.where(:user_id => u.id).update_all(:updated_at => 2.weeks.ago)
+      
+      b.share_with(u)
+      expect(b.reload.updated_at).to be < 1.hour.ago
+      expect(b2.reload.updated_at).to be < 1.hour.ago
+
+      Worker.process_queues
+      expect(b.reload.updated_at).to be > 1.hour.ago
+      expect(b2.reload.updated_at).to be > 1.hour.ago
+    end
+    
+    it "should invalidate the cache of all downstream boards when a board is unshared" do
+      u = User.create
+      u2 = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b2.global_id}}]
+      b.save
+      b.share_with(u)
+      Worker.process_queues
+      Board.where(:user_id => u.id).update_all(:updated_at => 2.weeks.ago)
+      
+      b.unshare_with(u)
+      expect(b.reload.updated_at).to be < 1.hour.ago
+      expect(b2.reload.updated_at).to be < 1.hour.ago
+
+      Worker.process_queues
+      expect(b.reload.updated_at).to be > 1.hour.ago
+      expect(b2.reload.updated_at).to be > 1.hour.ago
+    end
+    
+    it "should invalidate the cache of all just-now linked boards when a new board link is added" do
+      u = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b3 = Board.create(:user => u)
+      b4 = Board.create(:user => u)
+      b2.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b3.global_id}}]
+      b2.save
+      b3.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b4.global_id}}]
+      b3.save
+      Worker.process_queues
+      
+      Board.where(:user_id => u.id).update_all(:updated_at => 2.weeks.ago)
+      b.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b2.global_id}}]
+      b.save      
+      expect(b3.reload.updated_at).to be < 1.hour.ago
+      expect(b4.reload.updated_at).to be < 1.hour.ago
+      
+      Worker.process_queues
+      expect(b3.reload.updated_at).to be > 1.hour.ago
+      expect(b4.reload.updated_at).to be > 1.hour.ago
+    end
+    
+    it "should invalidate the cache of all no-longer linked boards when a board link is removed" do
+      u = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b3 = Board.create(:user => u)
+      b4 = Board.create(:user => u)
+      b.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b2.global_id}}]
+      b.save      
+      b2.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b3.global_id}}]
+      b2.save
+      b3.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b4.global_id}}]
+      b3.save
+      Worker.process_queues
+      
+      Board.where(:user_id => u.id).update_all(:updated_at => 2.weeks.ago)
+      b.reload
+      b.settings['buttons'] = []
+      b.save
+      expect(b3.reload.updated_at).to be < 1.hour.ago
+      expect(b4.reload.updated_at).to be < 1.hour.ago
+      
+      Worker.process_queues
+      expect(b3.reload.updated_at).to be > 1.hour.ago
+      expect(b4.reload.updated_at).to be > 1.hour.ago
+    end
+  end
+  
   describe "edit-sharing" do
     it "should allow co-authors to edit and delete the shared board, but not sub-boards" do
       u = User.create
