@@ -36,8 +36,6 @@ end
 
 task "extras:mobile" => :environment do
   folder = 'coughdrop_mobile'
-  puts "generating new assets"
-  puts `./bin/deploy_prep`
   js = nil
   css = nil
   Dir.glob('./public/assets/application-*') do |fn|
