@@ -64,7 +64,12 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
       end
       set.data['buttons'] = all_buttons
       set.save
+      set.schedule(:cache_buttons_json)
       set
     end
+  end
+  
+  def cache_buttons_json
+    self.data['buttons_json'] = self.data['buttons'].to_json
   end
 end

@@ -8,8 +8,16 @@ import Utils from '../utils/misc';
 
 CoughDrop.Buttonset = DS.Model.extend({
   key: DS.attr('string'),
+  buttons_json: DS.attr('raw'),
   buttons: DS.attr('raw'),
   name: DS.attr('string'),
+  set_buttons: function() {
+    var buttons = null;
+    try {
+      buttons = JSON.parse(this.get('buttons_json'));
+    } catch(e) { }
+    this.set('buttons', buttons);
+  }.observes('buttons_json'),
   find_buttons: function(str, user, include_home_and_sidebar) {
     if(str.length === 0) { return []; }
     var buttons = this.get('buttons') || [];
