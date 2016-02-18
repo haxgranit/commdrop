@@ -33,10 +33,7 @@ module Permissions
   def allows?(user, action)
     if false && self.class.cache_permissions
       # check for an existing result keyed off the record's id and updated_at
-      cache_key = (user && user.cache_key) || 'nobody'
-      permissions = get_cached("permissions-for/#{cache_key}")
-      # call permissions_for
-      permissions ||= permissions_for(user)
+      permissions = permissions_for(user)
       
       return permissions[action] == true
     end
@@ -51,6 +48,10 @@ module Permissions
   end
   
   def permissions_for(user)
+    cache_key = (user && user.cache_key) || 'nobody'
+    permissions = get_cached("permissions-for/#{cache_key}")
+    return permissions if permissions
+
     all_permissions = []
     permissions_lookup.each{|actions, block| all_permissions += actions }
     all_permissions = all_permissions.uniq.sort
@@ -68,7 +69,6 @@ module Permissions
       end
     end
     # cache the result with a 30-minute expiration keyed off the id and updated_at
-    cache_key = (user && user.cache_key) || 'nobody'
     set_cached("permissions-for/#{cache_key}", granted_permissions)
     granted_permissions
   end

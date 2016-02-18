@@ -72,8 +72,9 @@ var editManager = Ember.Object.extend({
       var neg_ids = [];
       this.controller.get('ordered_buttons').forEach(function(row) {
         row.forEach(function(btn) {
-          if(btn.get('id') < 0) {
-            neg_ids.push(btn.get('id'));
+          var num_id = parseInt(btn.get('id'), 10) || 0;
+          if(num_id < 0 && isFinite(num_id)) {
+            neg_ids.push(num_id);
           }
         });
       });
@@ -463,6 +464,7 @@ var editManager = Ember.Object.extend({
     var _this = this;
     var result = [];
     var pending_buttons = [];
+    var used_button_ids = {};
     // build the ordered grid
     // TODO: work without ordered grid (i.e. scene displays)
     for(var idx = 0; idx < grid.rows; idx++) {
@@ -471,7 +473,12 @@ var editManager = Ember.Object.extend({
         var button = null;
         var id = (grid.order[idx] || [])[jdx];
         for(var kdx = 0; kdx < buttons.length; kdx++) {
-          if(buttons[kdx].id == id) {
+          if(id !== null && id !== undefined && buttons[kdx].id == id && !used_button_ids[id]) {
+            // only allow each button id to be used once, even if referenced more than once in the grid
+            // TODO: if a button is references more than once in the grid, probably clone
+            // it for the second reference or something rather than just ignoring it. Multiply-referenced
+            // buttons do weird things when in edit mode.
+            used_button_ids[id] = true;
             var more_args = {board: board};
             if(board.get('no_lookups')) {
               more_args.no_lookups = true;
