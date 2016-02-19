@@ -507,12 +507,13 @@ var buttonTracker = Ember.Object.extend({
     }, 500);
 
     var now = (new Date()).getTime();
+    var duration = event.duration || 50;
     if(buttonTracker.last_gaze_linger) {
       // check if we're outside the screen bounds, or the timestamp bounds.
       // if so clear the object
-      if(buttonTracker.last_gaze_linger.started < now - (buttonTracker.gaze_timeout  + 1000)) {
+      if(now - buttonTracker.last_gaze_linger.started > buttonTracker.gaze_timeout + 1000 - duration) {
         buttonTracker.last_gaze_linger = null;
-      } else if(buttonTracker.last_gaze_linger.updated < now - 500) {
+      } else if(now - buttonTracker.last_gaze_linger.updated > 500 - duration) {
         buttonTracker.last_gaze_linger = null;
       } else {
         var bounds = buttonTracker.last_gaze_linger.loose_bounds();
@@ -563,7 +564,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.last_gaze_linger.updated = now;
       buttonTracker.last_gaze_linger.events = buttonTracker.last_gaze_linger.events || [];
       buttonTracker.last_gaze_linger.events.push(event);
-      if(buttonTracker.last_gaze_linger.started < now - buttonTracker.gaze_timeout) {
+      if(now - buttonTracker.last_gaze_linger.started > buttonTracker.gaze_timeout) {
         buttonTracker.element_release(buttonTracker.last_gaze_linger, event);
         buttonTracker.last_gaze_linger = null;
         // TODO: timeout before starting next selection
