@@ -1965,7 +1965,7 @@ describe('editManager', function() {
       b.set('id', '1_1');
       var reload_called = false;
       stub(b, 'reload_including_all_downstream', function() {
-        reload_called = true
+        reload_called = true;
       });
       var found = false;
       queryLog.defineFixture({

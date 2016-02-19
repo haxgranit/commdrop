@@ -583,7 +583,7 @@ class User < ActiveRecord::Base
     starting_new_board = Board.find_by_path(starting_new_board_id)
     Board.replace_board_for(self, starting_old_board, starting_new_board, update_inline)
     ids = [starting_old_board_id]
-    ids += starting_old_board.reload.settings['downstream_board_ids'] if starting_old_board
+    ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
   end
   
@@ -592,7 +592,7 @@ class User < ActiveRecord::Base
     starting_new_board = Board.find_by_path(starting_new_board_id)
     Board.copy_board_links_for(self, starting_old_board, starting_new_board)
     ids = [starting_old_board_id]
-    ids += starting_old_board.reload.settings['downstream_board_ids'] if starting_old_board
+    ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
   end
 

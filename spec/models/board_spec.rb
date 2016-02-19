@@ -823,58 +823,68 @@ describe Board, :type => :model do
   describe "post_process" do
     it "should search for a better default icon if the default icon is being used" do
       u = User.create
-      b = Board.new(:user => u)
+      b = Board.create(:user => u)
       b.settings = {'name' => 'chicken and fries'}
       b.generate_defaults
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
       expect(b.settings['default_image_url']).to eq(Board::DEFAULT_ICON)
       res = OpenStruct.new(:body => [{}, {'license' => 'CC By', 'image_url' => 'http://example.com/pic.png'}].to_json)
       expect(Typhoeus).to receive(:get).with("https://www.opensymbols.org/api/v1/symbols/search?q=chicken+and+fries", :ssl_verifypeer => false).and_return(res)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq('http://example.com/pic.png')
       expect(b.settings['default_image_url']).to eq('http://example.com/pic.png')
     end
     
     it "should not search for a better default icon once it's already found a better default icon" do
       u = User.create
-      b = Board.new(:user => u)
+      b = Board.create(:user => u)
       b.settings = {'name' => 'chicken and fries'}
       b.generate_defaults
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
       expect(b.settings['default_image_url']).to eq(Board::DEFAULT_ICON)
       res = OpenStruct.new(:body => [{}, {'license' => 'CC By', 'image_url' => 'http://example.com/pic.png'}].to_json)
       expect(Typhoeus).to receive(:get).with("https://www.opensymbols.org/api/v1/symbols/search?q=chicken+and+fries", :ssl_verifypeer => false).and_return(res)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq('http://example.com/pic.png')
       expect(b.settings['default_image_url']).to eq('http://example.com/pic.png')
       
       b.process_params({'name' => 'cool people'}, {})
       expect(Typhoeus).not_to receive(:get)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq('http://example.com/pic.png')
       expect(b.settings['default_image_url']).to eq('http://example.com/pic.png')
 
       expect(Typhoeus).not_to receive(:get)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq('http://example.com/pic.png')
       expect(b.settings['default_image_url']).to eq('http://example.com/pic.png')
     end
     
     it "should not search for a better default icon if no name set for the board" do
       u = User.create
-      b = Board.new(:user => u)
+      b = Board.create(:user => u)
       b.generate_defaults
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
       expect(b.settings['default_image_url']).to eq(Board::DEFAULT_ICON)
       expect(Typhoeus).not_to receive(:get)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
       expect(b.settings['default_image_url']).to eq(Board::DEFAULT_ICON)
     end
     
     it "should not search for a better default icon if an icon has been manually set" do
       u = User.create
-      b = Board.new(:user => u)
+      b = Board.create(:user => u)
       b.settings = {'name' => 'chicken and fries'}
       b.generate_defaults
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
@@ -884,29 +894,35 @@ describe Board, :type => :model do
       expect(b.settings['default_image_url']).to eq(nil)
       
       expect(Typhoeus).not_to receive(:get)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq('http://example.com/pic.png')
       expect(b.settings['default_image_url']).to eq(nil)
       
-      b = Board.new(:user => u)
+      b = Board.create(:user => u)
       b.settings = {'image_url' => 'http://example.com/pic2.png'}
       b.generate_defaults
       expect(b.settings['image_url']).to eq('http://example.com/pic2.png')
       expect(b.settings['default_image_url']).to eq(nil)
       
       expect(Typhoeus).not_to receive(:get)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq('http://example.com/pic2.png')
       expect(b.settings['default_image_url']).to eq(nil)
 
-      b = Board.new(:user => u)
+      b = Board.create(:user => u)
       b.settings = {'image_url' => Board::DEFAULT_ICON}
       b.generate_defaults
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
       expect(b.settings['default_image_url']).to eq(nil)
       
       expect(Typhoeus).not_to receive(:get)
-      b.post_process
+      b.save
+      Worker.process_queues
+      b.reload
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
       expect(b.settings['default_image_url']).to eq(nil)
     end
@@ -922,18 +938,18 @@ describe Board, :type => :model do
     end
   end
   
-  describe "copy_by" do
+  describe "find_copies_by" do
     it "should return nothing if no user provided" do
       u = User.create
       b = Board.create(:user => u)
-      expect(b.copy_by(nil)).to eq(nil)
+      expect(b.find_copies_by(nil)).to eq([])
     end
     
     it "should return nothing if no matching board found" do
       u1 = User.create
       b1 = Board.create(:user => u1)
       u2 = User.create
-      expect(b1.copy_by(u2)).to eq(nil)
+      expect(b1.find_copies_by(u2)).to eq([])
     end
     
     it "should return a result if any found" do
@@ -941,7 +957,7 @@ describe Board, :type => :model do
       b1 = Board.create(:user => u1)
       u2 = User.create
       b2 = Board.create(:user => u2, :parent_board_id => b1.id)
-      expect(b1.copy_by(u2)).to eq(b2)
+      expect(b1.find_copies_by(u2)).to eq([b2])
     end
     
     it "should return the most recent result" do
@@ -950,7 +966,7 @@ describe Board, :type => :model do
       u2 = User.create
       b2 = Board.create(:user => u2, :parent_board_id => b1.id)
       b3 = Board.create(:user => u2, :parent_board_id => b1.id)
-      expect(b1.copy_by(u2)).to eq(b3)
+      expect(b1.find_copies_by(u2)).to eq([b3, b2])
     end
   end
   
