@@ -13,6 +13,16 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
     self.data['buttons'] ||= []
     self.data['button_count'] = self.data['buttons'].length
     self.data['board_count'] = self.data['buttons'].map{|b| b['board_id'] }.uniq.length
+    self.cache_json_response
+  end
+  
+  def cache_json_response
+    self.data ||= {}
+    self.data['json_response'] = JsonApi::ButtonSet.as_json(self, :wrapper => true, :nocache => true).to_json
+  end
+
+  def cached_json_response
+    self.data && self.data['json_response']
   end
   
   def self.update_for(board_id)
@@ -64,12 +74,7 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
       end
       set.data['buttons'] = all_buttons
       set.save
-      set.schedule(:cache_buttons_json)
       set
     end
-  end
-  
-  def cache_buttons_json
-    self.data['buttons_json'] = self.data['buttons'].to_json
   end
 end

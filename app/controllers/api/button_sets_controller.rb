@@ -20,10 +20,10 @@ class Api::ButtonSetsController < ApplicationController
     json = {}
     json_str = "null"
     self.class.trace_execution_scoped(['button_set/board/json_render']) do
-      json = JsonApi::ButtonSet.as_json(button_set, :wrapper => true, :permissions => @api_user)
+      json = JsonApi::ButtonSet.as_json(button_set, :wrapper => true)
     end
     self.class.trace_execution_scoped(['button_set/board/json_stringify']) do
-      json_str = json.to_json
+      json_str = json.is_a?(String) ? json : json.to_json
     end
     render json: json_str
   end
