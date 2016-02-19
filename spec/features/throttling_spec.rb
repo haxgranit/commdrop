@@ -12,10 +12,38 @@ describe "throttling URLs" do
     last_response
   end
   
-  before(:each) do
-    Rack::Attack.cache.store.scan_each do |key|
-      Rack::Attack.cache.store.del(key) if key
+  class ThrottleStore
+    def init
+      @lookups = {}
     end
+    
+    def lookups
+      @lookups
+    end
+    
+    def read(key)
+      @lookups[key]
+    end
+    
+    def write(key, val, args)
+      @lookups[key] = val
+    end
+    
+    def delete(key)
+      @lookups.delete(key)
+    end
+    
+    def increment(key, cnt, args)
+      total = (read(key) || 0) + cnt
+      write(key, total, nil)
+      total
+    end
+  end
+  
+  before(:each) do
+    mem_store = ThrottleStore.new
+    mem_store.init
+    Rack::Attack.cache.store = mem_store
   end
 
   
@@ -57,6 +85,7 @@ describe "throttling URLs" do
   
   describe "/" do
     it "should throttle conservatively" do
+      expect(Time).to receive(:now).and_return(Time.at(1455925189)).at_least(10).times
       conservative_throttle_check(->{
         get "/"
       }, ->{
@@ -68,6 +97,7 @@ describe "throttling URLs" do
   
   describe "POST /token" do
     it "should throttle aggressively" do
+      expect(Time).to receive(:now).and_return(Time.at(1455925189)).at_least(10).times
       token = Security.browser_token
       u = User.new(:user_name => "fred")
       u.generate_password("seashell")
@@ -84,6 +114,7 @@ describe "throttling URLs" do
   
   describe "POST /api/v1/boards/\w+/download" do
     it "should throttle aggressiely" do
+      expect(Time).to receive(:now).and_return(Time.at(1455925189)).at_least(10).times
       u = User.create
       b = Board.create(:user => u, :public => true)
       aggressive_throttle_check(->{
@@ -98,6 +129,7 @@ describe "throttling URLs" do
   
   describe "POST /api/v1/purchase_gift" do
     it "should throttle aggressively" do
+      expect(Time).to receive(:now).and_return(Time.at(1455925189)).at_least(10).times
       @user = User.create
       @device = Device.create(:user => @user, :developer_key_id => 1, :device_key => 'hippo')
       p = Progress.create
