@@ -646,7 +646,7 @@ var pictureGrabber = Ember.Object.extend({
     } else if(navigator.device && navigator.device.capture && navigator.device.capture.captureImage) {
       navigator.device.capture.captureImage(function(files) {
         var media_file = files[0];
-        var file = new File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
+        var file = new window.File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
         _this.file_selected(file);
       }, function() { }, {limit: 1});
     }
@@ -864,7 +864,7 @@ var soundGrabber = Ember.Object.extend({
     } else if(navigator.device && navigator.device.capture && navigator.device.capture.captureAudio) {
       navigator.device.capture.captureAudio(function(files) {
         var media_file = files[0];
-        var file = new File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
+        var file = new window.File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
         _this.file_selected(file);
       }, function() { }, {limit: 1});
     }

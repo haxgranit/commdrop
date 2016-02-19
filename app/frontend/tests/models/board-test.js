@@ -110,27 +110,6 @@ describe('Board', function() {
     });
   });
 
-  //   star_or_unstar: function(star) {
-  //     var _this = this;
-  //     console.log(star);
-  //     persistence.ajax('/api/v1/boards/' + this.get('id') + '/stars', {
-  //       type: 'POST',
-  //       data: {
-  //         '_method': (star ? 'POST' : 'DELETE')
-  //       }
-  //     }).then(function(data) {
-  //       _this.set('starred', data.starred);
-  //       _this.set('stars', data.stars);
-  //     }, function() {
-  //       modal.warning(i18n.t('star_failed', "Star action failed"));
-  //     });
-  //   },
-  //   star: function() {
-  //     return this.star_or_unstar(true);
-  //   },
-  //   unstar: function() {
-  //     return this.star_or_unstar(false);
-  //   },
   describe("star/unstar", function() {
     it("should make the appropriate call to star a board", function() {
       var called = false;
@@ -206,7 +185,7 @@ describe('Board', function() {
       board.star();
       waitsFor(function() { return called; });
       runs(function() {
-        expect(text).toEqual("Star action failed");
+        expect(text).toEqual("Like action failed");
       });
     });
   });

@@ -336,7 +336,7 @@ var capabilities;
       battery: {
         listen: function(callback) {
           capabilities.battery_callbacks = capabilities.battery_callbacks || [];
-          var start_listening = capabilities.battery_callbacks.length == 0
+          var start_listening = capabilities.battery_callbacks.length === 0;
           capabilities.battery_callbacks.push(callback);
           if(start_listening) {
             var notify = function() {
@@ -378,7 +378,7 @@ var capabilities;
             }, false);
           }
           if(capabilities.battery_callbacks.last_result) {
-            callback(last_result);
+            callback(capabilities.battery_callbacks.last_result);
           }
         }
       },
