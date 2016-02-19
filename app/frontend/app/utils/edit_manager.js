@@ -725,8 +725,9 @@ var editManager = Ember.Object.extend({
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var save = old_board.create_copy(user);
       save.then(function(board) {
-        var done_callback = function() {
+        var done_callback = function(affected_board_ids) {
           resolve(board);
+          old_board.reload_including_all_downstream(affected_board_ids);
         };
         var endpoint = null;
         if(decision == 'modify_links_update' || decision == 'modify_links_copy') {
@@ -749,7 +750,7 @@ var editManager = Ember.Object.extend({
               if(event.status == 'finished') {
                 user.reload();
                 app_state.refresh_session_user();
-                done_callback();
+                done_callback(event.result && event.result.affected_board_ids);
               } else if(event.status == 'errored') {
                 reject(i18n.t('re_linking_failed', "Board re-linking failed while processing"));
               }

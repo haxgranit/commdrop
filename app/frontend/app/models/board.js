@@ -313,6 +313,32 @@ CoughDrop.Board = DS.Model.extend({
     this.set('buttons', [].concat(buttons));
     return new_button.id;
   },
+  reload_including_all_downstream: function(affected_board_ids) {
+    affected_board_ids = affected_board_ids || [];
+    if(affected_board_ids.indexOf(this.get('id')) == -1) {
+      affected_board_ids.push(this.get('id'));
+    }
+    var found_board_ids = [];
+    // when a board is copied, we need to reload all the original versions,
+    // so if any of them are in-memory or in indexeddb, then we need to
+    // reload or fetch them remotely to get the latest, updated version,
+    // which will include the "my copy" information.
+    CoughDrop.store.peekAll('board').content.forEach(function(brd) {
+      if(affected_board_ids && affected_board_ids.indexOf(brd.record.get('id')) != -1) {
+        if(!brd.record.get('isLoading') && !brd.record.get('isNew')) {
+          brd.record.reload();
+        }
+        found_board_ids.push(brd.record.get('id'));
+      }
+    });
+    affected_board_ids.forEach(function(id) {
+      if(found_board_ids.indexOf(id) == -1) {
+        persistence.find('board', id).then(function() {
+          CoughDrop.store.findRecord('board', id).then(null, function() { });
+        }, function() { });
+      }
+    });
+  },
   button_visible: function(button_id) {
     var grid = this.get('grid');
     if(!grid || !grid.order) { return false; }

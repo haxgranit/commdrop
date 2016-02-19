@@ -1947,6 +1947,47 @@ describe('editManager', function() {
       runs();
     });
     
+    it("should trigger a call to reload_including_all_downstream", function() {
+      app_state.set('currentBoardState', {id: '1_1'});
+      stub(modal, 'flash', function() { });
+      var user = Ember.Object.create({
+        stats: {
+          board_set_ids: ['1_2', '1_3', '1_1']
+        }
+      });
+      app_state.set('sessionUser', user);
+      expect(app_state.get('board_in_current_user_set')).toEqual(true);
+      var b = CoughDrop.store.createRecord('board', {
+        key: 'example/fred',
+        buttons: [],
+        grid: {}
+      });
+      b.set('id', '1_1');
+      var reload_called = false;
+      stub(b, 'reload_including_all_downstream', function() {
+        reload_called = true
+      });
+      var found = false;
+      queryLog.defineFixture({
+        method: 'POST',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '1_2'
+        }}),
+        compare: function(object) {
+          found = true;
+          return true;
+        }
+      });
+      var new_board = null;
+      editManager.copy_board(b).then(function(res) { new_board = res; });
+      waitsFor(function() { return new_board; });
+      runs(function() {
+        expect(new_board.get('id')).toEqual('1_2');
+        expect(reload_called).toEqual(true);
+      });
+    });
+    
     it("should replace in the user's communication set if specified as the decision and in the user's set", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
