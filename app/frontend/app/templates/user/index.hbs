@@ -88,7 +88,7 @@
     <div class="col-sm-3 col-xs-6">
       <div class="panel panel-default summary smaller">
         <div class="panel-heading">
-          {{t "Starred boards" key='starred_boards'}}
+          {{t "Liked boards" key='starred_boards'}}
         </div>
         <div class="panel-body">
           {{t "board" key='boards' count=model.stats.starred_boards}}
@@ -266,7 +266,7 @@
           {{#if model.permissions.edit}}
             <li role="presentation" class={{if private_selected 'active'}}><a href="#" {{action 'set_selected' 'private'}}>{{t "Private" key='private'}}</a></li>
           {{/if}}
-          <li role="presentation" class={{if starred_selected 'active'}}><a href="#" {{action 'set_selected' 'starred'}}>{{t "Starred" key='starred'}}</a></li>
+          <li role="presentation" class={{if starred_selected 'active'}}><a href="#" {{action 'set_selected' 'starred'}}>{{t "Liked" key='starred'}}</a></li>
           {{#if model.permissions.edit}}          
             <li role="presentation" class={{if shared_selected 'active'}}><a href="#" {{action 'set_selected' 'shared'}}>{{t "Shared with Me" key='shared_with_me'}}</a></li>
           {{/if}}

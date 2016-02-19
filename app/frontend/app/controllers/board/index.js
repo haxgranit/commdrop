@@ -410,7 +410,7 @@ export default Ember.Controller.extend({
     return prefix + (this.get('model.starred') ? 'images/star.png' : 'images/star_gray.png');
   }.property('model.starred'),
   starAlt: function() {
-    return this.get('model.starred') ? i18n.t('already_starred', "Already starred") : i18n.t('star_this_board', "Star this board");
+    return this.get('model.starred') ? i18n.t('already_starred', "Already liked") : i18n.t('star_this_board', "Like this board");
   }.property('model.starred'),
   noUndo: true,
   noRedo: true,

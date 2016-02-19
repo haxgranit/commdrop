@@ -250,7 +250,7 @@ CoughDrop.Board = DS.Model.extend({
       _this.set('starred', data.starred);
       _this.set('stars', data.stars);
     }, function() {
-      modal.warning(i18n.t('star_failed', "Star action failed"));
+      modal.warning(i18n.t('star_failed', "Like action failed"));
     });
   },
   star: function() {

@@ -208,12 +208,12 @@
             {{#if app_state.currentUser}}
               <a class='btn btn-default' href="#" {{action "star"}}>
                 <img src={{board.starImage}} alt={{board.starAlt}} style="margin-top: -5px; width: 20px;"/>
-                <span class="wide">{{t "Star" key="star"}}</span> <span class="badge">{{board.stars}}</span>
+                <span class="wide">{{t "Like" key="star"}}</span> <span class="badge">{{board.stars}}</span>
               </a>
             {{else}}
               <span class='btn btn-default' href="#">
                 <img src={{board.starImage}} alt={{board.starAlt}} style="margin-top: -5px; width: 20px;"/>
-                <span class="wide">{{t "Star" key="star"}}</span> <span class="badge">{{board.stars}}</span>
+                <span class="wide">{{t "Like" key="star"}}</span> <span class="badge">{{board.stars}}</span>
               </span>
             {{/if}}
             {{#if board.model.shareable}}

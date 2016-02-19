@@ -284,12 +284,12 @@
             {{#if app_state.currentUser}}
               <a class='btn btn-default not_really_skinny' href="#" {{action "star"}}>
                 <img src={{board.starImage}} alt={{board.starAlt}} style="margin-top: -5px; width: 20px;"/>
-                <span class="wide">{{t "Star" key="star"}}</span> <span class="badge">{{board.stars}}</span>
+                <span class="wide">{{t "Like" key="star"}}</span> <span class="badge">{{board.stars}}</span>
               </a>
             {{else}}
               <span class='btn btn-default not_really_skinny' href="#">
                 <img src={{board.starImage}} alt={{board.starAlt}} style="margin-top: -5px; width: 20px;"/>
-                <span class="wide">{{t "Star" key="star"}}</span> <span class="badge">{{board.stars}}</span>
+                <span class="wide">{{t "Like" key="star"}}</span> <span class="badge">{{board.stars}}</span>
               </span>
             {{/if}}
             {{#if board.model.shareable}}
@@ -314,9 +314,9 @@
                   {{#if app_state.currentUser}}
                     <li role="presentation">
                       {{#if board.model.starred}}
-                        <a role="menuitem" tabindex="-1" href="#" {{action "star"}}>{{t "Unstar Board" key='star_board'}}</a>
+                        <a role="menuitem" tabindex="-1" href="#" {{action "star"}}>{{t "Unlike Board" key='star_board'}}</a>
                       {{else}}
-                        <a role="menuitem" tabindex="-1" href="#" {{action "star"}}>{{t "Star Board" key='star_board'}}</a>
+                        <a role="menuitem" tabindex="-1" href="#" {{action "star"}}>{{t "Like Board" key='star_board'}}</a>
                       {{/if}}
                     </li>
                   {{/if}}

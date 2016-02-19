@@ -72,14 +72,14 @@ export default modal.ModalController.extend({
     if(this.get('board.user_name') != app_state.get('currentUser.user_name')) {
       res.push({name: i18n.t('their_boards', "This User's Boards (includes shared)"), id: 'current_user'});
       res.push({name: i18n.t('public_boards', "Public Boards"), id: 'public'});
-      res.push({name: i18n.t('their_starred_boards', "This User's Starred Boards"), id: 'current_user_starred'});
+      res.push({name: i18n.t('their_starred_boards', "This User's Liked Boards"), id: 'current_user_starred'});
       res.push({name: i18n.t('my_public_boards', "My Public Boards"), id: 'personal_public'});
-      res.push({name: i18n.t('my_public_boards', "My Starred Public Boards"), id: 'personal_public_starred'});
+      res.push({name: i18n.t('my_public_boards', "My Liked Public Boards"), id: 'personal_public_starred'});
       
     } else {
       res.push({name: i18n.t('my_boards', "My Boards (includes shared)"), id: 'personal'});
       res.push({name: i18n.t('public_boards', "Public Boards"), id: 'public'});
-      res.push({name: i18n.t('starred_boards', "My Starred Boards"), id: 'personal_starred'});
+      res.push({name: i18n.t('starred_boards', "My Liked Boards"), id: 'personal_starred'});
     }
     return res;
   }.property('board.user_name'),
