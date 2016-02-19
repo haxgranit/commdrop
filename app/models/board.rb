@@ -274,6 +274,21 @@ class Board < ActiveRecord::Base
     # Can't be backgrounded because board rendering depends on this
     self.map_images
     
+    self.schedule(:check_image_url)
+    
+    if @check_for_parts_of_speech
+      self.schedule(:check_for_parts_of_speech)
+      @check_for_parts_of_speech = nil
+    end
+
+    schedule_downstream_checks
+    if @track_revision
+      self.schedule(:track_revision)
+      @track_revision = nil
+    end
+  end
+  
+  def check_image_url
     if self.settings && self.settings['image_url'] == DEFAULT_ICON && self.settings['default_image_url'] == self.settings['image_url'] && self.settings['name'] && self.settings['name'] != 'Unnamed Board'
       res = Typhoeus.get("https://www.opensymbols.org/api/v1/symbols/search?q=#{CGI.escape(self.settings['name'])}", :ssl_verifypeer => false)
       results = JSON.parse(res.body)
@@ -289,17 +304,6 @@ class Board < ActiveRecord::Base
         @skip_post_process = false
       end
     end
-    
-    if @check_for_parts_of_speech
-      self.schedule(:check_for_parts_of_speech)
-      @check_for_parts_of_speech = nil
-    end
-
-    schedule_downstream_checks
-    if @track_revision
-      self.schedule(:track_revision)
-      @track_revision = nil
-    end
   end
   
   def map_images
@@ -313,8 +317,6 @@ class Board < ActiveRecord::Base
       sounds << {:id => button['sound_id']} if button['sound_id']
     end
     
-    # TODO: is there any security here to make sure you can't just steal someone
-    # else's images? I don't think so...
     existing_image_ids = BoardButtonImage.images_for_board(self.id).map(&:global_id)
     existing_images = existing_image_ids.map{|id| {:id => id} }
     image_ids = images.map{|i| i[:id] }
