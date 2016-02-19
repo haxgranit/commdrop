@@ -74,6 +74,8 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
       end
       set.data['buttons'] = all_buttons
       set.save
+      board.settings['board_downstream_button_set_id'] = set.global_id
+      board.save
       set
     end
   end

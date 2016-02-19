@@ -17,7 +17,6 @@ class Board < ActiveRecord::Base
   has_many :board_button_sounds
   has_many :button_sounds, :through => :board_button_sounds
   has_many :log_session_boards
-  has_one :board_downstream_button_set
   belongs_to :user
   belongs_to :parent_board, :class_name => 'Board'
   has_many :child_boards, :class_name => 'Board', :foreign_key => 'parent_board_id'
@@ -75,6 +74,15 @@ class Board < ActiveRecord::Base
     self.star(user, star)
     self.save
   end
+  
+  def board_downstream_button_set
+    if self.settings && self.settings['board_downstream_button_set_id']
+      BoardDownstreamButtonSet.find_by_global_id(self.settings['board_downstream_button_set_id'])
+    else
+      BoardDownstreamButtonSet.find_by(:board_id => self.id)
+    end
+  end
+
   
   def non_author_starred?
     self.user && ((self.settings || {})['starred_user_ids'] || []).any?{|s| s != self.user.global_id }
