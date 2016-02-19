@@ -10,6 +10,8 @@ module JsonApi::ButtonSet
     json = {} #board.settings
     json['id'] = board.global_id
     json['key'] = board.key
+    # TODO: remove this for better perf once all apps are updated
+    json['buttons'] = button_set.data['buttons']
     if button_set.data['buttons_json']
       json['buttons_json'] = button_set.data['buttons_json']
     else
