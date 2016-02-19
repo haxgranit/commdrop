@@ -35,6 +35,7 @@ module JsonApi::Board
     json['total_buttons'] = board.settings['total_buttons']
     json['unlinked_buttons'] = board.settings['unlinked_buttons']
     json['downstream_boards'] = (board.settings['downstream_board_ids'] || []).length
+    json['immediately_upstream_boards'] = (board.settings['immediately_upstream_board_ids'] || []).length
     json['user_name'] = board.cached_user_name
     self.trace_execution_scoped(['json/board/parent_board']) do
       json['parent_board_id'] = board.parent_board && board.parent_board.global_id
@@ -67,12 +68,14 @@ module JsonApi::Board
     end
     if args.key?(:permissions)
       self.trace_execution_scoped(['json/board/copy_check']) do
-        copy = board.copy_by(args[:permissions])
+        copies = board.find_copies_by(args[:permissions])
+        copy = copies[0]
         if copy
           json['board']['copy'] = {
             'id' => copy.global_id,
             'key' => copy.key
           }
+          json['board']['copies'] = copies.count
         end
       end
       self.trace_execution_scoped(['json/board/parent_board_check']) do

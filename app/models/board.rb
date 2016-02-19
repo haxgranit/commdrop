@@ -110,12 +110,12 @@ class Board < ActiveRecord::Base
     true
   end
   
-  def copy_by(user)
+  def find_copies_by(user)
     if user
       # TODO: sharding
-      Board.where(:parent_board_id => self.id, :user_id => user.id).order('id DESC').first
+      Board.where(:parent_board_id => self.id, :user_id => user.id).order('id DESC')
     else
-      nil
+      []
     end
   end
   
