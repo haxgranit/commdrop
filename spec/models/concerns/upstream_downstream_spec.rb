@@ -119,6 +119,7 @@ describe UpstreamDownstream, :type => :model do
       b1.save
       Worker.process_queues
       Worker.process_queues
+      Worker.process_queues
       expect(Worker.queues_empty?).to eq(true)
       expect(b3.reload.settings['downstream_board_ids'].sort).to eq([].sort)
       expect(b2.reload.settings['downstream_board_ids'].sort).to eq([].sort)
@@ -129,6 +130,7 @@ describe UpstreamDownstream, :type => :model do
       b2.save
       Worker.process_queues
       Worker.process_queues
+      Worker.process_queues
       expect(Worker.queues_empty?).to eq(true)
       expect(b3.reload.settings['downstream_board_ids'].sort).to eq([].sort)
       expect(b2.reload.settings['downstream_board_ids'].sort).to eq([b3.global_id].sort)
@@ -137,6 +139,7 @@ describe UpstreamDownstream, :type => :model do
         {'id' => 1, 'load_board' => {'id' => b1.global_id}}
       ]
       b3.save
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(Worker.queues_empty?).to eq(true)

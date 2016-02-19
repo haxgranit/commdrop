@@ -9,12 +9,14 @@ module JsonApi::ButtonSet
     bad_keys = (args.keys - [:wrapper, :nocache])
     raise "args not allowed because of cached responses, #{bad_keys.join(',')}" if bad_keys.length > 0
     board = button_set.board
-    json = {} #board.settings
-    json['id'] = board.global_id
-    json['key'] = board.key
+    json = {}
+    if board
+      json['id'] = board.global_id
+      json['key'] = board.key
+      json['name'] = board.settings && board.settings['name']
+    end
     # TODO: remove this for better perf once all apps are updated
     json['buttons'] = button_set.data['buttons']
-    json['name'] = board.settings && board.settings['name']
 
     json
   end
