@@ -286,6 +286,14 @@ module Subscription
     end
     json
   end
+  
+  def log_subscription_event(hash)
+    self.settings ||= {}
+    hash[:time] = Time.now.to_i
+    self.settings['subscription_events'] ||= []
+    self.settings['subscription_events'] << hash
+    self.save
+  end
       
   module ClassMethods  
     def check_for_subscription_updates

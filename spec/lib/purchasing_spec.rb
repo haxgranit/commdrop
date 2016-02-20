@@ -668,4 +668,29 @@ describe Purchasing do
       expect(res[:code]).to eq(g.code)
     end
   end
+  
+  describe "logging" do
+    it "should log user events without erroring" do
+      u = User.create
+      expect(Stripe::Charge).to receive(:create).with({
+        :amount => 15000,
+        :currency => 'usd',
+        :source => 'token',
+        :description => 'communicator long-term purchase $150',
+        :metadata => {
+          'user_id' => u.global_id,
+          'plan_id' => 'long_term_150'
+        }
+      }).and_return({
+        'id' => '23456',
+        'customer' => '45678'
+      })
+      expect(User).to receive(:subscription_event)
+      Purchasing.purchase(u, {'id' => 'token'}, 'long_term_150')
+      u.reload
+      expect(u.settings['subscription_events'].length).to eq(4)
+      expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting subscription update'])
+    end
+  end
+  
 end

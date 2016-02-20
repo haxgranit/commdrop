@@ -132,6 +132,7 @@ module Purchasing
 
   def self.purchase(user, token, type)
     # TODO: record basic card information ("Visa ending in 4242" for references)
+    user && user.log_subscription_event({:log => 'purchase initiated'})
     Stripe.api_key = ENV['STRIPE_SECRET_KEY']
     if type.match(/^slp_/) && type.match(/free/)
       user.update_subscription({
@@ -143,7 +144,8 @@ module Purchasing
       Purchasing.cancel_other_subscriptions(user, 'all')
       return {success: true, type: type}
     end
-    amount = type.split(/_/)[-1].to_i
+    user && user.log_subscription_event({:log => 'paid subscription'})
+    amount = type.sub(/_plus_trial/, '').split(/_/)[-1].to_i
     valid_amount = true
     description = type
     if type.match(/^slp_monthly/)
@@ -162,12 +164,14 @@ module Purchasing
       return {success: false, error: "unrecognized purchase type, #{type}"}
     end
     if !valid_amount
+      user && user.log_subscription_event({:error => true, :log => 'invalid_amount'})
       return {success: false, error: "#{amount} not valid for type #{type}"}
     end
     plan_id = type
     add_token_summary(token)
     begin
       if type.match(/long_term/)
+        user && user.log_subscription_event({:log => 'long-term - creating charge'})
         charge = Stripe::Charge.create({
           :amount => (amount * 100),
           :currency => 'usd',
@@ -179,6 +183,7 @@ module Purchasing
           }
         })
         time = 5.years.to_i
+        user && user.log_subscription_event({:log => 'persisting subscription update'})
         User.subscription_event({
           'purchase' => true,
           'user_id' => user.global_id,
@@ -190,15 +195,19 @@ module Purchasing
         })
         cancel_other_subscriptions(user, 'all')
       else
+        user && user.log_subscription_event({:log => 'monthly subscription'})
         customer = nil
         if user.settings['subscription'] && user.settings['subscription']['customer_id']
+          user && user.log_subscription_event({:log => 'retrieving existing customer'})
           customer = Stripe::Customer.retrieve(user.settings['subscription']['customer_id'])
         end
         if customer
+          user && user.log_subscription_event({:log => 'new subscription for existing customer'})
           sub = customer.subscriptions.create({
             :plan => plan_id,
             :source => token['id']
           })
+          user && user.log_subscription_event({:log => 'persisting subscription update'})
           updated = User.subscription_event({
             'subscribe' => true,
             'user_id' => user.global_id,
@@ -209,6 +218,7 @@ module Purchasing
           })
           Purchasing.cancel_other_subscriptions(user, sub['id']) if updated
         else
+          user && user.log_subscription_event({:log => 'creating new customer'})
           customer = Stripe::Customer.create({
             :metadata => {
               'user_id' => user.global_id
@@ -217,6 +227,7 @@ module Purchasing
             :source => token['id']
           })
           sub = customer.subscriptions['data'].detect{|s| s['status'] == 'active' }
+          user && user.log_subscription_event({:log => 'persisting subscription update'})
           updated = User.subscription_event({
             'subscribe' => true,
             'user_id' => user.global_id,
@@ -231,10 +242,12 @@ module Purchasing
     rescue Stripe::CardError => err
       json = err.json_body
       err = json[:error]
+      user && user.log_subscription_event({:error => 'stripe card_exception', :json => json})
       return {success: false, error: err[:code]}
     rescue => err
       type = (err.respond_to?('[]') && err[:type])
       code = (err.respond_to?('[]') && err[:code]) || 'unknown'
+      user && user.log_subscription_event({:error => 'other_exception', :err => err.to_s})
       return {success: false, error: 'unexpected_error', error_message: err.to_s, error_type: type, error_code: code}
     end
     {success: true, type: type}

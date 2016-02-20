@@ -833,22 +833,6 @@ describe Subscription, :type => :model do
     end
   end
   
-#   def subscription_override(type)
-#     if type == 'never_expires'
-#       self.process({}, {'premium_until' => 'forever'})
-#     elsif type == 'eval'
-#       self.update_subscription({
-#         'subscribe' => true,
-#         'subscription_id' => 'free_eval',
-#         'token_summary' => "Manually-set Eval Account",
-#         'plan_id' => 'eval_monthly_free'
-#       })
-#     else
-#       false
-#     end
-#     
-#   end
-
   describe "subscription_override" do
     it "should update for never_expires" do
       u = User.create
