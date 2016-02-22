@@ -407,7 +407,7 @@ var buttonTracker = Ember.Object.extend({
       
       // logic to prevent quick double-tap, seems like this was a fix for iOS problems
       // but it may no longer be necessary
-      if(elem_wrap && buttonTracker.lastSelect != elem_wrap.dom) {
+      if(elem_wrap && elem_wrap.dom && buttonTracker.lastSelect != elem_wrap.dom) {
         event.preventDefault();
         buttonTracker.lastSelect = elem_wrap.dom;
         Ember.run.later(function() {
