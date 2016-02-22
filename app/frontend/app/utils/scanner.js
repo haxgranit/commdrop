@@ -312,7 +312,7 @@ var scanner = Ember.Object.extend({
       }
     }
     if(capabilities.mobile && app_state.get('speak_mode') && Ember.$("#hidden_input:focus").length === 0) {
-      modal['default'].warning(i18n.t('tap_first', "Your switch may not be completely enabled. Tap somewhere on the screen to finish enabling it."), true);
+      modal.warning(i18n.t('tap_first', "Your switch may not be completely enabled. Tap somewhere on the screen to finish enabling it."), true);
     }
     modal.highlight(elem.dom, options).then(function() {
       scanner.pick();
