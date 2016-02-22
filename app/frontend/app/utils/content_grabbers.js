@@ -497,6 +497,11 @@ var pictureGrabber = Ember.Object.extend({
       if(!url) {
         if(_this.edited_image_data) {
           _this.select_image_preview(_this.edited_image_data); 
+        } else {
+          editManager.get_edited_image().then(function(data) {
+            _this.select_image_preview(data);
+          }, function() {
+          });
         }
         return;
       } else {

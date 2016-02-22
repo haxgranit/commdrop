@@ -44,7 +44,9 @@
         </div>
         <div style="margin-top: 10px;">
           <button type="button" class='btn btn-primary' {{action "select_image_preview"}}>{{t "Use This" key='use_this'}}</button>
-          <button type="button" class='btn btn-default' {{action "edit_image_preview"}}>{{t "Edit" key='edit'}}</button>
+          {{#unless image_preview.editor}}
+            <button type="button" class='btn btn-default' {{action "edit_image_preview"}}>{{t "Edit" key='edit'}}</button>
+          {{/unless}}
           {{#if stream}}
             <button type="button" class='btn btn-default' {{action "webcamToggle" false}}>{{t "Try Again" key='try_again'}}</button>
           {{/if}}
