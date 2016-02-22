@@ -777,7 +777,8 @@ var buttonTracker = Ember.Object.extend({
     } 
     if(!buttonTracker.drag) {
       elem_wrap = this.find_button_under_event(this.startEvent);
-      if(elem_wrap && app_state.get('edit_mode')) {
+      console.log(elem_wrap);
+      if(elem_wrap && elem_wrap.dom && app_state.get('edit_mode')) {
         var $elem = Ember.$(elem_wrap.dom);
         this.start_dragging($elem, this.startEvent);
         $elem.css('opacity', 0.0);
