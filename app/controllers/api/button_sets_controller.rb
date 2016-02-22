@@ -1,6 +1,6 @@
 class Api::ButtonSetsController < ApplicationController
   extend ::NewRelic::Agent::MethodTracer
-  before_filter :require_api_token
+  before_filter :require_api_token, :except => [:show]
   
   def show
     board = nil
