@@ -1047,6 +1047,7 @@ var capabilities;
       error = error || (event.target && event.target.error && event.target.error.message);
       error = error || (event.target && event.target.__versionTransaction && event.target.__versionTransaction.error && event.target.__versionTransaction.error.message);
       error = error || "unknown error";
+      console.log(event.target);
       console.error("Database error: " + error);
       // capabilities.db = false;
     };

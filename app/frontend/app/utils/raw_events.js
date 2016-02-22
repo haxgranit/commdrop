@@ -280,23 +280,28 @@ var buttonTracker = Ember.Object.extend({
           // placeholder where the dragged button used to live
           var $over = Ember.$(elem_wrap.dom);
           var for_folder = $over.find(".action_container.folder").length > 0;
-          var $overClone = $over.clone();
-          if(elem_wrap.dom == buttonTracker.drag.data('elem')) {
-            $overClone.css('opacity', 0.0);
-          } else {
-            var opacity = for_folder ? 0.2 : 0.7;
-            $overClone.css('opacity', opacity);
+          var $overClone = null;
+          try {
+            $overClone = $over.clone();
+          } catch(e) { }
+          if($overClone) {
+            if(elem_wrap.dom == buttonTracker.drag.data('elem')) {
+              $overClone.css('opacity', 0.0);
+            } else {
+              var opacity = for_folder ? 0.2 : 0.7;
+              $overClone.css('opacity', opacity);
+            }
+            buttonTracker.drag.data('overClone', $overClone[0]);
+            var $elem = Ember.$(buttonTracker.drag.data('elem'));
+            if(!for_folder) {
+              $over.css('opacity', 0.0);
+            }
+            $overClone.css({
+              top: $elem.css('top'),
+              left: $elem.css('left')
+            });
+            $elem.hide().after($overClone);
           }
-          buttonTracker.drag.data('overClone', $overClone[0]);
-          var $elem = Ember.$(buttonTracker.drag.data('elem'));
-          if(!for_folder) {
-            $over.css('opacity', 0.0);
-          }
-          $overClone.css({
-            top: $elem.css('top'),
-            left: $elem.css('left')
-          });
-          $elem.hide().after($overClone);
         }
       }
       if(buttonTracker.drag) {
@@ -657,9 +662,9 @@ var buttonTracker = Ember.Object.extend({
         },
         data: function(attr, val) {
           if(arguments.length == 2) {
-            elem.set(attr, val);
+            Ember.set(elem, attr, val);
           } else {
-            return elem.get(attr);
+            return Ember.get(elem, attr);
           }
         }
       };
