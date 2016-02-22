@@ -273,9 +273,7 @@ export default Ember.Controller.extend({
     },
     premium_voices: function() {
       var _this = this;
-      app_state.check_for_full_premium(this.get('model'), 'premium_voices').then(function() {
-        modal.open('premium-voices', {user: _this.get('model')});
-      });
+      modal.open('premium-voices', {user: _this.get('model')});
     },
     test_voice: function() {
       utterance.test_voice(this.get('model.preferences.device.voice.voice_uri'), this.get('model.preferences.device.voice.rate'), this.get('model.preferences.device.voice.pitch'), this.get('model.preferences.device.voice.volume'));

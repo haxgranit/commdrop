@@ -525,11 +525,9 @@
     <div class="col-sm-3 col-xs-7">
       {{bound-select select_class="form-control" select_id="voiceURI" content=user_voice_list selection=model.preferences.device.voice.voice_uri action=(action (mut model.preferences.device.voice.voice_uri)) }}
     </div>
-    {{#if more_voices_available}}
-      <div class="col-sm-2 col-xs-5">
-        <button class='btn btn-default' {{action "premium_voices"}}>{{t "Premium Voices" key='premium_voices'}}</button>
-      </div>
-    {{/if}}
+    <div class="col-sm-2 col-xs-5">
+      <button class='btn btn-default' {{action "premium_voices"}}>{{t "Premium Voices" key='premium_voices'}}</button>
+    </div>
   </div>
   <div class="form-group" style="margin-top: -15px;">
     <div class="col-sm-6 col-sm-offset-3">

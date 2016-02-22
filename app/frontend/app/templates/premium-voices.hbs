@@ -6,10 +6,12 @@
   <div class="modal-body">
     <div class="row">
       <div class="col-sm-12">
-        <p>{{t "CoughDrop offers a set of additional voices for paid users to use on Android and iOS. Listen to the voice samples to find the voice that will work best for you. You can download up to %{available} premium voices for use on your devices." available=model.user.premium_voices.allowed key='premium_voices_select'}}</p>
-        {{#if voice_error}}
+        <p>{{t "CoughDrop offers a set of additional voices for paid users on Android and iOS. Listen to the voice samples to find the voice that will work best for you. You can download up to %{available} premium voices for use on your devices." available=model.user.premium_voices.allowed key='premium_voices_select'}}</p>
+        {{#unless premium_available}}
+          <p class="text-info">{{t "Premium voices are only available to paid users, and currently only work on the iOS and Android apps. If you would like to install a premium voice during your free trial, please let us know." key='premium_only_available_paid'}}</p>
+        {{else if voice_error}}
           <p class='text-danger'>{{voice_error}}</p>
-        {{/if}}
+        {{/unless}}
         <table class="table table-hover">
           <thead>
             <tr>
@@ -59,7 +61,9 @@
                     {{#if voice.size}}
                       {{t "%{size}Mb" size=voice.size key='megabytes'}}
                     {{/if}}
-                    <a href="#" {{action 'download_voice' voice}}><span class="glyphicon glyphicon-save"></span></a>
+                    {{#if premium_available}}
+                      <a href="#" {{action 'download_voice' voice}}><span class="glyphicon glyphicon-save"></span></a>
+                    {{/if}}
                   {{/if}}
                 </td>
               </tr>

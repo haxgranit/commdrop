@@ -3,6 +3,7 @@ import modal from '../utils/modal';
 import speecher from '../utils/speecher';
 import capabilities from '../utils/capabilities';
 import i18n from '../utils/i18n';
+import app_state from '../utils/app_state';
 import persistence from '../utils/persistence';
 import tts_voices from '../utils/tts_voices';
 
@@ -15,6 +16,15 @@ export default modal.ModalController.extend({
   },
   refresh_voices: function() {
     var _this = this;
+    if(capabilities.installed_app) {
+      capabilities.tts.status().then(function() {
+        if(app_state.get('currentUser.full_premium') || app_state.get('currentUser.premium_voices.always_allowed')) {
+          _this.set('premium_available', true);
+        }
+      }, function() {
+      });
+    }
+
     var all_voices = capabilities.tts.downloadable_voices();
     var res = [];
     this.set('voice_error', null);
