@@ -376,7 +376,7 @@ var app_state = Ember.Object.extend({
         }
         // if scanning mode... has to be here because focus will only reliably work when
         // a user-controlled event has occurred, so can't be on a listener
-        if(app_state.get('currentUser.preferences.device.scanning') && capabilities.mobile) { // scanning mode
+        if(app_state.get('currentUser.preferences.device.scanning') && capabilities.mobile && capabilities.installed_app) { // scanning mode
           var $elem = Ember.$("#hidden_input");
           if($elem.length === 0) {
             $elem = $("<input/>", {id: 'hidden_input', autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'off'});
