@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import editManager from './edit_manager';
 import modal from './modal';
+import capabilities from './capabilities';
 import app_state from './app_state';
 import i18n from './i18n';
 import speecher from './speecher';
@@ -278,7 +279,9 @@ var scanner = Ember.Object.extend({
         e.pass_through = true;
         Ember.$(elem.dom).trigger(e);
       }
-      scanner.reset();
+      Ember.run.later(function() {
+        scanner.reset();
+      });
     }
   },
   next: function() {
@@ -296,10 +299,6 @@ var scanner = Ember.Object.extend({
     options.prevent_close = true;
     options.overlay = false;
     options.select_anywhere = true;
-    if(scanner.options && scanner.options.whole_screen_button) {
-      options.overlay = true;
-      options.clear_overlay = true;
-    }
     if(scanner.options && scanner.options.focus_overlay) {
       options.overlay = true;
       options.clear_overlay = false;
@@ -311,6 +310,9 @@ var scanner = Ember.Object.extend({
       } else if(elem && elem.label) {
         speecher.speak_text(elem.label, false, {interrupt: false});
       }
+    }
+    if(capabilities.mobile && app_state.get('speak_mode') && Ember.$("#hidden_input:focus").length === 0) {
+      modal['default'].warning(i18n.t('tap_first', "Your switch may not be completely enabled. Tap somewhere on the screen to finish enabling it."), true);
     }
     modal.highlight(elem.dom, options).then(function() {
       scanner.pick();

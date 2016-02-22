@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import editManager from './edit_manager';
 import modal from './modal';
+import capabilities from './capabilities';
 import app_state from './app_state';
 import scanner from './scanner';
 import stashes from './_stashes';
@@ -26,6 +27,9 @@ var $board_canvas = null;
 
 Ember.$(document).on('mousedown touchstart', function(event) {
   buttonTracker.touch_start(event)  ;
+  if(capabilities.mobile && event.type == 'touchstart' && app_state.get('speak_mode') && scanner.scanning) {
+    Ember.$("#hidden_input").select().focus();
+  }
 }).on('gazelinger mousemove touchmove mousedown touchstart', function(event) {
   buttonTracker.touch_continue(event);
 }).on('mouseup touchend touchcancel blur', function(event) {
