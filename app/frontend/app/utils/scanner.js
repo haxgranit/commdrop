@@ -311,7 +311,7 @@ var scanner = Ember.Object.extend({
         speecher.speak_text(elem.label, false, {interrupt: false});
       }
     }
-    if(capabilities.mobile && app_state.get('speak_mode') && Ember.$("#hidden_input:focus").length === 0) {
+    if(capabilities.mobile && capabilities.installed_app && app_state.get('speak_mode') && Ember.$("#hidden_input:focus").length === 0) {
       modal.warning(i18n.t('tap_first', "Your switch may not be completely enabled. Tap somewhere on the screen to finish enabling it."), true);
     }
     modal.highlight(elem.dom, options).then(function() {
