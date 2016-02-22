@@ -474,7 +474,6 @@ var buttonTracker = Ember.Object.extend({
     // buttons have a slightly-more advanced logic, because of all the selection
     // targets available in edit mode (image, action button, etc.) and the option
     // of applying stashed buttons/swapping buttons
-    var $elem = Ember.$(elem_wrap.dom);
     var $target = Ember.$(event.target);
     if(editManager.finding_target()) {
       elem_wrap.trigger('buttonselect');
@@ -623,7 +622,7 @@ var buttonTracker = Ember.Object.extend({
     var $target = Ember.$(elem).closest('.button');
     if($target.length > 0) {
       return buttonTracker.element_wrap($target[0]);
-    } else {
+    } else if(app_state.get('speak_mode')) {
       var $board = Ember.$(".board");
       if($board.length === 0) { return null; }
       var offset = $board.offset() || {};
@@ -777,7 +776,6 @@ var buttonTracker = Ember.Object.extend({
     } 
     if(!buttonTracker.drag) {
       elem_wrap = this.find_button_under_event(this.startEvent);
-      console.log(elem_wrap);
       if(elem_wrap && elem_wrap.dom && app_state.get('edit_mode')) {
         var $elem = Ember.$(elem_wrap.dom);
         this.start_dragging($elem, this.startEvent);
