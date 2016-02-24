@@ -15,7 +15,7 @@ module Converters::Utils
     nil
   end
   
-  def self.board_to_remote(board, user, file_type, include)
+  def self.board_to_remote(board, user, file_type, include, headerless=false)
     Progress.update_current_progress(0.2, :converting_file)
     # TODO: key off just the last change id for the board(s) when building the
     # filename, return existing filename if it exists and isn't about to expire
@@ -32,7 +32,8 @@ module Converters::Utils
       raise "Unrecognized conversion type: #{file_type}"
     end
     key = Security.sha512(board.id.to_s, 'board_id')
-    filename = "board_" + board.current_revision + "." + file_type.to_s
+    
+    filename = "board_" + board.current_revision + (include == 'all' ? '1' : '0') + (headerless ? '1' : '0') + "." + file_type.to_s
     remote_path = "downloads/#{key}/#{filename}"
     url = Uploader.check_existing_upload(remote_path)
     return url if url
@@ -43,12 +44,12 @@ module Converters::Utils
         if include == 'all'
           Converters::CoughDrop.to_obz(board, path, {'user' => user})
         else
-          Converters::CoughDrop.to_obz(board, path, {'user' => user})
+          Converters::CoughDrop.to_obz(board, path, {'user' => user, 'headerless' => !!headerless})
         end
       elsif file_type == 'obf'
         Converters::CoughDrop.to_obf(board, path)
       elsif file_type == 'pdf'
-        Converters::CoughDrop.to_pdf(board, path, {'user' => user, 'packet' => (include == 'all')})
+        Converters::CoughDrop.to_pdf(board, path, {'user' => user, 'packet' => (include == 'all'), 'headerless' => !!headerless})
       end
     end
     Progress.update_current_progress(0.9, :uploading_file)

@@ -20,10 +20,14 @@ export default modal.ModalController.extend({
   },
   actions: {
     startDownload: function(decision) {
-      if(decision || !this.get('model.has_links')) {
+      if(decision || (!this.get('model.has_links') && this.get('download_type'))) {
         var type = this.get('model.type');
         if(decision == 'all' && type == 'obf') { type = 'obz'; }
-        var download = persistence.ajax('/api/v1/boards/' + this.get('model.id') + '/download?type=' + type + '&include=' + decision, {type: 'POST'});
+        var url = '/api/v1/boards/' + this.get('model.id') + '/download?type=' + type + '&include=' + decision;
+        if(!this.get('include_header') && !this.get('download_type')) {
+          url = url + "&headerless=1";
+        }
+        var download = persistence.ajax(url, {type: 'POST'});
         var _this = this;
         this.set('progress', {
           status: 'pending'

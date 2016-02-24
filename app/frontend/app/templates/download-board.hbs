@@ -37,13 +37,28 @@
             {{/if}}
           {{else}}
             {{#if download_type}}
+              <span class="glyphicon glyphicon-cloud-download" style="font-size: 30px; float: left; padding-right: 10px; padding-bottom: 5px;"></span>
               <p>{{t "This board contains links to sub-boards. Would you like to download a file containing all available sub-boards, or just the current board?" key='confirm_download_board'}}</p>
               <button {{action "startDownload" "all"}} class="btn btn-primary">{{t "Download full board set" key='download_all_boards'}}</button>
               <button {{action "startDownload" "this"}} class="btn btn-default">{{t "Download just this board" key='download_this_board'}}</button>
             {{else}}
-              <p>{{t "This board contains links to sub-boards. Would you like to print a packet containing all available sub-boards, or just the current board?" key='confirm_print_board'}}</p>
-              <button {{action "startDownload" "all"}} class="btn btn-primary">{{t "Print full board set" key='download_all_boards'}}</button>
-              <button {{action "startDownload" "this"}} class="btn btn-default">{{t "Print just this board" key='download_this_board'}}</button>
+              <span class="glyphicon glyphicon-print" style="font-size: 30px; float: left; padding-right: 10px; padding-bottom: 5px;"></span>
+              <p>{{t "You can print off a physical copy of any board set in CoughDrop. Printed copies can work as an effective backup or for places where you may not want to take a physical device." key='print_explanation'}}</p>
+              {{#if model.has_links}}
+                <p>{{t "This board contains links to sub-boards. Would you like to print a packet containing all available sub-boards, or just the current board?" key='confirm_print_board'}}</p>
+              {{/if}}
+              <p>
+                <label>
+                  {{input type='checkbox' checked=include_header}}
+                  {{t "Include a vocalization header in the printed pdf" key='include_header'}}
+                </label>
+              </p>
+              {{#if model.has_links}}
+                <button {{action "startDownload" "all"}} class="btn btn-primary">{{t "Print full board set" key='download_all_boards'}}</button>
+                <button {{action "startDownload" "this"}} class="btn btn-default">{{t "Print just this board" key='download_this_board'}}</button>
+              {{else}}
+                <button {{action "startDownload" "this"}} class="btn btn-primary">{{t "Print this board" key='print_this_board'}}</button>
+              {{/if}}
             {{/if}}
           {{/if}}
         {{/if}}
