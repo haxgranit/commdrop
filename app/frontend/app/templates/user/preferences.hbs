@@ -407,117 +407,179 @@
   </div>
 {{/if}}
 {{#if advanced}}
-<div class="form-group">
-  <label for="scanning" class="col-sm-3 control-label">{{t "Scanning" key='scanning'}}</label>
-  <div class="col-sm-5">
-    <div class="checkbox">
-      <label>
-        {{input type="checkbox" checked=model.preferences.device.scanning id="scanning"}}
-        {{t "Enable switch-activated scanning" key='enable_scanning'}}
-      </label>
-    </div>
-  </div>
-</div>
-{{#if model.preferences.device.scanning}}
   <div class="form-group">
-    <label for="scanning_mode" class="col-sm-3 control-label">{{t "Scanning Mode" key='scanning_mode'}}</label>
-    <div class="col-sm-5">
-      {{bound-select select_class="form-control" select_id="scanning_mode" content=scanningModeList selection=model.preferences.device.scanning_mode action=(action (mut model.preferences.device.scanning_mode)) }}
-    </div>
-  </div>
-  {{#if region_scanning}}
-    <div class="form-group">
-      <label for="scanning_size" class="col-sm-3 control-label">{{t "Scanning Grid of" key='scanning_size'}}</label>
-      <div class="col-sm-2">
-        <div class="input-group">
-          <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.scanning_region_rows"}}>-</button>
-          </span>
-          {{input value=model.preferences.device.scanning_region_rows class="form-control" id="scanning_region_rows" placeholder="rows"}}
-          <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.scanning_region_rows"}}>+</button>
-          </span>
-        </div>
-      </div>
-      <div class="col-sm-1">
-        <p class="form-control-static">
-          {{t "by" key='by'}}
-        </p>
-      </div>
-      <div class="col-sm-2">
-        <div class="input-group">
-          <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.scanning_region_columns"}}>-</button>
-          </span>
-          {{input value=model.preferences.device.scanning_region_columns class="form-control" id="scanning_region_rows" placeholder="cols"}}
-          <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.scanning_region_columns"}}>+</button>
-          </span>
-        </div>
-      </div>
-    </div>
-  {{/if}}
-  <div class="form-group">
-    <label for="scanning_interval" class="col-sm-3 control-label">{{t "Scanning Interval" key='scanning_interval'}}</label>
-    <div class="col-sm-3">
-      <div class="input-group">
-        <span class="input-group-btn">
-          <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.scanning_interval"}}>-</button>
-        </span>
-        {{input value=model.preferences.device.scanning_interval class="form-control" id="scanning_interval" placeholder="1000"}}
-        <span class="input-group-btn">
-          <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.scanning_interval"}}>+</button>
-        </span>
-      </div>
-    </div>
-    <div class="col-sm-2">
-      <p class="form-control-static">{{t "milliseconds" key='milliseconds'}}</p>
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="scanning_select_on_any_event" class="col-sm-3 control-label">{{t "Scanning Pseudo-Switch" key='psuedo-switch'}}</label>
+    <label for="scanning" class="col-sm-3 control-label">{{t "Scanning" key='scanning'}}</label>
     <div class="col-sm-5">
       <div class="checkbox">
         <label>
-          {{input type="checkbox" checked=model.preferences.device.scanning_select_on_any_event id="scanning_select_on_any_event"}}
-          {{t "Select on Any Key Press or Screen Touch/Click" key='scanning_select_on_any_event'}}
+          {{input type="checkbox" checked=model.preferences.device.scanning id="scanning"}}
+          {{t "Enable switch-activated scanning" key='enable_scanning'}}
         </label>
       </div>
     </div>
   </div>
-  {{#if model.preferences.device.scanning_select_on_any_event}}
-    <label for="scanning_screen_buttons" class="col-sm-3 control-label">{{t "Psuedo-Switch Screen Buttons" key='psuedo-switch_buttons'}}</label>
+  {{#if model.preferences.device.scanning}}
     <div class="form-group">
-      <div class="col-sm-2">
-        <p class="form-control-static"><label for="scan_left">{{t "Left Half" key='left_half'}}</label></p>
-        {{bound-select select_class="form-control" select_id="scan_left" content=scan_pseudo_options selection=model.preferences.device.scanning_left_screen_action action=(action (mut model.preferences.device.scanning_left_screen_action)) }}
-      </div>
-      <div class="col-sm-2">
-        <p class="form-control-static"><label for="scan_right">{{t "Right Half" key='right_half'}}</label></p>
-        {{bound-select select_class="form-control" select_id="scan_right" content=scan_pseudo_options selection=model.preferences.device.scanning_right_screen_action action=(action (mut model.preferences.device.scanning_right_screen_action)) }}
+      <label for="scanning_mode" class="col-sm-3 control-label">{{t "Scanning Mode" key='scanning_mode'}}</label>
+      <div class="col-sm-5">
+        {{bound-select select_class="form-control" select_id="scanning_mode" content=scanningModeList selection=model.preferences.device.scanning_mode action=(action (mut model.preferences.device.scanning_mode)) }}
       </div>
     </div>
-  {{else}}
+    {{#if region_scanning}}
+      <div class="form-group">
+        <label for="scanning_size" class="col-sm-3 control-label">{{t "Scanning Grid of" key='scanning_size'}}</label>
+        <div class="col-sm-2">
+          <div class="input-group">
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.scanning_region_rows"}}>-</button>
+            </span>
+            {{input value=model.preferences.device.scanning_region_rows class="form-control" id="scanning_region_rows" placeholder="rows"}}
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.scanning_region_rows"}}>+</button>
+            </span>
+          </div>
+        </div>
+        <div class="col-sm-1">
+          <p class="form-control-static">
+            {{t "by" key='by'}}
+          </p>
+        </div>
+        <div class="col-sm-2">
+          <div class="input-group">
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.scanning_region_columns"}}>-</button>
+            </span>
+            {{input value=model.preferences.device.scanning_region_columns class="form-control" id="scanning_region_rows" placeholder="cols"}}
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.scanning_region_columns"}}>+</button>
+            </span>
+          </div>
+        </div>
+      </div>
+    {{/if}}
     <div class="form-group">
-      <label for="scanning_select_keycode" class="col-sm-3 control-label">{{t "Scanning \"Select\" Key" key='scanning_select_keycode'}}</label>
-      <div class="col-sm-5">
-        <label style="width: 50px;">
-          {{key-code-text-field id='scanning_select_keycode' class='form-control' value=model.preferences.device.scanning_select_keycode action=(action (mut model.preferences.device.scanning_select_keycode)) placeholder='hit any key'}}
-        </label>
-        &nbsp;{{select_keycode_string}}
+      <label for="scanning_interval" class="col-sm-3 control-label">{{t "Scanning Interval" key='scanning_interval'}}</label>
+      <div class="col-sm-3">
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.scanning_interval"}}>-</button>
+          </span>
+          {{input value=model.preferences.device.scanning_interval class="form-control" id="scanning_interval" placeholder="1000"}}
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.scanning_interval"}}>+</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <p class="form-control-static">{{t "milliseconds" key='milliseconds'}}</p>
       </div>
     </div>
     <div class="form-group">
-      <label for="scanning_next_keycode" class="col-sm-3 control-label">{{t "Scanning \"Next\" Key" key='scanning_next_keycode'}}</label>
+      <label for="scanning_select_on_any_event" class="col-sm-3 control-label">{{t "Scanning Pseudo-Switch" key='psuedo-switch'}}</label>
       <div class="col-sm-5">
-        <label style="width: 50px;">
-          {{key-code-text-field id='scanning_next_keycode' class='form-control' value=model.preferences.device.scanning_next_keycode placeholder='hit any key'}}
-        </label>
-        &nbsp;{{next_keycode_string}}
+        <div class="checkbox">
+          <label>
+            {{input type="checkbox" checked=model.preferences.device.scanning_select_on_any_event id="scanning_select_on_any_event"}}
+            {{t "Select on Any Key Press or Screen Touch/Click" key='scanning_select_on_any_event'}}
+          </label>
+        </div>
+      </div>
+    </div>
+    {{#if model.preferences.device.scanning_select_on_any_event}}
+      <label for="scanning_screen_buttons" class="col-sm-3 control-label">{{t "Psuedo-Switch Screen Buttons" key='psuedo-switch_buttons'}}</label>
+      <div class="form-group">
+        <div class="col-sm-2">
+          <p class="form-control-static"><label for="scan_left">{{t "Left Half" key='left_half'}}</label></p>
+          {{bound-select select_class="form-control" select_id="scan_left" content=scan_pseudo_options selection=model.preferences.device.scanning_left_screen_action action=(action (mut model.preferences.device.scanning_left_screen_action)) }}
+        </div>
+        <div class="col-sm-2">
+          <p class="form-control-static"><label for="scan_right">{{t "Right Half" key='right_half'}}</label></p>
+          {{bound-select select_class="form-control" select_id="scan_right" content=scan_pseudo_options selection=model.preferences.device.scanning_right_screen_action action=(action (mut model.preferences.device.scanning_right_screen_action)) }}
+        </div>
+      </div>
+    {{else}}
+      <div class="form-group">
+        <label for="scanning_select_keycode" class="col-sm-3 control-label">{{t "Scanning \"Select\" Key" key='scanning_select_keycode'}}</label>
+        <div class="col-sm-5">
+          <label style="width: 50px;">
+            {{key-code-text-field id='scanning_select_keycode' class='form-control' value=model.preferences.device.scanning_select_keycode action=(action (mut model.preferences.device.scanning_select_keycode)) placeholder='hit any key'}}
+          </label>
+          &nbsp;{{select_keycode_string}}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="scanning_next_keycode" class="col-sm-3 control-label">{{t "Scanning \"Next\" Key" key='scanning_next_keycode'}}</label>
+        <div class="col-sm-5">
+          <label style="width: 50px;">
+            {{key-code-text-field id='scanning_next_keycode' class='form-control' value=model.preferences.device.scanning_next_keycode placeholder='hit any key'}}
+          </label>
+          &nbsp;{{next_keycode_string}}
+        </div>
+      </div>
+    {{/if}}
+  {{/if}}
+  <div class="form-group">
+    <label for="scanning" class="col-sm-3 control-label">{{t "Eye Tracking" key='eye_tracking'}}</label>
+    <div class="col-sm-5">
+      <div class="checkbox">
+        {{#if eyegaze_capable}}
+          <label>
+            {{input type="checkbox" checked=model.preferences.device.eyegaze id="eyegaze"}}
+            {{t "Enable eye-tracking" key='eyegaze'}}
+          </label>
+        {{else}}
+          <em>{{t "Eye tracking is a beta feature on Windows, please contact us for more information" key='eye_tracking_beta'}}</em>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+  {{#if model.preferences.device.eyegaze}}
+    <div class="form-group">
+      <div class="col-sm-5 col-sm-offset-3">
+        <p class="form-control-static"><em>{{t "CoughDrop currently works with EyeX eye trackers. We hope to add more devices soon." key='supported_eye_trackers'}}</em></p>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="eyegaze_dwell" class="col-sm-3 control-label">{{t "Eye Dwell Time" key='eyegaze_dwell'}}</label>
+      <div class="col-sm-3">
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.eyegaze_dwell"}}>-</button>
+          </span>
+          {{input value=model.preferences.device.eyegaze_dwell class="form-control" id="eyegaze_dwell" placeholder="1000"}}
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.eyegaze_dwell"}}>+</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <p class="form-control-static">{{t "milliseconds" key='milliseconds'}}</p>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="eyegaze_delay" class="col-sm-3 control-label">{{t "Eye Selection Delay" key='eyegaze_delay'}}</label>
+      <div class="col-sm-3">
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.eyegaze_delay"}}>-</button>
+          </span>
+          {{input value=model.preferences.device.eyegaze_delay class="form-control" id="eyegaze_delay" placeholder="100"}}
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.eyegaze_delay"}}>+</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <p class="form-control-static">{{t "milliseconds" key='milliseconds'}}</p>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="eyegaze_targeting" class="col-sm-3 control-label">{{t "Eye Targeting Style" key='eyegaze_targeting'}}</label>
+      <div class="col-sm-5">
+        {{bound-select select_class="form-control" select_id="scanning_mode" content=targetingList selection=model.preferences.device.eyegaze_targeting action=(action (mut model.preferences.device.eyegaze_targeting)) }}
       </div>
     </div>
   {{/if}}
-{{/if}}
 {{/if}}
 {{#if user_voice_list}}
   <div class="form-group">

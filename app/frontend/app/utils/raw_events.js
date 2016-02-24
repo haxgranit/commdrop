@@ -180,7 +180,7 @@ var buttonTracker = Ember.Object.extend({
     }
     if(event.type == 'touchstart' || event.type == 'mousedown' || event.type == 'touchmove') {
       buttonTracker.buttonDown = true;
-    } else if(event.type == 'gazelinger') {
+    } else if(event.type == 'gazelinger' && buttonTracker.eyegaze_enabled) {
       buttonTracker.gaze_linger(event);
     }
     if(!buttonTracker.buttonDown && !app_state.get('edit_mode')) { 
@@ -491,12 +491,13 @@ var buttonTracker = Ember.Object.extend({
     }
   },
   gaze_linger: function(event) {
+    if(buttonTracker.gaze_wait) { return; }
     // - find the nearest selectable, with some liberal tolerance
     // - if we're already lingering
     //   - if we're outside the tolerance, start a new linger
     //   - otherwise average the linger's history and decide on the best candidate
     // - persist the current linger, record the starting timestamp
-    // - if we're been lingering on the element for more than the cutoff, call element_release
+    // - if we've been lingering on the element for more than the cutoff, call element_release
     var elem_wrap = buttonTracker.find_selectable_under_event(event, true);
     if(!buttonTracker.gaze_elem) {
       var elem = document.createElement('div');
@@ -506,7 +507,11 @@ var buttonTracker = Ember.Object.extend({
     }
 
     Ember.run.cancel(buttonTracker.linger_clear_later);
-    buttonTracker.gaze_timeout = buttonTracker.gaze_timeout || 2000;
+    buttonTracker.gaze_timeout = buttonTracker.gaze_timeout || 1000;
+    buttonTracker.gaze_animation = buttonTracker.gaze_animation || 'pie';
+    if(!buttonTracker.gaze_delay && buttonTracker.gaze_delay !== 0) {
+      buttonTracker.gaze_delay = 100;
+    }
     buttonTracker.linger_clear_later = Ember.run.later(function() {
       buttonTracker.gaze_elem.classList.remove('targeting');
       buttonTracker.gaze_elem.style.left = '-1000px';
@@ -565,8 +570,11 @@ var buttonTracker = Ember.Object.extend({
         buttonTracker.gaze_elem.style.top = (bounds.top + (bounds.height / 2) - 25) + "px";
         // restart the animation
         var clone = buttonTracker.gaze_elem.cloneNode(true);
+        clone.style.animationDuration = buttonTracker.gaze_timeout + 'ms';
+        clone.style.webkitAnimationDuration = buttonTracker.gaze_timeout + 'ms';
         buttonTracker.gaze_elem.parentNode.replaceChild(clone, buttonTracker.gaze_elem);
         clone.classList.add('targeting');
+        clone.classList.add(buttonTracker.gaze_animation);
         buttonTracker.gaze_elem = clone;
       }
       buttonTracker.last_gaze_linger.updated = now;
@@ -575,6 +583,12 @@ var buttonTracker = Ember.Object.extend({
       if(now - buttonTracker.last_gaze_linger.started > buttonTracker.gaze_timeout) {
         buttonTracker.element_release(buttonTracker.last_gaze_linger, event);
         buttonTracker.last_gaze_linger = null;
+        if(buttonTracker.gaze_delay) {
+          buttonTracker.gaze_wait = true;
+          Ember.run.later(function() {
+            buttonTracker.gaze_wait = false;
+          }, buttonTracker.gaze_delay);
+        }
         // TODO: timeout before starting next selection
       }
     } else {

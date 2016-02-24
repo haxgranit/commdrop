@@ -981,10 +981,8 @@ body.pretty_loader #loading_box {
     font-size: 21px;
     visibility: hidden;
     opacity: 0.0;
+    transition: visibility 0s 0.3s linear, opacity 0.15s ease-in 0.3s;
     -webkit-transition: visibility 0s 0.3s linear, opacity 0.15s ease-in 0.3s;
-    -moz-transition: visibility 0s 0.3s linear, opacity 0.15s ease-in 0.3s;
-    -ms-transition: visibility 0s 0.3s linear, opacity 0.15s ease-in 0.3s;
-    -o-transition: visibility 0s 0.3s linear, opacity 0.15s ease-in 0.3s;
   }
   &:hover .board_action {
     visibility: visible;
@@ -1043,8 +1041,6 @@ body.pretty_loader #loading_box {
 .spinning {
 animation: spinningAnimation 2s infinite linear;
 -webkit-animation: spinningAnimation 2s infinite linear;
--moz-animation: spinningAnimation 2s infinite linear;
--o-animation: spinningAnimation 2s infinite linear;
 }
 @keyframes spinningAnimation {
 from { -webkit-transform: rotate(0deg) scale(1); }
@@ -1053,14 +1049,6 @@ to { -webkit-transform: rotate(359deg) scale(1); }
 @-webkit-keyframes spinningAnimation {
 from { -webkit-transform: rotate(0deg) scale(1); }
 to { -webkit-transform: rotate(359deg) scale(1); }
-}
-@-moz-keyframes spinningAnimation {
-from { -moz-transform: rotate(0deg) scale(1); }
-to { -moz-transform: rotate(359deg) scale(1); }
-}
-@-o-keyframes spinningAnimation {
-from { -o-transform: rotate(0deg) scale(1); }
-to { -o-transform: rotate(359deg) scale(1); }
 }
 
 .reveal {
@@ -1088,14 +1076,6 @@ to { -o-transform: rotate(359deg) scale(1); }
 0%, 20%, 55% { opacity: 0.0; }
 25%, 50% { opacity: 1.0; }
 }
-@-moz-keyframes reveal2 {
-0%, 20%, 55% { opacity: 0.0; }
-25%, 50% { opacity: 1.0; }
-}
-@-o-keyframes reveal2 {
-0%, 20%, 55% { opacity: 0.0; }
-25%, 50% { opacity: 1.0; }
-}
 @keyframes reveal3 {
 0%, 45%, 80% { opacity: 0.0; }
 50%, 75% { opacity: 1.0; }
@@ -1104,27 +1084,11 @@ to { -o-transform: rotate(359deg) scale(1); }
 0%, 45%, 80% { opacity: 0.0; }
 50%, 75% { opacity: 1.0; }
 }
-@-moz-keyframes reveal3 {
-0%, 45%, 80% { opacity: 0.0; }
-50%, 75% { opacity: 1.0; }
-}
-@-o-keyframes reveal3 {
-0%, 45%, 80% { opacity: 0.0; }
-50%, 75% { opacity: 1.0; }
-}
 @keyframes reveal4 {
 0%, 70%, 100% { opacity: 0.0; }
 75%, 95% { opacity: 1.0; }
 }
 @-webkit-keyframes reveal4 {
-0%, 70%, 100% { opacity: 0.0; }
-75%, 95% { opacity: 1.0; }
-}
-@-moz-keyframes reveal4 {
-0%, 70%, 100% { opacity: 0.0; }
-75%, 95% { opacity: 1.0; }
-}
-@-o-keyframes reveal4 {
 0%, 70%, 100% { opacity: 0.0; }
 75%, 95% { opacity: 1.0; }
 }
@@ -1167,10 +1131,8 @@ video.button_image {
   width: auto; 
   opacity: 1.0; 
   z-index: 3;
+  transition: visibility 0s 2s linear, opacity 1s ease-in-out 1s;
   -webkit-transition: visibility 0s 2s linear, opacity 1s ease-in-out 1s;
-  -moz-transition: visibility 0s 2s linear, opacity 1s ease-in-out 1s;
-  -ms-transition: visibility 0s 2s linear, opacity 1s ease-in-out 1s;
-  -o-transition: visibility 0s 2s linear, opacity 1s ease-in-out 1s;
 }
 .flash .alert {
   border-top-right-radius: 0;
@@ -1330,20 +1292,6 @@ video.button_image {
     margin: 5px 5.5px;
   }
 }
-@-moz-keyframes recording_throb {
-  0% {
-    width: 72px;
-    height: 72px;
-    border-radius: 36px;
-    margin: 2px 2.5px;
-  }
-  80% {
-    width: 66px;
-    height: 66px;
-    border-radius: 33px;
-    margin: 5px 5.5px;
-  }
-}
 #recording_status:hover, #recording_status.recording {
   border-color: #f00;
 }
@@ -1355,10 +1303,6 @@ video.button_image {
   -webkit-animation-duration: 500ms;
   -webkit-animation-iteration-count: infinite;
   -webkit-animation-timing-function: ease-in-out;  
-  -moz-animation-name: recording_throb;
-  -moz-animation-duration: 500ms;
-  -moz-animation-iteration-count: infinite;
-  -moz-animation-timing-function: ease-in-out;  
   animation-name: recording_throb;
   animation-duration: 500ms;
   animation-iteration-count: infinite;
@@ -1392,16 +1336,28 @@ video.button_image {
     opacity: 0.7;
   }
 }
-@-moz-keyframes target {
-  0% {
-    transform: scale(1.5);
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(0.5);
-    opacity: 0.7;
-  }
+
+
+@keyframes rota {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
+
+@-webkit-keyframes rota {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes opa {
+  0% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@-webkit-keyframes opa {
+  0% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 #linger {
   display: block;
   width: 50px;
@@ -1413,19 +1369,67 @@ video.button_image {
   left: -100px;
   z-index: 999999;
   border-radius: 100px;
-  &.targeting {
+  animation-duration: 2000ms;
+  &.targeting.shrink {
     -webkit-animation-name: target;
-    -webkit-animation-duration: 2000ms;
     -webkit-animation-iteration-count: 1;
     -webkit-animation-timing-function: ease-in;  
-    -moz-animation-name: target;
-    -moz-animation-duration: 2000ms;
-    -moz-animation-iteration-count: 1;
-    -moz-animation-timing-function: ease-in;  
     animation-name: target;
-    animation-duration: 2000ms;
     animation-iteration-count: 1;
     animation-timing-function: ease-in;  
+  }
+  &.targeting.pie {
+    background: #ccc;
+    opacity: 0.6;
+    
+    .pie {
+      width: 50%;
+      height: 100%;
+      transform-origin: 100% 50%;
+      position: absolute;
+      background: #f00;
+      border: rgba(0, 0, 0, 0.1);
+    }
+
+    .spinner {
+      border-radius: 100% 0 0 100% / 50% 0 0 50%;
+      z-index: 200;
+      border-right: none;
+      -webkit-animation: rota ease-in-out;
+      -webkit-animation-duration: inherit;
+      animation: rota ease-in-out;
+      animation-duration: inherit;
+      animation-iteration-count: 1;
+    }
+
+    .filler {
+      border-radius: 0 100% 100% 0 / 0 50% 50% 0; 
+      left: 50%;
+      opacity: 0;
+      z-index: 100;
+      -webkit-animation: opa steps(1,end)  reverse;
+      -webkit-animation-duration: inherit;
+      animation: opa steps(1,end)  reverse;
+      animation-duration: inherit;
+      animation-iteration-count: 1;
+      border-left: none;
+    }
+
+    .mask {
+      width: 50%;
+      height: 100%;
+      position: absolute;
+      background: inherit;
+      opacity: 1;
+      z-index: 300;
+      border-top-left-radius: 100px;
+      border-bottom-left-radius: 100px;
+      -webkit-animation: opa steps(1,end);
+      -webkit-animation-duration: inherit;
+      animation: opa steps(1,end);
+      animation-duration: inherit;
+      animation-iteration-count: 1;
+    }
   }
 }
 

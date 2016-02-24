@@ -61,6 +61,10 @@ export default Ember.Controller.extend({
     {name: i18n.t('column_based', "Column-Based Scanning"), id: "column"},
     {name: i18n.t('region_based', "Region-Based Scanning"), id: "region"}
   ],
+  targetingList: [
+    {name: i18n.t('spinning_pie', "Spinning-Pie Animation"), id: 'pie'},
+    {name: i18n.t('shrinking_dot', "Shrinking-Dot Animation"), id: 'shrink'}
+  ],
   scan_pseudo_options: [
     {name: i18n.t('select', "Select"), id: "select"},
     {name: i18n.t('next', "Next"), id: "next"}
@@ -109,6 +113,9 @@ export default Ember.Controller.extend({
   }.property('model.preferences.device.scanning_next_keycode'),
   fullscreen_capable: function() {
     return capabilities.fullscreen_capable();
+  }.property(),
+  eyegaze_capable: function() {
+    return capabilities.eye_gaze.available;
   }.property(),
   wakelock_capable: function() {
     return capabilities.wakelock_capable();
@@ -180,6 +187,18 @@ export default Ember.Controller.extend({
         max = 5000;
         step = 100;
         default_value = 0;
+        empty_on_default = true;
+      } else if(attribute == 'model.preferences.device.eyegaze_dwell') {
+        min = 0;
+        max = 5000;
+        step = 100;
+        default_value = 1000;
+        empty_on_default = true;
+      } else if(attribute == 'model.preferences.device.eyegaze_delay') {
+        min = 0;
+        max = 5000;
+        step = 100;
+        default_value = 100;
         empty_on_default = true;
       } else if(attribute == 'model.preferences.board_jump_delay') {
         min = 100;

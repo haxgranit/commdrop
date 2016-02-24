@@ -439,6 +439,16 @@ var app_state = Ember.Object.extend({
           scanner.stop();
         }
       }
+      if(app_state.get('speak_mode') && _this.get('currentUser.preferences.device.eyegaze')) {
+        buttonTracker.eyegaze_enabled = true;
+        buttonTracker.gaze_timeout = _this.get('currentUser.preferences.device.eyegaze_dwell'),
+        buttonTracker.gaze_delay = _this.get('currentUser.preferences.device.eyegaze_delay'),
+        buttonTracker.gaze_animation = _this.get('currentUser.preferences.device.eyegaze_targeting');
+        capabilities.eye_gaze.listen();
+      } else {
+        buttonTracker.eyegaze_enabled = false;
+        capabilities.eye_gaze.stop_listening();
+      }
     }, 1000);
   },
   refresh_session_user: function() {
@@ -624,7 +634,6 @@ var app_state = Ember.Object.extend({
         });
 
       }
-      capabilities.eye_gaze.listen();
     } else if(!this.get('speak_mode') && this.get('last_speak_mode') !== undefined) {
       capabilities.wakelock('speak', false);
       stashes.persist('temporary_root_board_state', null);
@@ -632,7 +641,6 @@ var app_state = Ember.Object.extend({
       stashes.persist('speak_mode_user_id', null);
       stashes.persist('all_buttons_enabled', null);
       capabilities.fullscreen(false);
-      capabilities.eye_gaze.stop_listening();
     }
     this.set('last_speak_mode', !!this.get('speak_mode'));
   }.observes('speak_mode', 'currentUser.id', 'currentUser.preferences.logging'),
