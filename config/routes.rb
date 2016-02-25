@@ -113,6 +113,7 @@ Coughdrop::Application.routes.draw do
       delete 'stars' => 'boards#unstar'
       post 'download' => 'boards#download'
       post 'rename' => 'boards#rename'
+      post 'share_response' => 'boards#share_response'
     end
     resources :users do
       get 'stats/daily' => 'users#daily_stats'

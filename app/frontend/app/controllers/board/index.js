@@ -36,6 +36,24 @@ export default Ember.Controller.extend({
     }
     editManager.process_for_displaying();
   },
+  check_for_share_approval: function() {
+    var board_id = this.get('model.id');
+    var _this = this;
+    if(board_id && app_state.get('currentBoardState')) {
+      var shares = (app_state.get('currentUser.pending_board_shares') || []);
+      var matching_shares = shares.filter(function(s) { return s.board_id && s.board_id == board_id; });
+      if(matching_shares.length > 0) {
+        if(app_state.get('default_mode')) {
+          var already = {}; //this.get('already_checked_boards') || {};
+          if(!already[board_id]) {
+            already[board_id] = true;
+            this.set('already_checked_boards', already)
+            modal.open('approve-board-share', {board: _this.get('model'), shares: matching_shares});
+          }
+        }
+      }
+    }
+  }.observes('model.id', 'app_state.currentUser.pending_board_shares', 'app_state.default_mode'),
   updateSuggestions: function() {
     if(!this.get('model.word_suggestions')) { return; }
     var _this = this;

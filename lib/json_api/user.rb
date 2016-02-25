@@ -68,6 +68,8 @@ module JsonApi::User
       json['terms_agree'] = !!user.settings['terms_agreed']
       json['subscription'] = user.subscription_hash
       json['is_managed'] = !!json['subscription']['is_managed']
+      json['pending_board_shares'] = (user.settings['boards_shared_with_me'] || []).select{|s| s['pending'] }
+      
       
       json['has_management_responsibility'] = !!user.managed_organization_id
       

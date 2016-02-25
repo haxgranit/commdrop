@@ -252,12 +252,22 @@
         <div style="margin-left: 20px;">
           {{#if app_state.currentUser.subscription.org_pending}}
             <p>
-              {{#link-to 'user' app_state.currentUser.user_name}}{{t "%{org} wants to sponsor this user as part of their organization." key='remind_pending_org' org=app_state.currentUser.subscription.managing_org_name}}{{/link-to}}
+              {{#link-to 'user' app_state.currentUser.user_name}}<span class="glyphicon glyphicon-paperclip"></span>{{t "%{org} wants to sponsor this user as part of their organization." key='remind_pending_org' org=app_state.currentUser.subscription.managing_org_name}}{{/link-to}}
             </p>
+          {{/if}}
+          {{#if app_state.currentUser.pending_board_shares}}
+            {{#each app_state.currentUser.pending_board_shares as |share|}}
+              <p>
+                <span class="glyphicon glyphicon-share"></span>
+                {{#link-to 'board' share.board_key}}{{share.board_key}}{{/link-to}}
+                {{t "is being shared with you by %{user_name}<br/>and needs approval" key='board_share_needs_approval' user_name=share.user_name}}
+              </p>
+            {{/each}}
           {{/if}}
           {{#if app_state.currentUser.unread_messages}}
             <p>
             {{#link-to 'user.logs' app_state.currentUser.user_name (query-params type='note')}}
+              <span class="glyphicon glyphicon-envelope"></span>
               {{t "You have " key='you_have'}}
               {{t "unread message" count=app_state.currentUser.unread_messages key='unread_message_count'}}
             {{/link-to}}
@@ -270,14 +280,16 @@
           {{/if}}
           {{#unless app_state.currentUser.unread_messages}}
             {{#unless app_state.currentUser.parsed_notifications}}
-              {{#if show_notifications_explanation}}
-                <em style="font-size: 11px;">{{t "Notifications are alerts sent from other CoughDrop users. Users can send messages to everyone on a communicator's team and they'll appear here for quick review." key='notification_explanation'}}</em>
-              {{else}}
-                {{t "You have no new messages" key='no_new_messages'}}
-                <a href="#" {{action 'show_explanation' 'notifications'}}>
-                  <span class='glyphicon glyphicon-info-sign'></span>
-                </a>
-              {{/if}}
+              {{#unless app_state.currentUser.pending_board_shares}}
+                {{#if show_notifications_explanation}}
+                  <em style="font-size: 11px;">{{t "Notifications are alerts sent from other CoughDrop users. Users can send messages to everyone on a communicator's team and they'll appear here for quick review." key='notification_explanation'}}</em>
+                {{else}}
+                  {{t "You have no new messages" key='no_new_messages'}}
+                  <a href="#" {{action 'show_explanation' 'notifications'}}>
+                    <span class='glyphicon glyphicon-info-sign'></span>
+                  </a>
+                {{/if}}
+              {{/unless}}
             {{/unless}}
           {{/unless}}
         </div>

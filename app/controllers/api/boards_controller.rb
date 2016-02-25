@@ -122,6 +122,18 @@ class Api::BoardsController < ApplicationController
     end
   end
   
+  def share_response
+    board = Board.find_by_path(params['board_id'])
+    return unless exists?(board)
+    return unless allowed?(board, 'view')
+    approve = !!(params['approve'] == 'true' || params['approve'] == true || params['approve'] == 1 || params['approve'] == '1')
+    if board.update_shares_for(@api_user, approve)
+      render json: {updated: true, approved: approve}.to_json
+    else
+      api_error(400, {error: "board share update failed"})
+    end
+  end
+  
   def update
     board = Board.find_by_path(params['id'])
     return unless exists?(board)

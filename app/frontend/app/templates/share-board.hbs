@@ -34,7 +34,12 @@
                   <img src={{user.avatar_url}} style="height: 50px; width: 50px;"/>
                 </td>
                 <td>
-                  <div style="font-size: 20px;">{{user.name}}</div>
+                  <div style="font-size: 20px;">
+                    {{user.name}}
+                    {{#if user.pending}}
+                      <span class="text-muted" style="font-size: 12px;"> {{t "(pending approval)" key='pending_approval'}}</span>
+                    {{/if}}
+                  </div>
                   {{#link-to 'user' user.id}}{{user.user_name}}{{/link-to}}
                   {{#if user.include_downstream}}
                     <span class="text-muted"> {{t "(includes downstream boards)" key='downstream'}}</span>
@@ -70,6 +75,11 @@
               </div>
             </div>
             <div class="col-sm-12">
+              {{#if share_include_downstream}}
+                {{#if share_allow_editing}}
+                  <em>{{t "for security reasons, this type of sharing will have to be approved by the user" key='user_approval_sharing_required'}}</em>
+                {{/if}}
+              {{/if}}
               <div style="margin-top: 5px;">
                 <button type="submit" class="btn btn-default">{{t "Share Board" key='share_board'}}</button>
               </div>

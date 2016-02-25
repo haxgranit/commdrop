@@ -79,6 +79,8 @@ module Sharing
     list = [] + (user.settings['boards_shared_with_me'] || []).select{|share| share['board_id'] != self.global_id }
     if do_share
       list << {
+        'user_id' => user.global_id,
+        'user_name' => user.user_name,
         'board_id' => self.global_id,
         'board_key' => self.key,
         'include_downstream' => include_downstream,
@@ -93,12 +95,23 @@ module Sharing
     true
   end
   
-  def approve_downstream_share_with(user)
-    share_or_unshare(user, true, :include_downstream => true, :allow_editing => true, :pending_allow_editing => false)
+  def update_shares_for(user, approve)
+    user_ids = self.shared_user_ids
+    if user && user_ids.include?(user.global_id)
+      share_or_unshare(user, approve, :include_downstream => true, :allow_editing => true, :pending_allow_editing => false)
+    else
+      false
+    end
   end
   
   def unshare_with(user)
     share_or_unshare(user, false)
+  end
+  
+  def shared_user_ids
+    author = self.user
+    list = ((author.settings || {})['boards_i_shared'] || {})[self.global_id] || []
+    user_ids = list.map{|s| s['user_id'] }
   end
   
   def shared_users
