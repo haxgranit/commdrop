@@ -403,6 +403,17 @@ describe JsonApi::User do
       expect(hash['org_managed_users']).to eq(nil)
     end
     
+    it "should include any pending board shares" do
+      u = User.create
+      u2 = User.create
+      b = Board.create(:user => u2)
+      b.share_with(u, true, true)
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['pending_board_shares']).to_not eq(nil)
+      expect(hash['pending_board_shares'].length).to eq(1)
+      expect(hash['pending_board_shares'][0]['board_id']).to eq(b.global_id)
+    end
+    
     describe "feature_flags" do
       it "should return a feature_flags object" do
         u = User.create
