@@ -906,6 +906,8 @@ var capabilities;
       function_maker(idx);
     }
   })();
+  capabilities.setup_database = setup_database;
+  capabilities.idb = indexedDBSafe;
   function setup_database() {
     delete capabilities['db'];
     var user_name = stashes.get_db_id();
@@ -930,7 +932,39 @@ var capabilities;
         }, 1500);
       } else {
         console.log(event);
-        console.error("COUGHDROP: db failed to initialize");
+        if(!setup_database.already_tried_deleting) {
+          console.error("COUGHDROP: db failed to initialize, deleting database..");
+          indexedDBSafe.deleteDatabase(key);
+          setup_database.already_tried_deleting = true;
+          setTimeout(function() {
+            setup_database();
+          }, 500);
+        } else {
+          if(!setup_database.already_tried_deleting_all) {
+            console.error("COUGHDROP: db failed to initialize even after deleting, deleting other databases");
+            setup_database.already_tried_deleting_all = true;
+            if(indexedDBSafe.webkitGetDatabaseNames) {
+              indexedDBSafe.webkitGetDatabaseNames().onsuccess = function(res) {
+                if(res && res.target && res.target.result) {
+                  var count = res.target.result.length;
+                  for(var idx = 0; idx < count; idx++) {
+                    var str = res.target.result[idx];
+                    if(str && str.match(/^coughDropStorage/)) {
+                      indexedDBSafe.deleteDatabase(str);
+                    }
+                  }
+                  if(count > 0) {
+                    setTimeout(function() {
+                      setup_database();
+                    }, 500);
+                  }
+                }
+              };
+            }
+          } else {
+            console.error("COUGHDROP: db failed to initialize after repeated attempts");
+          }
+        }
         capabilities.db_error_event = event;
         capabilities.db = false;
       }

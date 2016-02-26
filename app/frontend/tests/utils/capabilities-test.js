@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } from 'frontend/tests/helpers/jasmine';
+import { db_wait } from 'frontend/tests/helpers/ember_helper';
 import capabilities from '../../utils/capabilities';
 import Ember from 'ember';
 
@@ -40,6 +41,55 @@ describe("capabilities", function() {
       });
       waitsFor(function() { return result == 0.5; });
       runs();
+    });
+  });
+  
+  describe("setup_database", function() {
+    
+    it("should try flushing databases on error", function() {
+      db_wait(function() {
+        var db_req = { };
+        var attempt = 0;
+        var deleted_databases = [];
+        var other = "coughDropStorage::bacon===abcdefg";
+        var db_key = null;
+        stub(capabilities.idb, 'open', function(key, revision) {
+          db_key = key;
+          attempt++;
+          var evt = {
+            attempt: attempt
+          };
+          Ember.run.later(function() {
+            db_req.onerror(evt);
+            if(attempt == 2) {
+              expect(deleted_databases).toEqual([key]);
+            } else if(attempt == 4) {
+              expect(deleted_databases).toEqual([key, other]);
+            }
+          }, 10);
+          return db_req;
+        });
+        waitsFor(function() { return attempt >= 4; });
+        runs(function() {
+          expect(deleted_databases).toEqual([db_key, other]);
+          expect(capabilities.db_error_event.attempt).toEqual(4);
+        });
+        stub(capabilities.idb, 'webkitGetDatabaseNames', function() {
+          var res = {};
+          Ember.run.later(function() {
+            res.onsuccess({
+              target: {
+                result: [other]
+              }
+            });
+          }, 10);
+          return res;
+        });
+        stub(capabilities.idb, 'deleteDatabase', function(key) {
+          deleted_databases.push(key);
+        });
+        capabilities.setup_database();
+      });
     });
   });
 });
