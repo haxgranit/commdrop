@@ -18,6 +18,9 @@ export default Ember.Component.extend({
     toggle_explanation: function(type) {
       this.set('explanation_' + type, !this.get('explanation_' + type));
     },
+    show_expiration_notes: function() {
+      this.set('show_expiration_notes', true);
+    },
     skip_subscription: function() {
       var role = this.get('subscription.user_type');
       var user = this.get('user');
