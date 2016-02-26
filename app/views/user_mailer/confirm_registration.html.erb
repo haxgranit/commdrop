@@ -4,7 +4,7 @@ built CoughDrop to make things easier for
 communicators and the support teams around them, so we hope the app can make a 
 difference for you.<br/><br/>
 
-You've signed up for an account with the user name <b><%= @user.user_name %></b>.
+You've signed up for an account with the user name <b><%= @user.display_user_name %></b>.
 To finish registering just
 <a href="<%= JsonApi::Json.current_host %>/<%= @user.user_name %>/confirm_registration/<%= @user.registration_code %>">open this link in your web browser of choice</a>.<br/><br/>
 

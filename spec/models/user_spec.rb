@@ -418,6 +418,14 @@ describe User, :type => :model do
       expect(u.user_name).to eq('awkward')
     end
     
+    it "should downcase a username, but remember the capitalization" do
+      u = User.new
+      u.process_params({
+      }, {:user_name => 'SpLenDid'})
+      expect(u.user_name).to eq('splendid')
+      expect(u.display_user_name).to eq('SpLenDid')
+    end
+    
     it "should clear unread messages only with a more-recent timestamp" do
       u = User.new
       u.settings ||= {}

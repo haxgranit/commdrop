@@ -34,8 +34,9 @@ module Processable
   def generate_unique_key(suggestion)
     collision = nil
     if self.class == User
-      collision = User.find_by(:user_name => suggestion)
+      collision = User.where(['lower(user_name) = ?', suggestion.downcase])[0]
     elsif self.class == Board
+      suggestion = suggestion.downcase
       collision = Board.find_by(:key => suggestion)
     else
       raise "unknown class: #{self.class.to_s}"
@@ -67,7 +68,7 @@ module Processable
   def generate_board_key(suggestion=nil)
     self.settings ||= {}
     suggestion ||= self.key || self.settings['name'] || "board"
-    suggestion = clean_path(suggestion)
+    suggestion = clean_path(suggestion.downcase)
     raise "user required" unless self.user && self.user.user_name
     full_suggestion = "#{self.user.user_name}/#{suggestion}"
     generate_unique_key(full_suggestion)
@@ -77,7 +78,7 @@ module Processable
     arg = (arg || "").strip
     arg = "_" unless arg.length > 0
     arg = "_" + arg if arg[0].match(/\d/)
-    arg = arg.downcase.gsub(/\'/, '').gsub(/[^a-zA-Z0-9_-]+/, '-').sub(/-+$/, '').gsub(/-+/, '-')
+    arg = arg.gsub(/\'/, '').gsub(/[^a-zA-Z0-9_-]+/, '-').sub(/-+$/, '').gsub(/-+/, '-')
     arg = arg * (3.0 / arg.length).ceil if arg.length < 3
     arg
   end

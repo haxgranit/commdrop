@@ -1,7 +1,7 @@
 <%= @user.settings['name'] %> just signed up for CoughDrop!
 
 
-User name: <%= @user.user_name %>
+User name: <%= @user.display_user_name %>
 Email: <%= @user.settings['email'] %>
 Type: <%= @user.registration_type %>
 <%= JsonApi::Json.current_host %>/<%= @user.user_name %>

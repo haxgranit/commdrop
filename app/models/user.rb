@@ -188,7 +188,7 @@ class User < ActiveRecord::Base
       self.settings['preferences'].delete('auto_open_speak_mode')
     end
     self.expires_at ||= Date.today + 60 if !self.id
-    self.user_name ||= self.generate_user_name(self.settings['name'])
+    self.user_name ||= self.generate_user_name(self.settings['name']).downcase
     self.email_hash = User.generate_email_hash(self.settings['email'])
     true
   end
@@ -418,11 +418,20 @@ class User < ActiveRecord::Base
         return false
       end
     end
-    self.user_name = self.generate_user_name(non_user_params[:user_name]) if non_user_params[:user_name]
+    new_user_name = nil
+    new_user_name = self.generate_user_name(non_user_params[:user_name]) if non_user_params[:user_name]
     if !self.user_name
-      self.user_name = self.generate_user_name(params['user_name']) if params['user_name'] && params['user_name'].length > 0
+      new_user_name = self.generate_user_name(params['user_name']) if params['user_name'] && params['user_name'].length > 0
+    end
+    if new_user_name
+      self.user_name = new_user_name.downcase
+      self.settings['display_user_name'] = new_user_name
     end
     true
+  end
+  
+  def display_user_name
+    (self.settings && self.settings['display_user_name']) || self.user_name
   end
   
   def process_device(device, non_user_params)

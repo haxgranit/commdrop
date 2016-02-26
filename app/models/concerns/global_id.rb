@@ -65,9 +65,9 @@ module GlobalId
     def find_by_path(path)
       return nil unless path
       if self == Board && path.to_s.match(/\//)
-        find_by(:key => path)
+        find_by(:key => path.downcase)
       elsif self == User && !path.to_s.match(/^\d/)
-        find_by(:user_name => path)
+        find_by(:user_name => path.downcase)
       else
         find_by_global_id(path)
       end
@@ -80,10 +80,10 @@ module GlobalId
       paths.each do |path|
         if self == Board && path.to_s.match(/\//)
           raise "not allowed on protected records" if self.protected_global_id
-          keys << path
+          keys << path.downcase
         elsif self == User && !path.to_s.match(/^\d/)
           raise "not allowed on protected records" if self.protected_global_id
-          user_names << path
+          user_names << path.downcase
         else
           global_ids << path
         end
