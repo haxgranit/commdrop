@@ -379,7 +379,7 @@ var app_state = Ember.Object.extend({
         if(app_state.get('currentUser.preferences.device.scanning') && capabilities.mobile && capabilities.installed_app) { // scanning mode
           var $elem = Ember.$("#hidden_input");
           if($elem.length === 0) {
-            $elem = $("<input/>", {id: 'hidden_input', autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'off'});
+            $elem = Ember.$("<input/>", {id: 'hidden_input', autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'off'});
             $elem.css({position: 'absolute', left: '-1000px'});
             document.body.appendChild($elem[0]);
             window.addEventListener('keyboardWillShow', function () {
@@ -441,8 +441,8 @@ var app_state = Ember.Object.extend({
       }
       if(app_state.get('speak_mode') && _this.get('currentUser.preferences.device.eyegaze')) {
         buttonTracker.eyegaze_enabled = true;
-        buttonTracker.gaze_timeout = _this.get('currentUser.preferences.device.eyegaze_dwell'),
-        buttonTracker.gaze_delay = _this.get('currentUser.preferences.device.eyegaze_delay'),
+        buttonTracker.gaze_timeout = _this.get('currentUser.preferences.device.eyegaze_dwell');
+        buttonTracker.gaze_delay = _this.get('currentUser.preferences.device.eyegaze_delay');
         buttonTracker.gaze_animation = _this.get('currentUser.preferences.device.eyegaze_targeting');
         capabilities.eye_gaze.listen();
       } else {

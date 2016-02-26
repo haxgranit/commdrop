@@ -47,7 +47,7 @@ export default Ember.Controller.extend({
           var already = {}; //this.get('already_checked_boards') || {};
           if(!already[board_id]) {
             already[board_id] = true;
-            this.set('already_checked_boards', already)
+            this.set('already_checked_boards', already);
             modal.open('approve-board-share', {board: _this.get('model'), shares: matching_shares});
           }
         }
