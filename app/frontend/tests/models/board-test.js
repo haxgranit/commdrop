@@ -248,6 +248,21 @@ describe('Board', function() {
       expect(board.get('grid').order).toEqual([[1,2,124],[2,129,null]]);
     });
   });
+  
+  describe("multiple_copies", function() {
+    it("should return the correct value", function() {
+      var board = CoughDrop.store.createRecord('board');
+      expect(board.get('multiple_copies')).toEqual(false);
+      board.set('copies', 0);
+      expect(board.get('multiple_copies')).toEqual(false);
+      board.set('copies', 1);
+      expect(board.get('multiple_copies')).toEqual(false);
+      board.set('copies', 2);
+      expect(board.get('multiple_copies')).toEqual(true);
+      board.set('copies', 10);
+      expect(board.get('multiple_copies')).toEqual(true);
+    });
+  });
 
   describe("button_visible", function() {
     it("should return true if the id is in the grid order", function() {
