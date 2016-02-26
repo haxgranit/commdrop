@@ -134,6 +134,14 @@ class Api::BoardsController < ApplicationController
     end
   end
   
+  def copies
+    board = Board.find_by_path(params['board_id'])
+    return unless exists?(board)
+    return unless allowed?(board, 'view')
+    boards = board.find_copies_by(@api_user)
+    render json: JsonApi::Board.paginate(params, boards)
+  end
+  
   def update
     board = Board.find_by_path(params['id'])
     return unless exists?(board)

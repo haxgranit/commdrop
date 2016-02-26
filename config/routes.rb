@@ -114,6 +114,7 @@ Coughdrop::Application.routes.draw do
       post 'download' => 'boards#download'
       post 'rename' => 'boards#rename'
       post 'share_response' => 'boards#share_response'
+      get 'copies' => 'boards#copies'
     end
     resources :users do
       get 'stats/daily' => 'users#daily_stats'

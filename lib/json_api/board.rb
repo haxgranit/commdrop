@@ -70,13 +70,14 @@ module JsonApi::Board
       self.trace_execution_scoped(['json/board/copy_check']) do
         copies = board.find_copies_by(args[:permissions])
         copy = copies[0]
+        copy = nil if copy && (!args[:permissions] || copy.user_id != args[:permissions].id)
         if copy
           json['board']['copy'] = {
             'id' => copy.global_id,
             'key' => copy.key
           }
-          json['board']['copies'] = copies.count
         end
+        json['board']['copies'] = copies.count
       end
       self.trace_execution_scoped(['json/board/parent_board_check']) do
         parent = board.parent_board

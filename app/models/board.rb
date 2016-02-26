@@ -120,8 +120,9 @@ class Board < ActiveRecord::Base
   
   def find_copies_by(user)
     if user
+      ids = [user.id] + self.class.local_ids(user.supervised_user_ids || [])
       # TODO: sharding
-      Board.where(:parent_board_id => self.id, :user_id => user.id).order('id DESC')
+      Board.where(:parent_board_id => self.id, :user_id => ids).sort_by{|b| [b.user_id == user.id ? 0 : 1, 0 - b.id] }
     else
       []
     end

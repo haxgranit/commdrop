@@ -968,6 +968,21 @@ describe Board, :type => :model do
       b3 = Board.create(:user => u2, :parent_board_id => b1.id)
       expect(b1.find_copies_by(u2)).to eq([b3, b2])
     end
+    
+    it "should include copies by supervisees, but list them after the user's" do
+      u1 = User.create
+      u2 = User.create
+      u3 = User.create
+      b1 = Board.create(:user => u1)
+      b2 = Board.create(:user => u2, :parent_board_id => b1.id)
+      b3 = Board.create(:user => u3, :parent_board_id => b1.id)
+      expect(b1.find_copies_by(u2)).to eq([b2])
+      
+      User.link_supervisor_to_user(u2, u3)
+      Worker.process_queues
+      
+      expect(b1.find_copies_by(u2)).to eq([b2, b3])
+    end
   end
   
   describe "check_for_parts_of_speech" do

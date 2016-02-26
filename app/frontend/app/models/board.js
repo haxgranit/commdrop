@@ -265,6 +265,9 @@ CoughDrop.Board = DS.Model.extend({
     // TODO: check local records for a user-specific copy as a fallback in case
     // offline
   },
+  multiple_copies: function() {
+    return this.get('copies') > 1;
+  }.property('copies'),
   create_copy: function(user) {
     var board = CoughDrop.store.createRecord('board', {
       parent_board_id: this.get('id'),

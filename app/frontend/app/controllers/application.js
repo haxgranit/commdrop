@@ -333,6 +333,9 @@ export default Ember.Controller.extend({
       if(!app_state.get('edit_mode')) { return; }
       modal.open('button-stash');
     },
+    list_copies: function() {
+      modal.open('board-copies', {board: this.get('board.model')});
+    },
     highlight_button: function() {
       // TODO: this and activateButton belong somewhere more testable
       var buttons = this.get('button_highlights');

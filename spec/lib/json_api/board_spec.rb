@@ -71,6 +71,7 @@ describe JsonApi::Board do
         'id' => b2.global_id,
         'key' => b2.key
       })
+      expect(hash['board']['copies']).to eq(1)
     end
     
     it "should include original-board information if any for the current board" do
@@ -87,6 +88,45 @@ describe JsonApi::Board do
         'id' => b.global_id,
         'key' => b.key
       })
+    end
+
+    it "should not include copy information if there are copies, but only by supervisees" do
+      u = User.create
+      b = Board.create(:user => u)
+      u2 = User.create
+      u3 = User.create
+      User.link_supervisor_to_user(u3, u2)
+      Worker.process_queues
+      
+      hash = JsonApi::Board.as_json(b, :permissions => u2, :wrapper => true)
+      expect(hash['board']['copy']).to eq(nil)
+      
+      b2 = Board.create(:user => u2, :parent_board_id => b.id)
+      expect(b.find_copies_by(u3).length).to eq(1)
+      hash = JsonApi::Board.as_json(b, :permissions => u3, :wrapper => true)
+      expect(hash['board']['copy']).to eq(nil)
+      expect(hash['board']['copies']).to eq(1)
+    end
+
+    it "should count copy information from supervisees" do
+      u = User.create
+      b = Board.create(:user => u)
+      u2 = User.create
+      u3 = User.create
+      User.link_supervisor_to_user(u3, u2)
+      Worker.process_queues
+      
+      hash = JsonApi::Board.as_json(b, :permissions => u2, :wrapper => true)
+      expect(hash['board']['copy']).to eq(nil)
+      
+      b2 = Board.create(:user => u2, :parent_board_id => b.id)
+      b3 = Board.create(:user => u3, :parent_board_id => b.id)
+      hash = JsonApi::Board.as_json(b, :permissions => u3, :wrapper => true)
+      expect(hash['board']['copy']).to eq({
+        'id' => b3.global_id,
+        'key' => b3.key
+      })
+      expect(hash['board']['copies']).to eq(2)
     end
   end
 end

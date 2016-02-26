@@ -244,7 +244,13 @@
               {{/if}}
             {{/if}}
             {{#if app_state.currentUser}}
-              {{#if board.model.copy.key}}
+              {{#if board.model.multiple_copies}}
+                <span style="margin-right: -1px;">
+                <a href="#" class='btn btn-info' {{action 'list_copies'}}>
+                  <span class="wide">{{t "Copies" key="copies"}}</span><span class="skinny real_skinny glyphicon glyphicon-file"></span>
+                </a>
+                </span>
+              {{else if board.model.copy.key}}
                 <!-- TODO: no idea why this is necessary -->
                 <span style="margin-right: -1px;">
                 {{#link-to 'board' board.model.copy.key class='btn btn-info'}}
