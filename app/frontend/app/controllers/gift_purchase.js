@@ -17,6 +17,10 @@ export default Ember.Controller.extend({
     }
     res.set('user_type', 'communicator');
     res.set('subscription_type', 'long_term_gift');
+    var _this = this;
+    Ember.run.later(function() {
+      _this.update_classes();
+    });
     return res;
   }.property('app_state.currentUser'),
   actions: {
