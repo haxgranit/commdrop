@@ -292,6 +292,9 @@ export default Ember.Controller.extend({
     },
     closing_index: function() {
       app_state.set('index_view', false);
+    },
+    manage_supervisors: function() {
+      modal.open('supervision-settings', {user: app_state.get('currentUser')});
     }
   }
 });

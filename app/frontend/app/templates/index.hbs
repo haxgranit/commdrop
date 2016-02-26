@@ -182,7 +182,14 @@
             {{t "Let us help you choose one." key='let_us_help_choose_home'}}
           {{/link-to}}
         {{/if}}
-      
+        {{#unless app_state.currentUser.supporter_role}}
+          <a href="#" class="list-group-item half_size subtle" {{action "manage_supervisors"}}>
+            <span>
+            <span class="glyphicon glyphicon-user"></span>
+            {{t "Manage Supervisors" key='manage_supervisors'}}
+            </span>
+          </a>
+        {{/unless}}
         <a href="#" class="list-group-item half_size subtle" {{action "newBoard"}}>
           <span>
           <span class="glyphicon glyphicon-plus"></span>
