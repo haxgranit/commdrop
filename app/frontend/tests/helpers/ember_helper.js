@@ -389,6 +389,9 @@ beforeEach(function() {
 });
 
 afterEach(function() {  
+  capabilities.setup_database.already_tried = false;
+  capabilities.setup_database.already_tried_deleting = false;
+  capabilities.setup_database.already_tried_deleting_all = false;
   capabilities.dbman = capabilities.dbman || capabilities.original_dbman;
   while(queryLog.length > 0) {
     queryLog.pop();

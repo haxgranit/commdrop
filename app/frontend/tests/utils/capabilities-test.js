@@ -53,6 +53,7 @@ describe("capabilities", function() {
         var deleted_databases = [];
         var other = "coughDropStorage::bacon===abcdefg";
         var db_key = null;
+        stub(capabilities, 'db', undefined);
         stub(capabilities.idb, 'open', function(key, revision) {
           db_key = key;
           attempt++;
