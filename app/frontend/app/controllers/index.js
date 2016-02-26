@@ -30,7 +30,7 @@ export default Ember.Controller.extend({
     return this.get('triedToSave') && !name && !user_name;
   }.property('user.name', 'user.user_name', 'triedToSave'),
   noSpacesName: function() {
-    return !!(this.get('user.user_name') || '').match(/\s/);
+    return !!(this.get('user.user_name') || '').match(/[\s\.'"]/);
   }.property('user.user_name'),
   blank_slate: function() {
     var progress = this.get('app_state.currentUser.preferences.progress');

@@ -630,7 +630,7 @@
               <div class="form-group">
                 {{input value=user.user_name class="form-control" id="user_name" title="user name" placeholder="User name (optional, we can pick for you)"}}
                 {{#if noSpacesName}}
-                  <span class='text-danger'>{{t "user names can't have spaces" key='no_spaces_user_name'}}</span>
+                  <span class='text-danger'>{{t "user names can't have spaces, dots or quotes" key='no_spaces_user_name'}}</span>
                 {{else if user.user_name_check.checking}}
                 {{else if user.user_name_check.exists}}
                   <span class='text-danger'>{{t '"%{user_name}" already exists' user_name=user.user_name}}</span>
