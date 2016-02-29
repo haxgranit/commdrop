@@ -2,6 +2,11 @@
   -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
 }
 
+@font-face{
+  font-family:'OpenDyslexic';
+  src:url(../fonts/OpenDyslexicAlta-Regular.otf) format('opentype');
+}
+
 #within_ember {
   position: relative;
 }
@@ -575,6 +580,9 @@ footer .wide_links {
   }
   &.comic_sans .button .button-label {
     font-family: "Comic Sans MS", cursive, sans-serif;
+  }
+  &.open_dyslexic .button .button-label {
+    font-family: "OpenDyslexic", Arial, sans-serif;
   }
 }
 .button {

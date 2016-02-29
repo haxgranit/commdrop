@@ -546,13 +546,9 @@ export default Ember.Controller.extend({
       }
       if(this.get('button_style').match(/^comic_sans/)) {
         res = res + "comic_sans ";
+      } else if(this.get('button_style').match(/open_dyslexic/)) {
+        res = res + "open_dyslexic ";
       }
-//     {name: i18n.t('default_font', "Default Font"), id: "default"},
-//     {name: i18n.t('default_font_caps', "Default Font, All Uppercase"), id: "default_caps"},
-//     {name: i18n.t('default_font_small', "Default Font, All Lowercase"), id: "default_small"},
-//     {name: i18n.t('comic_sans', "Comic Sans"), id: "comic_sans"},
-//     {name: i18n.t('comic_sans_caps', "Comic Sans, All Uppercase"), id: "comic_sans_caps"},
-//     {name: i18n.t('comic_sans_small', "Comic Sans, All Lowercase"), id: "comic_sans_small"},
     }
     return res;
   }.property('stashes.all_buttons_enabled', 'stashes.current_mode', 'paint_mode', 'border_style', 'text_style', 'model.finding_target'),

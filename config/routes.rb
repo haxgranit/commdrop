@@ -35,7 +35,6 @@ Coughdrop::Application.routes.draw do
   get '/terms' => 'boards#terms'
   get '/jobs' => 'boards#jobs'
   
-  # TODO: need a simple page that everyone can add as iframe that includes manifest link
   # if Rails.env.production?
   # TODO: need to catch the update event to post a note encouraging the user to reload
     offline = Rack::Offline.configure :cache_interval => 120 do
@@ -45,6 +44,7 @@ Coughdrop::Application.routes.draw do
       cache "/fonts/glyphicons-halflings-regular.svg"
       cache "/fonts/glyphicons-halflings-regular.ttf"
       cache "/fonts/glyphicons-halflings-regular.woff"
+      cache "/fonts/OpenDyslexicAlta-Regular.otf"
       cache "/images/star.png"
       cache "/images/logo-small.png"
       cache "/images/logo-big.png"
@@ -55,6 +55,9 @@ Coughdrop::Application.routes.draw do
       cache "/images/link.png"
       cache "/images/video.svg"
       cache "/images/app.png"
+      cache "/images/orange.png"
+      cache "/images/preview.png"
+      cache "/images/stats.png"
       cache "/images/microphone.svg"
       cache "/images/upload.svg"
       cache "/images/camera.svg"

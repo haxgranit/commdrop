@@ -38,6 +38,9 @@ export default Ember.Controller.extend({
     {name: i18n.t('comic_sans', "Comic Sans"), id: "comic_sans"},
     {name: i18n.t('comic_sans_caps', "Comic Sans, All Uppercase"), id: "comic_sans_caps"},
     {name: i18n.t('comic_sans_small', "Comic Sans, All Lowercase"), id: "comic_sans_small"},
+    {name: i18n.t('open_dyslexic', "OpenDyslexic"), id: "open_dyslexic"},
+    {name: i18n.t('open_dyslexic_caps', "OpenDyslexic, All Uppercase"), id: "open_dyslexic_caps"},
+    {name: i18n.t('open_dyslexic_small', "OpenDyslexic, All Lowercase"), id: "open_dyslexic_small"},
   ],
   activationLocationList: [
     {name: i18n.t('pointer_release', "Where I Release My Pointer"), id: "end"},
