@@ -66,7 +66,7 @@ module Subscription
         self.settings['subscription']['started'] = Time.now.iso8601
         self.settings['subscription']['token_summary'] = args['token_summary']
         self.settings['subscription']['plan_id'] = args['plan_id']
-        self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_monthly_free' || args['plan_id'] == 'eval_monthly_free'
+        self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_monthly_free'
         self.settings['subscription'].delete('never_expires')
         self.settings['preferences']['role'] = role
         if self.expires_at && self.expires_at > Time.now
@@ -111,7 +111,7 @@ module Subscription
         end
         self.settings['subscription']['token_summary'] = args['token_summary']
         self.settings['subscription']['last_purchase_plan_id'] = args['plan_id']
-        self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_long_term_free' || args['plan_id'] == 'eval_long_term_free'
+        self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_long_term_free'
         self.settings['subscription'].delete('never_expires')
         self.settings['subscription']['prior_purchase_ids'] ||= []
         if self.settings['subscription']['prior_purchase_ids'].include?(args['purchase_id'])
