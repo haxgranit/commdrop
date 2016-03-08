@@ -56,6 +56,7 @@ var CoughDrop = Ember.Application.extend({
       var checkForFooter = function() {
         if(Ember.$("footer").length > 0) {
           if(navigator && navigator.splashscreen && navigator.splashscreen.hide) {
+            window.splash_hidden = true;
             Ember.run.later(navigator.splashscreen.hide, 500);
           } else {
             console.log("splash screen expected but not found");
@@ -274,7 +275,7 @@ CoughDrop.YT = {
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);    
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         window.onYouTubeIframeAPIReady = function() {
           CoughDrop.YT.ready = true;
           CoughDrop.YT.track(player_id, callback).then(function(player) {
@@ -391,14 +392,14 @@ CoughDrop.Visualizations = {
     if(!window.google || !window.google.visualization || !window.google.maps) {
       var script = document.createElement('script');
       script.type = 'text/javascript';
-      
+
       var one_done = function(type) {
         one_done[type] = true;
         if(one_done.graphs && one_done.maps) {
           window.google.load("visualization", "1.1", {packages:["corechart", "sankey"], callback: CoughDrop.Visualizations.handle_callbacks});
         }
       };
-      
+
       window.ready_to_load_graphs = function() {
         one_done('graphs');
       };
@@ -417,7 +418,7 @@ CoughDrop.Visualizations = {
     } else {
       Ember.run.later(CoughDrop.Visualizations.handle_callbacks);
     }
-    
+
   }
 };
 
