@@ -57,10 +57,11 @@ module Processable
     end
   end
   
-  def generate_user_name(suggestion=nil)
+  def generate_user_name(suggestion=nil, downcased=true)
     suggestion ||= self.user_name || (self.settings && self.settings['name'])
     suggestion ||= (self.settings && self.settings['email'] && self.settings['email'].split(/@/)[0])
     suggestion ||= "person"
+    suggestion = suggestion.downcase if downcased
     suggestion = clean_path(suggestion)
     generate_unique_key(suggestion)
   end
@@ -75,15 +76,19 @@ module Processable
   end
   
   def clean_path(arg)
-    arg = (arg || "").strip
-    arg = "_" unless arg.length > 0
-    arg = "_" + arg if arg[0].match(/\d/)
-    arg = arg.gsub(/\'/, '').gsub(/[^a-zA-Z0-9_-]+/, '-').sub(/-+$/, '').gsub(/-+/, '-')
-    arg = arg * (3.0 / arg.length).ceil if arg.length < 3
-    arg
+    self.class.clean_path(arg)
   end
   
   module ClassMethods
+    def clean_path(arg)
+      arg = (arg || "").strip
+      arg = "_" unless arg.length > 0
+      arg = "_" + arg if arg[0].match(/\d/)
+      arg = arg.gsub(/\'/, '').gsub(/[^a-zA-Z0-9_-]+/, '-').sub(/-+$/, '').gsub(/-+/, '-')
+      arg = arg * (3.0 / arg.length).ceil if arg.length < 3
+      arg
+    end
+    
     def process_new(params, non_user_params=nil)
       obj = self.new
       obj.process(params, non_user_params)

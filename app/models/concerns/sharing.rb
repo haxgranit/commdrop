@@ -79,8 +79,8 @@ module Sharing
     list = [] + (user.settings['boards_shared_with_me'] || []).select{|share| share['board_id'] != self.global_id }
     if do_share
       list << {
-        'user_id' => user.global_id,
-        'user_name' => user.user_name,
+#         'user_id' => user.global_id,
+#         'user_name' => user.user_name,
         'board_id' => self.global_id,
         'board_key' => self.key,
         'include_downstream' => include_downstream,

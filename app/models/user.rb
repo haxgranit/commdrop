@@ -41,6 +41,7 @@ class User < ActiveRecord::Base
   def self.find_for_login(user_name)
     res = self.find_by(:user_name => user_name)
     res ||= self.find_by(:user_name => user_name.downcase)
+    res ||= self.find_by(:user_name => User.clean_path(user_name.downcase))
     if !res
       emails = self.find_by_email(user_name)
       emails = self.find_by_email(user_name.downcase) if emails.length == 0
@@ -188,7 +189,7 @@ class User < ActiveRecord::Base
       self.settings['preferences'].delete('auto_open_speak_mode')
     end
     self.expires_at ||= Date.today + 60 if !self.id
-    self.user_name ||= self.generate_user_name(self.settings['name']).downcase
+    self.user_name ||= self.generate_user_name(self.settings['name'])
     self.email_hash = User.generate_email_hash(self.settings['email'])
     true
   end
@@ -419,9 +420,9 @@ class User < ActiveRecord::Base
       end
     end
     new_user_name = nil
-    new_user_name = self.generate_user_name(non_user_params[:user_name]) if non_user_params[:user_name]
+    new_user_name = self.generate_user_name(non_user_params[:user_name], false) if non_user_params[:user_name]
     if !self.user_name
-      new_user_name = self.generate_user_name(params['user_name']) if params['user_name'] && params['user_name'].length > 0
+      new_user_name = self.generate_user_name(params['user_name'], false) if params['user_name'] && params['user_name'].length > 0
     end
     if new_user_name
       self.user_name = new_user_name.downcase

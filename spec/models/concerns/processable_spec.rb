@@ -60,7 +60,7 @@ describe Processable, :type => :model do
       expect(r.clean_path("a     ")).to eq("aaa")
       expect(r.clean_path("a**#&@%#@*")).to eq("aaa")
       expect(r.clean_path("a**#b&@%#@*")).to eq("a-b")
-      expect(r.clean_path("bob! I really like descriptions! Don't you?!?")).to eq("bob-i-really-like-descriptions-dont-you")
+      expect(r.clean_path("bob! I really like descriptions! Don't you?!?")).to eq("bob-I-really-like-descriptions-Dont-you")
       expect(r.clean_path("-----abc__def")).to eq("-abc__def")
     end
     
