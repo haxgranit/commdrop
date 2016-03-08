@@ -33,9 +33,9 @@ var capabilities;
   }
   function storage_result(success, id, data) {
     message_client({
-      type: 'storage_result', 
+      type: 'storage_result',
       id: id,
-      result_type: (success ? "success" : "failure"), 
+      result_type: (success ? "success" : "failure"),
       result: data
     });
   }
@@ -80,7 +80,7 @@ var capabilities;
             stashes.persist_object('auth_settings', auth_settings, true);
           }
           bg.callback({
-            type: 'access_token', 
+            type: 'access_token',
             access_token: auth_settings.access_token,
             user_name: auth_settings.user_name,
             credentials: capabilities.auth_credentials
@@ -128,7 +128,7 @@ var capabilities;
         }
         ajax(prefix + '/oauth2/token', {type: 'POST', data: {'access_token': message.access_token, '_method': 'DELETE'}}).always(function() {
           stashes.flush('auth_');
-            
+
           location.reload();
         });
       }
@@ -991,6 +991,9 @@ var capabilities;
   })();
   capabilities.setup_database = setup_database;
   capabilities.idb = indexedDBSafe;
+  capabilities.delete_database = function() {
+    indexedDBSafe.deleteDatabase(capabilities.db_name);
+  };
   function setup_database() {
     delete capabilities['db'];
     var user_name = stashes.get_db_id();
@@ -1060,7 +1063,7 @@ var capabilities;
       }, 10);
     };
 
-    request.onupgradeneeded = function(event) { 
+    request.onupgradeneeded = function(event) {
       var indexes_allowed = capabilities.system && capabilities.system != 'iOS';
       var done_after_upgrade = capabilities.system && capabilities.system == 'iOS';
       console.log("COUGHDROP: db upgrade needed");
@@ -1148,7 +1151,7 @@ var capabilities;
       // before we can proceed.
       alert("Please close all other tabs with this site open!");
     };
-    
+
     if(errored) {
       request.onerror();
     }
@@ -1259,7 +1262,7 @@ var capabilities;
       var transaction = null;
       try {
         transaction = capabilities.db.transaction([store], 'readonly');
-      } catch(e) { 
+      } catch(e) {
         capabilities.db_error = {
           message: e.message || e.getMessage(),
           store: store,
@@ -1294,7 +1297,7 @@ var capabilities;
       record.persisted = record.persisted || (new Date()).getTime();
       record.raw = capabilities.encrypt(record.raw);
       record.changed = record.changed || false;
-      
+
       var normalize = capabilities.dbman.normalize_record;
       capabilities.dbman.store_internal(store, record, function(new_record) {
         success(normalize(record, store));
