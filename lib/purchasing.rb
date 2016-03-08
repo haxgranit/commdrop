@@ -197,9 +197,9 @@ module Purchasing
       else
         user && user.log_subscription_event({:log => 'monthly subscription'})
         customer = nil
-        if user.settings['subscription'] && user.settings['subscription']['customer_id']
+        if user.settings['subscription'] && user.settings['subscription']['customer_id'] && user.settings['subscription']['customer_id'] != 'free'
           user && user.log_subscription_event({:log => 'retrieving existing customer'})
-          customer = Stripe::Customer.retrieve(user.settings['subscription']['customer_id'])
+          customer = Stripe::Customer.retrieve(user.settings['subscription']['customer_id']) rescue nil
         end
         if customer
           user && user.log_subscription_event({:log => 'new subscription for existing customer'})
