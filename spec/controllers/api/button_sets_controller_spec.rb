@@ -2,9 +2,9 @@ require 'spec_helper'
 
 describe Api::ButtonSetsController, :type => :controller do
   describe "show" do
-    it "should require api token" do
+    it "should not require api token" do
       get :show, :id => 'asdf'
-      assert_missing_token
+      assert_not_found
     end
     
     it "should require existing object" do
