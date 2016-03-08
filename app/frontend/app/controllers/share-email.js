@@ -1,0 +1,38 @@
+import modal from '../utils/modal';
+import persistence from '../utils/persistence';
+import i18n from '../utils/i18n';
+import CoughDrop from '../app';
+
+export default modal.ModalController.extend({
+  opening: function() {
+    this.set('subject', this.get('model.text'));
+    this.set('message', this.get('model.text') + "\n\n" + this.get('model.url'));
+    this.set('loading', false);
+    this.set('error', false);
+  },
+  no_email: function() {
+    return !(this.get('email') && this.get('email').match(/.+@.+/));
+  }.property('email'),
+  actions: {
+    confirm: function() {
+      if(this.get('no_email')) { return; }
+      var _this = this;
+      _this.set('loading', true);
+      persistence.ajax('/api/v1/utterances/' + this.get('model.utterance_id') + '/share', {
+        type: 'POST',
+        data: {
+          email: this.get('email'),
+          subject: this.get('subject'),
+          message: this.get('message')
+        }
+      }).then(function(data) {
+        _this.set('loading', false);
+        modal.close('share-email');
+        modal.success(i18n.t('email_send', "Email sent!"));
+      }, function(err) {
+        _this.set('loading', false);
+        _this.set('error', true);
+      });
+    }
+  }
+});

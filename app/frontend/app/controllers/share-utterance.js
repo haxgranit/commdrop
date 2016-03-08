@@ -1,16 +1,12 @@
 import modal from '../utils/modal';
-import coughDropExtras from '../utils/extras';
+import i18n from '../utils/i18n';
 import stashes from '../utils/_stashes';
 import utterance from '../utils/utterance';
 import CoughDrop from '../app';
 
 export default modal.ModalController.extend({
-  show_share: function() {
-    if(this.get('utterance_record.link')) {
-      coughDropExtras.share.load({link: this.get('utterance_record.link'), text: this.get('sentence')});
-    }
-  }.observes('utterance_record.link'),
   opening: function() {
+    this.set('copy_result', null);
     var controller = this;
     var utterances = stashes.get('remembered_vocalizations');
     controller.set('model', {});
@@ -32,5 +28,14 @@ export default modal.ModalController.extend({
   }.property('utterance'),
   escaped_sentence: function() {
     return encodeURIComponent(this.get('sentence'));
-  }.property('sentence')
+  }.property('sentence'),
+  actions: {
+    copy_event(res) {
+      if(res) {
+        this.set('copy_result', {succeeded: true});
+      } else {
+        this.set('copy_result', {failed: true});
+      }
+    }
+  }
 });

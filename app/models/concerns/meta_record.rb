@@ -12,7 +12,7 @@ module MetaRecord
       end
       res.summary = "That sentence came from using a speech app, which makes is easier for some people to communicate. Visit the site to learn more."
       res.image = URI.encode(json['image_url'])
-      res.large_image = URI.encode(json['large_image_url']) if json['large_image_url']
+      res.large_image = URI.encode(json['image_url']) if json['image_url']
       res.link = URI.encode(json['link'])
     elsif self.class == Board
       json = JsonApi::Board.as_json(self)

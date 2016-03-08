@@ -5,6 +5,7 @@ class Utterance < ActiveRecord::Base
   include MetaRecord
   include SecureSerialize
   include Async
+  include Notifier
   protect_global_id
   
   belongs_to :user
@@ -19,7 +20,10 @@ class Utterance < ActiveRecord::Base
   def generate_defaults
     self.data ||= {}
     if self.data['button_list']
-      self.data['image_url'] ||= self.data['button_list'].map{|b| b['image'] }.compact.first
+      if !self.data['image_url']
+        self.data['image_url'] ||= self.data['button_list'].map{|b| b['image'] }.compact.first
+        self.data['default_image_url'] = true
+      end
     end
     self.data['image_url'] ||= "https://s3.amazonaws.com/opensymbols/libraries/noun-project/Person-08e6d794b0.svg"
     self.data['show_user'] ||= false
@@ -31,6 +35,9 @@ class Utterance < ActiveRecord::Base
     self.data ||= {}
     self.data['large_image_url_attempted'] = true
     self.data['large_image_url'] = url
+    if self.data['default_image_url']
+      self.data['image_url'] = self.data['large_image_url']
+    end
     self.save
   end
   
@@ -41,13 +48,72 @@ class Utterance < ActiveRecord::Base
     true
   end
   
+  def share_with(params, sharer)
+    return false unless sharer
+    if params['supervisor_id']
+      if sharer && sharer.supervisor_user_ids.include?(params['supervisor_id'])
+        sup = User.find_by_path(params['supervisor_id'])
+        self.schedule(:deliver_to, {'user_id' => sup.global_id, 'sharer_id' => sharer.global_id})
+        return true
+      end
+    elsif params['email']
+      self.schedule(:deliver_to, {
+        'sharer_id' => sharer.global_id,
+        'email' => params['email'],
+        'subject' => params['subject'] || params['message'] || params['sentence'],
+        'message' => params['message'] || params['sentence']
+      })
+      return true
+    end
+    return false
+  end
+  
+  def deliver_to(args)
+    sharer = User.find_by_path(args['sharer_id'])
+    return false unless sharer
+    text = args['message'] || self.data['sentence']
+    subject = args['subject'] || self.data['sentence']
+    if args['email']
+      UserMailer.schedule_delivery(:utterance_share, {
+        'subject' => subject,
+        'message' => text,
+        'sharer_id' => sharer.global_id,
+        'to' => args['email']
+      })
+      return true
+    elsif args['user_id']
+      user = User.find_by_path(args['user_id'])
+      if user
+        notify('utterance_shared', {
+          'sharer' => {'user_name' => sharer.user_name, 'user_id' => sharer.global_id},
+          'user_id' => user.global_id,
+          'text' => text
+        })
+      end
+      return true
+    end
+    false
+  end
+  
+  def additional_listeners(type, args)
+    if type == 'utterance_shared'
+      u = User.find_by_global_id(args['user_id'])
+      res = []
+      res << u.record_code if u
+      res
+    end
+  end
+  
   def process_params(params, non_user_params)
     raise "user required" unless self.user || non_user_params[:user]
     self.user = non_user_params[:user] if non_user_params[:user]
     self.data ||= {}
     self.data['button_list'] = params['button_list'] if params['button_list'] # TODO: process this for real
     self.data['sentence'] = params['sentence'] if params['sentence'] # TODO: process this for real
-    self.data['image_url'] = params['image_url'] if params['image_url']
+    if params['image_url'] && params['image_url'] != self.data['image_url']
+      self.data['image_url'] = params['image_url'] 
+      self.data['default_image_url'] = false
+    end
     self.data['show_user'] = params['show_user'] if params['show_user']
   end
 end

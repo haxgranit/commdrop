@@ -55,6 +55,12 @@ class Webhook < ActiveRecord::Base
         notifiable = find_record(notifiable_code)
         notifiable.handle_notification(notification_type, record, additional_args) if notifiable && notifiable.respond_to?(:handle_notification)
       end
+      if record.respond_to?(:additional_listeners)
+        record.additional_listeners(notification_type, additional_args).each do |notifiable_code|
+          notifiable = find_record(notifiable_code)
+          notifiable.handle_notification(notification_type, record, additional_args) if notifiable && notifiable.respond_to?(:handle_notification)
+        end
+      end
     end
     Webhook.where(:record_code => record_code).each{|h| h.notify(notification_type) }
   end

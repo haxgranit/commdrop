@@ -12,6 +12,7 @@ describe MetaRecord, :type => :model do
     expect(r.title).to eq("Someone said: \"ok\"")
     expect(r.summary).to eq("That sentence came from using a speech app, which makes is easier for some people to communicate. Visit the site to learn more.")
     expect(r.image).to eq("https://s3.amazonaws.com/opensymbols/libraries/noun-project/Person-08e6d794b0.svg")
+    expect(r.large_image).to eq("https://s3.amazonaws.com/opensymbols/libraries/noun-project/Person-08e6d794b0.svg")
     expect(r.link).to eq("#{JsonApi::Json.current_host}/utterances/#{u.global_id}")
     expect(r.created).to eq(u.created_at.iso8601)
     expect(r.updated).to eq(u.updated_at.iso8601)

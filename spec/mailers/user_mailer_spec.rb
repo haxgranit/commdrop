@@ -337,6 +337,22 @@ describe UserMailer, :type => :mailer do
     end
   end
   
+  describe "utterance_share" do
+    it "should generate a message to the intended user" do
+      u = User.create(:settings => {'name' => 'stacy', 'email' => 'stacy@example.com'})
+      m = UserMailer.utterance_share({'sharer_id' => u.global_id, 'message' => 'bacon', 'to' => 'fred@example.com', 'subject' => 'something'})
+      
+      expect(m.to).to eq(['fred@example.com'])
+      expect(m.subject).to eq("something")
+
+      html = message_body(m, :html)
+      expect(html).to match(/bacon/)
+      
+      text = message_body(m, :text)
+      expect(text).to match(/bacon/)
+    end
+  end
+  
   it "should have a default reply-to of noreply@mycoughdrop.com"
   it "should have specs for the mailer erb templates"
 end

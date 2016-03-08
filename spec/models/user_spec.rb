@@ -919,6 +919,122 @@ describe User, :type => :model do
       end
     end
   end
+  
+
+#   def handle_notification(notification_type, record, args)
+#     if notification_type == 'push_message'
+#       if record.user_id == self.id
+#         self.settings['unread_messages'] ||= 0
+#         self.settings['unread_messages'] += 1
+#         self.settings['last_message_read'] = (record.started_at || 0).to_i
+#         self.save
+#       end
+#       self.add_user_notification({
+#         :id => record.global_id,
+#         :type => notification_type,
+#         :user_name => record.user.user_name,
+#         :author_user_name => record.author.user_name,
+#         :text => record.data['note']['text'],
+#         :occurred_at => record.started_at.iso8601
+#       })
+#       UserMailer.schedule_delivery(:log_message, self.global_id, record.global_id)
+#     elsif notification_type == 'board_buttons_changed'
+#       my_ubcs = UserBoardConnection.where(:user_id => self.id, :board_id => record.id)
+#       supervisee_ubcs = UserBoardConnection.where(:user_id => supervisees.map(&:id), :board_id => record.id)
+#       self.add_user_notification({
+#         :type => notification_type,
+#         :occurred_at => record.updated_at.iso8601,
+#         :for_user => my_ubcs.count > 0,
+#         :for_supervisees => supervisee_ubcs.map{|ubc| ubc.user.user_name }.sort,
+#         :previous_revision => args['revision'],
+#         :name => record.settings['name'],
+#         :key => record.key,
+#         :id => record.global_id
+#       })
+#     elsif notification_type == 'utterance_shared'
+#       pref = (self.settings && self.settings['preferences'] && self.settings['preferences']['share_notifications']) || 'email'
+#       if pref == 'email'
+#         UserMailer.schedule_delivery(:utterance_share, {
+#           'subject' => args['text'],
+#           'sharer_id' => args['sharer']['user_id'],
+#           'message' => args['text'],
+#           'to' => self.settings['email']
+#         })
+#       elsif pref == 'text'
+#         # TODO: twilio or something
+#       elsif pref == 'none'
+#         return
+#       end
+#       self.add_user_notification({
+#         :type => notification_type,
+#         :occurred_at => record.updated_at.iso8601,
+#         :sharer_user_name => args['sharer']['user_name'],
+#         :text => args['text']
+#       })
+#     end
+#   end
+  describe "handle_notification" do
+    it "should add a notification to the dashboard list"
+    
+    it "should handle push messages"
+    
+    it "should handle button change events"
+    
+    it "should handle utterance sharing" do
+      u = User.create
+      u2 = User.create
+      ut = Utterance.create
+      u.handle_notification('utterance_shared', ut, {
+        'text' => 'alternate pantsuit',
+        'sharer' => {'user_id' => u2.global_id}
+      })
+      expect(u.settings['user_notifications']).to_not eq(nil)
+      expect(u.settings['user_notifications'].length).to eq(1)
+      expect(u.settings['user_notifications'][0]['text']).to eq('alternate pantsuit')
+      expect(u.settings['user_notifications'][0]['type']).to eq('utterance_shared')
+    end
+    
+    it "should add an utterance share to the dashboard, even if email is sent" do
+      u = User.create(:settings => {'email' => 'u2@example.com'})
+      u.settings['preferences']['share_notifications'] = 'email'
+      u.save
+      
+      u2 = User.create
+      ut = Utterance.create
+      expect(UserMailer).to receive(:schedule_delivery).with(:utterance_share, {
+        'subject' => 'alternate pantsuit',
+        'message' => 'alternate pantsuit',
+        'sharer_id' => u2.global_id,
+        'to' => 'u2@example.com'
+      })
+      u.handle_notification('utterance_shared', ut, {
+        'text' => 'alternate pantsuit',
+        'sharer' => {'user_id' => u2.global_id}
+      })
+      expect(u.settings['user_notifications']).to_not eq(nil)
+      expect(u.settings['user_notifications'].length).to eq(1)
+      expect(u.settings['user_notifications'][0]['text']).to eq('alternate pantsuit')
+      expect(u.settings['user_notifications'][0]['type']).to eq('utterance_shared')
+    end
+    
+    it "should not email an utterance share if app is the preferred delivery method" do
+      u = User.create
+      u.settings['preferences']['share_notifications'] = 'app'
+      u.save
+      
+      u2 = User.create(:settings => {'email' => 'u2@example.com'})
+      ut = Utterance.create
+      expect(UserMailer).to_not receive(:schedule_delivery)
+      u.handle_notification('utterance_shared', ut, {
+        'text' => 'alternate pantsuit',
+        'sharer' => {'user_id' => u2.global_id}
+      })
+      expect(u.settings['user_notifications']).to_not eq(nil)
+      expect(u.settings['user_notifications'].length).to eq(1)
+      expect(u.settings['user_notifications'][0]['text']).to eq('alternate pantsuit')
+      expect(u.settings['user_notifications'][0]['type']).to eq('utterance_shared')
+    end
+  end
 
   it "should securely serialize settings" do
     u = User.new(:settings => {:a => 2})

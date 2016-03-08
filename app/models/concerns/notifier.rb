@@ -16,6 +16,10 @@ module Notifier
     []
   end
   
+  def additional_listeners(notification_type, additional_args)
+    []
+  end
+  
   def external_listeners(notification_type)
     Webhook.where(:record_code => self.record_code)
   end

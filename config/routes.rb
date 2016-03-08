@@ -151,7 +151,9 @@ Coughdrop::Application.routes.draw do
       get 'logs'
       get 'admin_reports'
     end
-    resources :utterances
+    resources :utterances do
+      post 'share'
+    end
     get "search/symbols" => "search#symbols"
     get "search/proxy" => "search#proxy"
     get "search/parts_of_speech" => "search#parts_of_speech"

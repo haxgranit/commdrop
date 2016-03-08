@@ -1150,6 +1150,14 @@ video.button_image {
   opacity: 0.0;
   visibility: hidden;
 }
+#share_links {
+  a {
+    img {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}
 #eye_gaze {
   position: absolute;
   width: 60px;

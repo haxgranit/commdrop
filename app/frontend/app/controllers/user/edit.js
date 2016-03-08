@@ -5,6 +5,11 @@ import i18n from '../../utils/i18n';
 
 export default Ember.Controller.extend({
   registration_types: CoughDrop.registrationTypes,
+  allow_shares_options: [
+    {name: i18n.t('email_shares', "Email Me When People I Supervise Share a Message with Me"), id: 'email'},
+    {name: i18n.t('text_shares', "Text Me When People I Supervise Share a Message with Me"), id: 'text'},
+    {name: i18n.t('app_shares', "Show In the App When People I Supervise Share a Message with Me"), id: 'app'}
+  ],
   title: function() {
     return "Edit " + this.get('model.user_name');
   }.property('model.user_name'),
@@ -29,7 +34,7 @@ export default Ember.Controller.extend({
         } else {
           modal.error(i18n.t('save_failed', "Save failed."));
         }
-        
+
       });
     },
     cancelSave: function() {

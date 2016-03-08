@@ -11,7 +11,7 @@ import capabilities from './capabilities';
       console.log(str);
     }
   };
-  
+
   var extras = Ember.Object.extend({
     setup: function(container, application) {
       application.register('cough_drop:extras', extras, { instantiate: false, singleton: true });
@@ -21,7 +21,7 @@ import capabilities from './capabilities';
     },
     enable: function() {
       if(this.get('ready')) { return; }
-      
+
       console_debug("COUGHDROP: extras ready");
       if(window.app_version) {
         console_debug("COUGHDROP: app version " + window.app_version);
@@ -44,49 +44,6 @@ import capabilities from './capabilities';
       } else {
         return false;
       }
-    },
-    share: {
-      load: function(options) {
-        if(extras.ready) {
-          capabilities.invoke({type: 'coughDropExtras', method: 'share', options: options});
-        } else {
-          extras.share.default_load(options);
-        }
-      },
-      default_load: function(options) {
-        window.switchTo5x=true;
-        if(!window.stButtons) {
-          var $script = Ember.$("<script/>", {src: "https://ws.sharethis.com/button/buttons.js", type: "text/javascript"});
-          Ember.$("head").append($script);
-        }
-        extras.share.check_for_dom_ready(options);
-        extras.share.check_for_load_ready();
-      },
-      check_for_dom_ready: function(options) {
-        if(Ember.$("#share_links").length) {
-          var $links = Ember.$("<div/>");
-          $links.append(Ember.$("<span/>", {'class': 'st_facebook_large', 'displayText': 'Facebook', 'st_url': options.link, 'st_title': options.text, 'st_summary': options.text, 'st_via': ''}));
-          $links.append(Ember.$("<span/>", {'class': 'st_twitter_large', 'displayText': 'Tweet', 'st_url': options.link, 'st_title': options.text, 'st_summary': options.text, 'st_via': ''}));
-          $links.append(Ember.$("<span/>", {'class': 'st_googleplus_large', 'displayText': 'Google +', 'st_url': options.link, 'st_title': options.text, 'st_summary': options.text, 'st_via': ''}));
-          $links.append(Ember.$("<span/>", {'class': 'st_email_large', 'displayText': 'Email', 'st_url': options.link, 'st_title': options.text, 'st_summary': options.text, 'st_via': ''}));
-          $links.append(Ember.$("<span/>", {'class': 'st_sharethis_large', 'displayText': 'ShareThis', 'st_url': options.link, 'st_title': options.text, 'st_summary': options.text, 'st_via': ''}));
-          Ember.$("#share_links").empty().append($links);
-        } else {
-          Ember.run.later(extras, function() {
-            extras.share.check_for_dom_ready(options);
-          }, 500);
-        }
-      },
-      check_for_load_ready: function() {
-        if(window.stLight && window.stButtons) {
-          window.stLight.options({publisher: "ae1f401c-73cf-4236-89cc-30db0b9bd2f6", doNotHash: true, doNotCopy: false, hashAddressBar: false, shorten: false});
-          setTimeout(function() {
-            window.stButtons.locateElements();
-          }, 500);
-        } else {
-          Ember.run.later(extras, extras.share.check_for_load_ready, 500);
-        }
-      },
     },
     eye_gaze: function(options) {
       capabilities.invoke({type: 'coughDropExtras', method: 'eye_gaze', options: {enable: true}});
@@ -200,11 +157,11 @@ import capabilities from './capabilities';
   }
   stashes.persist_raw('coughDropDeviceId', device_id);
   capabilities.device_id = device_id;
-  
+
   Ember.$.realAjax = Ember.$.ajax;
   function fakeXHR(xhr) {
     var res = {status: 0};
-    if(xhr && xhr.status) { 
+    if(xhr && xhr.status) {
       var res = {
         readyState: xhr.readyState,
         responseJSON: xhr.responseJSON,
@@ -218,7 +175,7 @@ import capabilities from './capabilities';
     }
     res.getAllResponseHeaders = function() { return null; };
     return res;
-  }    
+  }
 
   Ember.$.ajax = function(opts) {
     var _this = this;
@@ -266,7 +223,7 @@ import capabilities from './capabilities';
           options.headers['X-Has-AppCache'] = "true";
         }
       }
-      
+
       var success = options.success;
       var error = options.error;
       options.success = null;
@@ -332,7 +289,7 @@ import capabilities from './capabilities';
   Ember.$.ajax.meta_push = function(opts) {
     var now = (new Date()).getTime();
     opts.ts = now;
-    
+
     var metas = Ember.$.ajax.metas || [];
     var new_list = [];
     var res = null;
@@ -362,7 +319,7 @@ import capabilities from './capabilities';
   };
   extras.meta = Ember.$.ajax.meta;
   extras.meta_push = Ember.$.ajax.meta_push;
-  
+
   window.coughDropExtras = extras;
   window.addEventListener('message', function(event) {
     if(event.source != window) { return; }

@@ -8,9 +8,9 @@
     {{else}}
       <span style="color: #aaa;">
         {{t "Someone said:" key='someone_said'}}
-      </span>        
+      </span>
     {{/if}}
-    "{{model.sentence}}"
+    "<span id="sentence">{{model.sentence}}</span>"
   </h2>
   <div id="utterance" class="button_list" {{ action "vocalize"}}>
     {{#with model.button_list as |button_list|}}
@@ -20,11 +20,10 @@
   <div style="clear: both;"></div>
   {{#if speakable}}
     <div style="float: left; margin-right: 15px;">
-      <button class='btn btn-primary' {{action "vocalize"}}>{{t "Speak This Sentence" key='speak_this_sentence'}}</button>
+      <button class='btn btn-primary btn-lg' {{action "vocalize"}}>{{t "Speak This Sentence" key='speak_this_sentence'}}</button>
     </div>
   {{/if}}
-  <div style="float: left;" id="share_links">
-  </div>
+  {{share-bar url=model.link text=model.sentence element_id='sentence' user=app_state.currentUser utterance=model copy_event='copy_event'}}
   <div style="clear: left;"></div>
   <p style="margin-top: 15px; margin-bottom: 15px;">
     {{t "This person uses software running on a tablet, phone or computer to help them communicate. People use " key='stash_explanation_1'}}
@@ -41,22 +40,24 @@
       </div>
       <div class="form-group">
         <div class="col-sm-8">
-          <p class="form-control-static">
-            {{t "preview symbol:" key='preview_symbol'}}
-            <button type='button' {{action 'change_image' 'prev'}} class='btn btn-default'><span class='glyphicon glyphicon-chevron-left'></span></button>
-            <img src={{model.image_url}} style="height: 42px; max-width: 60px;" alt="preview symbol"/>
-            <button type='button' {{action 'change_image' 'next'}} class='btn btn-default'><span class='glyphicon glyphicon-chevron-right'></span></button>
-          </p>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="col-sm-8">
           <div class="checkbox">
             <label>
               {{input type="checkbox" checked=model.show_user}}
               {{t "Show author name when sharing" key='show_author'}}
             </label>
           </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-8">
+          <p class="form-control-static">
+            {{t "In some web sites, an image preview will be shown. You can select the image you would like to appear in these cases." key='preview_symbol'}}<br/>
+            <button type='button' {{action 'change_image' 'prev'}} class='btn btn-default'><span class='glyphicon glyphicon-chevron-left'></span></button>
+            <span style="width: 200px; height: 200px; display: inline-block; overflow: hidden; vertical-align: middle;">
+            <img src={{image_url}} style="max-height: 200px; width: 200px;" alt="preview symbol"/>
+            </span>
+            <button type='button' {{action 'change_image' 'next'}} class='btn btn-default'><span class='glyphicon glyphicon-chevron-right'></span></button>
+          </p>
         </div>
       </div>
       <div class="form-group">
@@ -75,7 +76,7 @@
       {{#each model.button_list as |button|}}
         {{#if button.image}}
           <li>
-            <img src={{button.image}} alt={{button.label}} title={{button.label}} style="width: 30px;"/> 
+            <img src={{button.image}} alt={{button.label}} title={{button.label}} style="width: 30px;"/>
             {{license-attribution license=button.image_license}}
           </li>
         {{/if}}

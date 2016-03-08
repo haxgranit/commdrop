@@ -86,6 +86,60 @@ describe Api::UtterancesController, :type => :controller do
     end
   end
   
+  describe "POST share" do
+    it "should require api token" do
+      post :share, :utterance_id => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should error if not found" do
+      token_user
+      post :share, :utterance_id => 'asdf'
+      assert_not_found
+    end
+    
+    it "should require edit permission" do
+      token_user
+      u = User.create
+      utterance = Utterance.create(:user => u)
+      post :share, :utterance_id => utterance.global_id
+      assert_unauthorized
+    end
+    
+    it "should return success on success" do
+      token_user
+      utterance = Utterance.create(:user => @user)
+      post :share, :utterance_id => utterance.global_id, :email => 'bob@example.com'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['shared']).to eq(true)
+    end
+    
+    it "should add a notification to the supervisor's feed" do
+      token_user
+      sup = User.create
+      User.link_supervisor_to_user(sup, @user)
+      utterance = Utterance.create(:user => @user, :data => {'sentence' => 'bacon free piglet'})
+      post :share, :utterance_id => utterance.global_id, :supervisor_id => sup.global_id
+      json = JSON.parse(response.body)
+      expect(json['shared']).to eq(true)
+      Worker.process_queues
+      Worker.process_queues
+      sup.reload
+      expect(sup.settings['user_notifications']).to_not eq(nil)
+      expect(sup.settings['user_notifications'].length).to eq(1)
+      expect(sup.settings['user_notifications'][0]['text']).to eq('bacon free piglet')
+      expect(sup.settings['user_notifications'][0]['sharer_user_name']).to eq(@user.user_name)
+    end
+    
+    it "should return error on error" do
+      token_user
+      utterance = Utterance.create(:user => @user)
+      post :share, :utterance_id => utterance.global_id, :supervisor_id => 1234
+      assert_error('utterance share failed')
+    end
+  end
+  
   describe "GET show" do
     it "should not require api token" do
       u = Utterance.create(:data => {:button_list => [{label: 'ok'}], :sentence => 'ok'})

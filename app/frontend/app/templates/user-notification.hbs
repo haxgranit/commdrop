@@ -1,7 +1,7 @@
 <p>
   {{#if notif.push_message}}
     {{#link-to 'user' notif.user_name}}
-      {{notif.user_name}} 
+      {{notif.user_name}}
     {{/link-to}}
     {{t " - new note by %{user_name}" key='user_new_message' user_name=notif.author_user_name}}
     <br/>
@@ -11,6 +11,19 @@
       </span>
       {{t " - " key='dash'}}
       {{notif.text}}
+    </span>
+  {{else if notif.utterance_shared}}
+    {{#link-to 'user' notif.sharer.user_name}}
+      {{notif.sharer.user_name}}
+    {{/link-to}}
+    {{t "said to you, " key='said' }}
+    {{#link-to 'utterance' notif.utterance_id}}
+      {{notif.text}}
+    {{/link-to}}
+    <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
+      <span title="{{unbound date notif.occurred_at}}">
+        {{date_ago notif.occurred_at}}
+      </span>
     </span>
   {{else if notif.board_buttons_changed}}
     {{#link-to 'board' notif.key}}

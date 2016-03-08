@@ -5,7 +5,7 @@ module Notifiable
     "#{self.class.to_s}:#{self.global_id}"
   end
   
-  def handle_notification(notification_type, record)
+  def handle_notification(notification_type, record, args=nil)
   end
   
   def channels_for(notification_type)

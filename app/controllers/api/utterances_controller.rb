@@ -16,6 +16,17 @@ class Api::UtterancesController < ApplicationController
       render json: JsonApi::Utterance.as_json(utterance, :wrapper => true, :permissions => @api_user).to_json
     end
   end
+  
+  def share
+    utterance = Utterance.find_by_global_id(params['utterance_id'])
+    return unless exists?(utterance)
+    return unless allowed?(utterance, 'edit')
+    if utterance.share_with(params, @api_user)
+      render json: {shared: true}.to_json
+    else
+      api_error(400, {error: "utterance share failed"})
+    end
+  end
 
   def update
     utterance = Utterance.find_by_global_id(params['id'])

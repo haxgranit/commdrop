@@ -153,7 +153,7 @@ class User < ActiveRecord::Base
         'geo_logging' => false,
         'role' => 'communicator',
         'auto_open_speak_mode' => true,
-        
+        'share_notifications' => 'email'
       }
     }
   end
@@ -325,7 +325,7 @@ class User < ActiveRecord::Base
       'scanning_select_on_any_event', 'vocalize_linked_buttons', 'sidebar_boards',
       'silence_spelling_buttons', 'stretch_buttons', 'registration_type',
       'board_background', 'vocalization_height', 'role', 'auto_open_speak_mode',
-      'canvas_render', 'blank_status']
+      'canvas_render', 'blank_status', 'share_notifications']
 
   PROGRESS_PARAMS = ['setup_done', 'intro_watched', 'profile_edited', 'preferences_edited', 'home_board_set', 'app_added', 'skipped_subscribe_modal']
   def process_params(params, non_user_params)
@@ -583,6 +583,26 @@ class User < ActiveRecord::Base
         :name => record.settings['name'],
         :key => record.key,
         :id => record.global_id
+      })
+    elsif notification_type == 'utterance_shared'
+      pref = (self.settings && self.settings['preferences'] && self.settings['preferences']['share_notifications']) || 'email'
+      if pref == 'email'
+        UserMailer.schedule_delivery(:utterance_share, {
+          'subject' => args['text'],
+          'sharer_id' => args['sharer']['user_id'],
+          'message' => args['text'],
+          'to' => self.settings['email']
+        })
+      elsif pref == 'text'
+        # TODO: twilio or something
+      elsif pref == 'none'
+        return
+      end
+      self.add_user_notification({
+        :type => notification_type,
+        :occurred_at => record.updated_at.iso8601,
+        :sharer_user_name => args['sharer']['user_name'],
+        :text => args['text']
       })
     end
   end

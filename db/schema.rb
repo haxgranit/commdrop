@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160223001612) do
+ActiveRecord::Schema.define(version: 20160301010310) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -136,7 +136,7 @@ ActiveRecord::Schema.define(version: 20160223001612) do
     t.string   "cluster_hash", limit: 255
   end
 
-  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_cluster_hash", unique: true, using: :btree
+  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_hash", unique: true, using: :btree
 
   create_table "contact_messages", force: :cascade do |t|
     t.text     "settings"

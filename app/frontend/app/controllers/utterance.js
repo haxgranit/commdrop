@@ -14,9 +14,33 @@ export default Ember.Controller.extend({
       return "Someone said: \"" + sentence + "\"";
     }
   }.property('model.sentence', 'model.show_user', 'model.user'),
+  check_for_large_image_url: function() {
+    var attempt = this.get('attempt') || 1;
+    var _this = this;
+    if(_this.get('model.permissions.edit') && !_this.get('model.large_image_url') && attempt < 15) {
+      Ember.run.later(function() {
+        _this.set('attempt', attempt + 1);
+        _this.get('model').reload().then(function(u) {
+          _this.check_for_large_image_url();
+        });
+      }, attempt * 500);
+    }
+  },
+  image_url: function() {
+    var index = this.get('image_index');
+    if(index == undefined) {
+      return this.get('model.image_url');
+    }
+
+    if(index == -1) {
+      return this.get('model.large_image_url');
+    } else {
+      return this.get('model.button_list')[index].image;
+    }
+  }.property('model.image_url', 'model.large_image_url', 'image_index'),
   show_share: function() {
+    this.check_for_large_image_url();
     this.set('speakable', speecher.ready);
-    coughDropExtras.share.load({link: this.get('model.link'), text: this.get('model.sentence')});
   }.observes('model.sentence'),
   user_showable: function() {
     return this.get('model.show_user') && this.get('model.user.name') && this.get('model.user.user_name');
@@ -31,31 +55,44 @@ export default Ember.Controller.extend({
       }
     },
     change_image: function(direction) {
-      var index = this.get('model.image_index');
-      if(!index) {
+      var index = this.get('image_index');
+      if(index == undefined) {
         var _this = this;
-        this.get('model.button_list').forEach(function(b, idx) {
-          if(b.image == _this.get('model.image_url') && !index) {
-            index = idx;
-          }
-        });
+        var image_url = _this.get('model.image_url');
+        if(image_url == _this.get('model.large_image_url')) {
+          index = -1;
+        } else {
+          this.get('model.button_list').forEach(function(b, idx) {
+            if(b.image == image_url && !index) {
+              index = idx;
+            }
+          });
+        }
       }
-      
+
       if(direction == 'next') {
         index++;
       } else {
         index--;
       }
-      if(index < 0) {
+      if(index == -1 && this.get('model.large_image_url')) {
+      } else if(index < 0) {
         index = this.get('model.button_list').length - 1;
       } else if(index >= this.get('model.button_list').length) {
-        index = 0;
+        if(this.get('model.large_image_url')) {
+          index = -1;
+        } else {
+          index = 0;
+        }
       }
-      var image = this.get('model.button_list')[index].image;
-      this.set('model.image_url', image);
-      this.set('model.image_index', index);
+      this.set('image_index', index);
+    },
+    copy_event(res) {
+      if(res) { modal.success(i18n.t('copied', "Copied to clipboard!")); }
+      else { modal.error(i18n.t('copy_failed', "Copy failed unexpectedly")); }
     },
     update_utterance: function() {
+      this.set('model.image_url', this.get('image_url'));
       this.get('model').save().then(null, function() {
         modal.error(i18n.t('utterance_update_failed', "Sentence update failed"));
       });

@@ -25,7 +25,7 @@ var capabilities;
   };
   var ajax = $.ajax;
   var chrome;
-  
+
   function message_client(message) {
     if(window.coughDropExtras) {
       window.coughDropExtras.extension_message(message);
@@ -145,7 +145,7 @@ var capabilities;
       });
     }
   };
-  
+
   capabilities = window.capabilities || {};
   capabilities.installed_app = !!capabilities.installed_app;
   capabilities.browserless = !!(capabilities.installed_app || navigator.standalone);
@@ -282,11 +282,11 @@ var capabilities;
           });
         },
         download_voice: function(voice_id, voice_url, progress) {
-          return capabilities.tts.tts_exec('downloadVoice', 
+          return capabilities.tts.tts_exec('downloadVoice',
             {
               voice_id: voice_id,
               voice_url: voice_url
-            }, 
+            },
             function(promise, res) {
               if(res.done) {
                 promise.resolve(res);
@@ -331,6 +331,89 @@ var capabilities;
           return capabilities.tts.tts_exec('stopSpeakingText', null, function(promise, res) {
             promise.resolve(res);
           });
+        }
+      },
+      sharing: {
+        types: {
+          'facebook': {
+            'Android': 'com.facebook.katana',
+            'iOS': 'com.apple.social.facebook'
+          },
+          'twitter': {
+            'iOS': 'com.apple.social.twitter'
+          }
+        },
+        available: function() {
+          var promise = capabilities.mini_promise();
+          // https://github.com/steevelefort/cordova3-ios-tts-plugin
+          if(window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.canShareVia) {
+            setTimeout(function() {
+              if(!promise.resolved) {
+                promise.resolve([]);
+              }
+            }, 2000);
+            var dones = 0;
+            var valids = ['email', 'generic'];
+            if(window.cordova && window.cordova.plugins && window.cordova.plugins.clipboard && window.cordova.plugins.clipboard.copy) {
+              valids.push('clipboard');
+            }
+            var all_done = function() {
+              if(dones >= checks.length) {
+                promise.resolve(valids);
+              }
+            };
+            var check_one = function(type) {
+              var check_type = (capabilities.sharing.types[type] || {})[capabilities.system] || type;
+              window.plugins.socialsharing.canShareVia(check_type, 'message', 'message', null, 'https://www.mycoughdrop.com', null, function() {
+                valids.push(type);
+                all_done();
+              }, function() {
+                all_done();
+              });
+            };
+            var checks = ['facebook', 'twitter', 'instagram', 'google_plus'];
+            checks.forEach(function(type) {
+              check_one(type);
+            });
+          } else {
+            promise.resolve([]);
+          }
+          return promise;
+        },
+        share: function(type, message, url) {
+          var promise = capabilities.mini_promise();
+          var share_type = (capabilities.sharing.types[type] || {})[capabilities.system] || type;
+          if(type == 'native') {
+            share_type = null;
+          }
+          if(type == 'email') {
+            if(window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.shareViaEmail) {
+              window.plugins.socialsharing.shareViaEmail(message, message, null, null, null, [url], function(success) {
+                promise.resolve();
+              }, function(err) {
+                promise.resolve();
+              });
+            } else {
+              promise.reject();
+            }
+          } else if(type == 'clipboard') {
+            // https://github.com/VersoSolutions/CordovaClipboard
+            if(window.cordova && window.cordova.plugins && window.cordova.plugins.clipboard && window.cordova.plugins.clipboard.copy) {
+              window.cordova.plugins.clipboard.copy(message);
+              promise.resolve();
+            } else {
+              promise.reject();
+            }
+          } else if(window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.shareVia) {
+            window.plugins.socialsharing.shareVia(share_type, message, message, null, url, function(success) {
+              promise.resolve();
+            }, function(err) {
+              promise.resolve();
+            });
+          } else {
+            promise.reject();
+          }
+          return promise;
         }
       },
       battery: {
@@ -417,8 +500,8 @@ var capabilities;
         return res;
       },
       fullscreen_capable: function() {
-        return (window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) || 
-                document.body.requestFullscreen || document.body.msRequestFullscreen || 
+        return (window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) ||
+                document.body.requestFullscreen || document.body.msRequestFullscreen ||
                 document.body.mozRequestFullScreen || document.body.webkitRequestFullscreen;
       },
       fullscreen: function(enable) {
@@ -441,7 +524,7 @@ var capabilities;
             } else {
               res.reject();
             }
-          }, 500);  
+          }, 500);
         } else {
           if(window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) {
             window.AndroidFullScreen.showSystemUI(function() { }, function() { });
@@ -460,13 +543,13 @@ var capabilities;
             } else {
               res.resolve();
             }
-          }, 500);  
+          }, 500);
         }
         return res;
       },
       storage_clear: function(options) {
         if(capabilities.dbman.not_ready(capabilities.storage_clear, options)) { return; }
-        
+
         capabilities.dbman.clear(options.store, function(record) {
           storage_result(true, options.store, record);
         }, function(error) {
@@ -489,7 +572,7 @@ var capabilities;
           store: 'deletion',
           index: null
         });
-        
+
         function next_getter() {
           var getter = getters.shift();
           if(!getter) {
@@ -503,7 +586,7 @@ var capabilities;
           });
         }
         next_getter();
-        
+
         function clear_deletions() {
 //           // this belongs as a separate call in sync, not part of find_changed
 //           capabilities.dbman.clear('deletion', function() {
@@ -574,7 +657,7 @@ var capabilities;
       },
       storage_find: function(options) {
         if(capabilities.dbman.not_ready(capabilities.storage_find, options)) { return; }
-        
+
         var res = capabilities.mini_promise();
         capabilities.dbman.find(options.store, options.key, function(record) {
           storage_result(true, options.id, record);
@@ -587,16 +670,16 @@ var capabilities;
       },
       storage_store: function(options) {
         if(capabilities.dbman.not_ready(capabilities.storage_store, options)) { return; }
-        
+
         capabilities.dbman.store(options.store, options.record, function(record) {
           storage_result(true, options.id, record);
         }, function(error) {
           storage_result(false, options.id, error);
-        }); 
+        });
       },
       storage_remove: function(options) {
         if(capabilities.dbman.not_ready(capabilities.storage_remove, options)) { return; }
-        
+
         capabilities.dbman.remove(options.store, options.record_id, function(record) {
           storage_result(true, options.id, record);
         }, function(error) {
@@ -628,14 +711,14 @@ var capabilities;
     for(var idx in functions) {
       if(typeof functions[idx] == 'function') {
         function_maker(capabilities, idx, functions[idx]);
-      } else {  
+      } else {
         capabilities[idx] = {};
         for(var jdx in functions[idx]) {
           function_maker(capabilities[idx], jdx, functions[idx][jdx]);
         }
       }
     }
-    
+
     bg.listen();
     window.addEventListener('popstate', function() {
       bg.send_message({type: 'page_action'});
@@ -647,11 +730,11 @@ var capabilities;
       bg.send_message({type: "init"});
     }
   }, 500);
-  
 
 
 
-  // TODO: When you start separating chunks of code with multiple line breaks, it's 
+
+  // TODO: When you start separating chunks of code with multiple line breaks, it's
   // time to split into multiple files.
   function params_from_url(url) {
     var query = url.split(/#/)[0].split(/\?/)[1] || "";
@@ -842,7 +925,7 @@ var capabilities;
               }
               _this.measuring.count++;
               _this.$pin.attr('class', 'dwell_for_' + _this.measuring.count);
-              // top 
+              // top
               var clientX = x - window.screenInnerOffsetX;
               var clientY = y - window.screenInnerOffsetY;
               var elem = document.elementFromPoint(clientX, clientY);

@@ -67,6 +67,12 @@ class UserMailer < ActionMailer::Base
     mail_message(@user, "Checking In")
   end
   
+  def utterance_share(opts)
+    @user = User.find_by_global_id(opts['sharer_id'])
+    @message = opts['message'] || "no message"
+    mail(to: opts['to'], subject: opts['subject'], reply_to: @user.settings['email'])
+  end
+  
   def organization_assigned(user_id, org_id)
     @user = User.find_by_global_id(user_id)
     @org = Organization.find_by_global_id(org_id)
