@@ -263,6 +263,48 @@ describe Supervising, :type => :model do
       expect(o.reload.managed_user?(u)).to eq(true)
     end
     
+    it "should allow approving a pending superivision org" do
+      u = User.create
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      expect(o.reload.managed_user?(u)).to eq(false)
+      o.add_supervisor(u.user_name, true)
+      expect(o.reload.pending_supervisor?(u.reload)).to eq(true)
+      expect(o.reload.supervisor?(u)).to eq(true)
+      u.reload.process({'supervisor_key' => "approve_supervision-#{o.global_id}"})
+      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.supervisor?(u)).to eq(true)
+    end
+    
+    it "should not error when re-approving an already-approved pending supervision org" do
+      u = User.create
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      expect(o.reload.managed_user?(u)).to eq(false)
+      o.add_supervisor(u.user_name, true)
+      expect(o.reload.pending_supervisor?(u.reload)).to eq(true)
+      expect(o.reload.supervisor?(u)).to eq(true)
+      u.reload.process({'supervisor_key' => "approve_supervision-#{o.global_id}"})
+      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.supervisor?(u)).to eq(true)
+      
+      expect(u.process_supervisor_key("approve_supervision-#{o.global_id}")).to eq(true)
+    end
+    
+    it "should allow rejecting a pending supervision org" do
+      u = User.create
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      expect(o.reload.managed_user?(u)).to eq(false)
+      o.add_supervisor(u.user_name, true)
+      expect(o.reload.pending_supervisor?(u.reload)).to eq(true)
+      expect(o.reload.supervisor?(u)).to eq(true)
+      u.reload.process({'supervisor_key' => "approve_supervision-#{o.global_id}"})
+      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.supervisor?(u)).to eq(true)
+      
+      expect(u.process_supervisor_key("remove_supervision-#{o.global_id}")).to eq(true)
+      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.supervisor?(u)).to eq(false)
+    end
+    
     it "should set a user to not-pending if they approve a pending org" do
       u = User.create
       o = Organization.create(:settings => {'total_licenses' => 1})
@@ -356,6 +398,140 @@ describe Supervising, :type => :model do
       u2.reload
       u.reload
       expect(u2.permissions_for(u)).not_to be_include('manage_supervision')
+    end
+  end
+  
+  describe "organization_hash" do
+    it "should include old-fashioned managed org" do
+      o = Organization.create
+      u = User.create
+      u.managed_organization_id = o.id
+      res = u.organization_hash
+      expect(res.length).to eq(1)
+      expect(res[0]).to eq({
+        'id' => o.global_id,
+        'name' => o.settings['name'],
+        'type' => 'manager',
+        'full_manager' => false,
+        'added' => nil
+      })
+    end
+    
+    it "should include old-fashioned managing org" do
+      o = Organization.create
+      u = User.create
+      u.managing_organization_id = o.id
+      u.settings['subscription'] = {
+        'added_to_organization' => 98765,
+        'org_pending' => true,
+        'org_sponsored' => false
+      }
+      res = u.organization_hash
+      expect(res.length).to eq(1)
+      expect(res[0]).to eq({
+        'id' => o.global_id,
+        'name' => o.settings['name'],
+        'type' => 'user',
+        'added' => 98765,
+        'pending' => true,
+        'sponsored' => false
+      })
+    end
+    
+    it "should include new-fashioned managing org" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      o.add_user(u.user_name, false, true)
+      
+      res = u.reload.organization_hash
+      expect(res.length).to eq(1)
+      expect(res[0]['id']).to eq(o.global_id)
+      expect(res[0]['name']).to eq(o.settings['name'])
+      expect(res[0]['type']).to eq('user')
+      added = Time.parse(res[0]['added'])
+      expect(added).to be > (Time.now - 10)
+      expect(added).to be < (Time.now + 10)
+      expect(res[0]['pending']).to eq(false)
+      expect(res[0]['sponsored']).to eq(true)
+    end
+    
+    it "should include all new-fashioned managed orgs" do
+      o = Organization.create
+      o2 = Organization.create
+      u = User.create
+      o.add_manager(u.user_name, true)
+      
+      res = u.reload.organization_hash
+      expect(res.length).to eq(1)
+      expect(res[0]['id']).to eq(o.global_id)
+      expect(res[0]['name']).to eq(o.settings['name'])
+      expect(res[0]['type']).to eq('manager')
+      added = Time.parse(res[0]['added'])
+      expect(added).to be > (Time.now - 10)
+      expect(added).to be < (Time.now + 10)
+      expect(res[0]['full_manager']).to eq(true)
+      
+      o2.add_manager(u.user_name, false)
+      res = u.reload.organization_hash
+      expect(res.length).to eq(2)
+      expect(res[1]['id']).to eq(o2.global_id)
+      expect(res[1]['name']).to eq(o2.settings['name'])
+      expect(res[1]['type']).to eq('manager')
+      added = Time.parse(res[1]['added'])
+      expect(added).to be > (Time.now - 10)
+      expect(added).to be < (Time.now + 10)
+      expect(res[1]['full_manager']).to eq(false)
+    end
+    
+    it "should include all supervision orgs" do
+      o = Organization.create
+      o2 = Organization.create
+      u = User.create
+      
+      o.add_supervisor(u.user_name, true)
+      res = u.reload.organization_hash
+      expect(res.length).to eq(1)
+      expect(res[0]['id']).to eq(o.global_id)
+      expect(res[0]['name']).to eq(o.settings['name'])
+      expect(res[0]['type']).to eq('supervisor')
+      added = Time.parse(res[0]['added'])
+      expect(added).to be > (Time.now - 10)
+      expect(added).to be < (Time.now + 10)
+      expect(res[0]['pending']).to eq(true)
+      
+      o2.add_supervisor(u.user_name, false)
+      res = u.reload.organization_hash
+      expect(res.length).to eq(2)
+      expect(res[1]['id']).to eq(o2.global_id)
+      expect(res[1]['name']).to eq(o2.settings['name'])
+      expect(res[1]['type']).to eq('supervisor')
+      added = Time.parse(res[1]['added'])
+      expect(added).to be > (Time.now - 10)
+      expect(added).to be < (Time.now + 10)
+      expect(res[1]['pending']).to eq(false)
+    end
+    
+    it "should not repeat org associations" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      u.managing_organization_id = o.id
+      u.settings['subscription'] = {
+        'added_to_organization' => 98765,
+        'org_pending' => true,
+        'org_sponsored' => false
+      }
+      o.add_user(u.user_name, false, true)
+
+      res = u.reload.organization_hash
+      expect(res.length).to eq(1)
+      expect(res[0]['id']).to eq(o.global_id)
+      expect(res[0]['name']).to eq(o.settings['name'])
+      expect(res[0]['type']).to eq('user')
+      added = Time.parse(res[0]['added'])
+      expect(added).to be > (Time.now - 10)
+      expect(added).to be < (Time.now + 10)
+      expect(res[0]['pending']).to eq(false)
+      expect(res[0]['sponsored']).to eq(true)
     end
   end
 end

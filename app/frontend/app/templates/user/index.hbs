@@ -3,12 +3,22 @@
 </div>
 {{#if model.permissions.view_detailed}}
   {{#if model.permissions.delete}}
-    {{#if model.subscription.org_pending}}
+    {{#if model.pending_org}}
       <div class='alert alert-info'>
-        {{t "%{org} wants to sponsor this user as part of their organization. This addition must be approved before it is complete." key='confirm_pending_org' org=model.subscription.managing_org_name}}
+        {{t "%{org} wants to support this user as part of their organization. This addition must be approved before it is complete. If approved, the organization will have access to profile information for this user." key='confirm_pending_org' org=model.pending_org.name}}
+        {{#if model.pending_org.sponsored}}
+          {{t "The organization will also sponsor this account, meaning it will be free as long as the organization remains a sponsor." key='org_sponsored'}}
+        {{/if}}
         <br/><br/>
-        <button class="btn btn-default" {{action 'approve_or_reject_org' true}}>{{t "Approve %{org}" org=model.subscription.managing_org_name}}</button>
-        <button class="btn btn-default" {{action 'approve_or_reject_org' false}}>{{t "Deny Access"}}</button>
+        <button class="btn btn-default" {{action 'approve_or_reject_org' 'user_approve'}}>{{t "Approve %{org}" org=model.pending_org.name}}</button>
+        <button class="btn btn-default" {{action 'approve_or_reject_org' 'user_reject'}}>{{t "Deny Access"}}</button>
+      </div>
+    {{else if model.pending_supervision_org}}
+      <div class='alert alert-info'>
+        {{t "%{org} wants to add you as a supervisor to their organization. Organization admins will be able to see your basic profile information, including the communicators in the organization that you are currently supervising." key='confirm_pending_supervision_org' org=model.pending_supervision_org.name}}
+        <br/><br/>
+        <button class="btn btn-default" {{action 'approve_or_reject_org' 'supervisor_approve'}}>{{t "Approve %{org}" org=model.pending_supervision_org.name}}</button>
+        <button class="btn btn-default" {{action 'approve_or_reject_org' 'supervisor_reject'}}>{{t "Deny Access"}}</button>
       </div>
     {{else if model.pending}}
       <div class='alert alert-success'>
@@ -40,7 +50,7 @@
       {{else}}
         {{#unless model.preferences.home_board.key}}
           <h2>{{t "Getting Started" key='welcome_message'}}</h2>
-        {{/unless}}    
+        {{/unless}}
       {{/if}}
       {{#unless model.preferences.home_board.key}}
         <p>{{t "You haven't selected a home board yet. Here's a few pre-built boards that you may like. Or you can always create your own! If you like one, just open it and hit 'Set as Home'." key='some_starting_boards'}}</p>
@@ -267,7 +277,7 @@
             <li role="presentation" class={{if private_selected 'active'}}><a href="#" {{action 'set_selected' 'private'}}>{{t "Private" key='private'}}</a></li>
           {{/if}}
           <li role="presentation" class={{if starred_selected 'active'}}><a href="#" {{action 'set_selected' 'starred'}}>{{t "Liked" key='starred'}}</a></li>
-          {{#if model.permissions.edit}}          
+          {{#if model.permissions.edit}}
             <li role="presentation" class={{if shared_selected 'active'}}><a href="#" {{action 'set_selected' 'shared'}}>{{t "Shared with Me" key='shared_with_me'}}</a></li>
           {{/if}}
           {{#if model.prior_home_boards}}
@@ -532,7 +542,7 @@
               </div>
             {{/if}}
           </div>
-          
+
           <h5 style="margin-top: 20px;">{{t "Devices:" key='devices_colon'}}</h5>
             {{#if model.devices}}
               <table class="table table-striped table-hover">

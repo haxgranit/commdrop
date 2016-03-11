@@ -103,11 +103,10 @@ Coughdrop::Application.routes.draw do
   get ':id/password_reset/:key' => ember_handler, :constraints => {:id => user_id_regex}
   get 'api/v1/token_check' => 'session#token_check'
   
-#   get 'become_user' => ''
-
   scope 'api/v1', module: 'api' do
     post 'forgot_password' => 'users#forgot_password'
     post 'messages' => 'messages#create'
+    
     resources :boards, :constraints => {:id => board_id_regex} do
       get 'stats' => 'boards#stats'
       post 'imports' => 'boards#import', on: :collection
@@ -119,6 +118,7 @@ Coughdrop::Application.routes.draw do
       post 'share_response' => 'boards#share_response'
       get 'copies' => 'boards#copies'
     end
+    
     resources :users do
       get 'stats/daily' => 'users#daily_stats'
       get 'stats/hourly' => 'users#hourly_stats'
@@ -135,31 +135,40 @@ Coughdrop::Application.routes.draw do
       post 'claim_voice' => 'users#claim_voice'
       post 'rename' => 'users#rename'
     end
+    
     resources :images do
       get 'batch', on: :collection
       get 'upload_success'
     end
+    
     get "buttonsets/:id" => "button_sets#show"
     get "boardversions" => "boards#history"
+    
     resources :gifts
+    
     resources :sounds do
       get 'upload_success'
     end
+    
     resources :organizations do
       get 'managers'
       get 'users'
+      get 'supervisors'
       get 'logs'
       get 'admin_reports'
     end
+    
     resources :utterances do
       post 'share'
     end
+    
     get "search/symbols" => "search#symbols"
     get "search/proxy" => "search#proxy"
     get "search/parts_of_speech" => "search#parts_of_speech"
     get "search/apps" => "search#apps"
     get "search/audio" => "search#audio"
     get "progress/:id" => "progress#progress"
+    
     resources :logs do
       get 'lam'
     end

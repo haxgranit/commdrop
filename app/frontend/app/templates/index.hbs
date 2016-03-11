@@ -28,7 +28,7 @@
               <span class={{if app_state.currentUser.expired "glyphicon glyphicon-info-sign expired" "glyphicon glyphicon-info-sign"}}></span>
               {{#if app_state.currentUser.expired}}
                 <strong class='text-danger'>{{t "Tap here to update your subscription" key='subscribe'}}</strong><br/>
-                {{t "your free preview has ended" key='preview_expired'}} 
+                {{t "your free preview has ended" key='preview_expired'}}
               {{else}}
                 <strong>{{t "Please subscribe" key='subscribe'}}</strong><br/>
                 {{t "your free preview ends" key='preview_expires'}} {{date app_state.currentUser.subscription.expires 'day'}}
@@ -104,7 +104,7 @@
                     {{#if persistence.syncing}}
                       {{t "Syncing..." key='syncing'}}
                       {{#if persistence.sync_progress}}
-                        {{persistence.sync_progress.visited}} / 
+                        {{persistence.sync_progress.visited}} /
                         {{t "board" key='communication_set_board' count=persistence.sync_progress.total}}
                       {{/if}}
                     {{else}}
@@ -163,7 +163,7 @@
                 {{#if app_state.currentUser.stats.board_set_ids}}
                   <br/>
                   {{#if persistence.sync_progress}}
-                    {{persistence.sync_progress.visited}} / 
+                    {{persistence.sync_progress.visited}} /
                     {{t "board" key='communication_set_board' count=persistence.sync_progress.total}}
                   {{else if persistence.sync_status_error}}
                     {{persistence.sync_status_error}}
@@ -202,7 +202,7 @@
             {{t "Organization Management" key='org_management'}}<br/>
           {{/link-to}}
         {{/if}}
-      
+
       </div>
       <div style="float: right;">
         <a href="#" {{action 'reload'}}>{{t "reload" key='reload'}}</a>
@@ -257,9 +257,9 @@
         {{/if}}
         <h4>{{t "Notifications" key='messages'}}</h4>
         <div style="margin-left: 20px;">
-          {{#if app_state.currentUser.subscription.org_pending}}
+          {{#if app_state.currentUser.pending_org}}
             <p>
-              {{#link-to 'user' app_state.currentUser.user_name}}<span class="glyphicon glyphicon-paperclip"></span>{{t "%{org} wants to sponsor this user as part of their organization." key='remind_pending_org' org=app_state.currentUser.subscription.managing_org_name}}{{/link-to}}
+              {{#link-to 'user' app_state.currentUser.user_name}}<span class="glyphicon glyphicon-paperclip"></span>{{t "%{org} wants to support this user as part of their organization." key='remind_pending_org' org=app_state.currentUser.pending_org.name}}{{/link-to}}
             </p>
           {{/if}}
           {{#if app_state.currentUser.pending_board_shares}}
@@ -300,7 +300,7 @@
             {{/unless}}
           {{/unless}}
         </div>
-        
+
         {{#if app_state.currentUser.supporter_role}}
           <h4>{{t "Recent Sessions for supervisees" key='recent_sessions_for_supervisees'}}</h4>
         {{else}}
@@ -325,7 +325,7 @@
                   {{/if}}
                 {{/link-to}}
                 {{#if app_state.currentUser.supporter_role}}
-                  <span> - 
+                  <span> -
                     {{#link-to 'user' log.user.user_name}}
                       {{log.user.user_name}}
                     {{/link-to}}
@@ -348,7 +348,7 @@
             {{/if}}
           {{/if}}
         </div>
-          
+
       </div>
     </div>
     <div class="col-sm-6 col-sm-offset-6 col-md-4 col-md-offset-0 col">
@@ -495,7 +495,7 @@
         {{#unless app_state.no_linky}}
           <button {{action 'intro_video' 'https://www.youtube.com/embed/ELNKXfvTDbA?rel=0&enablejsapi=1&autoplay=1'}} class='btn btn-default' style='background-color: rgba(255, 255, 255, 0.5); margin-top: 50px; margin-bottom: -50px; font-size: 16px; min-width: 300px; text-align: center;'>
             <span class='glyphicon glyphicon-play-circle' style='font-size: 24px; vertical-align: bottom;'></span>
-            See How CoughDrop Works 
+            See How CoughDrop Works
           </button>
         {{/unless}}
       </h2>
@@ -544,23 +544,23 @@
         <h2>with <span style="font-weight: 200;">COUGHDROP</span> you can:</h2>
       </div>
       <div class="col-sm-4 icon_column">
-        <span class="glyphicon glyphicon-comment big_icon" style="color: #49c7e8;"></span> 
+        <span class="glyphicon glyphicon-comment big_icon" style="color: #49c7e8;"></span>
         <span class="icon_under">
-        <strong>{{t "Personalize" key='personalize'}}</strong> 
+        <strong>{{t "Personalize" key='personalize'}}</strong>
         {{t "communication and access across multiple devices. Grow your vocabulary over time with a simple interface backed up by lots of help and training." key='personalize_text'}}
         </span>
       </div>
       <div class="col-sm-4 icon_column">
         <span class="glyphicon glyphicon-cloud big_icon" style="color: #f2b367;"></span>
         <span class="icon_under">
-        <strong>{{t "Work offline" key='work_offline'}}</strong> 
+        <strong>{{t "Work offline" key='work_offline'}}</strong>
         {{t "with backup in the cloud so it's painless to switch devices if something breaks. You can also share boards with others and open-license them for anyone to use." key='offline_text'}}
         </span>
       </div>
       <div class="col-sm-4 icon_column">
-        <span class="glyphicon glyphicon-signal big_icon" style="color: #e86060;"></span> 
+        <span class="glyphicon glyphicon-signal big_icon" style="color: #e86060;"></span>
         <span class="icon_under">
-        <strong>{{t "Empower the team" key='empower_the_team'}}</strong> 
+        <strong>{{t "Empower the team" key='empower_the_team'}}</strong>
         {{t "with reports that help everyone improve. Teams can collaborate and modify boards for each individual without having to take their device away." key='insights_text'}}
         </span>
       </div>
@@ -667,7 +667,7 @@
                 </label></p>
                 <button type="submit" class="btn btn-primary" style="width: 100px;">{{t "Sign Up" key='sign_up'}}</button>
                 <a href="#" {{action "authenticateSession"}} class="text" style="padding-left: 10px;">{{t "Already Registered?" key="already_registered"}}</a>
-              </div> 
+              </div>
             </form>
           {{else}}
             {{partial "bad-privacy-settings"}}

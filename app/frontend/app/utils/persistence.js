@@ -158,7 +158,7 @@ var persistence = Ember.Object.extend({
     var get_important_ids =  coughDropExtras.storage.find('settings', 'importantIds').then(function(res) {
       return Ember.RSVP.resolve(res.raw.ids);
     });
-    
+
     var get_board_ids = get_important_ids.then(function(ids) {
       var board_ids = [];
       ids.forEach(function(id) {
@@ -168,7 +168,7 @@ var persistence = Ember.Object.extend({
       });
       return board_ids;
     });
-    
+
     var get_boards = get_board_ids.then(function(ids) {
       var promises = [];
       var boards = [];
@@ -196,7 +196,7 @@ var persistence = Ember.Object.extend({
       promises.forEach(function(p) { p.then(null, function() { }); });
       return res;
     });
-    
+
     var search_boards = get_boards.then(function(boards) {
       var matching_boards = [];
       boards.forEach(function(board) {
@@ -210,7 +210,7 @@ var persistence = Ember.Object.extend({
       });
       return matching_boards;
     });
-    
+
     return search_boards;
   },
   remove: function(store, obj, key, log_removal) {
@@ -225,13 +225,13 @@ var persistence = Ember.Object.extend({
         }, function(error) {
           return Ember.RSVP.reject(error);
         });
-      
+
         if(log_removal) {
           result = result.then(function() {
             return coughDropExtras.storage.store('deletion', {store: store, id: record.id, storageId: (store + "_" + record.id)});
           });
         }
-      
+
         result.then(function() {
           persistence.log = persistence.log || [];
           persistence.log.push({message: "Successfully removed object", object: obj, key: key});
@@ -284,7 +284,7 @@ var persistence = Ember.Object.extend({
   store: function(store, obj, key, eventually) {
 //    console.log("store:"); console.log(obj);
     var _this = this;
-    
+
     return new Ember.RSVP.Promise(function(resolve, reject) {
       if(coughDropExtras && coughDropExtras.ready) {
         persistence.stores = persistence.stores || [];
@@ -302,10 +302,10 @@ var persistence = Ember.Object.extend({
           record.key = record.raw.key;
           record.tmp_key = record.raw.tmp_key;
           record.changed = !!record.raw.changed;
-        
-        
+
+
           var store_promise = coughDropExtras.storage.store(store, record, key).then(function() {
-            if(store == 'user' && key == 'self') {  
+            if(store == 'user' && key == 'self') {
               return store_method('settings', {id: record.id}, 'selfUserId').then(function() {
                 return Ember.RSVP.resolve(record.raw);
               }, function() {
@@ -365,16 +365,16 @@ var persistence = Ember.Object.extend({
   store_url: function(url, type) {
     if(!window.coughDropExtras || !window.coughDropExtras.ready || url.match(/^data:/)) {
       return Ember.RSVP.resolve({
-        url: url, 
+        url: url,
         type: type
       });
     }
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var lookup = Ember.RSVP.reject();
-      
-      var match = url.match(/opensymbols\.s3\.amazonaws\.com/) || url.match(/s3\.amazonaws\.com\/opensymbols/) || 
+
+      var match = url.match(/opensymbols\.s3\.amazonaws\.com/) || url.match(/s3\.amazonaws\.com\/opensymbols/) ||
                   url.match(/coughdrop-usercontent\.s3\.amazonaws\.com/) || url.match(/s3\.amazonaws\.com\/coughdrop-usercontent/);
-                  
+
       if(capabilities.installed_app) { match = true; }
       if(match) {
         // skip the remote request if it's stored locally from a location we
@@ -385,16 +385,16 @@ var persistence = Ember.Object.extend({
           });
         });
       }
-      
+
       if(match && window.FormData) {
         // try avoiding the proxy if we know the resource is CORS-enabled. Have to fall
         // back to plain xhr in order to get blob response
         lookup = lookup.then(null, function() {
           return new Ember.RSVP.Promise(function(xhr_resolve, xhr_reject) {
             var xhr = new XMLHttpRequest();
-            xhr.addEventListener('load', function(r) { 
-              if(xhr.status == 200) { 
-                contentGrabbers.read_file(xhr.response).then(function(s) { 
+            xhr.addEventListener('load', function(r) {
+              if(xhr.status == 200) {
+                contentGrabbers.read_file(xhr.response).then(function(s) {
                   xhr_resolve({
                     url: url,
                     type: type,
@@ -409,8 +409,8 @@ var persistence = Ember.Object.extend({
                 xhr_reject({cors: true, error: 'URL lookup failed with ' + xhr.status});
               }
             });
-            xhr.addEventListener('error', function() { 
-              xhr_reject({cors: true, error: 'URL lookup error'}); 
+            xhr.addEventListener('error', function() {
+              xhr_reject({cors: true, error: 'URL lookup error'});
             });
             xhr.addEventListener('abort', function() { xhr_reject({cors: true, error: 'URL lookup aborted'}); });
             console.log("trying CORS request for " + url);
@@ -423,7 +423,7 @@ var persistence = Ember.Object.extend({
           });
         });
       }
-      
+
       var fallback = lookup.then(null, function(res) {
         if(res && res.error && res.cors) {
           console.error("CORS request error: " + res.error);
@@ -432,8 +432,8 @@ var persistence = Ember.Object.extend({
         if(window.symbol_proxy_key) {
           external_proxy = persistence.ajax('https://www.opensymbols.org/api/v1/symbols/proxy?url=' + encodeURIComponent(url) + '&access_token=' + window.symbol_proxy_key, {type: 'GET'}).then(function(data) {
             var object = {
-              url: url, 
-              type: type, 
+              url: url,
+              type: type,
               content_type: data.content_type,
               data_uri: data.data
             };
@@ -443,8 +443,8 @@ var persistence = Ember.Object.extend({
         return external_proxy.then(null, function() {
           return persistence.ajax('/api/v1/search/proxy?url=' + encodeURIComponent(url), {type: 'GET'}).then(function(data) {
             var object = {
-              url: url, 
-              type: type, 
+              url: url,
+              type: type,
               content_type: data.content_type,
               data_uri: data.data
             };
@@ -454,9 +454,9 @@ var persistence = Ember.Object.extend({
           });
         });
       });
-      
+
       fallback.then(function(object) {
-        // TODO: if mobile app, use files api instead?? have to make sure that 
+        // TODO: if mobile app, use files api instead?? have to make sure that
         // the is-everything-synced check is looking for missing files, as well as
         // the is-this-board-safely-cached-already check.
         return persistence.store('dataCache', object, object.url);
@@ -503,7 +503,7 @@ var persistence = Ember.Object.extend({
         persistence.sync(user_id, force, ignore_supervisees).then(null, function() { });
       }, 100);
     }
-    
+
     console.log('syncing for ' + user_id);
     if(this.get('online')) {
       stashes.push_log();
@@ -512,7 +512,7 @@ var persistence = Ember.Object.extend({
     var synced_boards = [];
     // TODO: this could move to bg.js, that way it can run in the background
     // even if the app itself isn't running. whaaaat?! yeah.
-    
+
     // TODO: there should be a user preference to say, when I sync as 'self'
     // go ahead and sync all the boards for all my linked users as well.
     return new Ember.RSVP.Promise(function(sync_resolve, sync_reject) {
@@ -523,22 +523,22 @@ var persistence = Ember.Object.extend({
       var find_user = CoughDrop.store.findRecord('user', user_id).then(null, function() {
         sync_reject({error: "failed to retrieve user details"});
       });
-      
+
       find_user.then(function(user) {
         if(user) {
           user_id = user.get('id');
         }
         // TODO: also download all the user's personally-created boards
-        
+
         var sync_log = [];
-        
+
         var sync_promises = [];
-        
+
         // Step 0: If extras isn't ready then there's nothing else to do
         if(!window.coughDropExtras || !window.coughDropExtras.ready) {
           sync_promises.push(Ember.RSVP.reject({error: "extras not ready"}));
         }
-        if(!capabilities.db) { 
+        if(!capabilities.db) {
           sync_promises.push(Ember.RSVP.reject({error: "db not initialized"}));
         }
 
@@ -548,28 +548,28 @@ var persistence = Ember.Object.extend({
         // (needs to be smart about handling conflicts)
         // http://www.cs.tufts.edu/~nr/pubs/sync.pdf
         sync_promises.push(persistence.sync_changed());
-      
+
         var importantIds = [];
 
         // Step 2: If online
         // get the latest user profile information and settings
         sync_promises.push(persistence.sync_user(user, importantIds));
-      
+
         // Step 3: If online
         // check if the board set has changed at all, and if so
         // (or force == true) pull it all down locally
         // (add to settings.importantIds list)
         // (also download through proxy any image data URIs needed for board set)
         sync_promises.push(persistence.sync_boards(user, importantIds, synced_boards, force));
-        
+
         // Step 4: If user has any supervisees, sync them as well
         if(user && user.get('supervisees') && !ignore_supervisees) {
           sync_promises.push(persistence.sync_supervisees(user));
         }
-        
+
         // Step 5: Cache needed sound files
         sync_promises.push(speecher.load_beep());
-        
+
         // reject on any errors
         Ember.RSVP.all_wait(sync_promises).then(function() {
           // Step 4: If online
@@ -592,11 +592,11 @@ var persistence = Ember.Object.extend({
     }).then(function() {
       // TODO: some kind of alert with a "reload" option, since we potentially
       // just changed data out from underneath what's showing in the UI
-      
+
       // make a list of all buttons in the set so we can figure out the button
       // sequence needed to get from A to B
       var track_buttons = persistence.sync_buttons(synced_boards);
-      
+
       var complete_sync = track_buttons.then(function() {
         var last_sync = (new Date()).getTime() / 1000;
         if(persistence.get('sync_progress.root_user') == user_id) {
@@ -643,7 +643,7 @@ var persistence = Ember.Object.extend({
 //             button.load_board_id = button.load_board.id;
 //           }
 //           var image = images.find(function(i) { return i.get('id') == button.image_id; });
-//           if(image) { 
+//           if(image) {
 //             button.image = image.get('url');
 //           }
 //           // TODO: include the image here, if it makes things easier. Sync
@@ -670,7 +670,7 @@ var persistence = Ember.Object.extend({
             return record;
           }
         });
-        
+
         var sync_supervisee = find_supervisee.then(function(supervisee_user) {
           if(supervisee_user.get('permissions.supervise')) {
             console.log('syncing supervisee: ' + supervisee.user_name + " " + supervisee.id);
@@ -699,7 +699,7 @@ var persistence = Ember.Object.extend({
     }, function() {
       return Ember.RSVP.resolve({});
     });
-    
+
     var sync_all_boards = get_revisions.then(function(full_set_revisions) {
       return new Ember.RSVP.Promise(function(resolve, reject) {
         var to_visit_boards = [];
@@ -768,7 +768,7 @@ var persistence = Ember.Object.extend({
               board.load_button_set();
               var visited_board_promises = [];
               var safely_cached = !!safely_cached_boards[board.id];
-              // if the retrieved board's revision matches the synced cache's revision, 
+              // if the retrieved board's revision matches the synced cache's revision,
               // then this board and all its children should be already in the db.
               safely_cached = safely_cached || (full_set_revisions[board.get('id')] && board.get('full_set_revision') == full_set_revisions[board.get('id')]);
               if(force) { safely_cached = false; }
@@ -784,7 +784,7 @@ var persistence = Ember.Object.extend({
                 visited_board_promises.push(persistence.store_url(board.get('icon_url_with_fallback'), 'image'));
                 importantIds.push("dataCache_" + board.get('icon_url_with_fallback'));
               }
-          
+
               board.get('local_images_with_license').forEach(function(image) {
                 importantIds.push("image_" + image.get('id'));
                 // TODO: don't re-request URLs that are already in the cache and most likely haven't changed
@@ -804,10 +804,10 @@ var persistence = Ember.Object.extend({
                 // don't re-visit if we've already grabbed it for this sync
                 var already_visited = visited_boards.find(function(i) { return i == board.id || i == board.key; });
                 // don't add to the list if already planning to visit (and either
-                // the planned visit doesn't have link_disabled flag or the 
+                // the planned visit doesn't have link_disabled flag or the
                 // two entries match for the link_disabled flag)
                 var already_going_to_visit = to_visit_boards.find(function(b) { return (b.id == board.id || b.key == board.key) && (!board.link_disabled || board.link_disabled == b.link_disabled); });
-            
+
                 if(!already_visited && !already_going_to_visit) {
                   to_visit_boards.push({id: board.id, key: board.key, depth: next.depth + 1, link_disabled: board.link_disabled});
                 }
@@ -835,7 +835,7 @@ var persistence = Ember.Object.extend({
                       console.error("should have been safely cached, but board content wasn't in db:" + board.id);
                       return Ember.RSVP.resolve();
                     });
-                  }, function() { 
+                  }, function() {
                     console.error("should have been safely cached, but board wasn't in db:" + board.id);
                     return Ember.RSVP.resolve();
                   }));
@@ -850,10 +850,10 @@ var persistence = Ember.Object.extend({
               }, function() {
                 defer.reject.apply(null, arguments);
               });
-            }, function(err) { 
+            }, function(err) {
               var board_unauthorized = (err && err.error == "Not authorized");
               if(next.link_disabled && board_unauthorized) {
-                // TODO: if a link is disabled, can we get away with ignoring an unauthorized board? 
+                // TODO: if a link is disabled, can we get away with ignoring an unauthorized board?
                 // Prolly, since they won't be using that board anyway without an edit.
                 Ember.run.later(function() {
                   nextBoard(defer);
@@ -863,7 +863,7 @@ var persistence = Ember.Object.extend({
               }
             });
           } else if(!next) {
-            // TODO: mark this defer's promise as waiting (needs to be unmarked at each 
+            // TODO: mark this defer's promise as waiting (needs to be unmarked at each
             // nextBoard call), then set a longer timeout before calling nextBoard,
             // and only resolve when *all* the promises are waiting.
             defer.resolve();
@@ -887,7 +887,7 @@ var persistence = Ember.Object.extend({
         });
       });
     });
-    
+
     return sync_all_boards.then(function(full_set_revisions) {
       return persistence.store('settings', full_set_revisions, 'synced_full_set_revisions');
     });
@@ -907,7 +907,7 @@ var persistence = Ember.Object.extend({
         var url = user.get('avatar_url');
         return persistence.store_url(url, 'image');
       });
-      
+
       save_avatar.then(function(object) {
         importantIds.push("dataCache_" + object.url);
         resolve();
@@ -918,10 +918,10 @@ var persistence = Ember.Object.extend({
   },
   sync_changed: function() {
     return new Ember.RSVP.Promise(function(resolve, reject) {
-      var changed = persistence.find_changed().then(null, function() { 
-        reject({error: "failed to retrieve list of changed records"}); 
+      var changed = persistence.find_changed().then(null, function() {
+        reject({error: "failed to retrieve list of changed records"});
       });
-    
+
       changed.then(function(list) {
         var update_promises = [];
         var tmp_id_map = {};
@@ -939,7 +939,7 @@ var persistence = Ember.Object.extend({
               return Ember.RSVP.resolve();
             });
             update_promises.push(promise);
-          } else if(item.store == 'board' || item.store == 'image' || item.store == 'sound' || item.store == 'user') {  
+          } else if(item.store == 'board' || item.store == 'image' || item.store == 'sound' || item.store == 'user') {
             var find_record = null;
             var object = item.data.raw[item.store] || item.data.raw;
             var tmp_id = null;
@@ -948,7 +948,7 @@ var persistence = Ember.Object.extend({
               object.id = null;
               find_record = Ember.RSVP.resolve(CoughDrop.store.createRecord(item.store, object));
             } else {
-              find_record = CoughDrop.store.findRecord(item.store, object.id).then(null, function() { 
+              find_record = CoughDrop.store.findRecord(item.store, object.id).then(null, function() {
                 return Ember.RSVP.reject({error: "failed to retrieve " + item.store + " " + object.id + "for updating"});
               });
             }
@@ -964,7 +964,7 @@ var persistence = Ember.Object.extend({
                 return record.save();
               }
             });
-          
+
             var result = save_item.then(function(record) {
               if(item.store == 'board' && JSON.stringify(object).match(/tmp_/)) { // TODO: if item has temporary pointers
                 re_updates.push([item, record]);
@@ -977,7 +977,7 @@ var persistence = Ember.Object.extend({
             }, function() {
               return Ember.RSVP.reject({error: "failed to save " + item.store + " " + object.id});
             });
-          
+
             update_promises.push(result);
           }
         });
@@ -1041,7 +1041,7 @@ var persistence = Ember.Object.extend({
     serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
     // TODO: mimic any server-side changes that need to happen to make the record usable
-    if(!data[type.modelName].id) {    
+    if(!data[type.modelName].id) {
       data[type.modelName].id = persistence.temporary_id();
     }
     if(type.mimic_server_processing) {
@@ -1137,7 +1137,7 @@ persistence.DSExtend = {
     var find = persistence.find(type.modelName, id, true);
     if(persistence.force_reload == id) { find.then(null, function() { }); find = Ember.RSVP.reject(); }
     else if(!stashes.get('enabled')) { find.then(null, function() { }); find = Ember.RSVP.reject(); }
-    
+
     return find.then(function(data) {
       data.meta = data.meta || {};
       data.meta.local_result = true;

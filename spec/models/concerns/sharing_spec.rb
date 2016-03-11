@@ -281,7 +281,16 @@ describe Sharing, :type => :model do
     end
   end
   
-  describe "approve_downstream_share_with" do
+  def update_shares_for(user, approve)
+    user_ids = self.shared_user_ids
+    if user && user_ids.include?(user.global_id)
+      share_or_unshare(user, approve, :include_downstream => true, :allow_editing => true, :pending_allow_editing => false)
+    else
+      false
+    end
+  end
+
+  describe "update_shares_for" do
     it "should call share_with with the appropriate arguments" do
       u = User.create
       u2 = User.create
@@ -306,7 +315,7 @@ describe Sharing, :type => :model do
         'pending' => true
       }])
       
-      b.approve_downstream_share_with(u2)
+      b.update_shares_for(u2, true)
       expect(u.settings['boards_i_shared']).not_to eq(nil)
       expect(u.settings['boards_i_shared'][b.global_id].length).to eq(1)
       expect(u.settings['boards_i_shared'][b.global_id]).to eq([{
@@ -458,7 +467,7 @@ describe Sharing, :type => :model do
       b.settings = {'buttons' => [{'id' => 1, 'load_board' => {'id' => b2.global_id}}]}
       b.save
       b.share_with(u2, true, true)
-      b.approve_downstream_share_with(u2)
+      b.update_shares_for(u2, true)
       Worker.process_queues
       
       expect(b.reload.shared_with?(u2, true)).to eq(true)
@@ -643,7 +652,7 @@ describe Sharing, :type => :model do
       b.share_with(u2, true, true)
       b4.share_with(u2, true)
       expect(Board.all_shared_board_ids_for(u2, true).sort).to eq([b.global_id])
-      b.approve_downstream_share_with(u2)
+      b.update_shares_for(u2, true)
       expect(Board.all_shared_board_ids_for(u2, true).sort).to eq([b.global_id, b2.global_id, b3.global_id])
     end
   end
@@ -698,7 +707,7 @@ describe Sharing, :type => :model do
       b = Board.create(:user => u)
       b.share_with(u2, false, true)
       b.share_with(u3, true, true)
-      b.approve_downstream_share_with(u3)
+      b.update_shares_for(u3, true)
       expect(b.author_ids(true).sort).to eq([u.global_id, u3.global_id])
     end
   end
@@ -836,7 +845,7 @@ describe Sharing, :type => :model do
       u2 = User.create
       b = Board.create(:user => u)
       b.share_with(u2, true, true)
-      b.approve_downstream_share_with(u2)
+      b.update_shares_for(u2, true)
       b2 = Board.create(:user => u)
       b.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b2.global_id}}]
       b.save
@@ -876,7 +885,7 @@ describe Sharing, :type => :model do
       expect(b2.allows?(u, 'edit')).to eq(false)
       expect(b.allows?(u2, 'edit')).to eq(true)
       
-      b.approve_downstream_share_with(u2)
+      b.update_shares_for(u2, true)
       expect(b2.allows?(u, 'view')).to eq(true)
       expect(b2.allows?(u, 'edit')).to eq(true)
     end

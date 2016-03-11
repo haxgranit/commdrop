@@ -31,14 +31,12 @@ describe Organization, :type => :model do
       expect{ o.add_manager('frog') }.to raise_error("invalid user")
     end
     
-    it "should error on adding a manager that is managing a different organization" do
+    it "should not error on adding a manager that is managing a different organization" do
       o = Organization.create
       u = User.create(:managed_organization_id => o.id + 1)
       
-      expect{ o.add_manager(u.user_name, true) }.to raise_error("already associated with a different organization")
+      expect { o.add_manager(u.user_name, true) }.to_not raise_error
       u.reload
-      expect(u.managed_organization_id).to eq(o.id + 1)
-      expect(u.settings['full_manager']).not_to eq(true)
     end
     
     it "should correctly remove a manager" do
@@ -53,6 +51,18 @@ describe Organization, :type => :model do
       u.reload
       expect(u.managed_organization_id).to eq(nil)
       expect(u.settings['full_manager']).not_to eq(true)
+    end
+    
+    it "should allow being a manager for more than one org" do
+      o1 = Organization.create
+      o2 = Organization.create
+      u = User.create
+      o1.add_manager(u.user_name, true)
+      o2.add_manager(u.user_name, true)
+      u.reload
+      expect(u.settings['manager_for'].keys.sort).to eq([o1.global_id, o2.global_id].sort)
+      expect(o1.reload.manager?(u)).to eq(true)
+      expect(o2.reload.manager?(u)).to eq(true)
     end
     
     it "should correctly remove an assistant" do
@@ -74,14 +84,177 @@ describe Organization, :type => :model do
       expect{ o.remove_manager('frog') }.to raise_error("invalid user")
     end
     
-    it "should error on removing a manager that is managing a different organization" do
+    it "should not error on removing a manager that is managing a different organization" do
       o = Organization.create
       u = User.create(:managed_organization_id => o.id + 1)
       
-      expect{ o.remove_manager(u.user_name) }.to raise_error("associated with a different organization")
+      expect { o.remove_manager(u.user_name) }.to_not raise_error
+    end
+  end
+  
+  describe "managing supervisors" do
+    it "should correctly add a supervisor" do
+      o = Organization.create
+      u = User.create
+      o.add_supervisor(u.user_name, true)
+      expect(o.supervisor?(u.reload)).to eq(true)
+      expect(o.pending_supervisor?(u.reload)).to eq(true)
+      
+      o.add_supervisor(u.user_name, false)
+      expect(o.supervisor?(u.reload)).to eq(true)
+      expect(o.pending_supervisor?(u.reload)).to eq(false)
+    end
+    
+    it "should notify a user when being added as a supervisor" do
+      # TODO: ...
+      expect(1).to eq(2)
+    end
+    
+    it "should allow being a supervisor for multiple organizations" do
+      o1 = Organization.create
+      o2 = Organization.create
+      u = User.create
+      o1.add_supervisor(u.user_name, true)
+      o2.add_supervisor(u.user_name, false)
       u.reload
-      expect(u.managed_organization_id).to eq(o.id + 1)
-      expect(u.settings['full_manager']).not_to eq(true)
+      expect(o1.supervisor?(u)).to eq(true)
+      expect(o1.pending_supervisor?(u)).to eq(true)
+      expect(o2.supervisor?(u)).to eq(true)
+      expect(o2.pending_supervisor?(u)).to eq(false)
+    end
+    
+    it "should error adding a null user as a supervisor" do
+      o = Organization.create
+      u = User.create
+      expect { o.add_supervisor('bacon', true) }.to raise_error("invalid user")
+    end
+    
+    it "should error removing a null user as a supervisor" do
+      o = Organization.create
+      u = User.create
+      expect { o.remove_supervisor('bacon') }.to raise_error("invalid user")
+    end
+    
+    it "should correctly remove a supervisor" do
+      o = Organization.create
+      u = User.create
+      o.add_supervisor(u.user_name, true)
+      expect(o.supervisor?(u.reload)).to eq(true)
+      expect(o.pending_supervisor?(u.reload)).to eq(true)
+      
+      o.remove_supervisor(u.user_name)
+      expect(o.supervisor?(u.reload)).to eq(false)
+      expect(o.pending_supervisor?(u.reload)).to eq(false)
+    end
+    
+    it "should notify a user when being removed as a supervisor" do
+      # TODO: ...
+      expect(1).to eq(2)
+    end
+    
+    it "should keep other supervision settings intact when being removed as a supervisor" do
+      o = Organization.create
+      o2 = Organization.create
+      u = User.create
+      o.add_supervisor(u.user_name, true)
+      expect(o.supervisor?(u.reload)).to eq(true)
+      expect(o.pending_supervisor?(u.reload)).to eq(true)
+      o2.add_supervisor(u.user_name, true)
+      expect(o2.supervisor?(u.reload)).to eq(true)
+      expect(o2.pending_supervisor?(u.reload)).to eq(true)
+      
+      o.remove_supervisor(u.user_name)
+      expect(o.supervisor?(u.reload)).to eq(false)
+      expect(o.pending_supervisor?(u.reload)).to eq(false)
+      expect(o2.supervisor?(u.reload)).to eq(true)
+      expect(o2.pending_supervisor?(u.reload)).to eq(true)
+    end
+    
+    it "should allow org admins to see basic information about added supervisors" do
+      o = Organization.create
+      u = User.create
+      u2 = User.create
+      o.add_manager(u.user_name, true)
+      o.add_supervisor(u2.user_name, false)
+      o.reload
+      expect(Organization.manager_for?(u.reload, u2.reload)).to eq(true)
+      expect(u2.allows?(u, 'supervise')).to eq(true)
+      expect(u2.allows?(u, 'manage_supervision')).to eq(true)
+      expect(u2.allows?(u, 'view_detailed')).to eq(true)
+    end
+
+    it "should not allow org admins to see basic information about pending added supervisors" do
+      o = Organization.create
+      u = User.create
+      u2 = User.create
+      o.add_manager(u.user_name, true)
+      o.add_supervisor(u2.user_name, true)
+      perms = u2.reload.permissions_for(u.reload)
+      expect(u2.allows?(u, 'supervise')).to eq(false)
+      expect(u2.allows?(u, 'manage_supervision')).to eq(false)
+      expect(u2.allows?(u, 'view_detailed')).to eq(false)
+    end
+  end
+  
+  describe "user types" do
+    it "should correctly identify sponsored_user?" do
+      o = Organization.create
+      u = User.new
+      u.settings = {'managed_by' => {}}
+      u.settings['managed_by'][o.global_id] = {'sponsored' => true, 'pending' => false}
+      expect(o.sponsored_user?(u)).to eq(true)
+    end
+    
+    it "should correctly identify manager?" do
+      o = Organization.create
+      u = User.new
+      u.settings = {'manager_for' => {}}
+      u.settings['manager_for'][o.global_id] = {'full_manager' => true}
+      expect(o.manager?(u)).to eq(true)
+      expect(o.assistant?(u)).to eq(true)
+    end
+    
+    it "should correctly identify assistant?" do
+      o = Organization.create
+      u = User.new
+      u.settings = {'manager_for' => {}}
+      u.settings['manager_for'][o.global_id] = {'full_manager' => false}
+      expect(o.manager?(u)).to eq(false)
+      expect(o.assistant?(u)).to eq(true)
+    end
+    
+    it "should correctly identify supervisor?" do
+      o = Organization.create
+      u = User.new
+      u.settings = {'supervisor_for' => {}}
+      u.settings['supervisor_for'][o.global_id] = {'pending' => false}
+      expect(o.supervisor?(u)).to eq(true)
+      expect(o.pending_supervisor?(u)).to eq(false)
+    end
+
+    it "should correctly identify pending_supervisor?" do
+      o = Organization.create
+      u = User.new
+      u.settings = {'supervisor_for' => {}}
+      u.settings['supervisor_for'][o.global_id] = {'pending' => true}
+      expect(o.supervisor?(u)).to eq(true)
+      expect(o.pending_supervisor?(u)).to eq(true)
+    end
+    
+    it "should correctly identify managed_user?" do
+      o = Organization.create
+      u = User.new
+      u.settings = {'managed_by' => {}}
+      u.settings['managed_by'][o.global_id] = {'pending' => false, 'sponsored' => false}
+      expect(o.managed_user?(u)).to eq(true)
+    end
+    
+    it "should correctly identify pending_user?" do
+      o = Organization.create
+      u = User.new
+      u.settings = {'managed_by' => {}}
+      u.settings['managed_by'][o.global_id] = {'pending' => true, 'sponsored' => false}
+      expect(o.pending_user?(u)).to eq(true)
     end
   end
   
@@ -115,6 +288,19 @@ describe Organization, :type => :model do
       u.reload
       expect(u.settings['subscription']['seconds_left']).to be > 90
       expect(u.settings['subscription']['seconds_left']).to be <= 100
+    end
+    
+    it "should not allow being a user in more than one org" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      o2 = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create(:expires_at => Time.now + 100)
+      expect(u.expires_at) == Time.now + 100
+      res = o.add_user(u.user_name, false)
+      expect(res).to eq(true)
+      u.reload
+      expect(o.managed_user?(u)).to eq(true)
+      expect(o2.managed_user?(u)).to eq(false)
+      expect { o2.add_user(u.user_name, false) }.to raise_error("already associated with a different organization")
     end
 
     it "should notify the user when they are added by an org" do
@@ -152,7 +338,7 @@ describe Organization, :type => :model do
     
     it "should update a user's expires_at when they are removed" do
       o = Organization.create(:settings => {'total_licenses' => 1})
-      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'seconds_left' => 3.weeks.to_i}}, :managing_organization_id => o.id)
+      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => true, 'seconds_left' => 3.weeks.to_i}}, :managing_organization_id => o.id)
       o.remove_user(u.user_name)
       u.reload
       expect(u.settings['subscription_left']) == nil
@@ -160,9 +346,19 @@ describe Organization, :type => :model do
       expect(u.expires_at).to be <= Time.now + (3.weeks.to_i + 10)
     end
     
+    it "should not update a user's non-sponsored expires_at when they are removed" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => false, 'seconds_left' => 3.weeks.to_i}}, :managing_organization_id => o.id)
+      o.remove_user(u.user_name)
+      u.reload
+      expect(u.settings['subscription_left']) == nil
+      expect(u.expires_at).to be >= Time.now + 90
+      expect(u.expires_at).to be <= Time.now + 110
+    end
+    
     it "should give the user a window of time when they are removed if they have no expires_at time left" do
       o = Organization.create(:settings => {'total_licenses' => 1})
-      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'seconds_left' => 5}}, :managing_organization_id => o.id)
+      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => true, 'seconds_left' => 5}}, :managing_organization_id => o.id)
       o.remove_user(u.user_name)
       u.reload
       expect(u.settings['subscription_left']) == nil
@@ -195,7 +391,7 @@ describe Organization, :type => :model do
       o = Organization.create
       u = User.create(:managing_organization_id => o.id + 1)
       
-      expect{ o.remove_user(u.user_name) }.to raise_error("associated with a different organization")
+      expect{ o.remove_user(u.user_name) }.to raise_error("already associated with a different organization")
     end
   end
   
@@ -427,6 +623,8 @@ describe Organization, :type => :model do
       Organization.where(:id => o.id).update_all(:updated_at => 2.weeks.ago)
       expect(o.reload.updated_at).to be < 1.hour.ago
       o.add_user(u.user_name, false)
+      expect(o.reload.updated_at).to be > 1.hour.ago
+      Organization.where(:id => o.id).update_all(:updated_at => 2.weeks.ago)
       expect(o.reload.updated_at).to be < 1.hour.ago
       o.add_manager(u2.user_name)
       expect(o.reload.updated_at).to be > 1.hour.ago
@@ -441,6 +639,8 @@ describe Organization, :type => :model do
       Organization.where(:id => o.id).update_all(:updated_at => 2.weeks.ago)
       expect(o.reload.updated_at).to be < 1.hour.ago
       o.remove_user(u.user_name)
+      expect(o.reload.updated_at).to be > 1.hour.ago
+      Organization.where(:id => o.id).update_all(:updated_at => 2.weeks.ago)
       expect(o.reload.updated_at).to be < 1.hour.ago
       o.remove_manager(u2.user_name)
       expect(o.reload.updated_at).to be > 1.hour.ago
@@ -509,6 +709,108 @@ describe Organization, :type => :model do
         ]
       }, {:user => u2, :device => d2, :author => u2})
       expect(o.reload.log_sessions.count).to eq(2)
+    end
+  end
+  
+  describe "new user management" do
+    it "should add a user" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_user(u.user_name, true)
+      expect(res).to eq(true)
+      expect(o.reload.users.count).to eq(1)
+    
+      u.reload
+      expect(u.org_sponsored?).to eq(true)
+      u.managing_organization_id = nil
+      u.managed_organization_id = nil
+      expect(u.org_sponsored?).to eq(true)
+      expect(o.managed_user?(u)).to eq(true)
+    end
+  
+    it "should remove a user" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_user(u.user_name, true)
+      expect(res).to eq(true)
+      expect(o.reload.users.count).to eq(1)
+      expect(o.pending_user?(u.reload)).to eq(true)
+      expect(o.managed_user?(u)).to eq(true)
+    
+      o.remove_user(u.user_name)
+      expect(o.reload.users.count).to eq(0)
+    end
+  
+    it "should add an unsponsored user" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_user(u.user_name, false, false)
+      expect(res).to eq(true)
+      expect(o.reload.users.count).to eq(1)
+      expect(o.managed_user?(u.reload)).to eq(true)
+      expect(o.pending_user?(u)).to eq(false)
+      expect(o.sponsored_user?(u)).to eq(false)
+    end
+  
+    it "should add a manager" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_manager(u.user_name, true)
+      expect(res).to eq(true)
+      expect(o.reload.managers.count).to eq(1)
+
+      expect(o.manager?(u.reload)).to eq(true)
+      u.managing_organization_id = nil
+      u.managed_organization_id = nil
+      expect(o.manager?(u)).to eq(true)
+    end
+  
+    it "should add an assistant" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_manager(u.user_name, false)
+      expect(res).to eq(true)
+      expect(o.reload.managers.count).to eq(1)
+    end
+
+    it "should remove a manager" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_manager(u.user_name, true)
+      expect(res).to eq(true)
+      expect(o.reload.managers.count).to eq(1)
+      expect(o.manager?(u.reload)).to eq(true)
+
+      o.remove_manager(u.user_name)
+      expect(o.reload.managers.count).to eq(0)
+    end
+  
+    it "should add a supervisor" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_supervisor(u.user_name)
+      expect(res).to eq(true)
+      expect(o.reload.supervisors.count).to eq(1)
+      expect(o.supervisor?(u.reload)).to eq(true)
+    end
+  
+    it "should remove a supervisor" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_supervisor(u.user_name)
+      expect(res).to eq(true)
+      expect(o.reload.supervisors.count).to eq(1)
+    
+      o.remove_supervisor(u.user_name)
+      expect(o.reload.supervisors.count).to eq(0)
     end
   end
 end

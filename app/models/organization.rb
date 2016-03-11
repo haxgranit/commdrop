@@ -5,8 +5,6 @@ class Organization < ActiveRecord::Base
   include SecureSerialize
   secure_serialize :settings
   before_save :generate_defaults
-  has_many :users, :foreign_key => :managing_organization_id
-  has_many :managers, :class_name => User, :foreign_key => :managed_organization_id
   
   # cache should be invalidated if:
   # - a manager/assistant is added or removed
@@ -39,10 +37,13 @@ class Organization < ActiveRecord::Base
   def add_manager(user_key, full=false)
     user = User.find_by_path(user_key)
     raise "invalid user" unless user
-    raise "already associated with a different organization" if user.managed_organization_id && user.managed_organization_id != self.id
+    # raise "already associated with a different organization" if user.managed_organization_id && user.managed_organization_id != self.id
+    user.settings ||= {}
+    user.settings['manager_for'] ||= {}
+    user.settings['manager_for'][self.global_id] = {'full_manager' => !!full, 'added' => Time.now.iso8601}
+    self.attach_user(user, 'manager')
     user.managed_organization_id = self.id
     if full
-      user.settings ||= {}
       user.settings['full_manager'] = true
     end
     # TODO: trigger notification
@@ -54,11 +55,38 @@ class Organization < ActiveRecord::Base
   def remove_manager(user_key)
     user = User.find_by_path(user_key)
     raise "invalid user" unless user
-    raise "associated with a different organization" if user.managed_organization_id && user.managed_organization_id != self.id
+    # raise "associated with a different organization" if user.managed_organization_id && user.managed_organization_id != self.id
     user.managed_organization_id = nil
     user.settings ||= {}
+    user.settings['manager_for'] ||= {}
+    user.settings['manager_for'].delete(self.global_id)
+    self.detach_user(user, 'manager')
     user.settings['full_manager'] = false
     # TODO: trigger notification
+    user.save
+    self.touch
+    true
+  end
+  
+  def add_supervisor(user_key, pending=true)
+    user = User.find_by_path(user_key)
+    raise "invalid user" unless user
+    user.settings ||= {}
+    user.settings['supervisor_for'] ||= {}
+    user.settings['supervisor_for'][self.global_id] = {'pending' => pending, 'added' => Time.now.iso8601}
+    self.attach_user(user, 'supervisor')
+    user.save
+    self.touch
+    true
+  end
+  
+  def remove_supervisor(user_key)
+    user = User.find_by_path(user_key)
+    raise "invalid user" unless user
+    user.settings ||= {}
+    user.settings['supervisor_for'] ||= {}
+    user.settings['supervisor_for'].delete(self.global_id)
+    self.detach_user(user, 'supervisor')
     user.save
     self.touch
     true
@@ -67,21 +95,78 @@ class Organization < ActiveRecord::Base
   # TODO: code smell, using columns and settings to define levels of permissions. Maybe this
   # should be a separate table, even with slight perf hit..
   def manager?(user)
-    !!(user.managed_organization_id == self.id && user.settings && user.settings['full_manager'])
+    res = !!(user.managed_organization_id == self.id && user.settings && user.settings['full_manager'])
+    res ||= user.settings && user.settings['manager_for'] && user.settings['manager_for'][self.global_id] && user.settings['manager_for'][self.global_id]['full_manager']
+    !!res
   end
   
   def assistant?(user)
-    !!(user.managed_organization_id == self.id)
+    res = !!(user.managed_organization_id == self.id)
+    res ||= user.settings && user.settings['manager_for'] && user.settings['manager_for'][self.global_id]
+    !!res
+  end
+  
+  def supervisor?(user)
+    res = user.settings && user.settings['supervisor_for'] && user.settings['supervisor_for'][self.global_id]
+    !!res
   end
   
   def managed_user?(user)
-    !!(user.managing_organization_id == self.id)
+    res = !!(user.managing_organization_id == self.id)
+    res ||= user.settings && user.settings['managed_by'] && user.settings['managed_by'][self.global_id]
+    !!res
+  end
+  
+  def sponsored_user?(user)
+    res = user.managing_organization_id == self.id && user.settings && user.settings['subscription'] && user.settings['subscription']['org_sponsored'] != false
+    res ||= user.settings && user.settings['managed_by'] && user.settings['managed_by'][self.global_id] && user.settings['managed_by'][self.global_id]['sponsored']
+    !!res
+  end
+  
+  def pending_user?(user)
+    res = managed_user?(user) && !!user.settings['subscription']['org_pending'] if user.settings && user.settings['subscription'] && user.settings['subscription']['org_pending'] != nil
+    res ||= !!user.settings['managed_by'][self.global_id]['pending'] if user.settings && user.settings['managed_by'] && user.settings['managed_by'][self.global_id]
+    !!res
+  end
+  
+  def pending_supervisor?(user)
+    res = user.settings['supervisor_for'][self.global_id]['pending'] if user.settings && user.settings['supervisor_for'] && user.settings['supervisor_for'][self.global_id]
+    !!res
+  end
+  
+  def self.sponsored?(user)
+    res = user.managing_organization_id && user.settings && user.settings['subscription'] && user.settings['subscription']['org_sponsored']
+    res ||= user.settings && user.settings['managed_by'] && user.settings['managed_by'].any?{|id, opts| opts['sponsored'] }
+    !!res
+  end
+  
+  def self.managed?(user)
+    res = !!user.managing_organization_id
+    res ||= !!(user.settings['managed_by'] && user.settings['managed_by'].keys.length > 0)
+    res
+  end
+  
+  def self.supervisor?(user)
+    res = user.settings['supervisor_for'] && user.settings['supervisor_for'].keys.length > 0
+    !!res
+  end
+  
+  def self.manager?(user)
+    res = !!user.managed_organization_id
+    res ||= !!(user.settings['manager_for'] && user.settings['manager_for'].keys.length > 0)
+    res
   end
   
   def self.manager_for?(manager, user)
-    if user && manager && user.managing_organization_id && user.managing_organization_id == manager.managed_organization_id && 
-          manager.settings && manager.settings['full_manager'] && 
-          user.settings && user.settings['subscription'] && !user.settings['subscription']['org_pending']
+    return false unless manager && user
+    managed_orgs = []
+    managed_orgs << user.related_global_id(user.managing_organization_id) if user.managing_organization_id && user.settings && user.settings['subscription'] && !user.settings['subscription']['org_pending']
+    managed_orgs += user.settings['managed_by'].select{|id, opts| !opts['pending'] }.map{|id, opts| id } if user.settings && user.settings['managed_by']
+    managed_orgs += user.settings['supervisor_for'].select{|id, opts| !opts['pending'] }.map{|id, opts| id } if user.settings && user.settings['supervisor_for']
+    managing_orgs = []
+    managing_orgs << manager.related_global_id(manager.managed_organization_id) if manager.managed_organization_id && manager.settings && manager.settings['full_manager']
+    managing_orgs += manager.settings['manager_for'].select{|id, opts| opts['full_manager'] }.map{|id, opts| id } if manager.settings && manager.settings['manager_for']
+    if (managed_orgs & managing_orgs).length > 0
       # if user and manager are part of the same org
       return true
     else
@@ -90,32 +175,145 @@ class Organization < ActiveRecord::Base
   end
   
   def self.admin_manager?(manager)
-    if manager && manager.managed_organization_id && manager.settings && manager.settings['full_manager']
+    managing_orgs = []
+    managing_orgs << manager.related_global_id(manager.managed_organization_id) if manager.managed_organization_id && manager.settings && manager.settings['full_manager']
+    managing_orgs += manager.settings['manager_for'].select{|id, opts| opts['full_manager'] }.map{|id, opts| id } if manager.settings && manager.settings['manager_for']
+    
+    if managing_orgs.length > 0
       # if manager is part of the global org (the order of lookups seems weird, but should be a little more efficient)
       org = self.admin
-      return true if org && manager.managed_organization_id == org.id
+      return true if org && managing_orgs.include?(org.global_id)
     end
     false
   end
+  
+  def attach_user(user, user_type)
+    self.settings['attached_user_ids'] ||= {}
+    self.settings['attached_user_ids'][user_type] ||= []
+    self.settings['attached_user_ids'][user_type] << user.global_id
+    self.settings['attached_user_ids'][user_type].uniq!
+    self.save
+  end
 
-  def user?(user)
-    user.managing_organization_id == self.id
+  def detach_user(user, user_type)
+    self.settings['attached_user_ids'] ||= {}
+    self.settings['attached_user_ids'][user_type] ||= []
+    self.settings['attached_user_ids'][user_type].select!{|id| id != user.global_id }
+    self.save
   end
   
-  def add_user(user_key, pending)
+  def self.detach_user(user, user_type, except_org=nil)
+    Organization.attached_orgs(user, true).each do |org|
+      if org['type'] == user_type
+        if !except_org || org['id'] != except_org.global_id
+          org['org'].detach_user(user, user_type)
+        end
+      end
+    end
+  end
+  
+  def attached_users(user_type)
+    user_ids = []
+    if user_type == 'user'
+      user_ids += User.where(:managing_organization_id => self.id).all.map(&:global_id)
+    elsif user_type == 'manager'
+      user_ids += User.where(:managed_organization_id => self.id).all.map(&:global_id)
+    end
+    user_ids += ((self.settings['attached_user_ids'] || {})[user_type] || []).uniq
+    User.where(:id => User.local_ids(user_ids))
+  end
+  
+  def users
+    self.attached_users('user')
+  end
+  
+  def managers
+    self.attached_users('manager')
+  end
+  
+  def supervisors
+    self.attached_users('supervisor')
+  end  
+  
+  def self.attached_orgs(user, include_org=false)
+    res = []
+    org_ids = []
+    user.settings ||= {}
+    (user.settings['managed_by'] || {}).each do |org_id, opts|
+      org_ids << org_id
+    end
+    (user.settings['manager_for'] || {}).each do |org_id, opts|
+      org_ids << org_id
+    end
+    (user.settings['supervisor_for'] || {}).each do |org_id, opts|
+      org_ids << org_id
+    end
+    orgs = {}
+    Organization.find_all_by_global_id(org_ids.uniq).each do |org|
+      orgs[org.global_id] = org
+    end
+    (user.settings['managed_by'] || {}).each do |org_id, opts|
+      org = orgs[org_id]
+      e = {
+        'id' => org_id,
+        'name' => org.settings['name'],
+        'type' => 'user',
+        'added' => opts['added'],
+        'pending' => opts['pending'],
+        'sponsored' => opts['sponsored']
+      }
+      e['org'] = org if include_org
+      res << e if org
+    end
+    (user.settings['manager_for'] || {}).each do |org_id, opts|
+      org = orgs[org_id]
+      e = {
+        'id' => org_id,
+        'name' => org.settings['name'],
+        'type' => 'manager',
+        'added' => opts['added'],
+        'full_manager' => !!opts['full_manager']
+      }
+      e['org'] = org if include_org
+      res << e if org
+    end
+    (user.settings['supervisor_for'] || {}).each do |org_id, opts|
+      org = orgs[org_id]
+      e = {
+        'id' => org_id,
+        'name' => org.settings['name'],
+        'type' => 'supervisor',
+        'added' => opts['added'],
+        'pending' => !!opts['pending']
+      }
+      e['org'] = org if include_org
+      res << e if org
+    end
+    res
+  end
+  
+  def user?(user)
+    managed_user?(user)
+  end
+  
+  def add_user(user_key, pending, sponsored=true)
     user = User.find_by_path(user_key)
     raise "invalid user" unless user
-    raise "already associated with a different organization" if user.managing_organization_id && user.managing_organization_id != self.id
+    for_different_org = user.managing_organization_id && user.managing_organization_id != self.id
+    for_different_org ||= user.settings && user.settings['managed_by'] && (user.settings['managed_by'].keys - [self.global_id]).length > 0
+    raise "already associated with a different organization" if for_different_org
     user_count = User.where(['managing_organization_id = ? AND id != ?', self.id, user.id]).count
     raise "no licenses available" unless ((self.settings || {})['total_licenses'] || 0) > user_count
-    user.update_subscription_organization(self.global_id, pending)
+    user.update_subscription_organization(self.global_id, pending, sponsored)
     true
   end
   
   def remove_user(user_key)
     user = User.find_by_path(user_key)
     raise "invalid user" unless user
-    raise "associated with a different organization" if user.managing_organization_id && user.managing_organization_id != self.id
+    for_different_org = user.managing_organization_id && user.managing_organization_id != self.id
+    for_different_org ||= user.settings && user.settings['managed_by'] && (user.settings['managed_by'].keys - [self.global_id]).length > 0
+    raise "already associated with a different organization" if for_different_org
     user.update_subscription_organization(nil)
     true
   end
@@ -142,10 +340,16 @@ class Organization < ActiveRecord::Base
       begin
         if action == 'add_user'
           self.add_user(key, true)
+        elsif action == 'add_unsponsored_user'
+          self.add_user(key, true, false)
+        elsif action == 'add_supervisor'
+          self.add_supervisor(key, true)
         elsif action == 'add_assistant' || action == 'add_manager'
           self.add_manager(key, action == 'add_manager')
         elsif action == 'remove_user'
           self.remove_user(key)
+        elsif action == 'remove_supervisor'
+          self.remove_supervisor(key)
         elsif action == 'remove_assistant' || action == 'remove_manager'
           self.remove_manager(key)
         end

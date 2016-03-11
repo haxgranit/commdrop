@@ -18,10 +18,10 @@ export default Ember.Controller.extend({
     return (now - persistence.get('last_sync_at')) > (7 * 24 * 60 * 60 * 1000);
   }.property('persistence.last_sync_at'),
   blank_slate: function() {
-    return !this.get('model.preferences.home_board.key') &&  
-      this.get('public_boards_shortened').length === 0 && 
-      this.get('private_boards_shortened').length === 0 && 
-      this.get('starred_boards_shortened').length === 0 && 
+    return !this.get('model.preferences.home_board.key') &&
+      this.get('public_boards_shortened').length === 0 &&
+      this.get('private_boards_shortened').length === 0 &&
+      this.get('starred_boards_shortened').length === 0 &&
       this.get('shared_boards_shortened').length === 0;
   }.property('model.preferences.home_board.key', 'public_boards_shortened', 'private_boards_shortened', 'starred_boards_shortened', 'shared_boards_shortened'),
   shortened_list_of_prior_home_boards: function() {
@@ -124,7 +124,7 @@ export default Ember.Controller.extend({
     }
     this.store.query('log', {user_id: this.get('model.id')}).then(function(logs) {
       _this.set('model.logs', logs.slice(0,6));
-    }, function() { 
+    }, function() {
       if(!(_this.get('model.logs') || {}).length) {
         _this.set('model.logs', {error: true});
       }
@@ -212,13 +212,19 @@ export default Ember.Controller.extend({
     approve_or_reject_org: function(approve) {
       var user = this.get('model');
       var type = this.get('edit_permission') ? 'add_edit' : 'add';
-      if(approve) {
+      if(approve == 'user_approve') {
         user.set('supervisor_key', "approve-org");
-      } else {
+      } else if(approve == 'user_reject') {
         user.set('supervisor_key', "remove_supervisor-org");
+      } else if(approve == 'supervisor_approve') {
+        var org_id = this.get('model.pending_supervision_org.id');
+        user.set('supervisor_key', "approve_supervision-" + org_id);
+      } else if(approve == 'supervisor_reject') {
+        var org_id = this.get('model.pending_supervision_org.id');
+        user.set('supervisor_key', "remove_supervision-" + org_id);
       }
       user.save().then(function() {
-        
+
       }, function() { });
     },
     add_supervisor: function() {
@@ -297,7 +303,7 @@ export default Ember.Controller.extend({
       } else if(action == 'add_1') {
         this.set('subscription_settings', {action: action, type: i18n.t('never_expires', "Add 1 Month to Expiration")});
       }
-    },    
+    },
     reset_password: function(confirm) {
       if(confirm === undefined) {
         this.set('password', {});

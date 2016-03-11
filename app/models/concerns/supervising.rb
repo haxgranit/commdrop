@@ -44,6 +44,33 @@ module Supervising
     end
   end
   
+  def organization_hash
+    res = []
+    if self.managed_organization_id
+      o = self.managed_organization
+      res << {
+        'id' => o.global_id,
+        'name' => o.settings['name'],
+        'type' => 'manager',
+        'full_manager' => !!self.settings['full_manager'],
+        'added' => nil
+      } if o
+    end
+    if self.managing_organization_id
+      o = self.managing_organization
+      res << {
+        'id' => o.global_id,
+        'name' => o.settings['name'],
+        'type' => 'user',
+        'added' => (self.settings['subscription'] || {})['added_to_organization'],
+        'pending' => !!(self.settings['subscription'] || {})['org_pending'],
+        'sponsored' => (self.settings['subscription'] || {})['org_sponsored'] != false
+      } if o
+    end
+    res += Organization.attached_orgs(self)
+    res.reverse.uniq{|e| [e['id'], e['type']] }.sort_by{|e| e['id'] }
+  end
+
   def supervised_user_ids
     return [] unless self.settings && self.settings['supervisees']
     (self.settings['supervisees'] || []).map{|s| s['user_id'] }
@@ -85,6 +112,20 @@ module Supervising
     elsif action == 'approve' && key == 'org'
       self.settings['pending'] = false
       self.update_subscription_organization(self.managing_organization.global_id, false)
+      true
+    elsif action == 'approve_supervision'
+      org = Organization.find_by_global_id(key)
+      if org.pending_supervisor?(self)
+        org.add_supervisor(self.user_name, false)
+        true
+      elsif org.supervisor?(self)
+        true
+      else
+        false
+      end
+    elsif action == 'remove_supervision'
+      org = Organization.find_by_global_id(key)
+      org.remove_supervisor(self.user_name)
       true
     elsif action == 'remove_supervisor'
       if key == 'org'

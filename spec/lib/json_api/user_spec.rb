@@ -191,7 +191,7 @@ describe JsonApi::User do
         o = Organization.create
         u.settings['subscription'] = {}
         u.settings['subscription']['never_expires'] = true
-        u.managing_organization_id = o.id
+        u.settings['subscription']['org_sponsored'] = true
         u.settings['subscription']['added_to_organization'] = 3.months.ago.iso8601
         u.expires_at = 2.weeks.from_now
         u.settings['subscription']['started'] = 6.months.ago.iso8601
@@ -203,6 +203,7 @@ describe JsonApi::User do
           'active' => true
         })
         
+        u.managing_organization_id = o.id
         u.settings['subscription']['never_expires'] = false
         json = JsonApi::User.build_json(u, permissions: u)
         expect(json['is_managed']).to eq(true)
@@ -210,7 +211,9 @@ describe JsonApi::User do
           'active' => true,
           'is_managed' => true,
           'managing_org_name' => o.settings['name'],
-          'added_to_organization' => u.settings['subscription']['added_to_organization']
+          'added_to_organization' => u.settings['subscription']['added_to_organization'],
+          'org_pending' => false,
+          'org_sponsored' => true
         })
         
         u.managing_organization_id = nil
@@ -373,34 +376,6 @@ describe JsonApi::User do
         expect(hash['permissions']).not_to eq(nil)
         expect(hash['supervisees']).to eq(nil)
       end
-    end
-    
-    it "should include managed users only if there are any" do
-      u = User.create
-      o = Organization.create(:settings => {'total_licenses' => 1})
-      o.add_manager(u.user_name, true)
-      u2 = User.create
-      o.add_user(u2.user_name, false)
-      u.reload
-      u.managed_organization.reload
-      hash = JsonApi::User.build_json(u)
-      expect(hash['permissions']).to eq(nil)
-      expect(hash['supervisees']).to eq(nil)
-      
-      hash = JsonApi::User.build_json(u, permissions: u)
-      expect(hash['permissions']).not_to eq(nil)
-      expect(hash['org_managed_users']).not_to eq(nil)
-      expect(hash['org_managed_users'].length).to eq(1)
-      expect(hash['org_managed_users'][0]['id']).to eq(u2.global_id)
-      expect(hash['org_managed_users'][0]['name']).to eq(u2.settings['name'])
-      expect(hash['org_managed_users'][0]['user_name']).to eq(u2.user_name)
-      
-      o.remove_user(u2.user_name)
-      u.reload
-      u.managed_organization.reload
-      hash = JsonApi::User.build_json(u, permissions: u)
-      expect(hash['permissions']).not_to eq(nil)
-      expect(hash['org_managed_users']).to eq(nil)
     end
     
     it "should include any pending board shares" do

@@ -35,11 +35,10 @@ CoughDrop.User = DS.Model.extend({
   last_access: DS.attr('date'),
   membership_type: DS.attr('string'),
   subscription: DS.attr('raw'),
-  is_managed: DS.attr('boolean'),
-  managing_org_name: DS.attr('string'),
-  has_management_responsibility: DS.attr('boolean'),
   org_assistant: DS.attr('boolean'),
   org_manager: DS.attr('boolean'),
+  org_supervision_pending: DS.attr('boolean'),
+  organizations: DS.attr('raw'),
   password: DS.attr('string'),
   old_password: DS.attr('string'),
   preferences: DS.attr('raw'),
@@ -51,17 +50,34 @@ CoughDrop.User = DS.Model.extend({
   supervisors: DS.attr('raw'),
   supervisee_code: DS.attr('string'),
   supervisees: DS.attr('raw'),
-  org_managed_users: DS.attr('raw'),
   pending_board_shares: DS.attr('raw'),
   edit_permission: DS.attr('boolean'),
+  has_management_responsibility: function() {
+    return !!(this.get('organizations') || []).find(function(o) { return o.type == 'manager'; });
+  }.property('organizations'),
+  is_managed: function() {
+    return !!(this.get('organizations') || []).find(function(o) { return o.type == 'user'; });
+  }.property('organizations'),
+  managing_org: function() {
+    return (this.get('organizations') || []).find(function(o) { return o.type == 'user'; });
+  }.property('organizations'),
+  managing_supervision_orgs: function() {
+    return (this.get('organizations') || []).filter(function(o) { return o.type == 'supervisor'; });
+  }.property('organizations'),
+  pending_org: function() {
+    return (this.get('organizations') || []).find(function(o) { return o.type == 'user' && o.pending; });
+  }.property('organizations'),
+  pending_supervision_org: function() {
+    return (this.get('organizations') || []).find(function(o) { return o.type == 'supervisor' && o.pending; });
+  }.property('organizations'),
   supervisor_names: function() {
     var names = [];
-    if(this.get('is_managed') && this.get('subscription.managing_org_name')) {
-      names.push(this.get('subscription.managing_org_name'));
+    if(this.get('is_managed') && this.get('managing_org.name')) {
+      names.push(this.get('managing_org.name'));
     }
     names = names.concat((this.get('supervisors') || []).map(function(u) { return u.name; }));
     return names.join(", ");
-  }.property('supervisors', 'is_managed', 'subscription.managing_org_name'),
+  }.property('supervisors', 'is_managed', 'managing_org.name'),
   supervisee_names: function() {
     return (this.get('supervisees') || []).map(function(u) { return u.name; }).join(", ");
   }.property('supervisees'),
@@ -197,10 +213,6 @@ CoughDrop.User = DS.Model.extend({
     });
     return res;
   }.property('preferences.sidebar_boards'),
-  all_supervisees: function() {
-    var res = [].concat(this.get('supervisees') || []).concat(this.get('org_managed_users'));
-    return Utils.uniq(res, function(u) { return u.id; });
-  }.property('supervisees', 'org_managed_users'),
   checkForDataURL: function() {
     this.set('checked_for_data_url', true);
     var url = this.get('avatar_url_with_fallback');

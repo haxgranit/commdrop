@@ -5,15 +5,15 @@
     <span class='glyphicon glyphicon-heart' style="float: left; font-size: 30px; margin-right: 10px;"></span>
     {{t "You are lucky! Somehow you get set up with a subscription plan that never expires! Like, never, ever! If you for some reason you want to change that you're welcome to." key='never_expires_explanation'}}
   {{else if subscription.user.is_managed}}
-    {{#if subscription.user.subscription.org_pending}}
+    {{#if subscription.user.pending_org}}
       <span class='glyphicon glyphicon-user' style="float: left; font-size: 30px; margin-right: 10px;"></span>
-      {{t "<b>%{org}</b> wants to sponsor this user as part of their organization. This addition must be approved before it is complete." key='confirm_pending_org' org=model.subscription.managing_org_name}}
+      {{t "<b>%{org}</b> wants to sponsor this user as part of their organization. This addition must be approved before it is complete." key='confirm_pending_org' org=model.pending_org.name}}
       <br/><br/>
-      <button class="btn btn-default" {{action 'approve_or_reject_org' true}}>{{t "Approve %{org}" org=model.subscription.managing_org_name}}</button>
+      <button class="btn btn-default" {{action 'approve_or_reject_org' true}}>{{t "Approve %{org}" org=model.pending_org.name}}</button>
       <button class="btn btn-default" {{action 'approve_or_reject_org' false}}>{{t "Deny Access"}}</button>
     {{else}}
       <span class='glyphicon glyphicon-user' style="float: left; font-size: 30px; margin-right: 10px;"></span>
-      {{t "Your subscription is being sponsored by the organization, <b>%{org}</b>. We hope everything is going well for you and CoughDrop is making a difference!" key='org_managed' org=subscription.user.subscription.managing_org_name}}
+      {{t "Your subscription is being sponsored by the organization, <b>%{org}</b>. We hope everything is going well for you and CoughDrop is making a difference!" key='org_managed' org=subscription.user.managing_org.name}}
     {{/if}}
   {{else if subscription.user_expired}}
     <span class='glyphicon glyphicon-exclamation-sign' style="float: left; font-size: 30px; margin-right: 10px;"></span>
@@ -25,7 +25,7 @@
     {{else}}
       <span class='glyphicon glyphicon-calendar' style="float: left; font-size: 30px; margin-right: 10px;"></span>
       {{t "You are signed up for the monthly subscription plan, <b>%{plan}</b>. We hope everything is going well for you and CoughDrop is making a difference!" key='monthly_plan' plan=subscription.subscription_plan_description}}
-    {{/if}}  
+    {{/if}}
   {{else if subscription.user.subscription.purchased}}
     {{# if subscription.user_expiring}}
       <span class='glyphicon glyphicon-time' style="float: left; font-size: 30px; margin-right: 10px;"></span>

@@ -25,6 +25,8 @@ describe Subscription, :type => :model do
       expect(u.grace_period?).to eq(false)
       u.settings['subscription']['never_expires'] = false
       u.managing_organization_id = 1
+      u.settings['subscription'] = {}
+      u.settings['subscription']['org_sponsored'] = true
       expect(u.grace_period?).to eq(false)
       u.managing_organization_id = nil
       u.settings['subscription'] = {}
@@ -55,10 +57,6 @@ describe Subscription, :type => :model do
     end
   end
 
-#   def long_term_purchase?
-#     !!(!self.never_expires? && self.expires_at && self.expires_at > Time.now && self.settings && self.settings['subscription'] && self.settings['subscription']['last_purchase_plan_id'])
-#   end
-  
   describe "recurring_subscription?" do
     it "should return correct values" do
       u = User.new
@@ -109,6 +107,7 @@ describe Subscription, :type => :model do
       u = User.create(:expires_at => 3.days.ago)
       expect(u.premium?).to eq(false)
       u.managing_organization_id = 1
+      u.settings['subscription'] = {'org_sponsored' => true}
       expect(u.premium?).to eq(true)
     end
   end
@@ -246,6 +245,7 @@ describe Subscription, :type => :model do
       u = User.create(:settings => {'subscription' => {'seconds_left' => 12.weeks.to_i}})
       o = Organization.create
       u.managing_organization_id = o.id
+      u.settings['subscription']['org_sponsored'] = true
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)
       u.update_subscription_organization(nil)
       expect(u.expires_at.to_i).to eq(12.weeks.from_now.to_i)
@@ -255,6 +255,7 @@ describe Subscription, :type => :model do
       u = User.create(:settings => {'subscription' => {'seconds_left' => 10.minutes.to_i}})
       o = Organization.create
       u.managing_organization_id = o.id
+      u.settings['subscription']['org_sponsored'] = true
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)
       u.update_subscription_organization(nil)
       expect(u.expires_at.to_i).to eq(2.weeks.from_now.to_i)
@@ -265,11 +266,34 @@ describe Subscription, :type => :model do
       o = Organization.create
       u.managing_organization_id = o.id
       u.expires_at = nil
+      u.settings['subscription']['org_sponsored'] = true
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)
       u.update_subscription_organization(nil)
       expect(u.expires_at.to_i).to eq(2.weeks.from_now.to_i)
       expect(u.settings['subscription']['started']).to eq(nil)
       expect(u.settings['subscription']['added_to_organization']).to eq(nil)
+    end
+    
+    it "should allow adding a a pending user to an org" do
+      u = User.create
+      o = Organization.create
+      expect(UserMailer).to receive(:schedule_delivery).with(:organization_assigned, u.global_id, o.global_id)
+      u.update_subscription_organization(o.global_id, true)
+      expect(u.settings['subscription']['org_pending']).to eq(true)
+      expect(u.expires_at).to eq(nil)
+      expect(u.settings['subscription']['added_to_organization']).to eql(Time.now.iso8601)
+      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'update_subscription', 'arguments' => [{'pause' => true}]})).to eq(true)
+    end
+
+    it "should allow adding an unsponsored user to an org" do
+      u = User.create
+      o = Organization.create
+      expect(UserMailer).to receive(:schedule_delivery).with(:organization_assigned, u.global_id, o.global_id)
+      u.update_subscription_organization(o.global_id, false, false)
+      expect(u.settings['subscription']['org_sponsored']).to eq(false)
+      expect(u.expires_at).to_not eq(nil)
+      expect(u.settings['subscription']['added_to_organization']).to eql(Time.now.iso8601)
+      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'update_subscription', 'arguments' => [{'pause' => true}]})).to eq(false)
     end
   end
   
@@ -678,6 +702,21 @@ describe Subscription, :type => :model do
       expect(u.subscription_hash['purchased']).to eq(true)
       expect(u.subscription_hash['grace_period']).to eq(false)
     end
+    
+    it "should include org information even for non-sponsored org users" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+    
+      res = o.add_user(u.user_name, false, false)
+      u.reload
+      expect(o.managed_user?(u)).to eq(true)
+      expect(o.sponsored_user?(u)).to eq(false)
+      
+      expect(u.subscription_hash).not_to eq(nil)
+      expect(u.subscription_hash['is_managed']).to eq(true)
+      expect(u.subscription_hash['org_pending']).to eq(false)
+      expect(u.subscription_hash['org_sponsored']).to eq(false)
+    end
   end
   
   describe "check_for_subscription_updates" do
@@ -843,7 +882,7 @@ describe Subscription, :type => :model do
     it "should update for eval type" do
       u = User.create
       expect(u.subscription_override('eval')).to eq(true)
-      expect(u.settings['subscription']['free_premium']).to eq(true);
+      expect(u.settings['subscription']['free_premium']).to eq(false);
       expect(u.settings['subscription']['plan_id']).to eq('eval_monthly_free');
     end
     

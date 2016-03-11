@@ -1,23 +1,36 @@
 module Subscription
   extend ActiveSupport::Concern
   
-  def update_subscription_organization(org_id, pending=false)
+  def update_subscription_organization(org_id, pending=false, sponsored=true)
     prior_org = self.managing_organization
     actual_id = nil
     if org_id
       new_org = Organization.find_by_global_id(org_id)
       actual_id = new_org && new_org.id
       self.settings['subscription'] ||= {}
-      self.settings['subscription']['started'] = nil
+      if sponsored
+        self.settings['subscription']['started'] = nil
+        if self.expires_at && self.expires_at > Time.now
+          self.settings['subscription']['seconds_left'] = self.expires_at.to_i - Time.now.to_i
+          self.expires_at = nil
+        end
+        self.schedule(:update_subscription, {'pause' => true})
+      end
+      self.settings['subscription']['org_sponsored'] = sponsored
       self.settings['subscription']['added_to_organization'] = Time.now.iso8601
       self.settings['subscription']['org_pending'] = pending || false
       self.settings['preferences'] ||= {}
       self.settings['preferences']['role'] = 'communicator'
-      if self.expires_at && self.expires_at > Time.now
-        self.settings['subscription']['seconds_left'] = self.expires_at.to_i - Time.now.to_i
-        self.expires_at = nil
+      if new_org
+        Organization.detach_user(self, 'user', new_org)
+        new_org.attach_user(self, 'user')
+        self.settings['managed_by'] = {}
+        self.settings['managed_by'][new_org.global_id] = {
+          'added' => Time.now.iso8601,
+          'sponsored' => sponsored,
+          'pending' => pending
+        }
       end
-      self.schedule(:update_subscription, {'pause' => true})
       if !prior_org || prior_org != new_org
         UserMailer.schedule_delivery(:organization_assigned, self.global_id, new_org && new_org.global_id)
       end
@@ -25,11 +38,16 @@ module Subscription
       self.settings['subscription'] ||= {}
       self.settings['subscription']['started'] = nil
       self.settings['subscription']['added_to_organization'] = nil
-      if self.settings['subscription']['seconds_left']
-        self.expires_at = Time.now + self.settings['subscription']['seconds_left']
-        self.settings['subscription'].delete('seconds_left')
+      Organization.detach_user(self, 'user')
+      self.settings['managed_by'] = nil
+      if self.settings['subscription']['org_sponsored']
+        self.settings['subscription']['org_sponsored'] = nil
+        if self.settings['subscription']['seconds_left']
+          self.expires_at = Time.now + self.settings['subscription']['seconds_left']
+          self.settings['subscription'].delete('seconds_left')
+        end
+        self.expires_at = [self.expires_at, 2.weeks.from_now].compact.max
       end
-      self.expires_at = [self.expires_at, 2.weeks.from_now].compact.max
       # self.schedule(:update_subscription, {'resume' => true})
       if prior_org
         UserMailer.schedule_delivery(:organization_unassigned, self.global_id, prior_org && prior_org.global_id)
@@ -37,6 +55,27 @@ module Subscription
     end
     self.managing_organization_id = actual_id
     self.save
+  end
+  
+  def transfer_subscription_to(user)
+    raise "already transferred from this user!" if self.settings['subscription'] && self.settings['subscription']['transferred_to']
+    raise "already transferred to this user!" if user.settings['subscription'] && user.settings['subscription']['transferred_from']
+    transfer_keys = ['started', 'plan_id', 'subscription_id', 'token_summary', 'free_premium', 
+      'never_expires', 'seconds_left', 'customer_id', 'prior_customer_ids', 'prior_purchase_ids']
+    do_warn = false
+    transfer_keys.each do |key|
+      self.settings['subscription'] ||= {}
+      user.settings['subscription'] ||= {}
+      if self.settings['subscription'][key] != nil
+        do_warn = true if ['subscription_id', 'customer_id'].include?(key)
+        user.settings['subscription'][key] = self.settings['subscription'][key]
+        self.settings['subscription'].delete(key)
+      end
+    end
+    puts "MAKE SURE TO UPDATE THE CUSTOMER/SUBSCRIPTION METADATA IN THE PURCHASING SYSTEM"
+    Rails.logger.warn "MAKE SURE TO UPDATE THE CUSTOMER/SUBSCRIPTION METADATA IN THE PURCHASING SYSTEM"
+    user.settings['subscription']['transferred_from'] = self.global_id
+    self.settings['subscription']['transferred_to'] = user.global_id
   end
   
   # to make someone a free slp subscription, call:
@@ -233,7 +272,11 @@ module Subscription
   end
   
   def premium?
-    !!(never_expires? || self.recurring_subscription? || self.managing_organization_id || (self.expires_at && self.expires_at > Time.now) || self.free_premium?)
+    !!(never_expires? || self.recurring_subscription? || self.org_sponsored? || (self.expires_at && self.expires_at > Time.now) || self.free_premium?)
+  end
+  
+  def org_sponsored?
+    Organization.sponsored?(self)
   end
   
   def free_premium?
@@ -245,7 +288,7 @@ module Subscription
   end
 
   def grace_period?
-    !!(self.expires_at && self.expires_at > Time.now && !self.managing_organization_id && !self.never_expires? && !self.long_term_purchase? && !self.recurring_subscription?)
+    !!(self.expires_at && self.expires_at > Time.now && !self.org_sponsored? && !self.never_expires? && !self.long_term_purchase? && !self.recurring_subscription?)
   end
   
   def long_term_purchase?
@@ -262,13 +305,8 @@ module Subscription
     if self.never_expires?
       json['never_expires'] = true
       json['active'] = true
-    elsif self.managing_organization_id
-      json['is_managed'] = true
-      org = self.managing_organization
-      json['org_pending'] = !!self.settings['subscription']['org_pending'] if self.settings['subscription']['org_pending'] != nil
+    elsif self.org_sponsored?
       json['active'] = true
-      json['managing_org_name'] = (org && org.settings['name']) || "unknown organization"      
-      json['added_to_organization'] = self.settings['subscription']['added_to_organization'] if self.settings['subscription']['added_to_organization']
     else
       json['expires'] = self.expires_at && self.expires_at.iso8601
       json['grace_period'] = self.grace_period?
@@ -283,6 +321,15 @@ module Subscription
         json['plan_id'] = self.settings['subscription']['last_purchase_plan_id']
         json['free_premium'] = self.settings['subscription']['free_premium'] if self.free_premium?
       end
+    end
+    # TODO: remove in later API revision, after like July 2016
+    if Organization.managed?(self)
+      json['is_managed'] = true
+      org = self.managing_organization
+      json['org_pending'] = org.pending_user?(self)
+      json['org_sponsored'] = org.sponsored_user?(self)
+      json['managing_org_name'] = (org && org.settings['name']) || "unknown organization"
+      json['added_to_organization'] = self.settings['subscription']['added_to_organization'] if self.settings['subscription']['added_to_organization']
     end
     json
   end

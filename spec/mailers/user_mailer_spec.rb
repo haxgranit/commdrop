@@ -185,12 +185,12 @@ describe UserMailer, :type => :mailer do
       expect(m.subject).to eq("CoughDrop - Organization Sponsorship Added")
       
       html = message_body(m, :html)
-      expect(html).to match(/added you to their list of sponsored users/)
+      expect(html).to match(/added you to their list of supported users/)
       expect(html).to match(/<b>fred<\/b>/)
       expect(html).to match(/<b>#{o.settings['name']}<\/b>/)
       
       text = message_body(m, :text)
-      expect(text).to match(/added you to their list of sponsored users/)
+      expect(text).to match(/added you to their list of supported users/)
       expect(text).to match(/"fred"/)
       expect(text).to match(/"#{o.settings['name']}"/)
     end
@@ -205,12 +205,12 @@ describe UserMailer, :type => :mailer do
       expect(m.subject).to eq("CoughDrop - Organization Sponsorship Removed")
       
       html = message_body(m, :html)
-      expect(html).to match(/was just removed from the sponsored list by an organization/)
+      expect(html).to match(/was just removed from the supported list by an organization/)
       expect(html).to match(/<b>fred<\/b>/)
       expect(html).to match(/<b>#{o.settings['name']}<\/b>/)
       
       text = message_body(m, :text)
-      expect(text).to match(/was just removed from the sponsored list by an organization/)
+      expect(text).to match(/was just removed from the supported list by an organization/)
       expect(text).to match(/"fred"/)
       expect(text).to match(/"#{o.settings['name']}"/)
     end

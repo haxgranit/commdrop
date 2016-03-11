@@ -192,6 +192,55 @@ describe Api::OrganizationsController, :type => :controller do
       end
     end
     
+    describe "managing supervisors" do
+      it "should allow adding a new supervisor" do
+        token_user
+        o = Organization.create
+        o.add_manager(@user.user_name)
+        u = User.create
+        put :update, :id => o.global_id, :organization => {:management_action => "add_supervisor-#{u.user_name}"}
+        expect(response.success?).to eq(true)
+        expect(o.managed_user?(u.reload)).to eq(false)
+        expect(o.supervisor?(u.reload)).to eq(true)
+      end
+      
+      it "should fail gracefully when failing to add a supervisor" do
+        token_user
+        o = Organization.create
+        o.add_manager(@user.user_name)
+        put :update, :id => o.global_id, :organization => {:management_action => "add_supervisor-bob"}
+        expect(response.success?).to eq(false)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('organization update failed')
+        expect(json['errors']).to eq(['user management action failed: invalid user'])
+      end
+
+      it "should allow removing a supervisor" do
+        token_user
+        o = Organization.create
+        o.add_manager(@user.user_name)
+        u = User.create
+        o.add_supervisor(u.user_name, true)
+        put :update, :id => o.global_id, :organization => {:management_action => "remove_supervisor-#{u.user_name}"}
+        o.reload
+        expect(response.success?).to eq(true)
+        expect(o.managed_user?(u.reload)).to eq(false)
+        expect(o.manager?(u.reload)).to eq(false)
+        expect(o.supervisor?(u.reload)).to eq(false)
+      end
+      
+      it "should fail gracefully when removing a supervisor" do
+        token_user
+        o = Organization.create
+        o.add_manager(@user.user_name)
+        put :update, :id => o.global_id, :organization => {:management_action => "remove_supervisor-bob"}
+        expect(response.success?).to eq(false)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('organization update failed')
+        expect(json['errors']).to eq(['user management action failed: invalid user'])
+      end
+    end
+
     describe "managing users" do
       it "should allow adding a new user" do
         token_user
@@ -202,6 +251,21 @@ describe Api::OrganizationsController, :type => :controller do
         expect(response.success?).to eq(true)
         json = JSON.parse(response.body)
         expect(o.managed_user?(u.reload)).to eq(true)
+        expect(o.sponsored_user?(u.reload)).to eq(true)
+        expect(o.assistant?(u.reload)).to eq(false)
+        expect(o.manager?(u.reload)).to eq(false)
+      end
+      
+      it "should allow adding a new unsponsored user" do
+        token_user
+        o = Organization.create(:settings => {'total_licenses' => 1})
+        o.add_manager(@user.user_name)
+        u = User.create
+        put :update, :id => o.global_id, :organization => {:management_action => "add_unsponsored_user-#{u.user_name}"}
+        expect(response.success?).to eq(true)
+        json = JSON.parse(response.body)
+        expect(o.managed_user?(u.reload)).to eq(true)
+        expect(o.sponsored_user?(u.reload)).to eq(false)
         expect(o.assistant?(u.reload)).to eq(false)
         expect(o.manager?(u.reload)).to eq(false)
       end
@@ -430,6 +494,50 @@ describe Api::OrganizationsController, :type => :controller do
     end
   end
 
+  describe "supervisors" do
+    it "should require api token" do
+      get :supervisors, :organization_id => 1
+      assert_missing_token
+    end
+    
+    it "should return not found unless organization exists" do
+      token_user
+      get :supervisors, :organization_id => "1"
+      assert_not_found("1")
+    end
+    
+    it "should return unauthorized unless edit permissions allowed" do
+      o = Organization.create
+      token_user
+      get :supervisors, :organization_id => o.global_id
+      assert_unauthorized
+    end
+    
+    it "should return a paginated list of supervisors if authorized" do
+      o = Organization.create
+      token_user
+      u = User.create
+      u2 = User.create
+      o.add_manager(@user.user_name, true)
+      o.add_supervisor(u.user_name, false)
+      o.add_supervisor(u2.user_name, true)
+      
+      get :supervisors, :organization_id => o.global_id
+      expect(response.success?).to eq(true)
+      json = JSON.parse(response.body)
+      expect(json['meta']).not_to eq(nil)
+      expect(json['user'].length).to eq(2)
+      expect(json['user'][1]['id']).to eq(u.global_id)
+      expect(json['user'][1]['org_manager']).to eq(nil)
+      expect(json['user'][1]['org_assistant']).to eq(nil)
+      expect(json['user'][1]['org_supervision_pending']).to eq(false)      
+      expect(json['user'][0]['id']).to eq(u2.global_id)
+      expect(json['user'][0]['org_manager']).to eq(nil)
+      expect(json['user'][0]['org_assistant']).to eq(nil)
+      expect(json['user'][0]['org_supervision_pending']).to eq(true)      
+    end
+  end
+  
   describe "logs" do
     it "should require api token" do
       get :logs, :organization_id => 1

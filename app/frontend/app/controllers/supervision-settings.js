@@ -16,6 +16,13 @@ export default modal.ModalController.extend({
         alert("sadness!");
       });
     },
+    remove_supervision: function(id) {
+      var user = this.get('model');
+      user.set('supervisor_key', "remove_supervision-" + id);
+      user.save().then(null, function() {
+        alert("sadness!");
+      });
+    },
     remove_supervisee: function(id) {
       var user = this.get('model');
       user.set('supervisor_key', "remove_supervisee-" + id);

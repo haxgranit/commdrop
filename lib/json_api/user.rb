@@ -67,23 +67,20 @@ module JsonApi::User
       json['premium'] = user.premium?
       json['terms_agree'] = !!user.settings['terms_agreed']
       json['subscription'] = user.subscription_hash
-      json['is_managed'] = !!json['subscription']['is_managed']
+      json['organizations'] = user.organization_hash
+      json['is_managed'] = !!json['subscription']['is_managed'] # TODO: remove in later API revision, after like July 2016
       json['pending_board_shares'] = (user.settings['boards_shared_with_me'] || []).select{|s| s['pending'] }
       
       
-      json['has_management_responsibility'] = !!user.managed_organization_id
+      json['has_management_responsibility'] = Organization.manager?(user) # TODO: remove in later API revision, after like July 2016
       
       supervisors = user.supervisors
       supervisees = user.supervisees
-      managed_users = user.managed_users
       if supervisors.length > 0
         json['supervisors'] = supervisors[0, 10].map{|u| JsonApi::User.as_json(u, limited_identity: true, supervisee: user) }
       end
       if supervisees.length > 0
         json['supervisees'] = supervisees[0, 10].map{|u| JsonApi::User.as_json(u, limited_identity: true, supervisor: user) }
-      end
-      if managed_users.length > 0
-        json['org_managed_users'] = managed_users[0, 10].map{|u| JsonApi::User.as_json(u, limited_identity: true, supervisee: user) }
       end
       
       if user.settings['user_notifications'] && user.settings['user_notifications'].length > 0
@@ -106,12 +103,15 @@ module JsonApi::User
         json['edit_permission'] = user.edit_permission_for?(args[:supervisee])
       end
       if args[:organization]
-        if user.managed_organization_id
+        if Organization.manager?(user)
           json['org_manager'] = args[:organization].manager?(user)
           json['org_assistant'] = args[:organization].assistant?(user)
         end
-        if user.managing_organization_id
-          json['org_pending'] = !!(user.settings && user.settings['subscription'] && user.settings['subscription']['org_pending'])
+        if Organization.supervisor?(user)
+          json['org_supervision_pending'] = args[:organization].pending_supervisor?(user)
+        end
+        if Organization.managed?(user)
+          json['org_pending'] = args[:organization].pending_user?(user)
         end
       end
     elsif user.settings['public'] || (json['permissions'] && json['permissions']['view_detailed'])
