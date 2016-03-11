@@ -86,13 +86,15 @@ var persistence = Ember.Object.extend({
         var importantIds = res.importantIds;
         var ago = (new Date()).getTime() - (7 * 24 * 60 * 60 * 1000); // >1 week old is out of date
         // TODO: garbage collection for db??? maybe as part of sync..
-        if(record) {
-          record.important = !!importantIds.find(function(i) { return i == (store + "_" + key); });
+        if(record && record.raw) {
+          record.raw.important = !!importantIds.find(function(i) { return i == (store + "_" + key); });
         }
-        if(record && !record.important && record.persisted < ago) {
-          record = null;
+        // if we have the opportunity to get it from an online source and it's out of date,
+        // we should use the online source
+        if(record && record.raw && !record.important && record.persisted < ago) {
+          record.raw.outdated = true;
         }
-      
+
         if(record) {
           var result = {};
           if(wrapped) {

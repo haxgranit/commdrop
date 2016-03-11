@@ -1,4 +1,5 @@
 {{#button-listener compute_height='compute_height' button_event='button_event'}}
+{{#if model.id}}
   {{#if teaser_description}}
     <div id="board_description">
       <span {{action "boardDetails"}}>
@@ -82,4 +83,11 @@
     <div style="clear: left;"></div>
   </div>
   {{/with}}
+{{else}}
+  {{#if persistence.online}}
+    <p>{{t "You don't have access to this board right now, or it doesn't exist." key='no_permissions'}}</p>
+  {{else}}
+    <p>{{t "This board isn't available, or hasn't been synced for offline use." key='board_not_synced'}}</p>
+  {{/if}}
+{{/if}}
 {{/button-listener}}

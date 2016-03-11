@@ -29,12 +29,12 @@ export default Ember.Route.extend({
     contentGrabbers.board_controller = controller;
     model.without_lookups(function() {
       controller.processButtons();
-    });    
+    });
     model.prefetch_linked_boards();
-    
+
     // if you have the model.id but not permissions, that means you got it from an /index
-    // call and it doesn't actually have all the information you need to render, so you 
-    // better reload. if ordered_buttons isn't set then that just means we need some 
+    // call and it doesn't actually have all the information you need to render, so you
+    // better reload. if ordered_buttons isn't set then that just means we need some
     // additional lookups
     if(persistence.get('online') || (model.get('id') && (!controller.get('ordered_buttons') || (!model.get('pseudo_board') && model.get('permissions') === undefined)))) {
       var reload = Ember.RSVP.resolve();
@@ -43,14 +43,14 @@ export default Ember.Route.extend({
       if(persistence.get('online')) {
         // reload(false) says "hey, reload but you can use the local copy if you need to"
         // TODO: this is failing when the board is available locally but the image isn't available locally
-        // looks like this (usually, handle both cases) happens if it's stored in the local db but not 
+        // looks like this (usually, handle both cases) happens if it's stored in the local db but not
         // yet loaded into ember-data
         reload = model.reload(!app_state.get('speak_mode'));
       // if we're offline, then we should only reload if we absolutely have to (i.e. ordered_buttons isn't set)
       } else if(!controller.get('ordered_buttons')) {
         reload = model.reload(false);
       }
-      
+
       reload.then(function() {
         controller.processButtons();
       }, function(error) {
@@ -67,10 +67,7 @@ export default Ember.Route.extend({
       return true;
     },
     error: function(error, transition) {
-      if((error.responseJSON && error.responseJSON.error == "Not authorized") || (error.error == "Not authorized")) {
-        app_state.set('currentBoardState', null);
-        this.get('controller').set('model', CoughDrop.store.createRecord('board', {}));
-      }
+      this.get('controller').set('model', CoughDrop.store.createRecord('board', {}));
     },
   }
 });
