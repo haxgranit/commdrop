@@ -42,8 +42,13 @@ class Api::OrganizationsController < ApplicationController
   end
   
   def admin_reports
-    admin_org = Organization.admin
-    return unless allowed?(admin_org, 'edit')
+    org = Organization.find_by_path(params['organization_id'])
+    return unless allowed?(org, 'edit')
+    if !['logged_2', 'unused_3', 'unused_6'].include?(params['report'])
+      if !org.admin?
+        return unless allowed?(org, 'impossible')
+      end
+    end
     if !params['report']
       return api_error 400, {:error => "report parameter required"}
     end
@@ -53,7 +58,12 @@ class Api::OrganizationsController < ApplicationController
     if params['report'].match(/^unused_/)
       # logins not used in the last X months
       x = params['report'].split(/_/)[1].to_i
-      users = User.where(['created_at < ?', x.months.ago]).select{|u| u.devices.where(['updated_at < ?', x.months.ago]).count > 0 }
+      users = User.where(['created_at < ?', x.months.ago])
+      if !org.admin?
+        # TODO: sharding
+        users = user.where(:id => org.users.map(&:id))
+      end
+      users = user.select{|u| u.devices.where(['updated_at < ?', x.months.ago]).count > 0 }
     elsif params['report'] == 'setup_but_expired'
       # logins that have set a home board, used it at least a week after registering, and have an expired trial
       x = 2
@@ -75,8 +85,13 @@ class Api::OrganizationsController < ApplicationController
       users = User.where(['created_at > ?', x.weeks.ago])
     elsif params['report'].match(/logged_/)
       # logins that have generated logs in the last 2 weeks
-      x = 2
-      user_ids = LogSession.where(['created_at > ?', x.weeks.ago]).group('id, user_id').count('user_id').map(&:first)
+      x = params['report'].split(/_/)[1].to_i
+      sessions = LogSession.where(['created_at > ?', x.weeks.ago])
+      if !org.admin?
+        # TODO: sharding
+        sessions = sessions.where(:user_id => org.users.map(&:id))
+      end
+      user_ids = sessions.group('id, user_id').count('user_id').map(&:first)
       users = User.where(:id => user_ids)
     elsif params['report'] == 'missing_words'
       stats = RedisInit.default ? RedisInit.default.hgetall('missing_words') : {}

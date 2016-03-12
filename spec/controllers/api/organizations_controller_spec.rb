@@ -650,6 +650,24 @@ describe Api::OrganizationsController, :type => :controller do
       })
     end
     
+    it "should not work on non-admin orgs" do
+      token_user
+      o = Organization.create
+      o.add_manager(@user.user_name, false)
+      
+      get :admin_reports, :organization_id => o.global_id, :report => 'premium_voices'
+      assert_unauthorized
+    end
+    
+    it "should work on non-admin orgs for approved reports" do
+      token_user
+      o = Organization.create
+      o.add_manager(@user.user_name, false)
+      
+      get :admin_reports, :organization_id => o.global_id, :report => 'logged_2'
+      expect(response).to be_success
+    end
+    
     it "should generate other admin reports"
     
   end

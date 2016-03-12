@@ -26,6 +26,10 @@ export default Ember.Controller.extend({
         list.push({id: 'missing_symbols', name: i18n.t('missing_symbols', "Search terms that don't return any matching symbols")});
         list.push({id: 'premium_voices', name: i18n.t('premium_voice_downloads', "Premium Voice Downloads")});
         list.push({id: 'totals', name: i18n.t('record_totals', "Total counts")});
+      } else {
+        list.push({id: 'logged_2', name: i18n.t('logged_2', "Generated usage logs in the last 2 weeks")});
+        list.push({id: 'unused_3', name: i18n.t('unused_3', "Not used for the last 3 months")});
+        list.push({id: 'unused_6', name: i18n.t('unused_6', "Not used for the last 6 months")});
       }
       return list;
     } else {
