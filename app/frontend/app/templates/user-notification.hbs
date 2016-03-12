@@ -4,7 +4,6 @@
       {{notif.user_name}}
     {{/link-to}}
     {{t " - new note by %{user_name}" key='user_new_message' user_name=notif.author_user_name}}
-    <br/>
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
       <span title="{{unbound date notif.occurred_at}}">
         {{date_ago notif.occurred_at}}
@@ -25,6 +24,13 @@
         {{date_ago notif.occurred_at}}
       </span>
     </span>
+  {{else if notif.org_removed}}
+    {{t "You have been removed as a %{role} for the organization %{org_name}" key='removed_from_org' role=notif.user_type org_name=notif.org_name}}
+    <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
+      <span title="{{unbound date notif.occurred_at}}">
+        {{date_ago notif.occurred_at}}
+      </span>
+    </span>
   {{else if notif.board_buttons_changed}}
     {{#link-to 'board' notif.key}}
       {{notif.name}}
@@ -33,7 +39,6 @@
     <span style='font-size: 10px;'>
       {{#link-to 'board.history' notif.key}}{{t "history" key='history'}}{{/link-to}}
     </span>
-    <br/>
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
       <span title="{{unbound date notif.occurred_at}}">
         {{date_ago notif.occurred_at}}

@@ -585,6 +585,14 @@ class User < ActiveRecord::Base
         :key => record.key,
         :id => record.global_id
       })
+    elsif notification_type == 'org_removed'
+      self.add_user_notification({
+        :type => 'org_removed',
+        :org_id => record.global_id,
+        :org_name => record.settings['name'],
+        :user_type => args['user_type'],
+        :occurred_at => args['removed_at']
+      })
     elsif notification_type == 'utterance_shared'
       pref = (self.settings && self.settings['preferences'] && self.settings['preferences']['share_notifications']) || 'email'
       if pref == 'email'

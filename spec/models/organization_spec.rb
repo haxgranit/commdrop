@@ -105,11 +105,6 @@ describe Organization, :type => :model do
       expect(o.pending_supervisor?(u.reload)).to eq(false)
     end
     
-    it "should notify a user when being added as a supervisor" do
-      # TODO: ...
-      expect(1).to eq(2)
-    end
-    
     it "should allow being a supervisor for multiple organizations" do
       o1 = Organization.create
       o2 = Organization.create
@@ -145,11 +140,6 @@ describe Organization, :type => :model do
       o.remove_supervisor(u.user_name)
       expect(o.supervisor?(u.reload)).to eq(false)
       expect(o.pending_supervisor?(u.reload)).to eq(false)
-    end
-    
-    it "should notify a user when being removed as a supervisor" do
-      # TODO: ...
-      expect(1).to eq(2)
     end
     
     it "should keep other supervision settings intact when being removed as a supervisor" do

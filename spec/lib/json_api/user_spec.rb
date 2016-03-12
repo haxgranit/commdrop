@@ -389,6 +389,165 @@ describe JsonApi::User do
       expect(hash['pending_board_shares'][0]['board_id']).to eq(b.global_id)
     end
     
+    describe "organizations" do
+      it "should include any managing organization" do
+        o = Organization.create(:settings => {'total_licenses' => 2})
+        u = User.create
+        o.add_user(u.user_name, true, true)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(1)
+        expect(hash['organizations'][0]['id']).to eq(o.global_id)
+        expect(hash['organizations'][0]['type']).to eq('user')
+        expect(hash['organizations'][0]['pending']).to eq(true)
+        expect(hash['organizations'][0]['sponsored']).to eq(true)
+        
+        o.add_user(u.user_name, false, false)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(1)
+        expect(hash['organizations'][0]['id']).to eq(o.global_id)
+        expect(hash['organizations'][0]['type']).to eq('user')
+        expect(hash['organizations'][0]['pending']).to eq(false)
+        expect(hash['organizations'][0]['sponsored']).to eq(false)
+      end
+      
+      it "should include any managed organizations" do
+        o = Organization.create(:settings => {'total_licenses' => 2})
+        o2 = Organization.create(:settings => {'total_licenses' => 2})
+        u = User.create
+        o.add_manager(u.user_name, true)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(1)
+        expect(hash['organizations'][0]['id']).to eq(o.global_id)
+        expect(hash['organizations'][0]['type']).to eq('manager')
+        expect(hash['organizations'][0]['full_manager']).to eq(true)
+        
+        o2.add_manager(u.user_name, false)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(2)
+        expect(hash['organizations'][1]['id']).to eq(o2.global_id)
+        expect(hash['organizations'][1]['type']).to eq('manager')
+        expect(hash['organizations'][1]['full_manager']).to eq(false)
+      end
+      
+      it "should include any supervision organziations" do
+        o = Organization.create(:settings => {'total_licenses' => 2})
+        o2 = Organization.create(:settings => {'total_licenses' => 2})
+        u = User.create
+        o.add_supervisor(u.user_name, true)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(1)
+        expect(hash['organizations'][0]['id']).to eq(o.global_id)
+        expect(hash['organizations'][0]['type']).to eq('supervisor')
+        expect(hash['organizations'][0]['pending']).to eq(true)
+        
+        o2.add_supervisor(u.user_name, false)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(2)
+        expect(hash['organizations'][1]['id']).to eq(o2.global_id)
+        expect(hash['organizations'][1]['type']).to eq('supervisor')
+        expect(hash['organizations'][1]['pending']).to eq(false)
+      end
+      
+      it "should include a list of all organizations attached to the user" do
+        o = Organization.create(:settings => {'total_licenses' => 2})
+        o2 = Organization.create(:settings => {'total_licenses' => 2})
+        o3 = Organization.create(:settings => {'total_licenses' => 2})
+        u = User.create
+        o.add_manager(u.user_name, true)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(1)
+        expect(hash['organizations'][0]['id']).to eq(o.global_id)
+        expect(hash['organizations'][0]['type']).to eq('manager')
+        expect(hash['organizations'][0]['full_manager']).to eq(true)
+        
+        o2.add_supervisor(u.user_name, false)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(2)
+        expect(hash['organizations'][1]['id']).to eq(o2.global_id)
+        expect(hash['organizations'][1]['type']).to eq('supervisor')
+        expect(hash['organizations'][1]['pending']).to eq(false)
+
+        o3.add_user(u.user_name, false, true)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(3)
+        expect(hash['organizations'][2]['id']).to eq(o3.global_id)
+        expect(hash['organizations'][2]['type']).to eq('user')
+        expect(hash['organizations'][2]['pending']).to eq(false)
+        expect(hash['organizations'][2]['sponsored']).to eq(true)
+      end
+      
+      it "should include a notification when a non-pending user is removed as a user from an organization" do
+        o = Organization.create(:settings => {'total_licenses' => 2})
+        o2 = Organization.create(:settings => {'total_licenses' => 2})
+        u = User.create
+        o.add_user(u.user_name, false)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(1)
+        
+        o.remove_user(u.user_name)
+        Worker.process_queues
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(0)
+        expect(hash['notifications']).to_not eq(nil)
+        expect(hash['notifications'].length).to eq(1)
+        expect(hash['notifications'][0]['type']).to eq('org_removed')
+        expect(hash['notifications'][0]['user_type']).to eq('user')
+        expect(hash['notifications'][0]['org_id']).to eq(o.global_id)
+
+        o2.add_user(u.user_name, true)
+        o2.reload
+        u.reload
+        o2.remove_user(u.user_name)
+        Worker.process_queues
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(0)
+        expect(hash['notifications'].length).to eq(1)
+        expect(hash['notifications'][0]['org_id']).to eq(o.global_id)
+      end
+      
+      it "should include a notification when a user is removed as a supervisor from an organization" do
+        o = Organization.create(:settings => {'total_licenses' => 2})
+        o2 = Organization.create(:settings => {'total_licenses' => 2})
+        u = User.create
+        o.add_supervisor(u.user_name, false)
+        o2.add_supervisor(u.user_name, true)
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(2)
+        
+        o.remove_supervisor(u.user_name)
+        Worker.process_queues
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(1)
+        expect(hash['notifications']).to_not eq(nil)
+        expect(hash['notifications'].length).to eq(1)
+        expect(hash['notifications'][0]['type']).to eq('org_removed')
+        expect(hash['notifications'][0]['user_type']).to eq('supervisor')
+        expect(hash['notifications'][0]['org_id']).to eq(o.global_id)
+        
+        o2.remove_supervisor(u.user_name)
+        Worker.process_queues
+        u.reload
+        hash = JsonApi::User.build_json(u, permissions: u)
+        expect(hash['organizations'].length).to eq(0)
+        expect(hash['notifications'].length).to eq(1)
+        expect(hash['notifications'][0]['org_id']).to eq(o.global_id)
+      end
+    end
+    
     describe "feature_flags" do
       it "should return a feature_flags object" do
         u = User.create

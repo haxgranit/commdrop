@@ -3,6 +3,7 @@ class Organization < ActiveRecord::Base
   include Processable
   include GlobalId
   include SecureSerialize
+  include Notifier
   secure_serialize :settings
   before_save :generate_defaults
   
@@ -99,15 +100,19 @@ class Organization < ActiveRecord::Base
     raise "invalid user" unless user
     user.settings ||= {}
     user.settings['supervisor_for'] ||= {}
+    pending = user.settings['supervisor_for'][self.global_id] && user.settings['supervisor_for'][self.global_id]['pending']
     user.settings['supervisor_for'].delete(self.global_id)
     self.detach_user(user, 'supervisor')
     user.save
     self.touch
+    notify('org_removed', {
+      'user_id' => user.global_id,
+      'user_type' => 'supervisor',
+      'removed_at' => Time.now.iso8601
+    }) unless pending
     true
   end
   
-  # TODO: code smell, using columns and settings to define levels of permissions. Maybe this
-  # should be a separate table, even with slight perf hit..
   def manager?(user)
     res = !!(user.managed_organization_id == self.id && user.settings && user.settings['full_manager'])
     res ||= user.settings && user.settings['manager_for'] && user.settings['manager_for'][self.global_id] && user.settings['manager_for'][self.global_id]['full_manager']
@@ -333,9 +338,24 @@ class Organization < ActiveRecord::Base
     raise "invalid user" unless user
     for_different_org = user.managing_organization_id && user.managing_organization_id != self.id
     for_different_org ||= user.settings && user.settings['managed_by'] && (user.settings['managed_by'].keys - [self.global_id]).length > 0
+    pending = user.settings['managed_by'] && user.settings['managed_by'][self.global_id] && user.settings['managed_by'][self.global_id]['pending']
     raise "already associated with a different organization" if for_different_org
     user.update_subscription_organization(nil)
+    notify('org_removed', {
+      'user_id' => user.global_id,
+      'user_type' => 'user',
+      'removed_at' => Time.now.iso8601
+    }) unless pending
     true
+  end
+
+  def additional_listeners(type, args)
+    if type == 'org_removed'
+      u = User.find_by_global_id(args['user_id'])
+      res = []
+      res << u.record_code if u
+      res
+    end
   end
   
   def process_params(params, non_user_params)

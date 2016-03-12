@@ -112,7 +112,7 @@ module JsonApi::User
           if !json['org_supervision_pending']
             supervisees = user.supervisees
             # TODO: sharding
-            users = args[:organization].users.where(:user_id => supervisees.map(&:id))
+            supervisees = args[:organization].users.where(:id => supervisees.map(&:id))
             if supervisees.length > 0
               json['org_supervisees'] = supervisees[0, 10].map{|u| JsonApi::User.as_json(u, limited_identity: true, supervisor: user) }
             end
