@@ -300,7 +300,8 @@ class Board < ActiveRecord::Base
   def check_image_url
     if self.settings && self.settings['image_url'] == DEFAULT_ICON && self.settings['default_image_url'] == self.settings['image_url'] && self.settings['name'] && self.settings['name'] != 'Unnamed Board'
       res = Typhoeus.get("https://www.opensymbols.org/api/v1/symbols/search?q=#{CGI.escape(self.settings['name'])}", :ssl_verifypeer => false)
-      results = JSON.parse(res.body)
+      results = JSON.parse(res.body) rescue nil
+      results ||= []
       icon = results.detect do |result|
         result['license'] == "CC By" || result['repo_key'] == 'arasaac'
       end
