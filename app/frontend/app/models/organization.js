@@ -17,9 +17,13 @@ CoughDrop.Organization = DS.Model.extend({
   admin: DS.attr('boolean'),
   allotted_licenses: DS.attr('number'),
   used_licenses: DS.attr('number'),
+  total_users: DS.attr('number'),
   total_managers: DS.attr('number'),
+  total_supervisors: DS.attr('number'),
   created: DS.attr('date'),
   management_action: DS.attr('string'),
+  recent_session_user_count: DS.attr('number'),
+  recent_session_count: DS.attr('number'),
   licenses_available: function() {
     return (this.get('total_licenses') || 0) > (this.get('used_licenses') || 0);
   }.property('total_licenses', 'used_licenses')
@@ -30,7 +34,7 @@ CoughDrop.Organization.reopenClass({
       "view": true,
       "edit": true
     };
-  
+
     return hash;
   }
 });

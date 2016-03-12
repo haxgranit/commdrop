@@ -109,9 +109,18 @@ module JsonApi::User
         end
         if Organization.supervisor?(user)
           json['org_supervision_pending'] = args[:organization].pending_supervisor?(user)
+          if !json['org_supervision_pending']
+            supervisees = user.supervisees
+            # TODO: sharding
+            users = args[:organization].users.where(:user_id => supervisees.map(&:id))
+            if supervisees.length > 0
+              json['org_supervisees'] = supervisees[0, 10].map{|u| JsonApi::User.as_json(u, limited_identity: true, supervisor: user) }
+            end
+          end
         end
         if Organization.managed?(user)
           json['org_pending'] = args[:organization].pending_user?(user)
+          json['org_sponsored'] = args[:organization].sponsored_user?(user)
         end
       end
     elsif user.settings['public'] || (json['permissions'] && json['permissions']['view_detailed'])

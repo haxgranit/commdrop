@@ -116,7 +116,7 @@ module Supervising
     elsif action == 'approve_supervision'
       org = Organization.find_by_global_id(key)
       if org.pending_supervisor?(self)
-        org.add_supervisor(self.user_name, false)
+        org.approve_supervisor(self)
         true
       elsif org.supervisor?(self)
         true
@@ -125,7 +125,7 @@ module Supervising
       end
     elsif action == 'remove_supervision'
       org = Organization.find_by_global_id(key)
-      org.remove_supervisor(self.user_name)
+      org.reject_supervisor(self.user_name)
       true
     elsif action == 'remove_supervisor'
       if key == 'org'

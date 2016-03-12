@@ -80,6 +80,20 @@ class Organization < ActiveRecord::Base
     true
   end
   
+  def approve_supervisor(user)
+    if user.settings['supervisor_for'] && user.settings['supervisor_for'][self.global_id]
+      self.add_supervisor(user.user_name, false)
+      user.settings['supervisor_for'][self.global_id]['pending'] = false
+    end
+  end
+  
+  def reject_supervisor(user)
+    if user.settings['supervisor_for'] && user.settings['supervisor_for'][self.global_id]
+      self.remove_supervisor(user.user_name)
+      user.settings['supervisor_for'].delete(self.global_id)
+    end
+  end
+  
   def remove_supervisor(user_key)
     user = User.find_by_path(user_key)
     raise "invalid user" unless user
@@ -225,6 +239,12 @@ class Organization < ActiveRecord::Base
   
   def users
     self.attached_users('user')
+  end
+  
+  def sponsored_users
+    # TODO: get rid of this double-lookup
+    ids = self.attached_users('user').select{|u| self.sponsored_user?(u) }.map(&:id)
+    User.where(:id => ids)
   end
   
   def managers

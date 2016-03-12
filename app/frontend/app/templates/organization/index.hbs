@@ -1,128 +1,244 @@
 {{#if model.permissions.edit}}
-  <h3>{{t "Managers" key='manager'}}</h3>
-  {{#if managers.data}}
-    <table class="table table-hover" style="width: 400px;">
-      <tbody>
-        {{#each managers.data as |manager|}}
-          <tr>
-            <td>
-              {{#link-to 'user' manager.user_name}}
-                <img src={{manager.avatar_url}} style="height: 30px;"/>
-                {{manager.user_name}}
-              {{/link-to}}
-            </td>
-            <td>
-              {{#if manager.org_manager}}
-                {{t "manager" key='manager'}}
-              {{else if manager.org_assistant}}
-                {{t "assistant" key='assistant'}}
-              {{/if}}
-            </td>
-            <td>
-              <a href='#' {{action "management_action" 'remove_manager' manager.id}} class="glyphicon glyphicon-remove"><span class='text-hide'>remove</span></a>
-            </td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  {{else if managers.loading}}
-    {{t "Loading managers..." key='loading_managers'}}
-  {{else}}
-    {{t "None found" key='none_found'}}
-  {{/if}}
-  <div>
-    {{input value=manager_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
-    <button class="btn btn-default btn-sm" {{action "management_action" 'add_manager'}}>{{t "Add Manager" key='add_manager'}}</button>
-    <button class="btn btn-default btn-sm" {{action "management_action" 'add_assistant'}}>{{t "Add Assistant" key='add_assistant'}}</button>
+  <div class="row">
+    <div class="col-sm-3 col-xs-6">
+      <div class="panel panel-default summary smaller">
+        <div class="panel-heading">
+          {{t "Last logged session" key='last_logged_session'}}
+        </div>
+        <div class="panel-body">
+          {{#if first_log}}
+            {{date_ago first_log.started_at}}
+          {{else}}
+            {{t "..." key='ellipsis'}}
+          {{/if}}
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3 col-xs-6">
+      <div class="panel panel-default summary smaller">
+        <div class="panel-heading">
+          {{t "Recent sessions" key='recent_sessions'}}
+        </div>
+        <div class="panel-body">
+          {{t "session" key='sessions' count=model.recent_session_count}}
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3 col-xs-6">
+      <div class="panel panel-default summary smaller">
+        <div class="panel-heading">
+          {{t "Recently-logged users" key='recently_logged_users'}}
+        </div>
+        <div class="panel-body">
+          {{t "user" key='users' count=model.recent_session_user_count}}
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3 col-xs-6">
+      <div class="panel panel-default summary smaller">
+        <div class="panel-heading">
+          {{t "Total users" key='total_users'}}
+        </div>
+        <div class="panel-body">
+          {{t "user" key='users' count=model.total_users}}
+        </div>
+      </div>
+    </div>
   </div>
-  
-  <h3>{{t "Communicators" key='communicators'}}</h3>
-  {{#if users.data}}
-    <table class="table table-hover" style="width: 400px;">
-      <tbody>
-        {{#each users.data as |user|}}
-          <tr>
-            <td>
-              {{#link-to 'user' user.user_name}}
-                <img src={{user.avatar_url}} style="height: 30px;"/>
-                {{user.user_name}}
-              {{/link-to}}
-              {{#if user.org_pending}}
-                <span style="vertical-align: middle;" class="text-muted">{{t "(pending)" key='pending'}}</span>
-              {{/if}}
-            </td>
-            <td>
-              <a href='#' {{action "management_action" 'remove_user' user.user_name}} class="glyphicon glyphicon-remove"><span class='text-hide'>remove</span></a>
-            </td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-    {{#if more_users}}
-      <p>
-        {{#link-to 'organization.reports' (query-params current_report='all_users')}}
-          {{t "See all users" key='see_all_users'}}
-        {{/link-to}}
-      </p>
+  <ul class='nav nav-pills' style="margin-bottom: 15px;">
+    {{#if model.admin}}
+      <li class={{if show_organizations 'active'}}><a href="#" {{action 'pick' 'organizations'}}>{{t "Organizations" key='organizations'}}</a></li>
     {{/if}}
-  {{else if users.loading}}
-    {{t "Loading users..." key='loading_users'}}
-  {{else}}
-    {{t "None found" key='none_found'}}
-  {{/if}}
-  <p>
-    {{model.used_licenses}} {{t "out of" key='out_of' }} {{model.total_licenses}} {{t "allotted licenses used" key='licenses_used'}}
-  </p>
-  {{#if model.licenses_available}}
-    <div>
-      {{input value=user_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
-      <button class="btn btn-default btn-sm" {{action "management_action" 'add_user'}}>{{t "Add User" key='add_user'}}</button>
+    <li class={{if show_managers 'active'}}><a href="#" {{action 'pick' 'managers'}}>{{t "Managers" key='managers'}}</a></li>
+    <li class={{if show_supervisors 'active'}}><a href="#" {{action 'pick' 'supervisors'}}>{{t "Supervisors" key='supervisors'}}</a></li>
+    <li class={{if show_communicators 'active'}}><a href="#" {{action 'pick' 'communicators'}}>{{t "Communicators" key='communicators'}}</a></li>
+  </ul>
+  {{#if show_managers}}
+    {{#if managers.data}}
+      <p>
+        {{t "manager" key='managers' count=model.total_managers}}
+      </p>
+      <table class="table table-hover" style="width: 400px;">
+        <tbody>
+          {{#each managers.data as |manager|}}
+            <tr>
+              <td style='font-size: 20px;'>
+                {{#link-to 'user' manager.user_name}}
+                  <img src={{manager.avatar_url}} style="height: 30px;"/>
+                  {{manager.user_name}}
+                {{/link-to}}
+              </td>
+              <td>
+                {{#if manager.org_manager}}
+                  {{t "manager" key='manager'}}
+                {{else if manager.org_assistant}}
+                  {{t "assistant" key='assistant'}}
+                {{/if}}
+              </td>
+              <td>
+                <a href='#' {{action "management_action" 'remove_manager' manager.id}} class="glyphicon glyphicon-remove"><span class='text-hide'>remove</span></a>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else if managers.loading}}
+      <p>{{t "Loading managers..." key='loading_managers'}}</p>
+    {{else}}
+      <p>{{t "None found" key='none_found'}}</p>
+    {{/if}}
+    <div style='margin-top: -15px;'>
+      {{input value=manager_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
+      <button class="btn btn-default btn-sm" {{action "management_action" 'add_manager'}}>{{t "Add Manager" key='add_manager'}}</button>
+      <button class="btn btn-default btn-sm" {{action "management_action" 'add_assistant'}}>{{t "Add Assistant" key='add_assistant'}}</button>
     </div>
   {{/if}}
 
-  {{#if model.admin}}
-    {{#if model.permissions.manage}}
-      <h3>{{t "Organizations" key='organizations'}}</h3>
-      {{#if orgs.data}}
-        <table class="table table-hover" style="width: 400px;">
-          <tbody>
-            {{#each orgs.data as |org|}}
-              <tr>
-                <td>
-                  {{#link-to 'organization' org.id}}
-                    <span class='glyphicon glyphicon-paperclip' style="font-size: 25px; vertical-align: middle;"></span>
-                    {{org.name}}
-                  {{/link-to}}
-                </td>
-                <td>
-                  {{#unless org.admin}}
-                    <a href='#' {{action "remove_org" org}} class="glyphicon glyphicon-remove"><span class='text-hide'>remove</span></a>
-                  {{/unless}}
-                </td>
-              </tr>
-            {{/each}}
-          </tbody>
-        </table>
-      {{else if orgs.loading}}
-        {{t "Loading organizations..." key='loading_orgs'}}
-      {{else}}
-        {{t "None found" key='none_found'}}
+  {{#if show_supervisors}}
+    {{#if supervisors.data}}
+      <p>
+        {{t "supervisor" key='supervisors' count=model.total_supervisors}}
+      </p>
+      <table class="table table-hover" style="width: 600px;">
+        <tbody>
+          {{#each supervisors.data as |user|}}
+            <tr>
+              <td style='font-size: 20px;'>
+                {{#link-to 'user' user.user_name}}
+                  <img src={{user.avatar_url}} style="height: 30px;"/>
+                  {{user.user_name}}
+                {{/link-to}}
+                {{#if user.org_supervision_pending}}
+                  <span style="vertical-align: middle;" class="text-muted">{{t "(pending)" key='pending'}}</span>
+                {{/if}}
+              </td>
+              <td style='font-size: 14px;'>
+                {{#each user.org_supervisees as |sup|}}
+                  {{#link-to 'user' sup.user_name}}{{sup.user_name}}{{/link-to}}<br/>
+                {{/each}}
+              </td>
+              <td>
+                <a href='#' {{action "management_action" 'remove_supervisor' user.user_name}} class="glyphicon glyphicon-remove"><span class='text-hide'>remove</span></a>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{#if more_supervisors}}
+        <p>
+          {{#link-to 'organization.reports' (query-params current_report='all_supervisors')}}
+            {{t "See all supervisors" key='see_all_supervisors'}}
+          {{/link-to}}
+        </p>
       {{/if}}
-      <div>
-        {{input value=org_org_name placeholder="org name" class="form-control inline inline-masquerade input-sm"}}
-        {{input value=org_user_name placeholder="admin user name" class="form-control inline inline-masquerade input-sm"}}
-        <button class="btn btn-default btn-sm" {{action "add_org"}}>{{t "Add Organization" key='add_org'}}</button>
+    {{else if supervisors.loading}}
+      <p>{{t "Loading supervisors..." key='loading_supervisors'}}</p>
+    {{else}}
+      <p>{{t "None found" key='none_found'}}</p>
+    {{/if}}
+    <div style='margin-top: -15px;'>
+      {{input value=supervisor_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
+      <button class="btn btn-default btn-sm" {{action "management_action" 'add_supervisor'}}>{{t "Add Supervisor" key='add_supervisor'}}</button>
+    </div>
+  {{/if}}
+
+  {{#if show_communicators}}
+    {{#if users.data}}
+      <p>
+        {{model.used_licenses}} {{t "out of" key='out_of' }}
+        {{model.total_licenses}} {{t "sponsorships used, " key='sponsored_comma' }}
+        {{t "user" key='users' count=model.total_users}} {{t "total" key='total'}}
+      </p>
+      <table class="table table-hover" style="width: 400px;">
+        <tbody>
+          {{#each users.data as |user|}}
+            <tr>
+              <td>
+                {{#link-to 'user' user.user_name}}
+                  <img src={{user.avatar_url}} style="height: 30px;"/>
+                  {{user.user_name}}
+                {{/link-to}}
+                {{#if user.org_pending}}
+                  <span style="vertical-align: middle;" class="text-muted">{{t "(pending)" key='pending'}}</span>
+                {{/if}}
+                {{#if user.org_sponsored}}
+                  <span style="vertical-align: middle;" class="text-muted">{{t "(sponsored)" key='sponsored'}}</span>
+                {{/if}}
+              </td>
+              <td>
+                <a href='#' {{action "management_action" 'remove_user' user.user_name}} class="glyphicon glyphicon-remove"><span class='text-hide'>remove</span></a>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{#if more_users}}
+        <p>
+          {{#link-to 'organization.reports' (query-params current_report='all_users')}}
+            {{t "See all users" key='see_all_users'}}
+          {{/link-to}}
+        </p>
+      {{/if}}
+    {{else if users.loading}}
+      <p>{{t "Loading users..." key='loading_users'}}</p>
+    {{else}}
+      <p>{{t "None found" key='none_found'}}</p>
+    {{/if}}
+    {{#if model.licenses_available}}
+      <div style='margin-top: -15px;'>
+        {{input value=user_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
+        <button class="btn btn-default btn-sm" {{action "management_action" 'add_user'}}>{{t "Add User" key='add_user'}}</button>
       </div>
     {{/if}}
   {{/if}}
+
+  {{#if show_organizations}}
+    {{#if model.admin}}
+      {{#if model.permissions.manage}}
+        {{#if orgs.data}}
+          <p>
+            {{t "organization" key='organizations' count=orgs.data.length}}
+          </p>
+          <table class="table table-hover" style="width: 400px;">
+            <tbody>
+              {{#each orgs.data as |org|}}
+                <tr>
+                  <td style='font-size: 20px;'>
+                    {{#link-to 'organization' org.id}}
+                      <span class='glyphicon glyphicon-paperclip' style="font-size: 25px; vertical-align: middle;"></span>
+                      {{org.name}}
+                    {{/link-to}}
+                  </td>
+                  <td>
+                    {{#unless org.admin}}
+                      <a href='#' {{action "remove_org" org}} class="glyphicon glyphicon-remove"><span class='text-hide'>remove</span></a>
+                    {{/unless}}
+                  </td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else if orgs.loading}}
+          {{t "Loading organizations..." key='loading_orgs'}}
+        {{else}}
+          {{t "None found" key='none_found'}}
+        {{/if}}
+        <div style='margin-top: -15px;'>
+          {{input value=org_org_name placeholder="org name" class="form-control inline inline-masquerade input-sm"}}
+          {{input value=org_user_name placeholder="admin user name" class="form-control inline inline-masquerade input-sm"}}
+          <button class="btn btn-default btn-sm" {{action "add_org"}}>{{t "Add Organization" key='add_org'}}</button>
+        </div>
+      {{/if}}
+    {{/if}}
+  {{/if}}
   {{#if model.permissions.manage}}
-    <h3>{{t "Recent Sessions" key='recent_sessions'}}</h3>
+    <h3 style='margin-top: 30px;'>{{t "Recent Sessions" key='recent_sessions'}}</h3>
     {{#if logs.data}}
       <ul class="list-unstyled">
       {{#each logs.data as |log|}}
         <li>
           <p>
-            {{#link-to 'user' log.user.user_name}}{{log.user.user_name}}{{/link-to}} - 
+            {{#link-to 'user' log.user.user_name}}{{log.user.user_name}}{{/link-to}} -
             <span title="{{unbound date log.started_at}}">
               {{date_ago log.started_at}}
             </span>
@@ -136,9 +252,9 @@
       {{/each}}
       </ul>
     {{else if logs.loading}}
-      {{t "Loading sessions..." key='loading_sessions'}}          
+      <p>{{t "Loading sessions..." key='loading_sessions'}}</p>
     {{else}}
-      {{t "None found" key='none_found'}}
+      <p>{{t "None found" key='none_found'}}</p>
     {{/if}}
   {{/if}}
 {{else}}

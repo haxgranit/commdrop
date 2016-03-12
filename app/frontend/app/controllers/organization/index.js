@@ -10,8 +10,10 @@ export default Ember.Controller.extend({
     this.set('users', {});
     this.set('logs', {});
     this.set('managers', {});
+    this.set('supervisors', {});
     this.refresh_users();
     this.refresh_managers();
+    this.refresh_supervisors();
     this.refresh_orgs();
     var id = this.get('model.id');
     if(this.get('model.permissions.manage')) {
@@ -25,6 +27,36 @@ export default Ember.Controller.extend({
       });
     }
   },
+  shown_view: function() {
+    if(this.get('selected_view')) {
+      return this.get('selected_view');
+    } else if(this.get('model.admin')) {
+      return 'organizations';
+    } else {
+      return 'managers';
+    }
+  }.property('selected_view', 'model.admin'),
+  show_organizations: function() {
+    return !!(this.get('shown_view') == 'organizations');
+  }.property('shown_view'),
+  show_managers: function() {
+    return !!(this.get('shown_view') == 'managers');
+  }.property('shown_view'),
+  show_communicators: function() {
+    return !!(this.get('shown_view') == 'communicators');
+  }.property('shown_view'),
+  show_supervisors: function() {
+    return !!(this.get('shown_view') == 'supervisors');
+  }.property('shown_view'),
+  first_log: function() {
+    return (this.get('logs.data') || [])[0];
+  }.property('logs.data'),
+  recent_users: function() {
+    return (this.get('logs.data') || []).map(function(e) { return e.user.id; }).uniq().length;
+  }.property('logs.data'),
+  recent_sessions: function() {
+    return (this.get('logs.data') || []).length;
+  }.property('logs.data'),
   refresh_orgs: function() {
     var _this = this;
     if(this.get('model.admin')) {
@@ -63,12 +95,29 @@ export default Ember.Controller.extend({
       _this.set('managers.data', null);
     });
   },
+  refresh_supervisors: function() {
+    var _this = this;
+    _this.set('supervisors.loading', true);
+    var id = _this.get('model.id');
+    persistence.ajax('/api/v1/organizations/' + id + '/supervisors', {type: 'GET', data: {recent: true}}).then(function(data) {
+      _this.set('supervisors.loading', null);
+      _this.set('supervisors.data', data.user);
+    }, function() {
+      _this.set('supervisors.loading', null);
+      _this.set('supervisors.data', null);
+    });
+  },
   actions: {
+    pick: function(view) {
+      this.set('selected_view', view);
+    },
     management_action: function(action, user_name) {
       var model = this.get('model');
       var _this = this;
       if(action == 'add_manager' || action == 'add_assistant') {
         user_name = this.get('manager_user_name');
+      } else if(action == 'add_supervisor') {
+        user_name = this.get('supervisor_user_name');
       } else if(action == 'add_user') {
         user_name = this.get('user_user_name');
       }
@@ -78,6 +127,8 @@ export default Ember.Controller.extend({
           _this.refresh_users();
         } else if(action.match(/manager/)) {
           _this.refresh_managers();
+        } else if(action.match(/supervisor/)) {
+          _this.refresh_supervisors();
         }
       }, function(err) {
         console.log(err);

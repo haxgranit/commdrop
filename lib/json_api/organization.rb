@@ -17,9 +17,17 @@ module JsonApi::Organization
     
     if json['permissions'] && json['permissions']['edit']
       json['allotted_licenses'] = org.settings['total_licenses'] || 0
-      json['used_licenses'] = org.users.count
+      json['used_licenses'] = org.sponsored_users.count
+      json['total_users'] = org.users.count
       json['total_managers'] = org.managers.count
+      json['total_supervisors'] = org.supervisors.count
       json['created'] = org.created_at.iso8601
+      recent_sessions = LogSession.where(['started_at > ?', 2.weeks.ago])
+      if !org.admin?
+        recent_sessions = recent_sessions.where(:user_id => org.users.map(&:id))
+      end
+      json['recent_session_count'] = recent_sessions.count
+      json['recent_session_user_count'] = recent_sessions.distinct.count('user_id')
     end
     
     json

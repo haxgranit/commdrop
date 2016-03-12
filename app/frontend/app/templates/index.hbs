@@ -259,7 +259,12 @@
         <div style="margin-left: 20px;">
           {{#if app_state.currentUser.pending_org}}
             <p>
-              {{#link-to 'user' app_state.currentUser.user_name}}<span class="glyphicon glyphicon-paperclip"></span>{{t "%{org} wants to support this user as part of their organization." key='remind_pending_org' org=app_state.currentUser.pending_org.name}}{{/link-to}}
+              {{#link-to 'user' app_state.currentUser.user_name}}<span class="glyphicon glyphicon-paperclip"></span> {{t "%{org} wants to support this user as part of their organization." key='remind_pending_org' org=app_state.currentUser.pending_org.name}}{{/link-to}}
+            </p>
+          {{/if}}
+          {{#if app_state.currentUser.pending_supervision_org}}
+            <p>
+              {{#link-to 'user' app_state.currentUser.user_name}}<span class="glyphicon glyphicon-paperclip"></span> {{t "%{org} wants to add you as a supervisor to their organization." key='remind_pending_supervision_org' org=app_state.currentUser.pending_supervision_org.name}}{{/link-to}}
             </p>
           {{/if}}
           {{#if app_state.currentUser.pending_board_shares}}
