@@ -271,7 +271,7 @@ describe Supervising, :type => :model do
       expect(o.reload.pending_supervisor?(u.reload)).to eq(true)
       expect(o.reload.supervisor?(u)).to eq(true)
       u.reload.process({'supervisor_key' => "approve_supervision-#{o.global_id}"})
-      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.pending_supervisor?(u)).to eq(false)
       expect(o.reload.supervisor?(u)).to eq(true)
     end
     
@@ -283,7 +283,7 @@ describe Supervising, :type => :model do
       expect(o.reload.pending_supervisor?(u.reload)).to eq(true)
       expect(o.reload.supervisor?(u)).to eq(true)
       u.reload.process({'supervisor_key' => "approve_supervision-#{o.global_id}"})
-      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.pending_supervisor?(u)).to eq(false)
       expect(o.reload.supervisor?(u)).to eq(true)
       
       expect(u.process_supervisor_key("approve_supervision-#{o.global_id}")).to eq(true)
@@ -297,11 +297,11 @@ describe Supervising, :type => :model do
       expect(o.reload.pending_supervisor?(u.reload)).to eq(true)
       expect(o.reload.supervisor?(u)).to eq(true)
       u.reload.process({'supervisor_key' => "approve_supervision-#{o.global_id}"})
-      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.pending_supervisor?(u)).to eq(false)
       expect(o.reload.supervisor?(u)).to eq(true)
       
       expect(u.process_supervisor_key("remove_supervision-#{o.global_id}")).to eq(true)
-      expect(o.reload.pending_supervisor?(u.reload)).to eq(false)
+      expect(o.reload.pending_supervisor?(u)).to eq(false)
       expect(o.reload.supervisor?(u)).to eq(false)
     end
     

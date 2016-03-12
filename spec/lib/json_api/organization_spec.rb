@@ -38,5 +38,38 @@ describe JsonApi::Organization do
       expect(res['used_licenses']).to eq(0)
     end
     
+    it "should include basic tallies" do
+      o = Organization.create(:settings => {'total_licenses' => 4})
+      u = User.create
+      u2 = User.create
+      u3 = User.create
+      o.add_manager(u.user_name, true)
+      o.add_user(u2.user_name, false)
+      o.add_user(u3.user_name, true)
+      u.reload
+
+      d = Device.create(:user => u2)
+      now = Time.now.to_i
+      params = {
+        'events' => [
+          {'id' => 'abc', 'type' => 'button', 'button' => {'label' => 'I', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 10, },
+          {'id' => 'qwe', 'type' => 'button', 'button' => {'label' => 'like', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 8},
+          {'id' => 'wer', 'type' => 'button', 'button' => {'label' => 'ok go', 'board' => {'id' => '1_1'}}, 'timestamp' => now}
+        ]
+      }
+      l = LogSession.process_new(params, {
+        :user => u2,
+        :author => u2,
+        :device => d
+      })
+
+      res = JsonApi::Organization.build_json(o.reload, :permissions => u)
+      expect(res['total_users']).to eq(2)
+      expect(res['total_supervisors']).to eq(0)
+      expect(res['total_managers']).to eq(1)
+      expect(res['used_licenses']).to eq(2)
+      expect(res['recent_session_count']).to eq(1)
+      expect(res['recent_session_user_count']).to eq(1)
+    end
   end
 end

@@ -376,6 +376,32 @@ describe JsonApi::User do
         expect(hash['permissions']).not_to eq(nil)
         expect(hash['supervisees']).to eq(nil)
       end
+      
+      it "should include org-added supervisees in paginated list if for an organization" do
+        u = User.create
+        u2 = User.create
+        u3 = User.create
+        User.link_supervisor_to_user(u, u2)
+        User.link_supervisor_to_user(u, u3)
+        o = Organization.create(:settings => {'total_licenses' => 4})
+        o.add_supervisor(u.user_name, true)
+        o.add_user(u2.user_name, false)
+        
+        list = JsonApi::User.paginate({}, [u.reload], {:limited_identity => true, :organization => o.reload, :prefix => '/asdf'})
+        expect(list['user'].length).to eq(1)
+        expect(list['user'][0]['org_supervision_pending']).to eq(true)
+        expect(list['user'][0]['org_supervisees']).to eq(nil)
+        expect(list['user'][0]['supervisees']).to eq(nil)
+        
+        o.add_supervisor(u.user_name, false)
+        list = JsonApi::User.paginate({}, [u.reload], {:limited_identity => true, :organization => o.reload, :prefix => '/asdf'})
+        expect(list['user'].length).to eq(1)
+        expect(list['user'][0]['org_supervision_pending']).to eq(false)
+        expect(list['user'][0]['supervisees']).to eq(nil)
+        expect(list['user'][0]['org_supervisees']).to_not eq(nil)
+        expect(list['user'][0]['org_supervisees'].length).to eq(1)
+        expect(list['user'][0]['org_supervisees'][0]['user_name']).to eq(u2.user_name)
+      end
     end
     
     it "should include any pending board shares" do
