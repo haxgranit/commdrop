@@ -25,6 +25,9 @@
     color: #ccc;
   }
 }
+#within_ember.color_white {
+  background: #fff;
+}
 header:after {
   clear: left;
 }
@@ -1991,15 +1994,19 @@ span.hidden-xs {
 
 body:fullscreen {
   width: 100%;
+  background: #fff;
 }
 body:-webkit-full-screen {
   width: 100%;
+  background: #fff;
 }
 body:-moz-full-screen {
   width: 100%;
+  background: #fff;
 }
 body:-ms-fullscreen {
   width: 100%;
+  background: #fff;
 }
  
 
