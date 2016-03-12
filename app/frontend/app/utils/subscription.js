@@ -45,7 +45,7 @@ var Subscription = Ember.Object.extend({
     this.set('finalizing_purchase', false);
     this.set('purchase_complete', false);
     this.set('canceling', false);
-    
+
     var now = window.moment()._d;
     var sale = new Date(CoughDrop.sale * 1000);
     if(sale && now && sale > now) {
@@ -56,15 +56,15 @@ var Subscription = Ember.Object.extend({
     if(this.get('user')) {
       var u = this.get('user');
       var plan = u.get('subscription.plan_id');
-      
+
       this.set('email', u.get('email'));
-      
+
       if(u.get('preferences.role') == 'supporter') {
         this.set('user_type', 'supporter');
       } else if(['therapist', 'parent'].indexOf(u.get('preferences.registration_type')) >= 0) {
         this.set('user_type', 'supporter');
       }
-      
+
       if(u.get('subscription.expires')) {
         var expires = window.moment(u.get('subscription.expires'));
         var now = window.moment(new Date());
@@ -293,10 +293,10 @@ var Subscription = Ember.Object.extend({
       if(this.get('user.subscription.never_expires')) {
         return "free forever";
       } else {
-        return "no plan"; 
+        return "no plan";
       }
     }
-    var pieces = plan.split(/_/);
+    var pieces = plan.replace(/_plus_trial/, '').split(/_/);
     var amount = pieces.pop();
     if(amount != 'free') { amount = '$' + amount; }
     var type = "communicator ";
@@ -331,7 +331,7 @@ Subscription.reopenClass({
     $div.append(script);
     var config = document.createElement('script');
     document.body.appendChild($div[0]);
-    
+
     var check_for_ready = function() {
       if(window.StripeCheckout) {
         Subscription.handler = window.StripeCheckout.configure({
@@ -362,12 +362,12 @@ Subscription.reopenClass({
         setTimeout(check_for_ready, 500);
       }
     };
-    
+
     check_for_ready();
   },
   purchase: function(subscription) {
-    if(!window.StripeCheckout || !Subscription.handler) { 
-      alert('not ready'); 
+    if(!window.StripeCheckout || !Subscription.handler) {
+      alert('not ready');
       return Ember.RSVP.reject({error: "not ready"});
     }
     if(subscription.get('subscription_amount').match(/free/)) {
