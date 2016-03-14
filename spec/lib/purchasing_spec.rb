@@ -50,6 +50,47 @@ describe Purchasing do
       expect(res[:data]).to eq({:valid => false, :type => 'bacon', :event_id => 'asdf'})
     end
     
+    it "should update a user when their metadata changed" do
+      u1 = User.create
+      u2 = User.create
+      u1.settings['subscription'] = {'customer_id' => 'abacus'}
+      o = OpenStruct.new(:metadata => {'user_id' => u2.global_id})
+      expect(Stripe::Customer).to receive(:retrieve).with('abacus').and_return(o)
+      expect(User).to receive(:find_by_global_id).with(u1.global_id).and_return(u1)
+      expect(User).to receive(:find_by_global_id).with(u2.global_id).and_return(u2)
+      expect(u1).to receive(:transfer_subscription_to).with(u2, true)
+      stripe_event_request('customer.updated', {
+        'id' => 'abacus',
+        'metadata' => {
+          'user_id' => u2.global_id
+        }
+      }, {
+        'metadata' => {
+          'user_id' => u1.global_id
+        }
+      })
+    end
+    
+    it "should not update a user when their metadata change has already been updated" do
+      u1 = User.create
+      u2 = User.create
+      o = OpenStruct.new(:metadata => {'user_id' => u2.global_id})
+      expect(Stripe::Customer).to receive(:retrieve).with('abacus').and_return(o)
+      expect(User).to receive(:find_by_global_id).with(u1.global_id).and_return(u1)
+      expect(User).to receive(:find_by_global_id).with(u2.global_id).and_return(u2)
+      expect(u1).to_not receive(:transfer_subscription_to)
+      stripe_event_request('customer.updated', {
+        'id' => 'abacus',
+        'metadata' => {
+          'user_id' => u2.global_id
+        }
+      }, {
+        'metadata' => {
+          'user_id' => u1.global_id
+        }
+      })
+    end
+            
     describe "charge.succeeded" do
       it "should trigger a purchase event" do
         u = User.create
@@ -489,6 +530,31 @@ describe Purchasing do
     end
   end
   
+  describe "change_user_id" do
+    it "should error if no customer found" do
+      expect(Stripe::Customer).to receive(:retrieve).with('1234').and_return(nil)
+      expect { Purchasing.change_user_id('1234', '111', '222') }.to raise_error('customer not found')
+    end
+    
+    it "should error if customer doesn't match what's expected" do
+      o = OpenStruct.new(:metadata => {})
+      expect(Stripe::Customer).to receive(:retrieve).with('1234').and_return(o)
+      expect { Purchasing.change_user_id('1234', '111', '222') }.to raise_error('wrong existing user_id')
+      
+      o.metadata['user_id'] = '222'
+      expect(Stripe::Customer).to receive(:retrieve).with('1234').and_return(o)
+      expect { Purchasing.change_user_id('1234', '111', '222') }.to raise_error('wrong existing user_id')
+    end
+    
+    it "should update the customer correctly" do
+      o = OpenStruct.new(:metadata => {'user_id' => '111'})
+      expect(Stripe::Customer).to receive(:retrieve).with('1234').and_return(o)
+      expect(o).to receive(:save)
+      Purchasing.change_user_id('1234', '111', '222')
+      expect(o.metadata['user_id']).to eq('222')
+    end
+  end
+  
   describe "cancel_other_subscriptions" do
     it "should return false if no customer found" do
       u = User.create
@@ -720,5 +786,4 @@ describe Purchasing do
       expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting subscription update'])
     end
   end
-  
 end

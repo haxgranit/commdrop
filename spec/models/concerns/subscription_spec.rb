@@ -224,7 +224,7 @@ describe Subscription, :type => :model do
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_assigned, u.global_id, o.global_id)
       u.update_subscription_organization(o.global_id)
       expect(u.settings['subscription']['added_to_organization']).to eql(Time.now.iso8601)
-      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'update_subscription', 'arguments' => [{'pause' => true}]})).to eq(true)
+      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'process_subscription_token', 'arguments' => ['token', 'unsubscribe']})).to eq(true)
     end
     
     it "should notify when org is removed" do
@@ -282,7 +282,7 @@ describe Subscription, :type => :model do
       expect(u.settings['subscription']['org_pending']).to eq(true)
       expect(u.expires_at).to eq(nil)
       expect(u.settings['subscription']['added_to_organization']).to eql(Time.now.iso8601)
-      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'update_subscription', 'arguments' => [{'pause' => true}]})).to eq(true)
+      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'subscription_token', 'arguments' => ['token', 'unsubscribe']})).to eq(false)
     end
 
     it "should allow adding an unsponsored user to an org" do
@@ -293,7 +293,40 @@ describe Subscription, :type => :model do
       expect(u.settings['subscription']['org_sponsored']).to eq(false)
       expect(u.expires_at).to_not eq(nil)
       expect(u.settings['subscription']['added_to_organization']).to eql(Time.now.iso8601)
-      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'update_subscription', 'arguments' => [{'pause' => true}]})).to eq(false)
+      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'subscription_token', 'arguments' => ['token', 'unsubscribe']})).to eq(false)
+    end
+    
+    it "should cancel a user's monthly subscription when they accept an invitation to be sponsored by an org" do
+      u = User.create
+      o = Organization.create(:settings => {'total_licenses' => 2})
+      u.update_subscription_organization(o.global_id, false, true)
+      expect(Worker.scheduled?(User, :perform_action, {
+        'id' => u.id,
+        'method' => 'process_subscription_token',
+        'arguments' => ['token', 'unsubscribe']
+      })).to eq(true)
+    end
+  
+    it "should not cancel a user's monthly subscription when they are invited to be sponsored by an org" do
+      u = User.create
+      o = Organization.create(:settings => {'total_licenses' => 2})
+      u.update_subscription_organization(o.global_id, true, true)
+      expect(Worker.scheduled?(User, :perform_action, {
+        'id' => u.id,
+        'method' => 'process_subscription_token',
+        'arguments' => ['token', 'unsubscribe']
+      })).to eq(false)
+    end
+  
+    it "should not cancel a users's monthly subscription when they accept an unsponsored invitation to be added by an org" do
+      u = User.create
+      o = Organization.create(:settings => {'total_licenses' => 2})
+      u.update_subscription_organization(o.global_id, false, false)
+      expect(Worker.scheduled?(User, :perform_action, {
+        'id' => u.id,
+        'method' => 'process_subscription_token',
+        'arguments' => ['token', 'unsubscribe']
+      })).to eq(false)
     end
   end
   
@@ -890,6 +923,79 @@ describe Subscription, :type => :model do
       u = User.new
       expect(u.subscription_override('bacon')).to eq(false)
       expect(u.subscription_override('slp_monthly_free')).to eq(false)
+    end
+  end
+  
+#   def transfer_subscription_to(user, skip_remote_update=false)
+#     transfer_keys = ['started', 'plan_id', 'subscription_id', 'token_summary', 'free_premium', 
+#       'never_expires', 'seconds_left', 'customer_id', 'prior_customer_ids', 'prior_purchase_ids']
+#     did_change = false
+#     transfer_keys.each do |key|
+#       self.settings['subscription'] ||= {}
+#       user.settings['subscription'] ||= {}
+#       if self.settings['subscription'][key] != nil
+#         did_change = true if ['subscription_id', 'customer_id'].include?(key)
+#         user.settings['subscription'][key] = self.settings['subscription'][key]
+#         self.settings['subscription'].delete(key)
+#       end
+#     end
+#     if did_change && !skip_remote_update
+#       Purchasing.change_user_id(user.settings['subscription']['customer_id'], self.global_id, user.global_id)
+#     end
+#     user.settings['subscription']['transferred_from'] ||= []
+#     user.settings['subscription']['transferred_from'] << self.global_id
+#     user.save
+#     self.settings['subscription']['transferred_to'] ||= []
+#     self.settings['subscription']['transferred_to'] << user.global_id
+#     self.save
+#   end
+
+  describe "transfer_subscription_to" do
+    it "should move attributes from one user to another" do
+      u1 = User.create
+      u2 = User.create
+      u1.settings['subscription'] = {
+        'bacon' => '1234',
+        'started' => 1234,
+        'token_summary' => 'asdfjkl',
+        'never_expires' => true
+      }
+      u1.transfer_subscription_to(u2)
+      expect(u1.settings['subscription']).to eq({
+        'transferred_to' => [u2.global_id],
+        'bacon' => '1234'
+      })
+      expect(u2.settings['subscription']).to eq({
+        'started' => 1234,
+        'token_summary' => 'asdfjkl',
+        'never_expires' => true, 
+        'transferred_from' => [u1.global_id]
+      })
+    end
+    
+    it "should update the metadata on the subscription customer if there is one" do
+      u1 = User.create
+      u2 = User.create
+      u1.settings['subscription'] = {
+        'bacon' => '1234',
+        'started' => 1234,
+        'token_summary' => 'asdfjkl',
+        'never_expires' => true,
+        'customer_id' => '222222'
+      }
+      expect(Purchasing).to receive(:change_user_id).with('222222', u1.global_id, u2.global_id)
+      u1.transfer_subscription_to(u2)
+      expect(u1.settings['subscription']).to eq({
+        'transferred_to' => [u2.global_id],
+        'bacon' => '1234'
+      })
+      expect(u2.settings['subscription']).to eq({
+        'started' => 1234,
+        'customer_id' => '222222',
+        'token_summary' => 'asdfjkl',
+        'never_expires' => true, 
+        'transferred_from' => [u1.global_id]
+      })
     end
   end
 end

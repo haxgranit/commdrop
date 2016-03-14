@@ -48,6 +48,17 @@ module Purchasing
           end
           data = {:dispute => true, :notified => true, :valid => !!valid}
         end
+      elsif event['type'] == 'customer.updated'
+        customer = Stripe::Customer.retrieve(object['id'])
+        valid = customer && customer['metadata'] && customer['metadata']['user_id']
+        previous = event['data'] && event['data']['previous_attributes'] && event['data']['previous_attributes']['metadata'] && event['data']['previous_attributes']['metadata']['user_id']
+        if valid && previous
+          prior_user = User.find_by_global_id(previous)
+          new_user = User.find_by_global_id(valid)
+          if prior_user && new_user && prior_user.settings['subscription'] && prior_user.settings['subscription']['customer_id'] == object['id']
+            prior_user.transfer_subscription_to(new_user, true)
+          end
+        end
       elsif event['type'] == 'customer.subscription.created'
         customer = Stripe::Customer.retrieve(object['customer'])
         valid = customer && customer['metadata'] && customer['metadata']['user_id'] && object['plan'] && object['plan']['id']
@@ -334,6 +345,17 @@ module Purchasing
       {success: true, redeemed: true, code: code}
     else
       {success: false, error: "unexpected_error"}
+    end
+  end
+  
+  def self.change_user_id(customer_id, from_user_id, to_user_id)
+    customer = Stripe::Customer.retrieve(customer_id) rescue nil
+    if customer
+      raise "wrong existing user_id" unless customer.metadata && customer.metadata['user_id'] == from_user_id
+      customer.metadata['user_id'] = to_user_id
+      customer.save
+    else
+      raise "customer not found"
     end
   end
   
