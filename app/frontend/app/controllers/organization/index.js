@@ -11,10 +11,12 @@ export default Ember.Controller.extend({
     this.set('logs', {});
     this.set('managers', {});
     this.set('supervisors', {});
+    this.set('selected_view', null);
     this.refresh_users();
     this.refresh_managers();
     this.refresh_supervisors();
     this.refresh_orgs();
+    this.refresh_stats();
     var id = this.get('model.id');
     if(this.get('model.permissions.manage')) {
       this.set('logs.loading', true);
@@ -57,6 +59,17 @@ export default Ember.Controller.extend({
   recent_sessions: function() {
     return (this.get('logs.data') || []).length;
   }.property('logs.data'),
+  no_licenses: function() {
+    return !this.get('model.licenses_available');
+  }.property('model.licenses_available'),
+  refresh_stats: function() {
+    var _this = this;
+    persistence.ajax('/api/v1/organizations/' + this.get('model.id') + '/stats', {type: 'GET'}).then(function(stats) {
+      _this.set('weekly_stats', stats);
+    }, function() {
+      _this.set('weekly_stats', {error: true});
+    });
+  },
   refresh_orgs: function() {
     var _this = this;
     if(this.get('model.admin')) {
@@ -118,7 +131,7 @@ export default Ember.Controller.extend({
         user_name = this.get('manager_user_name');
       } else if(action == 'add_supervisor') {
         user_name = this.get('supervisor_user_name');
-      } else if(action == 'add_user') {
+      } else if(action == 'add_user' || action == 'add_unsponsored_user') {
         user_name = this.get('user_user_name');
       }
       model.set('management_action', action + '-' + user_name);
