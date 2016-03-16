@@ -53,13 +53,19 @@ CoughDrop.User = DS.Model.extend({
   pending_board_shares: DS.attr('raw'),
   edit_permission: DS.attr('boolean'),
   has_management_responsibility: function() {
-    return !!(this.get('organizations') || []).find(function(o) { return o.type == 'manager'; });
-  }.property('organizations'),
+    return this.get('managed_orgs').length > 0;
+  }.property('managed_orgs'),
   is_managed: function() {
     return !!(this.get('organizations') || []).find(function(o) { return o.type == 'user'; });
   }.property('organizations'),
   managing_org: function() {
     return (this.get('organizations') || []).find(function(o) { return o.type == 'user'; });
+  }.property('managing_orgs'),
+  manages_multiple_orgs: function() {
+    return this.get('managed_orgs').length > 1;
+  }.property('managing_orgs'),
+  managed_orgs: function() {
+    return (this.get('organizations') || []).filter(function(o) { return o.type == 'manager'; });
   }.property('organizations'),
   managing_supervision_orgs: function() {
     return (this.get('organizations') || []).filter(function(o) { return o.type == 'supervisor'; });

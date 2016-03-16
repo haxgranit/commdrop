@@ -197,10 +197,23 @@
           </span>
         </a>
         {{#if app_state.currentUser.has_management_responsibility}}
-          {{#link-to 'admin' class="list-group-item half_size"}}
-            <span class="glyphicon glyphicon-paperclip"></span>
-            {{t "Organization Management" key='org_management'}}<br/>
-          {{/link-to}}
+          {{#if app_state.currentUser.manages_multiple_orgs}}
+            <a class="list-group-item half_size">
+              <span class="glyphicon glyphicon-paperclip"></span>
+              {{#each app_state.currentUser.managed_orgs as |org|}}
+                <span style="margin-right: 10px;">
+                  {{#link-to 'organization' org.id}}
+                    {{org.name}}
+                  {{/link-to}}
+                </span>
+              {{/each}}
+            </a>
+          {{else}}
+            {{#link-to 'admin' class="list-group-item half_size"}}
+              <span class="glyphicon glyphicon-paperclip"></span>
+              {{t "Organization Management" key='org_management'}}<br/>
+            {{/link-to}}
+          {{/if}}
         {{/if}}
 
       </div>

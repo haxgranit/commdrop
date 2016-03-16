@@ -8,6 +8,7 @@ export default Ember.Controller.extend({
     if(this.get('model.permissions.edit')) {
       var list = [{id: 'select', name: i18n.t('select_report_prompt', "[ Select a Report ]")}];
       list.push({id: 'all_users', name: i18n.t('all_users', "All organization communicators") });
+      list.push({id: 'all_supervisors', name: i18n.t('all_supervisors', "All organization supervisors") });
       if(this.get('model.permissions.manage')) {
         list.push({id: 'recent_sessions', name: i18n.t('recent_sessions', "Recent user sessions") });
       }
@@ -81,13 +82,15 @@ export default Ember.Controller.extend({
           }
         }, function(err) {
           _this.set('results.loading', false);
-          _this.seT('results.error', {error: err.error || i18n.t('unexpected_error', "Unexpected error")});
+          _this.set('results.error', {error: err.error || i18n.t('unexpected_error', "Unexpected error")});
         });
       };
       if(this.get('current_report') == 'recent_sessions') {
         next_page('/api/v1/organizations/' + _this.get('model.id') + '/logs', 100);
       } else if(this.get('current_report') == 'all_users') {
         next_page('/api/v1/organizations/' + _this.get('model.id') + '/users');
+      } else if(this.get('current_report') == 'all_supervisors') {
+        next_page('/api/v1/organizations/' + _this.get('model.id') + '/supervisors');
       } else {
         next_page('/api/v1/organizations/' + _this.get('model.id') + '/admin_reports?report=' + _this.get('current_report'));
       }

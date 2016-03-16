@@ -18,7 +18,7 @@ export default Ember.Component.extend({
         ];
         var not_recent = total - recent;
         table.push(["Users with Session(s) in Last 2 Weeks", recent]);
-        table.push(["No Recent Sessions", not_recent]);
+        table.push(["Users without Recent Sessions", not_recent]);
         var data = window.google.visualization.arrayToDataTable(table);
 
         var options = {
