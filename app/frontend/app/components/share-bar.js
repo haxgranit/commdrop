@@ -2,6 +2,7 @@ import Ember from 'ember';
 import coughDropExtras from '../utils/extras';
 import app_state from '../utils/app_state';
 import modal from '../utils/modal';
+import capabilities from '../utils/capabilities';
 import i18n from '../utils/i18n';
 
 export default Ember.Component.extend({

@@ -39,16 +39,16 @@ export default Ember.Controller.extend({
     }
   }.property('selected_view', 'model.admin'),
   show_organizations: function() {
-    return !!(this.get('shown_view') == 'organizations');
+    return this.get('shown_view') == 'organizations';
   }.property('shown_view'),
   show_managers: function() {
-    return !!(this.get('shown_view') == 'managers');
+    return this.get('shown_view') == 'managers';
   }.property('shown_view'),
   show_communicators: function() {
-    return !!(this.get('shown_view') == 'communicators');
+    return this.get('shown_view') == 'communicators';
   }.property('shown_view'),
   show_supervisors: function() {
-    return !!(this.get('shown_view') == 'supervisors');
+    return this.get('shown_view') == 'supervisors';
   }.property('shown_view'),
   first_log: function() {
     return (this.get('logs.data') || [])[0];

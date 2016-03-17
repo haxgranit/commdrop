@@ -28,7 +28,7 @@ export default Ember.Controller.extend({
   },
   image_url: function() {
     var index = this.get('image_index');
-    if(index == undefined) {
+    if(index === undefined) {
       return this.get('model.image_url');
     }
 
@@ -56,7 +56,7 @@ export default Ember.Controller.extend({
     },
     change_image: function(direction) {
       var index = this.get('image_index');
-      if(index == undefined) {
+      if(index === undefined) {
         var _this = this;
         var image_url = _this.get('model.image_url');
         if(image_url == _this.get('model.large_image_url')) {

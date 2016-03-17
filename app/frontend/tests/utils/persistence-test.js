@@ -42,7 +42,7 @@ describe("persistence", function() {
   afterEach(function() {
     capabilities.dbman = dbman;
   });
-  
+
   var board = null;
   function push_board(callback) {
     db_wait(function() {
@@ -146,7 +146,7 @@ describe("persistence", function() {
         });
       });
     });
-    it("should not return the found result if too old", function() {
+    it("should mark the result if too old", function() {
       db_wait(function() {
         var rnd = persistence.temporary_id();
         var record = null;
@@ -163,7 +163,7 @@ describe("persistence", function() {
           setTimeout(function() {
             coughDropExtras.storage.store('settings', ids, 'importantIds').then(function() {
               setTimeout(function() {
-                persistence.find('settings', 'hat').then(null, function(res) {
+                persistence.find('settings', 'hat').then(function(res) {
                   record = res;
                 });
               }, 10);
@@ -172,7 +172,7 @@ describe("persistence", function() {
         });
         waitsFor(function() { return record; });
         runs(function() {
-          expect(record.error).toEqual("record not found");
+          expect(record.outdated).toEqual(true);
         });
       });
     });
@@ -203,6 +203,8 @@ describe("persistence", function() {
         waitsFor(function() { return record; });
         runs(function() {
           expect(record.hat).toEqual(rnd);
+          expect(record.important).toEqual(true);
+          expect(record.outdated).toEqual(true);
         });
       });
     });
@@ -212,11 +214,11 @@ describe("persistence", function() {
     it("should stash accesses", function() {
       stashes.persist('recent_boards', []);
       persistence.remember_access('find', 'board', 'bob/cool');
-      expect(stashes.get('recent_boards')).toEqual([{id: 'bob/cool'}]); 
+      expect(stashes.get('recent_boards')).toEqual([{id: 'bob/cool'}]);
       persistence.remember_access('find', 'board', 'bob/cool2');
-      expect(stashes.get('recent_boards')).toEqual([{id: 'bob/cool2'}, {id: 'bob/cool'}]); 
+      expect(stashes.get('recent_boards')).toEqual([{id: 'bob/cool2'}, {id: 'bob/cool'}]);
       persistence.remember_access('find', 'board', 'bob/cool2');
-      expect(stashes.get('recent_boards')).toEqual([{id: 'bob/cool2'}, {id: 'bob/cool'}]); 
+      expect(stashes.get('recent_boards')).toEqual([{id: 'bob/cool2'}, {id: 'bob/cool'}]);
     });
   });
 
@@ -319,7 +321,7 @@ describe("persistence", function() {
       });
     });
   });
-  
+
   describe("store", function() {
     it("should store a record", function() {
       db_wait(function() {
@@ -338,7 +340,7 @@ describe("persistence", function() {
         });
       });
     });
-    
+
     it("should not reject (but log an error) on a failed storage attempt", function() {
       db_wait(function() {
         stub(coughDropExtras.storage, 'store', function(store, record, key) {
@@ -359,7 +361,7 @@ describe("persistence", function() {
         });
       });
     });
-    
+
     it("should store images and sounds for stored board records", function() {
       db_wait(function() {
         var record = {
@@ -426,7 +428,7 @@ describe("persistence", function() {
       var res = persistence.store_url("data:bacon");
       expect(res.then).not.toEqual(null);
     });
-    
+
     it("should resolve immediately on a data_uri", function() {
       var done = false;
       var res = persistence.store_url("data:bacon").then(function() {
@@ -435,7 +437,7 @@ describe("persistence", function() {
       waitsFor(function() { return done; });
       runs();
     });
-    
+
     it("should make an API call to proxy the URL", function() {
       stub(persistence, 'ajax', function(options) {
         return Ember.RSVP.resolve({
@@ -457,7 +459,7 @@ describe("persistence", function() {
         });
       });
     });
-    
+
     it("should store the API results in the dataCache table", function() {
       db_wait(function() {
         stub(persistence, 'ajax', function(options) {
@@ -484,7 +486,7 @@ describe("persistence", function() {
         runs();
       });
     });
-    
+
     it("should error on a failed API call", function() {
       db_wait(function() {
         stub(persistence, 'ajax', function(options) {
@@ -699,7 +701,7 @@ describe("persistence", function() {
             local = obj;
             return Ember.RSVP.resolve(obj);
           });
-          
+
           var result = null;
           CoughDrop.store.find('board', '9876').then(function(res) {
             result = res;
@@ -711,7 +713,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should skip straight to a db lookup when offline", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -727,7 +729,7 @@ describe("persistence", function() {
                 name: 'Cool Board'
             }});
           });
-          
+
           var result = null;
           CoughDrop.store.find('board', '9876').then(function(res) {
             result = res;
@@ -740,7 +742,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should skip straight to a db lookup when finding a local id", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -755,7 +757,7 @@ describe("persistence", function() {
                 name: 'Cool Board'
             }});
           });
-          
+
           var result = null;
           CoughDrop.store.find('board', 'tmp_abcd').then(function(res) {
             result = res;
@@ -768,7 +770,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should reject if offline and not found in the local db", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -781,7 +783,7 @@ describe("persistence", function() {
           stub(persistence, 'find', function(store, key) {
             return Ember.RSVP.reject({});
           });
-          
+
           var result = null;
           CoughDrop.store.find('board', '8765').then(null, function(res) {
             result = res;
@@ -793,7 +795,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should find a locally-created record while offline", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -805,7 +807,7 @@ describe("persistence", function() {
           board.save().then(function(res) {
             record = res;
           });
-          
+
           waitsFor(function() { return record; });
           runs(function() {
             setTimeout(function() {
@@ -836,7 +838,7 @@ describe("persistence", function() {
           runs();
         });
       });
-      
+
       it("should persist to the local db if successfully created online", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -871,7 +873,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should store a version locally if offline", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -883,7 +885,7 @@ describe("persistence", function() {
           board.save().then(function(res) {
             record = res;
           });
-          
+
           waitsFor(function() { return record; });
           runs(function() {
             setTimeout(function() {
@@ -912,7 +914,7 @@ describe("persistence", function() {
           board.save().then(function(res) {
             record = res;
           });
-          
+
           var raw = null;
           waitsFor(function() { return record; });
           runs(function() {
@@ -929,8 +931,8 @@ describe("persistence", function() {
           });
         });
       });
-      
-      it("should store an image uploaded locally if offline", function() { 
+
+      it("should store an image uploaded locally if offline", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
           persistence.set('online', false);
@@ -956,11 +958,11 @@ describe("persistence", function() {
           pictureGrabber.setup(button, controller);
           controller.set('image_preview', {url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=='});
           var button_set = false;
-          stub(editManager, 'change_button', function(id, args) { 
+          stub(editManager, 'change_button', function(id, args) {
             if(id === '456' && args.image_id === '123') { button_set = true; }
           });
           pictureGrabber.select_image_preview();
-          
+
           var record = null;
           waitsFor(function() { return controller.get('model.image'); });
           runs(function() {
@@ -998,7 +1000,7 @@ describe("persistence", function() {
           runs();
         });
       });
-      
+
       it("should persist an updated record to the local db", function() {
         push_board(function() {
           queryLog.real_lookup = true;
@@ -1010,10 +1012,10 @@ describe("persistence", function() {
           });
           var result = null;
           board.set('name', 'Cool Board');
-          board.save().then(function(res) { 
+          board.save().then(function(res) {
             result = res;
           }, function(res) { dbg(); });
-          
+
           var record = null;
           waitsFor(function() { return result; });
           runs(function() {
@@ -1029,7 +1031,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should update a locally-created record that hasn't been persisted yet", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -1041,7 +1043,7 @@ describe("persistence", function() {
           board.save().then(function(res) {
             record = res;
           });
-          
+
           waitsFor(function() { return record; });
           runs(function() {
             expect(!!record.get('id').match(/^tmp_/)).toEqual(true);
@@ -1066,7 +1068,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should mark a locally-updated record as changed for later sync", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -1078,7 +1080,7 @@ describe("persistence", function() {
           board.save().then(function(res) {
             record = res;
           });
-          
+
           waitsFor(function() { return record; });
           runs(function() {
             expect(!!record.get('id').match(/^tmp_/)).toEqual(true);
@@ -1103,7 +1105,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should ajax-create a locally-created record if updating and now online", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -1126,7 +1128,7 @@ describe("persistence", function() {
             }
             return Ember.RSVP.reject({});
           });
-          
+
           waitsFor(function() { return record; });
           runs(function() {
             expect(!!record.get('id').match(/^tmp_/)).toEqual(true);
@@ -1181,7 +1183,7 @@ describe("persistence", function() {
             }
             return Ember.RSVP.reject({});
           });
-          
+
           waitsFor(function() { return record; });
           runs(function() {
             Ember.run.later(function() {
@@ -1276,7 +1278,7 @@ describe("persistence", function() {
           });
         });
       });
-      
+
       it("should still allow finding by the temporary board key after persisted remotely", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -1300,7 +1302,7 @@ describe("persistence", function() {
             }
             return Ember.RSVP.reject({});
           });
-          
+
           waitsFor(function() { return record; });
           var tmp_id = null;
           persistence.removals = [];
@@ -1360,7 +1362,7 @@ describe("persistence", function() {
           runs();
         });
       });
-      
+
       it("should remove from the local db if successfully deleted", function() {
         push_board(function() {
           queryLog.real_lookup = true;
@@ -1388,7 +1390,7 @@ describe("persistence", function() {
           runs();
         });
       });
-      
+
       it("should delete a locally-created record", function() {
         db_wait(function() {
           queryLog.real_lookup = true;
@@ -1401,7 +1403,7 @@ describe("persistence", function() {
           board.save().then(function(res) {
             record = res;
           });
-          
+
           var record_id = null;
           waitsFor(function() { return record; });
           runs(function() {
@@ -1424,7 +1426,7 @@ describe("persistence", function() {
           runs();
         });
       });
-      
+
       it("should delete from the local db and remember the delete if offline for later sync", function() {
         push_board(function() {
           queryLog.real_lookup = true;
@@ -1459,7 +1461,7 @@ describe("persistence", function() {
           runs();
         });
       });
-      
+
       it("should delete from the server when sync is finally called", function() {
         push_board(function() {
           queryLog.real_lookup = true;
@@ -1508,7 +1510,7 @@ describe("persistence", function() {
             return Ember.RSVP.reject({});
           });
           waitsFor(function() { return found_deletion; });
-          
+
           runs(function() {
             Ember.run.later(function() {
               persistence.set('online', true);
@@ -1529,7 +1531,7 @@ describe("persistence", function() {
     describe("findQuery", function() {
       it("should make an ajax call if online", function() {
         queryLog.real_lookup = true;
-        
+
         var done = false;
         stub(Ember.$, 'realAjax', function(options) {
           return Ember.RSVP.resolve({board: [
@@ -1546,7 +1548,7 @@ describe("persistence", function() {
       });
       it("should handle a failed ajax call if online", function() {
         queryLog.real_lookup = true;
-        
+
         var done = false;
         stub(Ember.$, 'realAjax', function(options) {
           return Ember.RSVP.reject({});
@@ -1559,11 +1561,11 @@ describe("persistence", function() {
         waitsFor(function() { return done; });
         runs();
       });
-      
+
       it("should reject if offline", function() {
         queryLog.real_lookup = true;
         persistence.set('online', false);
-        
+
         var ajaxed = false;
         var rejected = false;
         stub(Ember.$, 'realAjax', function(options) {
@@ -1580,6 +1582,6 @@ describe("persistence", function() {
       });
     });
   });
-  
+
 });
 
