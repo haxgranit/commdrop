@@ -528,8 +528,14 @@ describe Purchasing do
       res = Purchasing.unsubscribe(u)
       expect(res).to eq(true)
     end
+    
+    it "should not trigger a message if there wasn't an existing subscription" do
+      u = User.create(:settings => {'subscription' => {}})
+      expect(SubscriptionMailer).to_not receive(:schedule_delivery)
+      Purchasing.unsubscribe(u)
+    end
   end
-  
+
   describe "change_user_id" do
     it "should error if no customer found" do
       expect(Stripe::Customer).to receive(:retrieve).with('1234').and_return(nil)

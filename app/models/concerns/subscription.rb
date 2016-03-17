@@ -114,7 +114,7 @@ module Subscription
         self.save
       end
     elsif args['unsubscribe']
-      if self.settings['subscription']['subscription_id'] == args['subscription_id'] || args['subscription_id'] == 'all'
+      if (args['subscription_id'] && self.settings['subscription']['subscription_id'] == args['subscription_id']) || args['subscription_id'] == 'all'
         if self.settings['subscription']['seconds_left']
           self.expires_at = Time.now + self.settings['subscription']['seconds_left']
           self.settings['subscription'].delete('seconds_left')
