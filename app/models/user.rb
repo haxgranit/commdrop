@@ -252,7 +252,7 @@ class User < ActiveRecord::Base
           if downstream_board
             orphan_board_ids -= [downstream_board.id]
             UserBoardConnection.find_or_create_by(:board_id => downstream_board.id, :user_id => self.id)
-            downstream_board.save
+            downstream_board.save_without_post_processing
           end
         end
       end
@@ -262,7 +262,7 @@ class User < ActiveRecord::Base
       board = Board.find_by(:id => id)
       if board
         board.generate_stats
-        board.save
+        board.save_without_post_processing
       end
     end
     true

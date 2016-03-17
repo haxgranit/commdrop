@@ -272,6 +272,12 @@ class Board < ActiveRecord::Base
     end
   end
   
+  def save_without_post_processing
+    @skip_post_process = true
+    self.save
+    @skip_post_process = false
+  end
+  
   def post_process
     if @skip_post_process
       @skip_post_process = false
@@ -283,7 +289,9 @@ class Board < ActiveRecord::Base
     # Can't be backgrounded because board rendering depends on this
     self.map_images
     
-    self.schedule(:check_image_url)
+    if self.settings && self.settings['image_url'] == DEFAULT_ICON && self.settings['default_image_url'] == self.settings['image_url'] && self.settings['name'] && self.settings['name'] != 'Unnamed Board'
+      self.schedule(:check_image_url)
+    end
     
     if @check_for_parts_of_speech
       self.schedule(:check_for_parts_of_speech)
@@ -310,7 +318,7 @@ class Board < ActiveRecord::Base
         self.settings['default_image_url'] = icon['image_url']
         self.settings['default_image_details'] = icon
         @skip_post_process = true
-        self.save
+        self.save_without_post_processing
         @skip_post_process = false
       end
     end
