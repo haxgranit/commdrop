@@ -485,12 +485,12 @@ describe Api::OrganizationsController, :type => :controller do
       json = JSON.parse(response.body)
       expect(json['meta']).not_to eq(nil)
       expect(json['user'].length).to eq(2)
-      expect(json['user'][0]['id']).to eq(u.global_id)
-      expect(json['user'][0]['org_manager']).to eq(false)
-      expect(json['user'][0]['org_assistant']).to eq(true)
-      expect(json['user'][1]['id']).to eq(@user.global_id)
-      expect(json['user'][1]['org_manager']).to eq(true)
+      expect(json['user'][1]['id']).to eq(u.global_id)
+      expect(json['user'][1]['org_manager']).to eq(false)
       expect(json['user'][1]['org_assistant']).to eq(true)
+      expect(json['user'][0]['id']).to eq(@user.global_id)
+      expect(json['user'][0]['org_manager']).to eq(true)
+      expect(json['user'][0]['org_assistant']).to eq(true)
     end
   end
 
@@ -527,14 +527,14 @@ describe Api::OrganizationsController, :type => :controller do
       json = JSON.parse(response.body)
       expect(json['meta']).not_to eq(nil)
       expect(json['user'].length).to eq(2)
-      expect(json['user'][1]['id']).to eq(u.global_id)
-      expect(json['user'][1]['org_manager']).to eq(nil)
-      expect(json['user'][1]['org_assistant']).to eq(nil)
-      expect(json['user'][1]['org_supervision_pending']).to eq(false)      
-      expect(json['user'][0]['id']).to eq(u2.global_id)
+      expect(json['user'][0]['id']).to eq(u.global_id)
       expect(json['user'][0]['org_manager']).to eq(nil)
       expect(json['user'][0]['org_assistant']).to eq(nil)
-      expect(json['user'][0]['org_supervision_pending']).to eq(true)      
+      expect(json['user'][0]['org_supervision_pending']).to eq(false)      
+      expect(json['user'][1]['id']).to eq(u2.global_id)
+      expect(json['user'][1]['org_manager']).to eq(nil)
+      expect(json['user'][1]['org_assistant']).to eq(nil)
+      expect(json['user'][1]['org_supervision_pending']).to eq(true)      
     end
   end
   

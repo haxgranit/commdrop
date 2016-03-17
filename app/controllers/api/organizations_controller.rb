@@ -29,14 +29,14 @@ class Api::OrganizationsController < ApplicationController
   
   def supervisors
     return unless allowed?(@org, 'edit')
-    users = @org.supervisors.order(id: :desc)
+    users = @org.supervisors.order('user_name')
     prefix = "/organizations/#{@org.global_id}/supervisors"
     render json: JsonApi::User.paginate(params, users, {:limited_identity => true, :organization => @org, :prefix => prefix})
   end
 
   def managers
     return unless allowed?(@org, 'edit')
-    users = @org.managers.order(id: :desc)
+    users = @org.managers.order('user_name')
     prefix = "/organizations/#{@org.global_id}/managers"
     render json: JsonApi::User.paginate(params, users, {:limited_identity => true, :organization => @org, :prefix => prefix})
   end
