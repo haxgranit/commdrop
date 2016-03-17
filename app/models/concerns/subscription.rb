@@ -5,10 +5,8 @@ module Subscription
     # used to pause subscription when the user is adopted by an organization, 
     # and possibly to resume the subscription when the user is dropped by an organization.
     prior_org = self.managing_organization
-    actual_id = nil
     if org_id
       new_org = Organization.find_by_global_id(org_id)
-      actual_id = new_org && new_org.id
       self.settings['subscription'] ||= {}
       if sponsored
         self.settings['subscription']['started'] = nil
@@ -57,7 +55,6 @@ module Subscription
         UserMailer.schedule_delivery(:organization_unassigned, self.global_id, prior_org && prior_org.global_id)
       end
     end
-    self.managing_organization_id = actual_id
     self.save
   end
   

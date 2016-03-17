@@ -132,16 +132,18 @@ describe ApplicationController, :type => :controller do
       expect(controller.params['user_id']).to eq('my_org')
       expect(controller.params['author_id']).to eq('my_org')
       
-      u = User.create(:managed_organization_id => 9)
-      d = Device.create(:user => u)
+      u = User.create
+      d = Device.create(:user => u.reload)
+      u.settings['manager_for'] = {'9' => {'full_manager' => true}}
       get :index, :id => 'my_org', :user_id => 'my_org', :author_id => 'my_org', :access_token => d.token, :check_token => true
       expect(assigns[:api_user]).to eq(u)
       expect(controller.params['id']).to eq('my_org')
       expect(controller.params['user_id']).to eq('my_org')
       expect(controller.params['author_id']).to eq('my_org')
 
-      u = User.create(:managed_organization_id => o.id)
-      d = Device.create(:user => u)
+      u = User.create
+      o.add_manager(u.user_name, true)
+      d = Device.create(:user => u.reload)
       get :index, :id => 'my_org', :user_id => 'my_org', :author_id => 'my_org', :access_token => d.token, :check_token => true
       expect(assigns[:api_user]).to eq(u)
       expect(controller.params['id']).to eq(o.global_id)

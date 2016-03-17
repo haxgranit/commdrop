@@ -44,29 +44,18 @@ module Supervising
     end
   end
   
+  def managing_organization
+    orgs = Organization.attached_orgs(self)
+    org = orgs.detect{|o| o['type'] == 'user' }
+    if org
+      Organization.find_by_global_id(org['id'])
+    else
+      nil
+    end
+  end
+  
   def organization_hash
     res = []
-    if self.managed_organization_id
-      o = self.managed_organization
-      res << {
-        'id' => o.global_id,
-        'name' => o.settings['name'],
-        'type' => 'manager',
-        'full_manager' => !!self.settings['full_manager'],
-        'added' => nil
-      } if o
-    end
-    if self.managing_organization_id
-      o = self.managing_organization
-      res << {
-        'id' => o.global_id,
-        'name' => o.settings['name'],
-        'type' => 'user',
-        'added' => (self.settings['subscription'] || {})['added_to_organization'],
-        'pending' => !!(self.settings['subscription'] || {})['org_pending'],
-        'sponsored' => (self.settings['subscription'] || {})['org_sponsored'] != false
-      } if o
-    end
     res += Organization.attached_orgs(self)
     res.reverse.uniq{|e| [e['id'], e['type']] }.sort_by{|e| e['id'] }
   end
@@ -74,14 +63,6 @@ module Supervising
   def supervised_user_ids
     return [] unless self.settings && self.settings['supervisees']
     (self.settings['supervisees'] || []).map{|s| s['user_id'] }
-  end
-  
-  def managed_users
-    if self.managed_organization_id && self.managed_organization && self.managed_organization.manager?(self)
-      self.managed_organization.users
-    else
-      []
-    end
   end
   
   def supervisees

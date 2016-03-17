@@ -329,41 +329,6 @@ describe Supervising, :type => :model do
   end
   
   describe "managed_users" do
-    it "should should return nothing for a non-manager" do
-      u = User.create
-      u2 = User.create
-      o = Organization.create(:settings => {'total_licenses' => 1})
-      o.add_user(u2.user_name, false)
-      
-      u.reload
-      expect(u.managed_users).to eq([])
-    end
-
-    it "should return nothing for an assistant manager" do
-      u = User.create
-      u2 = User.create
-      o = Organization.create(:settings => {'total_licenses' => 1})
-      o.add_manager(u.user_name)
-      o.add_user(u2.user_name, false)
-      
-      u.reload
-      expect(u.managed_users).to eq([])
-    end
-    
-
-    it "should return a list of users" do
-      u = User.create
-      u2 = User.create
-      o = Organization.create(:settings => {'total_licenses' => 1})
-      o.add_manager(u.user_name, true)
-      o.add_user(u2.user_name, false)
-      
-      u.reload
-      expect(u.managed_users).not_to eq([])
-      expect(u.managed_users.length).to eq(1)
-      expect(u.managed_users).to eq([u2])
-    end
-    
     it "should not grant permissions for the manager of a pending org invite" do
       u = User.create
       u2 = User.create
@@ -402,42 +367,6 @@ describe Supervising, :type => :model do
   end
   
   describe "organization_hash" do
-    it "should include old-fashioned managed org" do
-      o = Organization.create
-      u = User.create
-      u.managed_organization_id = o.id
-      res = u.organization_hash
-      expect(res.length).to eq(1)
-      expect(res[0]).to eq({
-        'id' => o.global_id,
-        'name' => o.settings['name'],
-        'type' => 'manager',
-        'full_manager' => false,
-        'added' => nil
-      })
-    end
-    
-    it "should include old-fashioned managing org" do
-      o = Organization.create
-      u = User.create
-      u.managing_organization_id = o.id
-      u.settings['subscription'] = {
-        'added_to_organization' => 98765,
-        'org_pending' => true,
-        'org_sponsored' => false
-      }
-      res = u.organization_hash
-      expect(res.length).to eq(1)
-      expect(res[0]).to eq({
-        'id' => o.global_id,
-        'name' => o.settings['name'],
-        'type' => 'user',
-        'added' => 98765,
-        'pending' => true,
-        'sponsored' => false
-      })
-    end
-    
     it "should include new-fashioned managing org" do
       o = Organization.create(:settings => {'total_licenses' => 1})
       u = User.create
@@ -514,12 +443,6 @@ describe Supervising, :type => :model do
     it "should not repeat org associations" do
       o = Organization.create(:settings => {'total_licenses' => 1})
       u = User.create
-      u.managing_organization_id = o.id
-      u.settings['subscription'] = {
-        'added_to_organization' => 98765,
-        'org_pending' => true,
-        'org_sponsored' => false
-      }
       o.add_user(u.user_name, false, true)
 
       res = u.reload.organization_hash

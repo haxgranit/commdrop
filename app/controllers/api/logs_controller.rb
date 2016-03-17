@@ -4,11 +4,9 @@ class Api::LogsController < ApplicationController
     user = User.find_by_path(params['user_id'])
     return unless allowed?(user, 'supervise')
     user_ids = [user.id]
-    user_ids = [] if params['supervisees'] || params['org_managed_users']
+    user_ids = [] if params['supervisees']
     if params['supervisees']
       user_ids += user.supervisees.map(&:id)
-    elsif params['org_managed_users']
-      user_ids += user.managed_users.map(&:id)
     end
     user_ids = user_ids.uniq
     

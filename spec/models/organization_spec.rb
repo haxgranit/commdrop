@@ -5,25 +5,25 @@ describe Organization, :type => :model do
     it "should correctly add a manager" do
       o = Organization.create
       u = User.create
-      expect(u.managed_organization_id).to eq(nil)
+      expect(o.manager?(u)).to eq(false)
       
       res = o.add_manager(u.user_name, true)
       expect(res).to eq(true)
       u.reload
-      expect(u.managed_organization_id).to eq(o.id)
-      expect(u.settings['full_manager']).to eq(true)
+      expect(o.manager?(u)).to eq(true)
+      expect(o.assistant?(u)).to eq(true)
     end
     
     it "should correctly add an assistant" do
       o = Organization.create
       u = User.create
-      expect(u.managed_organization_id).to eq(nil)
+      expect(o.manager?(u)).to eq(false)
       
-      res = o.add_manager(u.user_name)
+      res = o.add_manager(u.user_name, false)
       expect(res).to eq(true)
       u.reload
-      expect(u.managed_organization_id).to eq(o.id)
-      expect(u.settings['full_manager']).not_to eq(true)
+      expect(o.manager?(u)).to eq(false)
+      expect(o.assistant?(u)).to eq(true)
     end
     
     it "should error on adding a manager that doesn't exist" do
@@ -33,7 +33,9 @@ describe Organization, :type => :model do
     
     it "should not error on adding a manager that is managing a different organization" do
       o = Organization.create
-      u = User.create(:managed_organization_id => o.id + 1)
+      o2 = Organization.create
+      u = User.create
+      o2.add_manager(u.user_name, true)
       
       expect { o.add_manager(u.user_name, true) }.to_not raise_error
       u.reload
@@ -49,8 +51,7 @@ describe Organization, :type => :model do
       res = o.remove_manager(u.user_name)
       expect(res).to eq(true)
       u.reload
-      expect(u.managed_organization_id).to eq(nil)
-      expect(u.settings['full_manager']).not_to eq(true)
+      expect(o.manager?(u.reload)).to eq(false)
     end
     
     it "should allow being a manager for more than one org" do
@@ -75,8 +76,8 @@ describe Organization, :type => :model do
       res = o.remove_manager(u.user_name)
       expect(res).to eq(true)
       u.reload
-      expect(u.managed_organization_id).to eq(nil)
-      expect(u.settings['full_manager']).not_to eq(true)
+      expect(o.manager?(u.reload)).to eq(false)
+      expect(o.assistant?(u)).to eq(false)
     end
     
     it "should error on removing a manager that doesn't exist" do
@@ -86,7 +87,10 @@ describe Organization, :type => :model do
     
     it "should not error on removing a manager that is managing a different organization" do
       o = Organization.create
-      u = User.create(:managed_organization_id => o.id + 1)
+      o2 = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      o2.add_manager(u.user_name, true)
+      u.reload
       
       expect { o.remove_manager(u.user_name) }.to_not raise_error
     end
@@ -256,7 +260,7 @@ describe Organization, :type => :model do
       res = o.add_user(u.user_name, true)
       u.reload
       expect(res).to eq(true)
-      expect(u.managing_organization_id).to eq(o.id)
+      expect(o.sponsored_user?(u)).to eq(true)
     end
     
     it "should error on adding a user that doesn't exist" do
@@ -301,12 +305,14 @@ describe Organization, :type => :model do
       res = o.add_user(u.user_name, true)
       u.reload
       expect(res).to eq(true)
-      expect(u.managing_organization_id).to eq(o.id)
+      expect(o.sponsored_user?(u)).to eq(true)
     end
     
     it "should error on adding a user that is managed by a different organization" do
       o = Organization.create
-      u = User.create(:managing_organization_id => o.id + 1)
+      o2 = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      o2.add_user(u.user_name, false, true)
       
       expect{ o.add_user(u.user_name, false) }.to raise_error("already associated with a different organization")
     end
@@ -318,17 +324,20 @@ describe Organization, :type => :model do
       res = o.add_user(u.user_name, false)
       u.reload
       expect(res).to eq(true)
-      expect(u.managing_organization_id).to eq(o.id)
+      expect(o.sponsored_user?(u)).to eq(true)
       
       res = o.remove_user(u.user_name)
       u.reload
       expect(res).to eq(true)
-      expect(u.managing_organization_id).to eq(nil)
+      expect(o.sponsored_user?(u)).to eq(false)
     end
     
     it "should update a user's expires_at when they are removed" do
       o = Organization.create(:settings => {'total_licenses' => 1})
-      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => true, 'seconds_left' => 3.weeks.to_i}}, :managing_organization_id => o.id)
+      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => true, 'seconds_left' => 3.weeks.to_i}})
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'sponsored' => true, 'pending' => false}
+      u.save
       o.remove_user(u.user_name)
       u.reload
       expect(u.settings['subscription_left']) == nil
@@ -338,7 +347,10 @@ describe Organization, :type => :model do
     
     it "should not update a user's non-sponsored expires_at when they are removed" do
       o = Organization.create(:settings => {'total_licenses' => 1})
-      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => false, 'seconds_left' => 3.weeks.to_i}}, :managing_organization_id => o.id)
+      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => false, 'seconds_left' => 3.weeks.to_i}})
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'sponsored' => true, 'pending' => false}
+      u.save
       o.remove_user(u.user_name)
       u.reload
       expect(u.settings['subscription_left']) == nil
@@ -348,7 +360,10 @@ describe Organization, :type => :model do
     
     it "should give the user a window of time when they are removed if they have no expires_at time left" do
       o = Organization.create(:settings => {'total_licenses' => 1})
-      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => true, 'seconds_left' => 5}}, :managing_organization_id => o.id)
+      u = User.create(:expires_at => Time.now + 100, :settings => {'subscription' => {'org_sponsored' => true, 'seconds_left' => 5}})
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'sponsored' => true, 'pending' => false}
+      u.save
       o.remove_user(u.user_name)
       u.reload
       expect(u.settings['subscription_left']) == nil
@@ -363,13 +378,13 @@ describe Organization, :type => :model do
       res = o.add_user(u.user_name, false)
       u.reload
       expect(res).to eq(true)
-      expect(u.managing_organization_id).to eq(o.id)
+      expect(o.user?(u)).to eq(true)
       
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)
       res = o.remove_user(u.user_name)
       u.reload
       expect(res).to eq(true)
-      expect(u.managing_organization_id).to eq(nil)
+      expect(o.user?(u)).to eq(false)
     end
     
     it "should error on removing a user that doesn't exist" do
@@ -379,7 +394,9 @@ describe Organization, :type => :model do
     
     it "should error on removing a user that is managed by a different organization" do
       o = Organization.create
-      u = User.create(:managing_organization_id => o.id + 1)
+      o2 = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      o2.add_user(u.user_name, false, true)
       
       expect{ o.remove_user(u.user_name) }.to raise_error("already associated with a different organization")
     end
@@ -646,10 +663,11 @@ describe Organization, :type => :model do
       expect(o.settings['total_licenses']).to eq(5)
     end
     
-    it "should error greacefully if allotted_licenses is decreased to fewer than are already used" do
+    it "should error gracefully if allotted_licenses is decreased to fewer than are already used" do
       o = Organization.create(:settings => {'total_licenses' => 1})
       u = User.create
-      o.add_user(u.user_name, false)
+      o.add_user(u.user_name, false, true)
+      expect(o.reload.sponsored_users.count).to eq(1)
       res = o.process({:allotted_licenses => 0}, {'updater' => u})
       expect(res).to eq(false)
       expect(o.processing_errors).to eq(["too few licenses, remove some users first"])
@@ -820,8 +838,6 @@ describe Organization, :type => :model do
     
       u.reload
       expect(u.org_sponsored?).to eq(true)
-      u.managing_organization_id = nil
-      u.managed_organization_id = nil
       expect(u.org_sponsored?).to eq(true)
       expect(o.managed_user?(u)).to eq(true)
     end
@@ -861,8 +877,6 @@ describe Organization, :type => :model do
       expect(o.reload.managers.count).to eq(1)
 
       expect(o.manager?(u.reload)).to eq(true)
-      u.managing_organization_id = nil
-      u.managed_organization_id = nil
       expect(o.manager?(u)).to eq(true)
     end
   

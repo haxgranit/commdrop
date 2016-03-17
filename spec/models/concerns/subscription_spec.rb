@@ -24,11 +24,11 @@ describe Subscription, :type => :model do
       u.settings['subscription']['never_expires'] = true
       expect(u.grace_period?).to eq(false)
       u.settings['subscription']['never_expires'] = false
-      u.managing_organization_id = 1
+      u.settings['managed_by'] = {'1_1' => {'pending' => false, 'sponsored' => true}}
       u.settings['subscription'] = {}
       u.settings['subscription']['org_sponsored'] = true
       expect(u.grace_period?).to eq(false)
-      u.managing_organization_id = nil
+      u.settings['managed_by'] = nil
       u.settings['subscription'] = {}
       expect(u.grace_period?).to eq(true)
       u.settings['subscription']['customer_id'] = 'free'
@@ -106,7 +106,7 @@ describe Subscription, :type => :model do
     it "should return premium if assigned to an organization" do
       u = User.create(:expires_at => 3.days.ago)
       expect(u.premium?).to eq(false)
-      u.managing_organization_id = 1
+      u.settings['managed_by'] = {'1' => {'pending' => false, 'sponsored' => true}}
       u.settings['subscription'] = {'org_sponsored' => true}
       expect(u.premium?).to eq(true)
     end
@@ -206,7 +206,8 @@ describe Subscription, :type => :model do
     it "should not notify when same org is re-assigned" do
       u = User.create
       o = Organization.create
-      u.managing_organization_id = o.id
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'pending' => false, 'sponsored' => true}
       expect(UserMailer).not_to receive(:schedule_delivery)
       u.update_subscription_organization(o.global_id)
     end
@@ -230,7 +231,8 @@ describe Subscription, :type => :model do
     it "should notify when org is removed" do
       u = User.create
       o = Organization.create
-      u.managing_organization_id = o.id
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'pending' => false, 'sponsored' => true}
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)
       u.update_subscription_organization(nil)
     end
@@ -244,7 +246,8 @@ describe Subscription, :type => :model do
     it "should restore any remaining subscription time when removing from an org" do
       u = User.create(:settings => {'subscription' => {'seconds_left' => 12.weeks.to_i}})
       o = Organization.create
-      u.managing_organization_id = o.id
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'pending' => false, 'sponsored' => true}
       u.settings['subscription']['org_sponsored'] = true
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)
       u.update_subscription_organization(nil)
@@ -254,7 +257,8 @@ describe Subscription, :type => :model do
     it "should always give at least a grace period when removing from an org" do
       u = User.create(:settings => {'subscription' => {'seconds_left' => 10.minutes.to_i}})
       o = Organization.create
-      u.managing_organization_id = o.id
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'pending' => false, 'sponsored' => true}
       u.settings['subscription']['org_sponsored'] = true
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)
       u.update_subscription_organization(nil)
@@ -264,7 +268,8 @@ describe Subscription, :type => :model do
     it "should update settings when removing from an org" do
       u = User.create(:settings => {'subscription' => {'started' => Time.now.iso8601, 'added_to_organization' => Time.now.iso8601}})
       o = Organization.create
-      u.managing_organization_id = o.id
+      u.settings['managed_by'] = {}
+      u.settings['managed_by'][o.global_id] = {'pending' => false, 'sponsored' => true}
       u.expires_at = nil
       u.settings['subscription']['org_sponsored'] = true
       expect(UserMailer).to receive(:schedule_delivery).with(:organization_unassigned, u.global_id, o.global_id)

@@ -76,9 +76,9 @@ class ApplicationController < ActionController::Base
       if @api_user && (key == 'id' || key.match(/_id$/)) && val == 'self'
         params[key] = @api_user.global_id
       end
-      if @api_user && (key == 'id' || key.match(/_id$/)) && val == 'my_org' && @api_user.managed_organization_id
-        org = @api_user.managed_organization
-        params[key] = org.global_id if org
+      if @api_user && (key == 'id' || key.match(/_id$/)) && val == 'my_org' && Organization.manager?(@api_user)
+        org = @api_user.organization_hash.select{|o| o['type'] == 'manager' }.sort_by{|o| o['added'] || Time.now.iso8601 }[0]
+        params[key] = org['id'] if org
       end
     end
   end

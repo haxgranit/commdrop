@@ -13,8 +13,6 @@ class User < ActiveRecord::Base
   has_many :log_sessions
   has_many :boards
   has_many :devices
-  belongs_to :managing_organization, :class_name => Organization
-  belongs_to :managed_organization, :class_name => Organization
   before_save :generate_defaults
   after_save :track_boards
   after_save :notify_of_changes

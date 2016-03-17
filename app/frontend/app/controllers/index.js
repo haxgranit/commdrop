@@ -52,7 +52,7 @@ export default Ember.Controller.extend({
     options.forEach(function(opt) {
       if(progress[opt]) {
         done++;
-      } 
+      }
     });
     return Math.round(done / total * 100);
   }.property('app_state.currentUser.preferences.progress'),
@@ -62,7 +62,7 @@ export default Ember.Controller.extend({
   checkForBlankSlate: function() {
     var _this = this;
     if(Ember.testing) { return; }
-    persistence.find_recent('board').then(function(boards) {  
+    persistence.find_recent('board').then(function(boards) {
       if(boards && boards.slice) {
         boards = boards.slice(0, 12);
       }
@@ -85,7 +85,7 @@ export default Ember.Controller.extend({
       android: capabilities.system == "Android",
       ios: capabilities.system == "iOS"
     };
-    
+
     res.needs_install_reminder = !res.added_somewhere || ((res.android || res.ios) && !res.standalone);
     if(res.standalone && (res.android || res.ios)) {
       res.needs_install_reminder = false;
@@ -137,7 +137,7 @@ export default Ember.Controller.extend({
           stashes.persist('last_index_browse', key);
         }
         if(key == 'recent') {
-          persistence.find_recent('board').then(function(boards) {  
+          persistence.find_recent('board').then(function(boards) {
             if(boards && boards.slice) {
               boards = boards.slice(0, 9);
             }
@@ -162,7 +162,7 @@ export default Ember.Controller.extend({
           }
           _this.store.query('board', {user_id: 'self', per_page: 9}).then(function(boards) {
             _this.set('personalBoards', boards);
-          }, function() { 
+          }, function() {
             if(!(_this.get('personalBoards') || {}).length) {
               _this.set('personalBoards', {error: true});
             }
@@ -193,15 +193,13 @@ export default Ember.Controller.extend({
       var find_args = {user_id: model.get('id'), type: 'session'};
       if(model.get('supporter_role')) {
         find_args.supervisees = true;
-        // TODO: make seeing org-managed logs on the home page optional
-        find_args.org_managed_users = true;
       }
       if(!(controller.get('logs') || {}).length) {
         controller.set('logs', {loading: true});
       }
       this.store.query('log', find_args).then(function(list) {
         controller.set('logs', list.get('content').slice(0, 6).mapBy('record'));
-      }, function() { 
+      }, function() {
         if(!(controller.get('logs') || {}).length) {
           controller.set('logs', {error: true});
         }
@@ -236,7 +234,7 @@ export default Ember.Controller.extend({
         if(!this.get('app_state.installed_app')) {
           modal.open('subscribe');
         } else {
-          
+
         }
       }
     }

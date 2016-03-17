@@ -188,7 +188,7 @@ describe JsonApi::User do
       
       it "should return proper subscription attributes" do
         u = User.create
-        o = Organization.create
+        o = Organization.create(:settings => {'total_licenses' => 1})
         u.settings['subscription'] = {}
         u.settings['subscription']['never_expires'] = true
         u.settings['subscription']['org_sponsored'] = true
@@ -203,7 +203,8 @@ describe JsonApi::User do
           'active' => true
         })
         
-        u.managing_organization_id = o.id
+        o.add_user(u.user_name, false, true)
+        u.reload
         u.settings['subscription']['never_expires'] = false
         json = JsonApi::User.build_json(u, permissions: u)
         expect(json['is_managed']).to eq(true)
@@ -216,7 +217,10 @@ describe JsonApi::User do
           'org_sponsored' => true
         })
         
-        u.managing_organization_id = nil
+        o.remove_user(u.user_name)
+        u.reload
+        u.settings['subscription']['started'] = 6.months.ago.iso8601
+        u.settings['subscription']['plan_id'] = 'monthly_6'
         json = JsonApi::User.build_json(u, permissions: u)
         expect(json['subscription']).to eq({
           'grace_period' => false,

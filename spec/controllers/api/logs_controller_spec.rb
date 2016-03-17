@@ -69,38 +69,6 @@ describe Api::LogsController, :type => :controller do
       expect(json['meta']['next_url']).to eq(nil)
     end
     
-    it "should include managed user sessions when requested" do
-      users = [User.create, User.create, User.create]
-      token_user
-      o = Organization.create(:settings => {'total_licenses' => 2})
-      o.add_manager(@user.user_name, true)
-      users.each_with_index do |u, idx|
-        if idx != 2
-          o.add_user(u.user_name, false)
-        end
-        d = Device.create(:user => u)
-        3.times do |i|
-          LogSession.process_new({
-            :events => [
-              {'timestamp' => (i.days.ago + i).to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
-              {'timestamp' => (i.days.ago + 100 + i).to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
-            ]
-          }, {:user => u, :device => d, :author => u})
-        end
-      end
-      Worker.process_queues
-      @user.reload
-      @user.managed_organization.reload
-      expect(@user.reload.managed_users.length).to eq(2)
-      get :index, :user_id => @user.global_id, :org_managed_users => true
-      json = JSON.parse(response.body)
-      expect(json['log'].length).to eq(6)
-      expect(json['log'][0]['author']['id']).to eq(users[0].global_id)
-      expect(json['log'][1]['author']['id']).to eq(users[1].global_id)
-      expect(json['log'][2]['author']['id']).to eq(users[0].global_id)
-      expect(json['meta']['next_url']).to eq(nil)
-    end
-    
     it "should filter by query parameters" do
       token_user
       geo = ClusterLocation.create(:user => @user, :cluster_type => 'geo')
