@@ -251,6 +251,18 @@ describe JsonApi::User do
           'never_expires' => true
         })
       end
+      
+      it "should return a subscription object of explicitly specified" do
+        u = User.create
+        u2 = User.create
+        o = Organization.create(:admin => true)
+        o.add_manager(u2.user_name, true)
+        
+        json = JsonApi::User.build_json(u)
+        expect(json['subscription']).to eq(nil)
+        json = JsonApi::User.build_json(u, :limited_identity => true, :subscription => true)
+        expect(json['subscription']).not_to eq(nil)
+      end
     end
     
     describe "sidebar_boards" do

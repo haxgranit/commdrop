@@ -642,7 +642,7 @@ describe Organization, :type => :model do
       o = Organization.create
       o.process({
         :allotted_licenses => 5
-      })
+      }, {'updater' => User.create})
       expect(o.settings['total_licenses']).to eq(5)
     end
     
@@ -650,7 +650,7 @@ describe Organization, :type => :model do
       o = Organization.create(:settings => {'total_licenses' => 1})
       u = User.create
       o.add_user(u.user_name, false)
-      res = o.process({:allotted_licenses => 0})
+      res = o.process({:allotted_licenses => 0}, {'updater' => u})
       expect(res).to eq(false)
       expect(o.processing_errors).to eq(["too few licenses, remove some users first"])
     end
@@ -699,6 +699,113 @@ describe Organization, :type => :model do
         ]
       }, {:user => u2, :device => d2, :author => u2})
       expect(o.reload.log_sessions.count).to eq(2)
+    end
+  end
+  
+  describe "process" do
+    it "should log an event if the total licenses has changed" do
+      o = Organization.create
+      u = User.create
+      o.process({'allotted_licenses' => 2}, {'updater' => u})
+      expect(o.settings['purchase_events']).to_not eq(nil)
+      expect(o.settings['purchase_events'].length).to eq(1)
+      expect(o.settings['purchase_events'][0]['type']).to eq('update_license_count')
+    end
+    
+    it "should not log an event if the total licenses is set to the same value" do
+      o = Organization.create(:settings => {'total_licenses' => 2})
+      u = User.create
+      o.process({'allotted_licenses' => 2}, {'updater' => u})
+      expect(o.settings['purchase_events']).to eq(nil)
+    end
+  end
+  
+  describe "subscription management" do
+    it "should add a monitored subscription" do
+      o = Organization.create
+      u = User.create
+      o.add_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([u])
+    end
+    
+    it "should error when adding a subscription user that doesn't exist" do
+      o = Organization.create
+      expect { o.add_subscription('bacon') }.to raise_error("invalid user")
+    end
+    
+    it "should log a purchase event when adding a subscription user" do
+      o = Organization.create
+      u = User.create
+      o.add_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([u])
+      expect(o.purchase_history).not_to eq(nil)
+      expect(o.purchase_history.length).to eq(1)
+      expect(o.purchase_history[0]['type']).to eq('add_subscription')
+    end
+    
+    it "should remove a monitored subscription" do
+      o = Organization.create
+      u = User.create
+      o.add_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([u])
+      o.remove_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([])
+    end
+    
+    it "should erorr when removing a subscription user that doesn't exist" do
+      o = Organization.create
+      expect { o.remove_subscription('bacon') }.to raise_error("invalid user")
+    end
+    
+    it "should log a purchase event when removing a subscription user" do
+      o = Organization.create
+      u = User.create
+      o.add_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([u])
+      o.remove_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([])
+      expect(o.purchase_history).not_to eq(nil)
+      expect(o.purchase_history.length).to eq(2)
+      expect(o.purchase_history[1]['type']).to eq('add_subscription')
+      expect(o.purchase_history[0]['type']).to eq('remove_subscription')
+    end
+    
+    it "should return a list of purchase events" do
+      o = Organization.create
+      u = User.create
+      o.add_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([u])
+      o.remove_subscription(u.user_name)
+      expect(o.reload.subscriptions).to eq([])
+      expect(o.purchase_history).not_to eq(nil)
+      expect(o.purchase_history.length).to eq(2)
+      expect(o.purchase_history[1]['type']).to eq('add_subscription')
+      expect(o.purchase_history[0]['type']).to eq('remove_subscription')
+    end
+    
+    it "should log the specified purchase event" do
+      o = Organization.create
+      o.log_purchase_event({'asdf' => 1})
+      o.log_purchase_event({'jkl' => 1})
+      expect(o.settings['purchase_events']).to_not eq(nil)
+      expect(o.settings['purchase_events'].length).to eq(2)
+      es = o.settings['purchase_events'].sort_by{|e| e['asdf'] || 0 }
+      expect(es[1]['asdf']).to eq(1)
+      expect(Time.parse(es[1]['logged_at'])).to be > (Time.now - 10)
+      expect(Time.parse(es[1]['logged_at'])).to be < (Time.now + 10)
+      expect(es[0]['jkl']).to eq(1)
+      expect(Time.parse(es[0]['logged_at'])).to be > (Time.now - 10)
+      expect(Time.parse(es[0]['logged_at'])).to be < (Time.now + 10)
+    end
+    
+    it "should return a list of subscription users" do
+      o = Organization.create
+      u1 = User.create
+      u2 = User.create
+      o.add_subscription(u1.user_name)
+      expect(o.reload.subscriptions).to eq([u1])
+      o.add_subscription(u2.user_name)
+      expect(o.reload.subscriptions).to eq([u1, u2])
     end
   end
   

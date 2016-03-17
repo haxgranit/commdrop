@@ -71,5 +71,64 @@ describe JsonApi::Organization do
       expect(res['recent_session_count']).to eq(1)
       expect(res['recent_session_user_count']).to eq(1)
     end
+
+#     if json['permissions'] && json['permissions']['manage']
+#       json['org_subscriptions'] = org.subscriptions.map{|u| JsonApi::User.as_json(u, limited_identity: true, subscription: true) }
+#     end
+#     if json['permissions'] && json['permissions']['manage_subscription']
+#       json['purchase_history'] = org.purchase_history
+#     end
+    
+    it "should include purchase history if allowed" do
+      u = User.create
+      u2 = User.create
+      o = Organization.create
+      o.add_subscription(u2.user_name)
+      o.reload
+      o.process({'allotted_licenses' => 2}, {'updater' => u})
+      admin = Organization.create(:admin => true)
+      admin.add_manager(u.user_name, true)
+      
+      res = JsonApi::Organization.build_json(o.reload, :permissions => u.reload)
+      expect(res['purchase_history']).to_not eq(nil)
+      expect(res['purchase_history'].length).to eq(2)
+    end
+    
+    it "should not include purchase history if not allowed" do
+      u = User.create
+      u2 = User.create
+      o = Organization.create
+      o.add_subscription(u2.user_name)
+      o.process({'allotted_licenses' => 2}, {'updater' => u})
+      o.add_manager(u.user_name, true)
+      
+      res = JsonApi::Organization.build_json(o.reload, :permissions => u.reload)
+      expect(res['purchase_history']).to eq(nil)
+    end
+    
+    it "should include subscription users if allowed" do
+      u = User.create
+      u2 = User.create
+      o = Organization.create
+      o.add_subscription(u2.user_name)
+      o.add_manager(u.user_name, false)
+      
+      res = JsonApi::Organization.build_json(o.reload, :permissions => u.reload)
+      expect(res['org_subscriptions']).to_not eq(nil)
+      expect(res['org_subscriptions'].length).to eq(1)
+      expect(res['org_subscriptions'][0]['user_name']).to eq(u2.user_name)
+      expect(res['org_subscriptions'][0]['subscription']).to_not eq(nil)
+    end
+    
+    it "should not include subscription users if not allowed" do
+      u = User.create
+      u2 = User.create
+      o = Organization.create
+      o.add_subscription(u2.user_name)
+      
+      res = JsonApi::Organization.build_json(o.reload, :permissions => u.reload)
+      expect(res['org_subscriptions']).to eq(nil)
+    end
+    
   end
 end

@@ -593,6 +593,69 @@ describe Api::OrganizationsController, :type => :controller do
     end
   end
   
+  describe "stats" do
+    it "should require api token" do
+      get :stats, :organization_id => '1_1234'
+      assert_missing_token
+    end
+    
+    it "should return not found unless org exists" do
+      token_user
+      get :stats, :organization_id => '1_1234'
+      assert_not_found("1_1234")
+    end
+    
+    it "should return unauthorized unless permissions allowed" do
+      token_user
+      o = Organization.create
+      get :stats, :organization_id => o.global_id
+      assert_unauthorized
+    end
+    
+    it "should return expected stats" do
+      token_user
+      user = User.create
+      d = Device.create(:user => user)
+      o = Organization.create
+      o.add_manager(@user.user_name, false)
+      o.add_user(user.user_name, true, false)
+      expect(o.reload.approved_users.length).to eq(0)
+      get :stats, :organization_id => o.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq([])
+      
+      LogSession.process_new({
+        :events => [
+          {'timestamp' => 4.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 3.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => user, :device => d, :author => user})
+      LogSession.process_new({
+        :events => [
+          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => user, :device => d, :author => user})
+      Worker.process_queues
+      get :stats, :organization_id => o.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq([])
+      
+      o.add_user(user.user_name, false, false)
+      expect(o.reload.approved_users.length).to eq(1)
+      get :stats, :organization_id => o.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json.length).to eq(2)
+      expect(json[0]['sessions']).to eq(1)
+      expect(json[0]['timestamp']).to be > 0
+      expect(json[1]['sessions']).to eq(1)
+      expect(json[1]['timestamp']).to be > 0
+    end
+  end
+  
   describe "admin_reports" do
     it "should require api token" do
       get :admin_reports, :organization_id => '1_1234'

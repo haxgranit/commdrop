@@ -169,7 +169,7 @@ class Api::OrganizationsController < ApplicationController
   def create
     admin_org = Organization.admin
     return unless allowed?(admin_org, 'manage')
-    org = Organization.process_new(params['organization'])
+    org = Organization.process_new(params['organization'], {'updater' => @api_user})
     if org.errored?
       api_error(400, {error: "organization creation failed", errors: org && org.processing_errors})
     else

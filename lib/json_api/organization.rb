@@ -29,7 +29,7 @@ module JsonApi::Organization
       json['recent_session_count'] = recent_sessions.count
       json['recent_session_user_count'] = recent_sessions.distinct.count('user_id')
     end
-    if json['permissions'] && json['permissions']['manage']
+    if json['permissions'] && json['permissions']['edit']
       json['org_subscriptions'] = org.subscriptions.map{|u| JsonApi::User.as_json(u, limited_identity: true, subscription: true) }
     end
     if json['permissions'] && json['permissions']['manage_subscription']
