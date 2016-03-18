@@ -777,7 +777,7 @@ describe Api::BoardsController, :type => :controller do
         json = JSON.parse(response.body)
         expect(json['boardversion']).not_to eq(nil)
         expect(json['boardversion'].length).to eq(1)
-        expect(json['boardversion'][0]['action']).to eq('create')
+        expect(json['boardversion'][0]['action']).to eq('created')
         expect(json['boardversion'][0]['modifier']['user_name']).to eq(@user.user_name)
       end
     
@@ -801,8 +801,8 @@ describe Api::BoardsController, :type => :controller do
         json = JSON.parse(response.body)
         expect(json['boardversion']).not_to eq(nil)
         expect(json['boardversion'].length).to eq(2)
-        expect(json['boardversion'][0]['action']).to eq('destroy')
-        expect(json['boardversion'][1]['action']).to eq('create')
+        expect(json['boardversion'][0]['action']).to eq('deleted')
+        expect(json['boardversion'][1]['action']).to eq('created')
         expect(json['boardversion'][1]['modifier']['user_name']).to eq(@user.user_name)
       end
     

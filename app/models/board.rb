@@ -178,6 +178,8 @@ class Board < ActiveRecord::Base
       end
     end
     self.settings['edit_description'] = @edit_description
+    @edit_description = nil
+
     self.settings['buttons'] ||= []
     self.settings['grid'] ||= {}
     self.settings['grid']['rows'] = (self.settings['grid']['rows'] || 2).to_i
@@ -484,6 +486,20 @@ class Board < ActiveRecord::Base
   def icon_url_or_fallback
     fallback = DEFAULT_ICON
     self.settings['image_url'].blank? ? fallback : self.settings['image_url']
+  end
+  
+  def self.user_versions(global_id)
+    # TODO: sharding
+    local_id = Board.local_ids([global_id])[0]
+    versions = []
+    all_versions = PaperTrail::Version.where(:item_type => 'Board', :item_id => local_id).order('id DESC')
+    all_versions.each_with_index do |v, idx|
+      if v.whodunnit
+        v.instance_variable_set('@next', all_versions[idx + 1])
+        versions << v
+      end
+    end
+    versions
   end
   
   def flush_related_records

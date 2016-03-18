@@ -514,7 +514,8 @@ describe Purchasing do
     
     it "should unsubscribe from all active subscriptions" do
       u = User.create
-      u.settings['subscription'] = {'customer_id' => '2345'}
+      u.settings['subscription'] = {'customer_id' => '2345', 'subscription_id' => '3456'}
+      u.save
       a = {'id' => '3456'}
       b = {'id' => '6789'}
       c = {'id' => '4567'}

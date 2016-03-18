@@ -8,6 +8,7 @@ CoughDrop.Boardversion = DS.Model.extend({
   stats: DS.attr('raw'),
   action: DS.attr('string'),
   summary: DS.attr('string'),
+  immediately_upstream_boards: DS.attr('raw'),
   recent: function() {
     var past = window.moment().add(-7, 'day');
     return this.get('created') && this.get('created') > past;

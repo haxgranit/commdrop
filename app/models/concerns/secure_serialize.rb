@@ -60,6 +60,14 @@ module SecureSerialize
         load_secure_object
         res
       end
+      alias_method :real_set, '[]='
+      define_method('[]=') do |*args|
+        if args[0] == column
+          send("#{column}=", args[1])
+        else
+          real_set(*args)
+        end
+      end
       before_save :persist_secure_object
       define_singleton_method(:before_save) do |*args|
         raise "only simple before_save calls after secure_serialize: #{args.to_json}" unless args.length == 1 && args[0].is_a?(Symbol)

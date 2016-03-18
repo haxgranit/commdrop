@@ -160,14 +160,14 @@ class Api::BoardsController < ApplicationController
     return unless exists?(board || deleted_board)
     if board
       return unless allowed?(board, 'edit')
-      board_id = board.id
+      board_id = board.global_id
     elsif deleted_board && deleted_board.user
       return unless allowed?(deleted_board.user, 'view_deleted_boards')
-      board_id = deleted_board.board_id
+      board_id = deleted_board.board_global_id
     end
     return unless exists?(board_id)
-    versions = PaperTrail::Version.where(:item_type => 'Board', :item_id => board_id).where('whodunnit IS NOT NULL').order('id DESC')
-    render json: JsonApi::BoardVersion.paginate(params, versions)
+    versions = Board.user_versions(board_id)
+    render json: JsonApi::BoardVersion.paginate(params, versions, {:admin => Organization.admin_manager?(@api_user)})
   end
   
   def rename

@@ -38,6 +38,9 @@ describe SecureSerialize, :type => :model do
     def reload
     end
     
+    def []=(*args)
+    end
+    
     def read_attribute(column)
       @settings
     end
