@@ -743,6 +743,7 @@ var persistence = Ember.Object.extend({
           persistence.update_sync_progress();
           var next = to_visit_boards.shift();
           var id = next && (next.id || next.key);
+          var key = next && next.key;
           if(next && next.depth < 20 && id && !visited_boards.find(function(i) { return i == id; })) {
             console.log('finding board... ' + id);
             var local_full_set_revision = null;
@@ -861,7 +862,7 @@ var persistence = Ember.Object.extend({
                   nextBoard(defer);
                 }, 150);
               } else {
-                defer.reject({error: "failed to retrieve board " + id + " for syncing", board_unauthorized: board_unauthorized});
+                defer.reject({error: "board " + (key || id) + " failed retrieval for syncing", board_unauthorized: board_unauthorized});
               }
             });
           } else if(!next) {
