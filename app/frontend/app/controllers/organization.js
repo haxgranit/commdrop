@@ -30,6 +30,21 @@ export default Ember.Controller.extend({
         });
       }
     },
+    find_board: function() {
+      var key = this.get('search_board');
+      var _this = this;
+      if(key) {
+        CoughDrop.store.findRecord('board', key).then(function(res) {
+          _this.transitionToRoute('board', res.get('key'));
+        }, function(err) {
+          if(err.deleted && err.key) {
+            _this.transitionToRoute('board', err.key);
+          } else {
+            modal.error(i18n.t('no_boards_found', "No boards found matching that lookup"));
+          }
+        });
+      }
+    },
     find_user: function() {
       var q = this.get('search_user');
       var _this = this;
