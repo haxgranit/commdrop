@@ -491,11 +491,15 @@ class Board < ActiveRecord::Base
   def self.user_versions(global_id)
     # TODO: sharding
     local_id = Board.local_ids([global_id])[0]
+    current = Board.find_by_global_id(global_id)
     versions = []
     all_versions = PaperTrail::Version.where(:item_type => 'Board', :item_id => local_id).order('id DESC')
+
     all_versions.each_with_index do |v, idx|
       if v.whodunnit
-        v.instance_variable_set('@next', all_versions[idx + 1])
+        later_version = all_versions[idx - 1]
+        later_object = later_version ? later_version.reify : current
+        v.instance_variable_set('@later_object', later_object)
         versions << v
       end
     end

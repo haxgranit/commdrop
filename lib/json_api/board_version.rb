@@ -41,11 +41,14 @@ module JsonApi::BoardVersion
           'image' => "https://www.mycoughdrop.com/images/logo-big.png"
         }
       end
-      next_version = version.instance_variable_get('@next')
+      later_object = version.instance_variable_get('@later_object')
       
       obj = version.reify rescue nil
       if obj && !obj.settings
         obj.load_secure_object rescue nil
+      end
+      if json['action'] == 'created' && later_object && later_object.parent_board_id
+        json['action'] = 'copied'
       end
       if obj && obj.settings
         if json['action'] == 'updated' && obj.settings['edit_description'] && obj.settings['edit_description']['notes'] && obj.settings['edit_description']['notes'].length > 0

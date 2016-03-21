@@ -186,7 +186,7 @@ class Api::UsersController < ApplicationController
     return unless exists?(user, params['user_id']) && exists?(old_board, params['old_board_id']) && exists?(new_board, params['new_board_id'])
     return unless allowed?(user, 'edit') && allowed?(old_board, 'view') && allowed?(new_board, 'view')
     
-    progress = Progress.schedule(user, :replace_board, params['old_board_id'], params['new_board_id'], params['update_inline'])
+    progress = Progress.schedule(user, :replace_board, params['old_board_id'], params['new_board_id'], params['update_inline'], user_for_paper_trail)
     render json: JsonApi::Progress.as_json(progress, :wrapper => true)
   end
   
@@ -197,7 +197,7 @@ class Api::UsersController < ApplicationController
     return unless exists?(user, params['user_id']) && exists?(old_board, params['old_board_id']) && exists?(new_board, params['new_board_id'])
     return unless allowed?(user, 'edit') && allowed?(old_board, 'view') && allowed?(new_board, 'view')
     
-    progress = Progress.schedule(user, :copy_board_links, params['old_board_id'], params['new_board_id'])
+    progress = Progress.schedule(user, :copy_board_links, params['old_board_id'], params['new_board_id'], user_for_paper_trail)
     render json: JsonApi::Progress.as_json(progress, :wrapper => true)
   end
   

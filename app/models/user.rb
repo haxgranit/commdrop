@@ -614,22 +614,30 @@ class User < ActiveRecord::Base
     end
   end
   
-  def replace_board(starting_old_board_id, starting_new_board_id, update_inline=false)
+  def replace_board(starting_old_board_id, starting_new_board_id, update_inline=false, whodunnit=nil)
+    prior = PaperTrail.whodunnit
+    PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
     starting_new_board = Board.find_by_path(starting_new_board_id)
     Board.replace_board_for(self, starting_old_board, starting_new_board, update_inline)
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
+  ensure
+    PaperTrail.whodunnit = prior
   end
   
-  def copy_board_links(starting_old_board_id, starting_new_board_id)
+  def copy_board_links(starting_old_board_id, starting_new_board_id, whodunnit=nil)
+    prior = PaperTrail.whodunnit
+    PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
     starting_new_board = Board.find_by_path(starting_new_board_id)
     Board.copy_board_links_for(self, starting_old_board, starting_new_board)
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
+  ensure
+    PaperTrail.whodunnit = prior
   end
 
   def notify_on(attributes, notification_type)
