@@ -138,11 +138,11 @@ var i18n = Ember.Object.extend({
         str = str.replace(terms[idx], value);
       }
     }
-    
+
     if(options && options.hash && options.hash.count !== undefined) {
       var count = options.hash.count;
       if(count && count.length) { count = count.length; }
-      if(count != 1) { 
+      if(count != 1) {
         str = count + " " + this.pluralize(str);
       } else {
         str = count + " " + str;
@@ -209,6 +209,9 @@ var i18n = Ember.Object.extend({
     var res = null;
     var modifier = 'ed';
     var vowel_cons = this.vowels.indexOf(check[check.length - 2]) >= 0 && this.vowels.indexOf(check[check.length - 1]) == -1;
+    if(check[check.length - 1] == 'x') {
+      vowel_cons = false;
+    }
     var syllables = this.syllables(str);
     var ending_stress = true; // TODO: this will be a hard one, methinks
     var sub = this.substitutions.tenses[str];
@@ -275,6 +278,20 @@ var i18n = Ember.Object.extend({
     }
     return res;
   },
+  verb_negation: function(str) {
+    // http://www.grammarly.com/handbook/sentences/negatives/
+    // https://www.englishclub.com/vocabulary/contractions-negative.htm
+    var check = str.toLowerCase();
+    var res = null;
+    if(this.substitutions.verb_to_be_negations[check]) {
+      res = this.substitutions.verb_to_be_negations[check];
+    } else if(str.match(/n$/)) {
+      res = str + "'t";
+    } else {
+      res = str + "n't";
+    }
+    return res;
+  },
   syllables: function(word) {
     // http://stackoverflow.com/questions/405161/detecting-syllables-in-a-word
     // https://code.google.com/p/hyphenator/
@@ -320,7 +337,7 @@ var i18n = Ember.Object.extend({
     if(this.substitutions.superlatives_comparatives[check]) { // list of exceptions
       res = this.substitutions.superlatives_comparatives[check][(most ? 1 : 0)];
     } else if(syllables == 1) { // 1 syllable
-      // add the last consonant again if it's not already doubled and 
+      // add the last consonant again if it's not already doubled and
       // the word ends in consonant-vowel-consonant
       var word = str;
       if(check.length >= 3) {
@@ -397,6 +414,11 @@ var i18n = Ember.Object.extend({
       'little': ['less', 'the least'],
       'much': ['more', 'the most',],
       'far': ['farther', 'the farthest']
+    },
+    verb_to_be_negations: {
+      'am': "am not",
+      'will': "won't",
+      'shall': "shan't"
     },
     possessives: {
       'i': ['my', 'mine'],

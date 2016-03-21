@@ -71,6 +71,7 @@ Coughdrop::Application.routes.draw do
       cache "/images/web_version.svg"
       cache "/images/ios_app_store.svg"
       cache "/images/google_play.png"
+      cache "/images/amazon.png"
       cache "/offline"
       # cache other assets
 

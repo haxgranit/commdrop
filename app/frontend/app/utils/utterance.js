@@ -46,7 +46,7 @@ var utterance = Ember.Object.extend({
         if(idx === 0 || last_computed.in_progress) {
           last = buttonList.pop() || {};
         }
-        // append to previous 
+        // append to previous
         var altered = this.modify_button(last, button);
         buttonList.push(altered);
       } else if(text.match(/^\:/) && !last.sound) {
@@ -83,25 +83,25 @@ var utterance = Ember.Object.extend({
         }, function() { });
       }
     });
-    
+
     app_state.set('button_list', visualButtonList);
     stashes.persist('working_vocalization', buttonList);
   }.observes('rawButtonList', 'rawButtonList.[]', 'rawButtonList.length'),
-  modifiers: [':plural', ':singular', ':comparative', ':er', ':superlative', 
+  modifiers: [':plural', ':singular', ':comparative', ':er', ':superlative',
     ':est', ':possessive', ':\'s', ':past', ':ed', ':present-participle', ':ing', ':space', ':complete'],
   modify_button: function(original, addition) {
     // TODO: I'm thinking maybe +s notation shouldn't append to word buttons, only :modify notation
     // should do that. The problem is when you want to spell a word after picking a word-button,
     // how exactly do you go about that? Make them type a space first? I guess maybe...
     var altered = Ember.$.extend({}, original);
-    
+
     altered.modified = true;
     altered.button_id = altered.button_id || addition.button_id;
     altered.sound = null;
     altered.board = altered.board || addition.board;
     altered.modifications = altered.modifications || [];
     altered.modifications.push(addition);
-    
+
     var text = addition.vocalization || addition.label;
     var prior_text = (altered.vocalization || altered.label || '');
     var prior_label = (altered.label || '');
@@ -131,6 +131,10 @@ var utterance = Ember.Object.extend({
       altered.vocalization = i18n.superlative(prior_text);
       altered.label = i18n.superlative(prior_label);
       altered.in_progress = false;
+    } else if(text == ':verb-negation' || text == ':\'t') {
+      altered.vocalization = i18n.verb_negation(prior_text);
+      altered.label = i18n.verb_negation(prior_label);
+      altered.in_progress = false;
     } else if(text == ':possessive' || text == ':\'s') {
       altered.vocalization = i18n.possessive(prior_text);
       altered.label = i18n.possessive(prior_label);
@@ -144,7 +148,7 @@ var utterance = Ember.Object.extend({
       altered.label = i18n.tense(prior_label, {present_participle: true});
       altered.in_progress = false;
     }
-    
+
     var filler = 'https://s3.amazonaws.com/opensymbols/libraries/mulberry/pencil%20and%20paper%202.svg';
     altered.image = altered.image || filler;
     if(!altered.in_progress && altered.image == filler) {
@@ -204,7 +208,7 @@ var utterance = Ember.Object.extend({
       text = text + " <span class='glyphicon glyphicon-volume-up'></span>";
     }
     $(selector).attr('data-content', text).popover('show');
-    
+
     this._popoverHide = Ember.run.later(this, function() {
       $(selector).popover('hide');
     }, 2000);
@@ -259,7 +263,7 @@ var utterance = Ember.Object.extend({
         items.push({text: (list[idx].vocalization || list[idx].label), volume: volume});
       }
     }
-    
+
     stashes.log({
       text: text,
       buttons: stashes.get('working_vocalization')
@@ -277,7 +281,7 @@ var utterance = Ember.Object.extend({
     if(isNaN(pitch)) { pitch = 1.0; }
     volume = parseFloat(volume);
     if(isNaN(volume)) { volume = 1.0; }
-      
+
     speecher.speak_text(i18n.t('do_you_like_voice', "Do you like my voice?"), true, {
       volume: volume,
       pitch: pitch,
