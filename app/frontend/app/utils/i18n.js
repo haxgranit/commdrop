@@ -202,6 +202,7 @@ var i18n = Ember.Object.extend({
     // http://www.oxforddictionaries.com/us/words/spelling
     // TODO: agent nouns? (jumper, cooker, accelerator)
     // TODO: nominalizations? (swimming, refusal, carelessness)
+    // http://www.say-it-in-english.com/SomeRules.html
     var check = str.toLowerCase();
     if(!this.substitutions.tenses[check] && this.substitutions.tenses.replacements[check]) {
       check = this.substitutions.tenses.replacements[check];

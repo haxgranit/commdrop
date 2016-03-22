@@ -10,6 +10,8 @@ describe("i18n", function() {
       expect(i18n.pluralize).not.toEqual(null);
       expect(i18n.pluralize("cat")).toEqual("cats");
       expect(i18n.pluralize("cow")).toEqual("cows");
+      expect(i18n.pluralize("wish")).toEqual("wishes");
+      expect(i18n.pluralize("box")).toEqual("boxes");
     });
   });
 
@@ -129,6 +131,7 @@ describe("i18n", function() {
       expect(i18n.tense('control', {present_participle: true})).toEqual("controlling");
       expect(i18n.tense('contemplate', {present_participle: true})).toEqual("contemplating");
       expect(i18n.tense('care', {present_participle: true})).toEqual("caring");
+      expect(i18n.tense('bury', {present_participle: true})).toEqual("burying");
     });
 
     it("should properly tensify a simple-past", function() {
@@ -141,6 +144,7 @@ describe("i18n", function() {
       expect(i18n.tense('miss', {simple_past: true})).toEqual("missed");
       expect(i18n.tense('admit', {simple_past: true})).toEqual("admitted");
       expect(i18n.tense('like', {simple_past: true})).toEqual("liked");
+      expect(i18n.tense('bury', {simple_past: true})).toEqual("buried");
     });
 
     it("should properly tensify a past-participle", function() {
