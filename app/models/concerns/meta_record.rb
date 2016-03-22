@@ -17,7 +17,9 @@ module MetaRecord
     elsif self.class == Board
       json = JsonApi::Board.as_json(self)
       res.title = json['name']
-      res.summary = json['description']
+      res.summary = json['description'] || ""
+      res.summary += " -- " if res.summary.length > 0
+      res.summary += "Communication board \"#{res.title}\", #{json['grid']['rows']} x #{json['grid']['columns']}"
       res.image = URI.encode(json['image_url'])
       res.link = URI.encode(json['link'])
     elsif self.class == User

@@ -12,6 +12,16 @@ class BoardsController < ApplicationController
     
   end
   
+  def about
+    @meta_record = OpenStruct.new
+    @meta_record.title = "About CoughDrop"
+    @meta_record.summary = "Why \"CoughDrop\"? Cough drops help you get back the voice you already had, but that maybe people couldn't hear so well. If you're new to the world of augmentative communication, just about every part of it feels intimidating."
+    @meta_record.link = "#{request.protocol}://#{request.host_with_port}/about"
+    @meta_record.created = Time.parse("Jan 1 2014").iso8601
+    @meta_record.updated = Time.now.iso8601
+    render :index
+  end
+  
   def terms; end
   
   def privacy; end

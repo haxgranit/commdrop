@@ -62,6 +62,12 @@
   <link href="https://www.mycoughdrop.com/icons/logo-152.png" rel="apple-touch-icon" sizes="152x152" />
 </head>
 <body class="<%= 'pretty_loader' if pretty_loader %>">
+<% if @meta_record && crawler? %>
+  <div id="meta_header">
+    <h1><%= @meta_record.title %></h1>
+    <p><%= @meta_record.summary %></p>
+  </div>
+<% end %>
 
 <%= yield %>
 

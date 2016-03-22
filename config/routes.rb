@@ -34,6 +34,7 @@ Coughdrop::Application.routes.draw do
   get '/privacy' => 'boards#privacy'
   get '/terms' => 'boards#terms'
   get '/jobs' => 'boards#jobs'
+  get '/about' => 'boards#about'
   
   # if Rails.env.production?
   # TODO: need to catch the update event to post a note encouraging the user to reload

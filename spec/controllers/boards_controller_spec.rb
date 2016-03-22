@@ -15,6 +15,14 @@ describe BoardsController, :type => :controller do
     end
   end
   
+  describe "about" do
+    it "should render" do
+      get "about"
+      expect(response).to be_success
+      expect(assigns[:meta_record]).not_to eq(nil)
+    end
+  end
+  
   describe "board" do
     it "should set a meta attribute" do
       u = User.create
