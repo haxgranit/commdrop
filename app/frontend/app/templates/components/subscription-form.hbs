@@ -85,6 +85,12 @@
                 <button type="button" class="btn btn-primary active" {{action 'set_subscription_type' 'gift_code'}}>
                   {{t "I have a gift code" key='voucher_code'}}
                 </button>
+              {{else if pricing_only}}
+                <span style="padding-left: 20px; margin-top: 40px; display: inline-block;">
+                  {{#link-to 'gift_purchase'}}
+                    {{t "Purchase as a gift" key='purchase_as_a_gift'}}
+                  {{/link-to}}
+                </span>
               {{/if}}
             </div>
           {{else}}
@@ -246,7 +252,7 @@
       <div class="col-sm-9">
         {{#link-to 'register' class='btn btn-lg btn-primary'}}{{t "Sign Up for a Free Trial of CoughDrop" key='sign_up_for_trial_coughdrop'}}{{/link-to}}
       </div>
-    </div>    
+    </div>
   {{else}}
     <div class="form-group">
       <div class="col-sm-9">
@@ -263,6 +269,6 @@
           <button type="button" class="btn btn-lg btn-default" {{action "reset"}}>{{t "Cancel Changes" key='cancel_changes'}}</button>
         {{/if}}
       </div>
-    </div>    
+    </div>
   {{/if}}
 </form>
