@@ -10,7 +10,7 @@ import stashes from './_stashes';
 // - text boxes in edit mode should be clickable
 // - backspace should only remove one item
 // - PIN entry shouldn't double-add the selected number
-// - identity dropdown should work, including picking an item in the 
+// - identity dropdown should work, including picking an item in the
 //   menu, and the menu auto-closing when somewhere else is hit
 // - button_list should vocalize on select
 // - hitting the action or image icon on a button while in edit
@@ -31,6 +31,9 @@ Ember.$(document).on('mousedown touchstart', function(event) {
     Ember.$("#hidden_input").select().focus();
   }
 }).on('gazelinger mousemove touchmove mousedown touchstart', function(event) {
+  if(event.type == 'mousemove' || event.type == 'mousedown') {
+    buttonTracker.mouse_used = true;
+  }
   buttonTracker.touch_continue(event);
 }).on('mouseup touchend touchcancel blur', function(event) {
   buttonTracker.touch_release(event);
@@ -110,7 +113,7 @@ var buttonTracker = Ember.Object.extend({
   setup: function() {
     // cheap trick to get us ahead of the line in front of ember
     Ember.$("#within_ember").on('click', '.advanced_selection', function(event) {
-      // we're basically replacing all click events by tracking up and down explicitly, 
+      // we're basically replacing all click events by tracking up and down explicitly,
       // so we don't want any unintentional double-triggers
       if(event.pass_through) { return; }
       event.preventDefault();
@@ -129,12 +132,12 @@ var buttonTracker = Ember.Object.extend({
       // doesn't need to be here, but since buttons are always using advanced_selection it's probably ok
       Ember.$(".touched").removeClass('touched');
       // this is to prevent ugly selected boxes that happen with dragging
-      if(app_state.get('edit_mode') || app_state.get('speak_mode')) { 
+      if(app_state.get('edit_mode') || app_state.get('speak_mode')) {
         if(!buttonTracker.ignored_region(event)) {
           event.preventDefault();
         }
         if(app_state.get('edit_mode')) {
-          return; 
+          return;
         }
       }
 
@@ -156,9 +159,9 @@ var buttonTracker = Ember.Object.extend({
   },
   // used for handling dragging
   touch_continue: function(event) {
-    if(buttonTracker.transitioning) { 
+    if(buttonTracker.transitioning) {
       event.preventDefault();
-      return; 
+      return;
     }
 
     // not the best approach, but I was getting tired of all the selected text blue things when
@@ -169,7 +172,7 @@ var buttonTracker = Ember.Object.extend({
         event.preventDefault();
       }
     }
-    
+
     event = buttonTracker.normalize_event(event);
     buttonTracker.ignoreUp = false;
     if(event.screenX && event.clientX) {
@@ -180,10 +183,12 @@ var buttonTracker = Ember.Object.extend({
     }
     if(event.type == 'touchstart' || event.type == 'mousedown' || event.type == 'touchmove') {
       buttonTracker.buttonDown = true;
-    } else if(event.type == 'gazelinger' && buttonTracker.eyegaze_enabled) {
-      buttonTracker.gaze_linger(event);
+    } else if(event.type == 'gazelinger' && buttonTracker.dwell_enabled) {
+      buttonTracker.dwell_linger(event);
+    } else if(event.type == 'mousemove' && buttonTracker.dwell_enabled && buttonTracker.dwell_type == 'mouse_dwell') {
+      buttonTracker.dwell_linger(event);
     }
-    if(!buttonTracker.buttonDown && !app_state.get('edit_mode')) { 
+    if(!buttonTracker.buttonDown && !app_state.get('edit_mode')) {
       var button_wrap = buttonTracker.find_selectable_under_event(event);
       if(button_wrap) {
         button_wrap.addClass('hover');
@@ -194,9 +199,9 @@ var buttonTracker = Ember.Object.extend({
         app_state.get('board_virtual_dom').clear_hover();
         Ember.$("#board_canvas").css('cursor', '');
       }
-      return; 
+      return;
     }
-  
+
     if(buttonTracker.buttonDown && buttonTracker.any_select && buttonTracker.scanning_enabled) {
       var width = Ember.$(window).width();
       if(event.clientX <= (width / 2)) {
@@ -212,7 +217,7 @@ var buttonTracker = Ember.Object.extend({
           return scanner.pick();
         }
       }
-    
+
     }
     if(buttonTracker.buttonDown && !Ember.$(event.target).hasClass('highlight')) {
       modal.close_highlight();
@@ -255,7 +260,7 @@ var buttonTracker = Ember.Object.extend({
           }
         }
       }
-      if(!elem_wrap || !app_state.get('edit_mode')) { 
+      if(!elem_wrap || !app_state.get('edit_mode')) {
       } else {
         // this is expensive, only do when the drop target has changed
         if(elem_wrap.dom && elem_wrap.dom != buttonTracker.drag.data('over')) {
@@ -275,7 +280,7 @@ var buttonTracker = Ember.Object.extend({
           }
           // remember which element you were last over, can skip all this if hasn't changed
           buttonTracker.drag.data('over', elem_wrap.dom);
-      
+
           // $over is the current drop target, make a copy of it and put it in as a
           // placeholder where the dragged button used to live
           var $over = Ember.$(elem_wrap.dom);
@@ -311,10 +316,10 @@ var buttonTracker = Ember.Object.extend({
   },
   touch_release: function(event) {
     event = buttonTracker.normalize_event(event);
-    
+
     // don't remember why this is important...
     buttonTracker.buttonDown = false;
-    
+
     var selectable_wrap = buttonTracker.find_selectable_under_event(event);
     // if dragging a button, behavior is very different than otherwise
     if(buttonTracker.drag) {
@@ -349,7 +354,7 @@ var buttonTracker = Ember.Object.extend({
       }
       buttonTracker.drag = null;
     } else if((selectable_wrap || buttonTracker.initialTarget) && !buttonTracker.ignored_region(event)) {
-      // if it either started or ended on a selectable item then there's a 
+      // if it either started or ended on a selectable item then there's a
       // chance we need to trigger a 'click', so pass it along
       buttonTracker.buttonDown = true;
       buttonTracker.element_release(selectable_wrap, event);
@@ -357,7 +362,7 @@ var buttonTracker = Ember.Object.extend({
 //       event.preventDefault();
 //       event.stopPropagation();
 //       Ember.$(event.target).trigger('click');
-    // TODO: if not advanced_selection, touch events (but not mouse events) should be 
+    // TODO: if not advanced_selection, touch events (but not mouse events) should be
     // mapped to click events for faster activation. Maybe find a library for this..
     }
     editManager.release_stroke();
@@ -368,15 +373,15 @@ var buttonTracker = Ember.Object.extend({
   },
   element_release: function(elem_wrap, event) {
     // don't remember why this is important, but I'm pretty sure it is
-    if(buttonTracker.ignored_region(event)) { 
+    if(buttonTracker.ignored_region(event)) {
       if(editManager.finding_target()) {
         buttonTracker.ignoreUp = true;
         event.preventDefault();
       } else {
-        return; 
+        return;
       }
     }
-    
+
     if(buttonTracker.drag || !buttonTracker.buttonDown || buttonTracker.ignoreUp) {
       // when dragging or nothing selected, do nothing
       buttonTracker.ignoreUp = false;
@@ -393,7 +398,7 @@ var buttonTracker = Ember.Object.extend({
       // selecting a button
       event.preventDefault();
       var ts = (new Date()).getTime();
-      
+
       if(event.type != 'gazelinger') {
         // Use start, end or average pointer location for selection
         buttonTracker.activation_location = buttonTracker.activation_location || window.user_preferences.any_user.activation_location;
@@ -413,7 +418,7 @@ var buttonTracker = Ember.Object.extend({
           elem_wrap = null;
         }
       }
-      
+
       // logic to prevent quick double-tap, seems like this was a fix for iOS problems
       // but it may no longer be necessary
       if(elem_wrap && elem_wrap.dom && buttonTracker.lastSelect != elem_wrap.dom) {
@@ -424,7 +429,7 @@ var buttonTracker = Ember.Object.extend({
             buttonTracker.lastSelect = null;
           }
         }, 300);
-        
+
         // different elements have different selection styles
         // TODO: standardize this more
         if(elem_wrap.dom.id == 'identity') {
@@ -465,7 +470,7 @@ var buttonTracker = Ember.Object.extend({
         buttonTracker.button_release(elem_wrap, event);
       }
     }
-    
+
     // without this, applying a button from the stash causes the selected
     // button to be put in drag mode
     buttonTracker.buttonDown = false;
@@ -490,8 +495,8 @@ var buttonTracker = Ember.Object.extend({
       }
     }
   },
-  gaze_linger: function(event) {
-    if(buttonTracker.gaze_wait) { return; }
+  dwell_linger: function(event) {
+    if(buttonTracker.dwell_wait) { return; }
     // - find the nearest selectable, with some liberal tolerance
     // - if we're already lingering
     //   - if we're outside the tolerance, start a new linger
@@ -499,109 +504,126 @@ var buttonTracker = Ember.Object.extend({
     // - persist the current linger, record the starting timestamp
     // - if we've been lingering on the element for more than the cutoff, call element_release
     var elem_wrap = buttonTracker.find_selectable_under_event(event, true);
-    if(!buttonTracker.gaze_elem) {
+    if(!buttonTracker.dwell_elem) {
       var elem = document.createElement('div');
       elem.id = 'linger';
       document.body.appendChild(elem);
-      buttonTracker.gaze_elem = elem;
+      var spinner = document.createElement('div');
+      spinner.className = 'spinner pie';
+      elem.appendChild(spinner);
+      var filler = document.createElement('div');
+      filler.className = 'filler pie';
+      elem.appendChild(filler);
+      var mask = document.createElement('div');
+      mask.className = 'mask';
+      elem.appendChild(mask);
+      buttonTracker.dwell_elem = elem;
     }
 
     Ember.run.cancel(buttonTracker.linger_clear_later);
-    buttonTracker.gaze_timeout = buttonTracker.gaze_timeout || 1000;
-    buttonTracker.gaze_animation = buttonTracker.gaze_animation || 'pie';
-    if(!buttonTracker.gaze_delay && buttonTracker.gaze_delay !== 0) {
-      buttonTracker.gaze_delay = 100;
+    buttonTracker.dwell_timeout = buttonTracker.dwell_timeout || 1000;
+    buttonTracker.dwell_animation = buttonTracker.dwell_animation || 'pie';
+    if(!buttonTracker.dwell_delay && buttonTracker.dwell_delay !== 0) {
+      buttonTracker.dwell_delay = 100;
     }
     buttonTracker.linger_clear_later = Ember.run.later(function() {
-      buttonTracker.gaze_elem.classList.remove('targeting');
-      buttonTracker.gaze_elem.style.left = '-1000px';
-      buttonTracker.last_gaze_linger = null;
-      // clear the gaze icon
+      buttonTracker.dwell_elem.classList.remove('targeting');
+      buttonTracker.dwell_elem.style.left = '-1000px';
+      buttonTracker.last_dwell_linger = null;
+      // clear the dwell icon
     }, 500);
 
     var now = (new Date()).getTime();
     var duration = event.duration || 50;
-    if(buttonTracker.last_gaze_linger) {
+    if(buttonTracker.last_dwell_linger) {
       // check if we're outside the screen bounds, or the timestamp bounds.
       // if so clear the object
-      if(now - buttonTracker.last_gaze_linger.started > buttonTracker.gaze_timeout + 1000 - duration) {
-        buttonTracker.last_gaze_linger = null;
-      } else if(now - buttonTracker.last_gaze_linger.updated > 500 - duration) {
-        buttonTracker.last_gaze_linger = null;
+      if(now - buttonTracker.last_dwell_linger.started > buttonTracker.dwell_timeout + 1000 - duration) {
+        buttonTracker.last_dwell_linger = null;
+      } else if(now - buttonTracker.last_dwell_linger.updated > 500 - duration) {
+        buttonTracker.last_dwell_linger = null;
       } else {
-        var bounds = buttonTracker.last_gaze_linger.loose_bounds();
+        var bounds = buttonTracker.last_dwell_linger.loose_bounds();
         if(event.clientX < bounds.left || event.clientX > bounds.left + bounds.width ||
               event.clientY < bounds.top || event.clientY > bounds.top + bounds.height) {
-          buttonTracker.last_gaze_linger = null;
+          buttonTracker.last_dwell_linger = null;
         }
       }
     }
-    if(elem_wrap && buttonTracker.last_gaze_linger && elem_wrap.dom == buttonTracker.last_gaze_linger.dom) {
+    if(elem_wrap && buttonTracker.last_dwell_linger && elem_wrap.dom == buttonTracker.last_dwell_linger.dom) {
       // if they're the same, we're rockin'
       buttonTracker.buttonDown = true;
-    } else if(elem_wrap && buttonTracker.last_gaze_linger && elem_wrap.dom != buttonTracker.last_gaze_linger.dom) {
+    } else if(elem_wrap && buttonTracker.last_dwell_linger && elem_wrap.dom != buttonTracker.last_dwell_linger.dom) {
       // if there's a valid existing linger for a different element, decide between it and the new linger
-      var old_bounds = buttonTracker.last_gaze_linger.loose_bounds();
+      var old_bounds = buttonTracker.last_dwell_linger.loose_bounds();
       var new_bounds = elem_wrap.loose_bounds();
       var avg_x = event.clientX, avg_y = event.clientY;
       // TODO: need to better factor in gravity of almost-done linger
-      buttonTracker.last_gaze_linger.events.forEach(function(e) {
+      buttonTracker.last_dwell_linger.events.forEach(function(e) {
         avg_x = avg_x + e.clientX;
         avg_y = avg_y + e.clientY;
       });
-      avg_x = avg_x / (buttonTracker.last_gaze_linger.events.length + 1);
-      avg_y = avg_y / (buttonTracker.last_gaze_linger.events.length + 1);
+      avg_x = avg_x / (buttonTracker.last_dwell_linger.events.length + 1);
+      avg_y = avg_y / (buttonTracker.last_dwell_linger.events.length + 1);
       // cheap but less-accurate comparison
       var old_dist = (Math.abs(old_bounds.left + (old_bounds.width / 2) - avg_x) + Math.abs(old_bounds.top + (old_bounds.height / 2) - avg_y)) / 2;
       var new_dist = (Math.abs(new_bounds.left + (new_bounds.width / 2) - avg_x) + Math.abs(new_bounds.top + (new_bounds.height / 2) - avg_y)) / 2;
       if(new_dist < old_dist) {
-        buttonTracker.last_gaze_linger = elem_wrap;
+        buttonTracker.last_dwell_linger = elem_wrap;
       }
     } else if(elem_wrap) {
-      buttonTracker.last_gaze_linger = elem_wrap;
+      buttonTracker.last_dwell_linger = elem_wrap;
     }
-    if(buttonTracker.last_gaze_linger) {
-      // place the gaze icon in the center of the current linger
-      if(!buttonTracker.last_gaze_linger.started) {
+    if(buttonTracker.last_dwell_linger) {
+      // place the dwell icon in the center of the current linger
+      if(!buttonTracker.last_dwell_linger.started) {
         // restart the excited doing-something animation
-        buttonTracker.last_gaze_linger.started = now;
-        var bounds = buttonTracker.last_gaze_linger.loose_bounds();
-        buttonTracker.gaze_elem.style.left = (bounds.left + (bounds.width / 2) - 25) + "px";
-        buttonTracker.gaze_elem.style.top = (bounds.top + (bounds.height / 2) - 25) + "px";
+        buttonTracker.last_dwell_linger.started = now;
+        var bounds = buttonTracker.last_dwell_linger.loose_bounds();
+        buttonTracker.dwell_elem.style.left = (bounds.left + (bounds.width / 2) - 25) + "px";
+        buttonTracker.dwell_elem.style.top = (bounds.top + (bounds.height / 2) - 25) + "px";
         // restart the animation
-        var clone = buttonTracker.gaze_elem.cloneNode(true);
-        clone.style.animationDuration = buttonTracker.gaze_timeout + 'ms';
-        clone.style.webkitAnimationDuration = buttonTracker.gaze_timeout + 'ms';
-        buttonTracker.gaze_elem.parentNode.replaceChild(clone, buttonTracker.gaze_elem);
+        var clone = buttonTracker.dwell_elem.cloneNode(true);
+        clone.style.animationDuration = buttonTracker.dwell_timeout + 'ms';
+        clone.style.webkitAnimationDuration = buttonTracker.dwell_timeout + 'ms';
+        buttonTracker.dwell_elem.parentNode.replaceChild(clone, buttonTracker.dwell_elem);
         clone.classList.add('targeting');
-        clone.classList.add(buttonTracker.gaze_animation);
-        buttonTracker.gaze_elem = clone;
+        clone.classList.add(buttonTracker.dwell_animation);
+        buttonTracker.dwell_elem = clone;
       }
-      buttonTracker.last_gaze_linger.updated = now;
-      buttonTracker.last_gaze_linger.events = buttonTracker.last_gaze_linger.events || [];
-      buttonTracker.last_gaze_linger.events.push(event);
-      if(now - buttonTracker.last_gaze_linger.started > buttonTracker.gaze_timeout) {
-        buttonTracker.element_release(buttonTracker.last_gaze_linger, event);
-        buttonTracker.last_gaze_linger = null;
-        if(buttonTracker.gaze_delay) {
-          buttonTracker.gaze_wait = true;
+      buttonTracker.last_dwell_linger.updated = now;
+      buttonTracker.last_dwell_linger.events = buttonTracker.last_dwell_linger.events || [];
+      buttonTracker.last_dwell_linger.events.push(event);
+      if(now - buttonTracker.last_dwell_linger.started > buttonTracker.dwell_timeout) {
+        buttonTracker.element_release(buttonTracker.last_dwell_linger, event);
+        buttonTracker.last_dwell_linger = null;
+        if(buttonTracker.dwell_delay) {
+          buttonTracker.dwell_wait = true;
           Ember.run.later(function() {
-            buttonTracker.gaze_wait = false;
-          }, buttonTracker.gaze_delay);
+            buttonTracker.dwell_wait = false;
+          }, buttonTracker.dwell_delay);
         }
         // TODO: timeout before starting next selection
       }
     } else {
-      // stick the gaze icon wherever it goes, with a sad nothing-here styling
-      buttonTracker.gaze_elem.classList.remove('targeting');
-      buttonTracker.gaze_elem.style.left = (event.clientX - 25) + "px";
-      buttonTracker.gaze_elem.style.top = (event.clientY - 25) + "px";
+      // stick the dwell icon wherever it goes, with a sad nothing-here styling
+      buttonTracker.dwell_elem.classList.remove('targeting');
+      buttonTracker.dwell_elem.style.left = (event.clientX - 25) + "px";
+      buttonTracker.dwell_elem.style.top = (event.clientY - 25) + "px";
     }
   },
   find_selectable_under_event: function(event, loose) {
     event = buttonTracker.normalize_event(event);
     if(event.clientX === undefined || event.clientY === undefined) { return null; }
+    var left = 0;
+    if(buttonTracker.dwell_elem) {
+      var left = buttonTracker.dwell_elem.style.left
+      buttonTracker.dwell_elem.style.left = '-1000px';
+    }
     var $target = Ember.$(document.elementFromPoint(event.clientX, event.clientY));
+    if(buttonTracker.dwell_elem) {
+      buttonTracker.dwell_elem.style.left = left;
+    }
     var region = $target.closest(".advanced_selection")[0];
     if(!region && loose) {
       // TODO: check the loose bounds of all the selectable elements, see if
@@ -782,12 +804,12 @@ var buttonTracker = Ember.Object.extend({
     var diffX = event.pageX - this.startEvent.pageX;
     var diffY = event.pageY - this.startEvent.pageY;
     var elem_wrap = null;
-    
+
     if(Math.abs(event.pageX - this.startEvent.pageX) < this.drag_distance && Math.abs(event.pageY - this.startEvent.pageY) < this.drag_distance) {
       return;
     } else if(this.ignored_region(this.startEvent)) {
       return;
-    } 
+    }
     if(!buttonTracker.drag) {
       elem_wrap = this.find_button_under_event(this.startEvent);
       if(elem_wrap && elem_wrap.dom && app_state.get('edit_mode')) {
@@ -807,9 +829,9 @@ var buttonTracker = Ember.Object.extend({
     buttonTracker.drag = $elem.clone().addClass('clone');
     buttonTracker.drag.css({width: width, height: height, zIndex: 2});
     // buttonTracker.drag.find('.button').css('background', '#fff');
-    buttonTracker.drag.data('elem', $elem[0]);    
+    buttonTracker.drag.data('elem', $elem[0]);
     Ember.$('body').append(buttonTracker.drag);
-    
+
     editManager.set_drag_mode(true);
     var offset = $elem.offset();
     this.initialButtonX = offset.left;
@@ -849,9 +871,9 @@ var buttonTracker = Ember.Object.extend({
   ignored_region: function(event) {
     var target = event && event.target;
     var result = !!(target && (
-                      target.tagName == 'INPUT' || 
+                      target.tagName == 'INPUT' ||
                       target.className == 'dropdown-backdrop' ||
-                      target.className == 'modal' || 
+                      target.className == 'modal' ||
                       target.className == 'modal-dialog'
                     ));
     return result;
@@ -891,7 +913,7 @@ var buttonTracker = Ember.Object.extend({
   },
   move_tab: function(forward) {
     // progress forward or backward to the adjacent button
-    // return true if there is an adjacent button, if not then 
+    // return true if there is an adjacent button, if not then
     // clear the tab and return false
     if(buttonTracker.focus_wrap) {
       var b = app_state.get('board_virtual_dom').button_from_index(buttonTracker.focus_wrap.index + (forward ? 1 : -1));

@@ -95,7 +95,7 @@ var app_state = Ember.Object.extend({
     modal.close();
     if(route.get('session.access_token')) {
       var find = CoughDrop.store.findRecord('user', 'self');
-      
+
       find.then(function(user) {
         console.log("user initialization working..");
         if(user.get('local_result') && stashes.get('online')) {
@@ -104,11 +104,11 @@ var app_state = Ember.Object.extend({
           }, function() { });
         }
         app_state.set('sessionUser', user);
-        
+
         if(stashes.get('speak_mode_user_id')) {
           CoughDrop.store.findRecord('user', stashes.get('speak_mode_user_id')).then(function(user) {
             app_state.set('speakModeUser', user);
-          }, function() { 
+          }, function() {
             console.error('failed trying to speak as ' + stashes.get('speak_mode_user_id'));
           });
         }
@@ -148,7 +148,7 @@ var app_state = Ember.Object.extend({
       }, function() {
         refresh();
       });
-    } else {  
+    } else {
       refresh();
     }
   },
@@ -272,7 +272,7 @@ var app_state = Ember.Object.extend({
     var current = this.get('currentBoardState');
     var state = stashes.get('temporary_root_board_state') || stashes.get('root_board_state');
     state = state || this.get('currentUser.preferences.home_board');
-    
+
     var do_log = false;
     if(state && state.key) {
       if(app_state.get('currentBoardState.key') != state.key) {
@@ -296,7 +296,7 @@ var app_state = Ember.Object.extend({
     }
     var current = app_state.get('currentBoardState');
     var preferred = app_state.get('currentUser.preferences.home_board');
-    
+
     if(!app_state.get('speak_mode')) {
       // if it's in the speak-mode-user's board set, keep the original home board,
       // otherwise set the current board to home for now
@@ -307,7 +307,7 @@ var app_state = Ember.Object.extend({
         decision = decision || 'currentAsHome';
       }
     }
-    
+
     if(!current || decision == 'goHome') {
       this.home_in_speak_mode();
     } else if(stashes.get('current_mode') == 'speak') {
@@ -366,7 +366,7 @@ var app_state = Ember.Object.extend({
         stashes.persist('last_mode', stashes.get('current_mode'));
       } else if(mode == 'speak') {
         var speaking_as_someone_else = app_state.get('speakModeUser.id') && app_state.get('speakModeUser.id') != app_state.get('sessionUser.id');
-        // TODO: consider some kind of reminder for free subscription accounts, if you 
+        // TODO: consider some kind of reminder for free subscription accounts, if you
         // think they shouldn't be using as a speak mode user
         if(app_state.get('currentUser') && !opts.reminded && app_state.get('currentUser.expired') && !speaking_as_someone_else) {
           return modal.open('premium-required', {remind_to_upgrade: true, action: 'app_speak_mode'}).then(function() {
@@ -439,14 +439,17 @@ var app_state = Ember.Object.extend({
           scanner.stop();
         }
       }
-      if(app_state.get('speak_mode') && _this.get('currentUser.preferences.device.eyegaze')) {
-        buttonTracker.eyegaze_enabled = true;
-        buttonTracker.gaze_timeout = _this.get('currentUser.preferences.device.eyegaze_dwell');
-        buttonTracker.gaze_delay = _this.get('currentUser.preferences.device.eyegaze_delay');
-        buttonTracker.gaze_animation = _this.get('currentUser.preferences.device.eyegaze_targeting');
-        capabilities.eye_gaze.listen();
+      if(app_state.get('speak_mode') && _this.get('currentUser.preferences.device.dwell')) {
+        buttonTracker.dwell_enabled = true;
+        buttonTracker.dwell_timeout = _this.get('currentUser.preferences.device.dwell_timeout');
+        buttonTracker.dwell_delay = _this.get('currentUser.preferences.device.dwell_delay');
+        buttonTracker.dwell_type = _this.get('currentUser.preferences.device.dwell_type');
+        buttonTracker.dwell_animation = _this.get('currentUser.preferences.device.dwell_targeting');
+        if(buttonTracker.dwell_type == 'eyegaze') {
+          capabilities.eye_gaze.listen();
+        }
       } else {
-        buttonTracker.eyegaze_enabled = false;
+        buttonTracker.dwell_enabled = false;
         capabilities.eye_gaze.stop_listening();
       }
     }, 1000);
@@ -592,7 +595,7 @@ var app_state = Ember.Object.extend({
     } else {
       return 70;
     }
-  }.property('header_size', 'speak_mode'), 
+  }.property('header_size', 'speak_mode'),
   check_for_full_premium: function(user, action) {
     if(user && user.get('expired')) {
       return modal.open('premium-required', {action: action});

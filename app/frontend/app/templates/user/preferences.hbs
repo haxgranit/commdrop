@@ -292,7 +292,7 @@
         <p class="form-control-static">
           <strong>Active</strong>
         </p>
-        <ul class="list-group"> 
+        <ul class="list-group">
           {{#each active_sidebar_options as |option|}}
             <li class="list-group-item" style="height: 60px;">
               <img src={{option.image}} style="float: left; height: 40px; max-width: 40px;"  {{action "sidebar_button_settings" option}}/>
@@ -317,7 +317,7 @@
           <p class="form-control-static">
             <strong>Disabled</strong>
           </p>
-          <ul class="list-group"> 
+          <ul class="list-group">
             {{#each disabled_sidebar_options as |option|}}
               <li class="list-group-item" style="height: 60px;">
                 <img src={{option.image}} style="float: left; height: 40px; max-width: 40px;"/>
@@ -519,36 +519,58 @@
     {{/if}}
   {{/if}}
   <div class="form-group">
-    <label for="scanning" class="col-sm-3 control-label">{{t "Eye Tracking" key='eye_tracking'}}</label>
+    <label for="scanning" class="col-sm-3 control-label">{{t "Dwell/Eye Tracking" key='dwell_eye_tracking'}}</label>
     <div class="col-sm-5">
       <div class="checkbox">
-        {{#if eyegaze_capable}}
+        {{#if eyegaze_or_dwell_capable}}
           <label>
-            {{input type="checkbox" checked=model.preferences.device.eyegaze id="eyegaze"}}
-            {{t "Enable eye-tracking" key='eyegaze'}}
+            {{input type="checkbox" checked=model.preferences.device.dwell id="eyegaze"}}
+            {{t "Enable dwell/eye-tracking" key='eyegaze'}}
           </label>
         {{else}}
-          <em>{{t "Eye tracking is a beta feature on Windows, please contact us for more information" key='eye_tracking_beta'}}</em>
+          <em>{{t "Eye-gaze or dwell tracking is a beta feature on Windows or other mouse-based system, please contact support for more information" key='eye_tracking_beta'}}</em>
         {{/if}}
       </div>
     </div>
   </div>
-  {{#if model.preferences.device.eyegaze}}
+  {{#if model.preferences.device.dwell}}
     <div class="form-group">
-      <div class="col-sm-5 col-sm-offset-3">
-        <p class="form-control-static"><em>{{t "CoughDrop currently works with EyeX eye trackers. We hope to add more devices soon." key='supported_eye_trackers'}}</em></p>
+      <label for="dwell_type" class="col-sm-3 control-label">{{t "Dwell Type" key='dwell_type'}}</label>
+      <div class="col-sm-3">
+        {{bound-select select_class="form-control" select_id="scanning_mode" content=dwellList selection=model.preferences.device.dwell_type action=(action (mut model.preferences.device.dwell_type)) }}
       </div>
+      <div class="col-sm-2">
+        <button class='btn btn-default' {{action "test_dwell"}}>
+          {{#if testing_dwell}}
+            {{t "Stop Tracking" key='stop_test_dwell'}}
+          {{else}}
+            {{t "Test Dwell Tracking" key='test_dwell'}}
+          {{/if}}
+        </button>
+      </div>
+      {{#if testing_dwell}}
+        <div class="col-sm-2">
+          {{dwell-tracker user=model}}
+        </div>
+      {{/if}}
     </div>
+    {{#if eyegaze_type}}
+      <div class="form-group">
+        <div class="col-sm-5 col-sm-offset-3">
+          <p class="form-control-static"><em>{{t "CoughDrop eye tracking currently works with EyeX and EyeTribe eye trackers. We hope to add more devices soon." key='supported_eye_trackers'}}</em></p>
+        </div>
+      </div>
+    {{/if}}
     <div class="form-group">
-      <label for="eyegaze_dwell" class="col-sm-3 control-label">{{t "Eye Dwell Time" key='eyegaze_dwell'}}</label>
+      <label for="dwell_duration" class="col-sm-3 control-label">{{t "Dwell Time" key='dwell_duration'}}</label>
       <div class="col-sm-3">
         <div class="input-group">
           <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.eyegaze_dwell"}}>-</button>
+            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.dwell_duration"}}>-</button>
           </span>
-          {{input value=model.preferences.device.eyegaze_dwell class="form-control" id="eyegaze_dwell" placeholder="1000"}}
+          {{input value=model.preferences.device.dwell_duration class="form-control" id="dwell_duration" placeholder="1000"}}
           <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.eyegaze_dwell"}}>+</button>
+            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.dwell_duration"}}>+</button>
           </span>
         </div>
       </div>
@@ -557,15 +579,15 @@
       </div>
     </div>
     <div class="form-group">
-      <label for="eyegaze_delay" class="col-sm-3 control-label">{{t "Eye Selection Delay" key='eyegaze_delay'}}</label>
+      <label for="dwell_delay" class="col-sm-3 control-label">{{t "Dwell Selection Delay" key='dwell_delay'}}</label>
       <div class="col-sm-3">
         <div class="input-group">
           <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.eyegaze_delay"}}>-</button>
+            <button type="button" class="btn btn-default" {{action "plus_minus" "minus" "model.preferences.device.dwell_delay"}}>-</button>
           </span>
-          {{input value=model.preferences.device.eyegaze_delay class="form-control" id="eyegaze_delay" placeholder="100"}}
+          {{input value=model.preferences.device.dwell_delay class="form-control" id="dwell_delay" placeholder="100"}}
           <span class="input-group-btn">
-            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.eyegaze_delay"}}>+</button>
+            <button type="button" class="btn btn-default" {{action "plus_minus" "plus" "model.preferences.device.dwell_delay"}}>+</button>
           </span>
         </div>
       </div>
@@ -574,9 +596,9 @@
       </div>
     </div>
     <div class="form-group">
-      <label for="eyegaze_targeting" class="col-sm-3 control-label">{{t "Eye Targeting Style" key='eyegaze_targeting'}}</label>
+      <label for="dwell_targeting" class="col-sm-3 control-label">{{t "Dwell Targeting Style" key='dwell_targeting'}}</label>
       <div class="col-sm-5">
-        {{bound-select select_class="form-control" select_id="scanning_mode" content=targetingList selection=model.preferences.device.eyegaze_targeting action=(action (mut model.preferences.device.eyegaze_targeting)) }}
+        {{bound-select select_class="form-control" select_id="scanning_mode" content=targetingList selection=model.preferences.device.dwell_targeting action=(action (mut model.preferences.device.dwell_targeting)) }}
       </div>
     </div>
   {{/if}}
@@ -687,5 +709,5 @@
     <button type="submit" class="btn btn-primary">{{t "Save Preferences" key='save_preferences'}}</button>
     <button type="button" class="btn btn-default" {{action "cancelSave"}}>{{t "Cancel" key='cancel'}}</button>
   </div>
-</div>    
+</div>
 </form>

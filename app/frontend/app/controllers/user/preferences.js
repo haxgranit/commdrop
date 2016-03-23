@@ -3,6 +3,7 @@ import i18n from '../../utils/i18n';
 import app_state from '../../utils/app_state';
 import utterance from '../../utils/utterance';
 import capabilities from '../../utils/capabilities';
+import buttonTracker from '../../utils/raw_events';
 import modal from '../../utils/modal';
 
 export default Ember.Controller.extend({
@@ -64,6 +65,10 @@ export default Ember.Controller.extend({
     {name: i18n.t('column_based', "Column-Based Scanning"), id: "column"},
     {name: i18n.t('region_based', "Region-Based Scanning"), id: "region"}
   ],
+  dwellList: [
+    {name: i18n.t('eye_gaze', "Eye Gaze Tracking"), id: 'eyegaze'},
+    {name: i18n.t('mouse_dwell', "Mouse Dwell Tracking"), id: 'mouse_dwell'}
+  ],
   targetingList: [
     {name: i18n.t('spinning_pie', "Spinning-Pie Animation"), id: 'pie'},
     {name: i18n.t('shrinking_dot', "Shrinking-Dot Animation"), id: 'shrink'}
@@ -117,9 +122,12 @@ export default Ember.Controller.extend({
   fullscreen_capable: function() {
     return capabilities.fullscreen_capable();
   }.property(),
-  eyegaze_capable: function() {
-    return capabilities.eye_gaze.available;
+  eyegaze_or_dwell_capable: function() {
+    return capabilities.eye_gaze.available || buttonTracker.mouse_used;
   }.property(),
+  eyegaze_type: function() {
+    return this.get('model.preferences.device.dwell') && this.get('model.preferences.device.dwell_type') == 'eyegaze';
+  }.property('model.preferences.device.dwell', 'model.preferences.device.dwell_type'),
   wakelock_capable: function() {
     return capabilities.wakelock_capable();
   }.property(),
@@ -292,6 +300,9 @@ export default Ember.Controller.extend({
       } else if(direction == 'restore') {
         this.set('model.preferences.sidebar_boards', active.concat([button]));
       }
+    },
+    test_dwell: function() {
+      this.set('testing_dwell', !this.get('testing_dwell'));
     },
     premium_voices: function() {
       var _this = this;
