@@ -144,7 +144,8 @@ describe User, :type => :model do
         'button_spacing' => 'small',
         'button_border' => 'small',
         'button_text' => 'medium',
-        'vocalization_height' => 'small'
+        'vocalization_height' => 'small',
+        'wakelock' => true
       })
       expect(u.settings['preferences']['activation_location']).to eq('end')
       expect(u.settings['preferences']['logging']).to eq(false)
@@ -174,7 +175,8 @@ describe User, :type => :model do
         'button_spacing' => 'small',
         'button_border' => 'small',
         'button_text' => 'medium',
-        'vocalization_height' => 'small'
+        'vocalization_height' => 'small',
+        'wakelock' => true
       })
       expect(u.user_name).to eq("bob-miller")
       expect(u.email_hash).not_to eq(nil)

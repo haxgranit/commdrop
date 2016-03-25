@@ -617,7 +617,9 @@ var app_state = Ember.Object.extend({
       // this method is getting called again on every board load, even if already in speak mode. This check
       // limits the following block to once per speak-mode-activation.
       if(!this.get('last_speak_mode')) {
-        capabilities.wakelock('speak', true);
+        if(this.get('currentUser.preferences.device.wakelock') !== false) {
+          capabilities.wakelock('speak', true);
+        }
         this.set_history([]);
         if(stashes.get('logging_enabled')) {
           modal.notice(i18n.t('logging_enabled', "Logging is enabled"), true);

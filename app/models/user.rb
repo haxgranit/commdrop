@@ -133,6 +133,7 @@ class User < ActiveRecord::Base
         'button_border' => 'small',
         'button_text' => 'medium',
         'vocalization_height' => 'small',
+        'wakelock' => true
       },
       'any_user' => {
         'activation_location' => 'end',
