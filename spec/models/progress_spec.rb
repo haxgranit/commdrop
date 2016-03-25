@@ -78,12 +78,12 @@ describe Progress, :type => :model do
     end
     it "should schedule a worker action for classes or objects" do
       p = Progress.schedule(User, :count)
-      expect(Worker.scheduled?(Progress, :perform_action, p.id)).to eq(true)
+      expect(Worker.scheduled_for?('priority', Progress, :perform_action, p.id)).to eq(true)
       expect(p.settings).to eq({'class' => 'User', 'id' => nil, 'method' => 'count', 'arguments' => [], 'state' => 'pending'})
 
       u = User.create      
       p = Progress.schedule(u, :touch, true, false)
-      expect(Worker.scheduled?(Progress, :perform_action, p.id)).to eq(true)
+      expect(Worker.scheduled_for?('priority', Progress, :perform_action, p.id)).to eq(true)
       expect(p.settings).to eq({'class' => 'User', 'id' => u.id, 'method' => 'touch', 'arguments' => [true, false], 'state' => 'pending'})
     end
   end

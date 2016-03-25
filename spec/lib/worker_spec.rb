@@ -40,6 +40,17 @@ describe Worker do
       Worker.schedule(User, 'do_something', {a: 1, b: [2,3,4], c: {d: 7}})
       expect(Worker.scheduled?(User, :do_something, {a: 1, b: [2,3,4], c: {d: 7}})).to be_truthy
     end
+
+    it "should add to a difference queue" do
+      Worker.schedule_for('bacon', User, 'do_something', 2)
+      expect(Worker.scheduled?(User, :do_something, 2)).to be_falsey
+      expect(Worker.scheduled?(User, :do_something, 1)).to be_falsey
+      expect(Worker.scheduled_for?('bacon', User, :do_something, 2)).to be_truthy
+      expect(Worker.scheduled_for?('bacon', User, :do_something, 1)).to be_falsey
+      Worker.schedule_for('priority', User, 'do_something', {a: 1, b: [2,3,4], c: {d: 7}})
+      expect(Worker.scheduled?(User, :do_something, {a: 1, b: [2,3,4], c: {d: 7}})).to be_falsey
+      expect(Worker.scheduled_for?('priority', User, :do_something, {a: 1, b: [2,3,4], c: {d: 7}})).to be_truthy
+    end
     
     it "should add to the queue from async-enabled models" do
       User.schedule(:hip_hop, 16)

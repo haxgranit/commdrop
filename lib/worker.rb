@@ -5,8 +5,13 @@ module Worker
     "#{Process.pid}_#{Thread.current.object_id}"
   end
   
-  def self.schedule(klass, method_name, *args)
+  def self.schedule_for(queue, klass, method_name, *args)
+    @queue = queue.to_s
     Resque.enqueue(Worker, klass.to_s, method_name, *args)
+  end
+  
+  def self.schedule(klass, method_name, *args)
+    schedule_for(:default, klass, method_name, *args)
   end
   
   def self.perform(*args)
@@ -14,6 +19,7 @@ module Worker
     klass_string = args_copy.shift
     klass = Object.const_get(klass_string)
     method_name = args_copy.shift
+    Rails.logger.info("performed #{klass_string} . #{method_name}")
     klass.send(method_name, *args_copy)
   rescue Resque::TermException
     Resque.enqueue(self, *args)
@@ -23,10 +29,19 @@ module Worker
     # TODO...
   end
   
-  def self.scheduled?(klass, method_name, *args)
-    idx = Resque.size('default')
+  def self.scheduled_actions(queue='default')
+    idx = Resque.size(queue)
+    res = []
     idx.times do |i|
-      schedule = Resque.peek('default', i)
+      res << Resque.peek(queue, i)
+    end
+    res
+  end
+  
+  def self.scheduled_for?(queue, klass, method_name, *args)
+    idx = Resque.size(queue)
+    idx.times do |i|
+      schedule = Resque.peek(queue, i)
       if schedule['class'] == 'Worker' && schedule['args'][0] == klass.to_s && schedule['args'][1] == method_name.to_s
         if args.to_json == schedule['args'][2..-1].to_json
           return true
@@ -34,6 +49,10 @@ module Worker
       end
     end
     return false
+  end
+  
+  def self.scheduled?(klass, method_name, *args)
+    scheduled_for?('default', klass, method_name, *args)
   end
   
   def self.stop_stuck_workers

@@ -59,7 +59,7 @@ class Progress < ActiveRecord::Base
       'arguments' => args
     }
     progress.save!
-    Worker.schedule(Progress, :perform_action, progress.id)
+    Worker.schedule_for(:priority, Progress, :perform_action, progress.id)
     progress
   end
   
