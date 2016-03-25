@@ -501,6 +501,17 @@ class Board < ActiveRecord::Base
     DeletedBoard.process(self)
   end
   
+  def buttons_and_images_for(user)
+    key = "buttons_and_images/#{user ? user.cache_key : 'nobody'}"
+    res = get_cached(key)
+    return res if res
+    res = {}
+    res['images'] = self.button_images.map{|i| JsonApi::Image.as_json(i) }
+    res['sounds'] = self.button_sounds.map{|s| JsonApi::Sound.as_json(s) }
+    set_cached(key, res)
+    res
+  end
+  
   def default_listeners(notification_type)
     if notification_type == 'board_buttons_changed'
       ubc = UserBoardConnection.where(:board_id => self.id)

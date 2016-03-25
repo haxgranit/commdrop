@@ -17,6 +17,7 @@ class ButtonImage < ActiveRecord::Base
   
   add_permissions('view') { true }
   add_permissions('view', 'edit') {|user| self.user_id == user.id || (self.user && self.user.allows?(user, 'edit')) }
+  cache_permissions
 
   def generate_defaults
     self.settings ||= {}

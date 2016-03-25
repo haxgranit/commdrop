@@ -63,8 +63,9 @@ module JsonApi::Board
   
   def self.extra_includes(board, json, args={})
     self.trace_execution_scoped(['json/board/images_and_sounds']) do
-      json['images'] = board.button_images.map{|i| JsonApi::Image.as_json(i, args) }
-      json['sounds'] = board.button_sounds.map{|s| JsonApi::Sound.as_json(s, args) }
+      hash = board.buttons_and_images_for(args[:permissions])
+      json['images'] = hash['images']
+      json['sounds'] = hash['sounds']
     end
     if args.key?(:permissions)
       self.trace_execution_scoped(['json/board/copy_check']) do
