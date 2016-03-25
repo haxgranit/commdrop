@@ -41,6 +41,8 @@ export default modal.ModalController.extend({
       this.set('loading', true);
       this.set('error', false);
       this.set('current_user', null);
+      this.set('in_board_set', null);
+      this.set('home_board', null);
       var find_user = CoughDrop.store.findRecord('user', for_user_id).then(function(user) {
         if(!user.get('stats')) {
           return user.reload();
@@ -53,6 +55,7 @@ export default modal.ModalController.extend({
         _this.set('current_user', user);
         _this.set('loading', false);
         _this.set('in_board_set', !!in_board_set);
+        _this.set('home_board', user.get('preferences.home_board.id') == _this.get('model.board.id'));
       }, function() {
         _this.set('loading', false);
         _this.set('error', true);
@@ -61,6 +64,7 @@ export default modal.ModalController.extend({
       this.set('loading', false);
       this.set('error', false);
       this.set('in_board_set', false);
+      this.set('home_board', false);
     }
   }.observes('currently_selected_id', 'model.supervisees'),
   actions: {

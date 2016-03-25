@@ -44,19 +44,22 @@ module Relinking
   end
 
   module ClassMethods
-    def replace_board_for(user, starting_old_board, starting_new_board, update_inline=false)
+    def replace_board_for(user, opts)
+      starting_old_board = opts[:starting_old_board] || raise("starting_old_board required")
+      starting_new_board = opts[:starting_new_board] || raise("starting_new_board required")
+      update_inline = opts[:update_inline] || false
       board_ids = []
       # get all boards currently connected to the user
       if user.settings['preferences'] && user.settings['preferences']['home_board']
         board_ids += [user.settings['preferences']['home_board']['id']] 
         board = Board.find_by_path(user.settings['preferences']['home_board']['id'])
         board.track_downstream_boards!
-        board_ids += board.settings['downstream_board_ids'] if board
+        board_ids += board.settings['downstream_board_ids']
       end
       boards = Board.find_all_by_path(board_ids)
       pending_replacements = [[starting_old_board, starting_new_board]]
 
-      user_home_changed = relink_board_for(user, boards, pending_replacements, update_inline ? 'update_inline' : nil)
+      user_home_changed = relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => (update_inline ? 'update_inline' : nil)})
       
       # if the user's home board was replaced, update their preferences
       if user_home_changed
@@ -73,7 +76,9 @@ module Relinking
       
     end
 
-    def copy_board_links_for(user, starting_old_board, starting_new_board)
+    def copy_board_links_for(user, opts)
+      starting_old_board = opts[:starting_old_board] || raise("starting_old_board required")
+      starting_new_board = opts[:starting_new_board] || raise("starting_new_board required")
       board_ids = starting_old_board.settings['downstream_board_ids']
       boards = Board.find_all_by_path(board_ids)
       pending_replacements = [[starting_old_board, starting_new_board]]
@@ -87,10 +92,13 @@ module Relinking
       end
       boards = [starting_old_board] + boards
 
-      relink_board_for(user, boards, pending_replacements, 'update_inline')
+      relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => 'update_inline'})
     end
     
-    def relink_board_for(user, boards, pending_replacements, update_preference=nil)
+    def relink_board_for(user, opts)
+      boards = opts[:boards] || raise("boards required")
+      pending_replacements = opts[:pending_replacements] || raise("pending_replacements required")
+      update_preference = opts[:update_preference]
       # maintain mapping of old boards to their replacements
       replacement_map = {}
       pending_replacements.each do |old_board, new_board|

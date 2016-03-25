@@ -261,10 +261,6 @@ describe Board, :type => :model do
     end
   end
 
-  describe "track_revision" do
-    it "should do something worth having specs for"
-  end
-  
   describe "generate_defaults" do
     it "should generate default values" do
       b = Board.new
@@ -483,21 +479,6 @@ describe Board, :type => :model do
       b.instance_variable_set('@track_downstream_boards', true)
       b.save
       expect(Worker.scheduled?(Board, 'perform_action', {'id' => b.id, 'method' => 'track_downstream_boards!', 'arguments' => [[], nil]})).to eq(true)
-    end
-    
-    it "should track revision only if specified" do
-      u = User.create
-      b = Board.create(:user => u)
-      # have to double-save to get the id to not change things
-      b.save
-      expect(Worker.scheduled?(Board, 'perform_action', {'id' => b.id, 'method' => 'track_revision', 'arguments' => []})).to eq(true)
-      Worker.flush_queues
-      expect(b.instance_variable_get('@track_revision')).to eq(nil)
-      b.save
-      expect(Worker.scheduled?(Board, 'perform_action', {'id' => b.id, 'method' => 'track_revision', 'arguments' => []})).to eq(false)
-      b.instance_variable_set('@track_revision', ['1234', 0])
-      b.save
-      expect(Worker.scheduled?(Board, 'perform_action', {'id' => b.id, 'method' => 'track_revision', 'arguments' => []})).to eq(true)
     end
   end
   

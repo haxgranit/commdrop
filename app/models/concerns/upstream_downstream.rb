@@ -85,7 +85,7 @@ module UpstreamDownstream
     # step 3: notify upstream if there was a change
     if changed || buttons_changed || downstream_buttons_changed || downstream_boards_changed
       @track_downstream_boards = false
-      self.save
+      self.save_without_post_processing
       self.complete_stream_checks(already_visited_ids)
     end
     true
@@ -123,7 +123,7 @@ module UpstreamDownstream
   
   def update_any_upstream
     self.any_upstream = (self.settings['immediately_upstream_board_ids'] || []).length > 0
-    self.save
+    self.save_without_post_processing
   end
   
   def touch_downstreams

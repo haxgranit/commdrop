@@ -156,12 +156,6 @@ class Board < ActiveRecord::Base
     return res
   end
   
-  def track_revision
-    # TODO: BoardRevision.save_revision(board, @track_revision)
-    @track_revision = nil
-    true
-  end
-  
   def generate_defaults
     self.settings ||= {}
     self.settings['name'] ||= "Unnamed Board"
@@ -301,10 +295,6 @@ class Board < ActiveRecord::Base
     end
 
     schedule_downstream_checks
-    if @track_revision
-      self.schedule(:track_revision)
-      @track_revision = nil
-    end
   end
   
   def check_image_url

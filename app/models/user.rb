@@ -620,7 +620,7 @@ class User < ActiveRecord::Base
     PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
     starting_new_board = Board.find_by_path(starting_new_board_id)
-    Board.replace_board_for(self, starting_old_board, starting_new_board, update_inline)
+    Board.replace_board_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :update_inline => update_inline})
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
@@ -633,7 +633,7 @@ class User < ActiveRecord::Base
     PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
     starting_new_board = Board.find_by_path(starting_new_board_id)
-    Board.copy_board_links_for(self, starting_old_board, starting_new_board)
+    Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board})
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}

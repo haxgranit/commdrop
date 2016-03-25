@@ -101,7 +101,10 @@ describe Relinking, :type => :model do
       b1.track_downstream_boards!
       expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id])
       b2 = b1.copy_for(u2)
-      expect(Board).to receive(:relink_board_for) do |user, boards, pending_replacements, action|
+      expect(Board).to receive(:relink_board_for) do |user, opts|
+        boards = opts[:boards]
+        pending_replacements = opts[:pending_replacements]
+        action = opts[:update_preference]
         expect(user).to eq(u2)
         expect(boards.length).to eq(2)
         expect(boards).to eq([b1, b1a])
@@ -110,7 +113,7 @@ describe Relinking, :type => :model do
         expect(pending_replacements[1][0]).to eq(b1a)
         expect(action).to eq('update_inline')
       end
-      Board.copy_board_links_for(u2, b1, b2)
+      Board.copy_board_links_for(u2, {:starting_old_board => b1, :starting_new_board => b2})
     end
     
     it "should not copy downstream boards that it doesn't have permission to access" do
@@ -123,7 +126,10 @@ describe Relinking, :type => :model do
       b1.track_downstream_boards!
       expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id])
       b2 = b1.copy_for(u2)
-      expect(Board).to receive(:relink_board_for) do |user, boards, pending_replacements, action|
+      expect(Board).to receive(:relink_board_for) do |user, opts|
+        boards = opts[:boards]
+        pending_replacements = opts[:pending_replacements]
+        action = opts[:update_preference]
         expect(user).to eq(u2)
         expect(boards.length).to eq(2)
         expect(boards).to eq([b1, b1a])
@@ -131,7 +137,7 @@ describe Relinking, :type => :model do
         expect(pending_replacements[0]).to eq([b1, b2])
         expect(action).to eq('update_inline')
       end
-      Board.copy_board_links_for(u2, b1, b2)
+      Board.copy_board_links_for(u2, {:starting_old_board => b1, :starting_new_board => b2})
     end
     
     it "should update links in the root board and all downstream boards" do
@@ -148,7 +154,7 @@ describe Relinking, :type => :model do
       b1.track_downstream_boards!
       expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id, b1b.global_id])
       b2 = b1.copy_for(u2)
-      Board.copy_board_links_for(u2, b1, b2)
+      Board.copy_board_links_for(u2, {:starting_old_board => b1, :starting_new_board => b2})
 
       b2.reload
       expect(b2.settings['buttons'][0]['load_board']['key']).not_to eq(b1a.key)
@@ -158,7 +164,6 @@ describe Relinking, :type => :model do
       expect(b2.settings['buttons'][0]['load_board']).to eq({'key' => b2a.key, 'id' => b2a.global_id})
       expect(b2a.settings['buttons'][0]['load_board']).to eq({'key' => b2b.key, 'id' => b2b.global_id, 'link_disabled' => true})
     end
-    
   end
  
   describe "replace_board_for" do
@@ -191,7 +196,7 @@ describe Relinking, :type => :model do
       expect(ref.reload.settings['immediately_downstream_board_ids']).to eq([old.global_id])
       expect(ref.reload.settings['downstream_board_ids']).to eq([old.global_id, leave_alone.global_id, change_inline.global_id])
       
-      Board.replace_board_for(u.reload, old.reload, new.reload)
+      Board.replace_board_for(u.reload, {:starting_old_board => old.reload, :starting_new_board => new.reload})
       expect(u.settings['preferences']['home_board']['id']).not_to eq(ref.global_id)
       b = Board.find_by_path(u.settings['preferences']['home_board']['id'])
       expect(b).not_to eq(nil)
@@ -244,7 +249,7 @@ describe Relinking, :type => :model do
       u.save
       Worker.process_queues
       
-      Board.replace_board_for(u.reload, level3.reload, new_level3.reload)
+      Board.replace_board_for(u.reload, {:starting_old_board => level3.reload, :starting_new_board => new_level3.reload})
       expect(u.settings['preferences']['home_board']['id']).not_to eq(level0.global_id)
       b = Board.find_by_path(u.settings['preferences']['home_board']['id'])
       expect(b).not_to eq(nil)
@@ -300,7 +305,7 @@ describe Relinking, :type => :model do
       expect(ref.reload.settings['immediately_downstream_board_ids']).to eq([old.global_id])
       expect(ref.reload.settings['downstream_board_ids']).to eq([old.global_id, leave_alone.global_id, change_inline.global_id])
       
-      Board.replace_board_for(u.reload, old.reload, new.reload)
+      Board.replace_board_for(u.reload, {:starting_old_board => old.reload, :starting_new_board => new.reload})
       expect(u.settings['preferences']['home_board']['id']).not_to eq(ref.global_id)
     end
     
@@ -322,7 +327,7 @@ describe Relinking, :type => :model do
       u.save
       Worker.process_queues
       
-      Board.replace_board_for(u.reload, level1.reload, new_level1.reload)
+      Board.replace_board_for(u.reload, {:starting_old_board => level1.reload, :starting_new_board => new_level1.reload})
       expect(u.settings['preferences']['home_board']['id']).to eq(level0.global_id)
     end
     
@@ -352,7 +357,7 @@ describe Relinking, :type => :model do
       expect(make_copy2.reload.settings['immediately_downstream_board_ids']).to eq([make_copy.global_id])
       expect(make_copy2.reload.settings['downstream_board_ids'].sort).to eq([make_copy.global_id, old.global_id].sort)
       
-      Board.replace_board_for(u.reload, old.reload, new.reload, false)
+      Board.replace_board_for(u.reload, {:starting_old_board => old.reload, :starting_new_board => new.reload, :update_inline => false})
       expect(u.settings['preferences']['home_board']['id']).not_to eq(make_copy2.global_id)
       b = Board.find_by_path(u.settings['preferences']['home_board']['id'])
       expect(b).not_to eq(nil)
@@ -402,7 +407,7 @@ describe Relinking, :type => :model do
       expect(make_copy2.reload.settings['immediately_downstream_board_ids']).to eq([make_copy.global_id])
       expect(make_copy2.reload.settings['downstream_board_ids'].sort).to eq([make_copy.global_id, old.global_id].sort)
       
-      Board.replace_board_for(u.reload, old.reload, new.reload, true)
+      Board.replace_board_for(u.reload, {:starting_old_board => old.reload, :starting_new_board => new.reload, :update_inline => true})
       expect(u.settings['preferences']['home_board']['id']).to eq(make_copy2.global_id)
 
       b = make_copy2.reload

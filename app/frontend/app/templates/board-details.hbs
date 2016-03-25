@@ -12,7 +12,7 @@
       {{#if model.parent_board_key}}
         <dt>{{t "Copied From" key='copied_from'}}</dt>
         <dd>
-          {{#link-to 'board' parent_board_key}}{{model.parent_board_key}}{{/link-to}}
+          {{#link-to 'board' model.parent_board_key}}{{model.parent_board_key}}{{/link-to}}
         </dd>
       {{/if}}
       <dt>{{t "Public" key='public'}}</dt>
@@ -27,7 +27,7 @@
         <dt>{{t "Suggestions" key='suggestions'}}</dt>
         <dd>{{t "Shows word completion suggestions" key='shows_word_completion_suggestions'}}</dd>
       {{/if}}
-      
+
       <dt>{{t "License" key='license'}}</dt>
         <dd>
           {{license-attribution license=model.license}}
@@ -67,7 +67,7 @@
           {{else}}
             <ul class="list-unstyled">
             {{#each images_with_license as |image|}}
-              <li><img src={{image.url}} alt={{image.filename}} title={{image.filename}} style="width: 30px;"/> 
+              <li><img src={{image.url}} alt={{image.filename}} title={{image.filename}} style="width: 30px;"/>
               {{license-attribution license=image.license}}
               </li>
             {{/each}}

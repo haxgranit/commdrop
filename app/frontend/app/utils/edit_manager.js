@@ -44,7 +44,7 @@ var editManager = Ember.Object.extend({
       this.lucky_symbols(this.lucky_symbol.pendingSymbols);
       this.lucky_symbol.pendingSymbols = [];
     }
-    
+
   }.observes('app_state.edit_mode'),
   start_edit_mode: function() {
     var app = app_state.controller;
@@ -254,8 +254,8 @@ var editManager = Ember.Object.extend({
       button = this.find_button(id);
       button = button && button.raw();
     }
-    if(button) { 
-      delete button.id; 
+    if(button) {
+      delete button.id;
       button.stashed_at = (new Date()).getTime();
     }
     if(button && list[list.length - 1] != button) {
@@ -275,7 +275,7 @@ var editManager = Ember.Object.extend({
     if(this.stashedButtonToApply) {
       this.change_button(id, this.stashedButtonToApply);
       this.stashedButtonToApply = null;
-    } 
+    }
   },
   finding_target: function() {
     return this.swapId || this.stashedButtonToApply;
@@ -335,7 +335,7 @@ var editManager = Ember.Object.extend({
     if(!button || !folder) { return Ember.RSVP.reject({error: "couldn't find a button"}); }
     if(!folder.load_board || !folder.load_board.key) { return Ember.RSVP.reject({error: "not a folder!"}); }
     this.clear_button(a);
-    
+
     var find = CoughDrop.store.findRecord('board', folder.load_board.key).then(function(ref) {
       return ref;
     });
@@ -361,13 +361,13 @@ var editManager = Ember.Object.extend({
         return Ember.RSVP.reject({error: 'not authorized'});
       }
     });
-    
+
     var new_id;
     var update_buttons = ready_for_update.then(function(board) {
       new_id = board.add_button(button);
       return board.save();
     });
-    
+
     return update_buttons.then(function(board) {
       return Ember.RSVP.resolve({visible: board.button_visible(new_id), button: button});
     });
@@ -726,7 +726,19 @@ var editManager = Ember.Object.extend({
       var save = old_board.create_copy(user);
       save.then(function(board) {
         var done_callback = function(affected_board_ids) {
-          resolve(board);
+          if(decision.match(/as_home$/)) {
+            user.set('preferences.home_board', {
+              id: board.get('id'),
+              key: board.get('key')
+            });
+            user.save().then(function() {
+              resolve(board);
+            }, function() {
+              reject(i18n.t('user_home_failed', "Failed to update user's home board"));
+            });
+          } else {
+            resolve(board);
+          }
           old_board.reload_including_all_downstream(affected_board_ids);
         };
         var endpoint = null;
@@ -734,7 +746,7 @@ var editManager = Ember.Object.extend({
           if((user.get('stats.board_set_ids') || []).indexOf(old_board.get('id')) >= 0) {
             endpoint = '/api/v1/users/' + user.get('id') + '/replace_board';
           }
-        } else if(decision == 'links_copy') {
+        } else if(decision == 'links_copy' || decision == 'links_copy_as_home') {
           endpoint = '/api/v1/users/' + user.get('id') + '/copy_board_links';
         }
         if(endpoint) {
@@ -761,7 +773,7 @@ var editManager = Ember.Object.extend({
         } else {
           done_callback();
         }
-      }, function() { 
+      }, function() {
         reject(i18n.t('copying_failed', "Board copy failed unexpectedly"));
       });
     });
