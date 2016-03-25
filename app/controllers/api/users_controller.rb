@@ -30,7 +30,7 @@ class Api::UsersController < ApplicationController
       users = User.find_by_email(params['q'])
     else
       users = User.where(:user_name => params['q'])
-      users = [User.find_by_global_id(params['q'])] if users.count == 0
+      users = [User.find_by_global_id(params['q'])].compact if users.count == 0
       if users.count == 0
         users = User.where(["user_name ILIKE ?", "%#{params['q']}%"]).order('user_name')
       end
