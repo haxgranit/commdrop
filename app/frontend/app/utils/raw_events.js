@@ -523,6 +523,10 @@ var buttonTracker = Ember.Object.extend({
     Ember.run.cancel(buttonTracker.linger_clear_later);
     buttonTracker.dwell_timeout = buttonTracker.dwell_timeout || 1000;
     buttonTracker.dwell_animation = buttonTracker.dwell_animation || 'pie';
+    var allowed_delay_between_events = 500;
+    if(event.type == 'mousemove') {
+      allowed_delay_between_events = buttonTracker.dwell_timeout + 500;
+    }
     if(!buttonTracker.dwell_delay && buttonTracker.dwell_delay !== 0) {
       buttonTracker.dwell_delay = 100;
     }
@@ -531,7 +535,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.dwell_elem.style.left = '-1000px';
       buttonTracker.last_dwell_linger = null;
       // clear the dwell icon
-    }, 500);
+    }, allowed_delay_between_events);
 
     var now = (new Date()).getTime();
     var duration = event.duration || 50;
@@ -540,7 +544,7 @@ var buttonTracker = Ember.Object.extend({
       // if so clear the object
       if(now - buttonTracker.last_dwell_linger.started > buttonTracker.dwell_timeout + 1000 - duration) {
         buttonTracker.last_dwell_linger = null;
-      } else if(now - buttonTracker.last_dwell_linger.updated > 500 - duration) {
+      } else if(now - buttonTracker.last_dwell_linger.updated > allowed_delay_between_events - duration) {
         buttonTracker.last_dwell_linger = null;
       } else {
         var bounds = buttonTracker.last_dwell_linger.loose_bounds();
