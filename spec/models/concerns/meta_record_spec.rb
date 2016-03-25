@@ -25,7 +25,7 @@ describe MetaRecord, :type => :model do
     r = b.meta_record
     expect(r).not_to eq(nil)
     expect(r.title).to eq("Unnamed Board")
-    expect(r.summary).to eq(nil)
+    expect(r.summary).to eq("Communication board \"Unnamed Board\", 2 x 4")
     expect(r.image).to eq("https://s3.amazonaws.com/opensymbols/libraries/arasaac/board_3.png")
     expect(r.link).to eq("#{JsonApi::Json.current_host}/#{b.key}")
     expect(r.created).to eq(u.created_at.iso8601)

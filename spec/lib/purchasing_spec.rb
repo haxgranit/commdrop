@@ -637,7 +637,7 @@ describe Purchasing do
         :amount => 15000,
         :currency => 'usd',
         :source => 'token',
-        :description => 'gift purchase $150',
+        :description => 'sponsored license purchase $150',
         :metadata => {
           'giver_id' => u.global_id,
           'giver_email' => 'bob@example.com',
@@ -665,7 +665,7 @@ describe Purchasing do
         :amount => 50000,
         :currency => 'usd',
         :source => 'token',
-        :description => 'gift purchase $500',
+        :description => 'sponsored license purchase $500',
         :metadata => {
           'giver_id' => u.global_id,
           'giver_email' => 'bob@example.com',
@@ -696,7 +696,7 @@ describe Purchasing do
         :amount => 15000,
         :currency => 'usd',
         :source => 'token',
-        :description => 'gift purchase $150',
+        :description => 'sponsored license purchase $150',
         :metadata => {
           'giver_id' => u.global_id,
           'giver_email' => 'bob@example.com',
