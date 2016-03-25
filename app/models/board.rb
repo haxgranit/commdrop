@@ -165,6 +165,7 @@ class Board < ActiveRecord::Base
     elsif self.settings['image_url'] != self.settings['default_image_url']
       self.settings['default_image_url'] = nil
     end
+    @brand_new = !self.id
     @buttons_changed = true if self.settings['buttons'] && !self.id
     if @edit_description
       if self.settings['edit_description'] && self.settings['edit_description']['timestamp'] < @edit_description['timestamp'] - 1
@@ -281,7 +282,7 @@ class Board < ActiveRecord::Base
     end
     
     rev = (((self.settings || {})['revision_hashes'] || [])[-2] || [])[0]
-    notify('board_buttons_changed', {'revision' => rev}) if @buttons_changed
+    notify('board_buttons_changed', {'revision' => rev}) if @buttons_changed && !@brand_new
     # Can't be backgrounded because board rendering depends on this
     self.map_images
     
