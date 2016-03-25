@@ -497,6 +497,21 @@ describe User, :type => :model do
       u = User.process_new(:email => 'bob@example.com')
       u.process({'email' => 'fred@example.com'})
     end
+    it "should notify observers when a user's home board changes" do
+      u = User.create
+      b = Board.create(:user => u)
+      expect(u).to receive(:notify).with('home_board_changed')
+      u.process({'preferences' => {'home_board' => {'id' => b.global_id, 'key' => b.key}}})
+    end
+
+    it "should not notify observers when a user's home board doesn't actually change" do
+      u = User.create
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id, 'key' => b.key}
+      u.save
+      expect(u).to_not receive(:notify).with('home_board_changed')
+      u.process({'preferences' => {'home_board' => {'id' => b.global_id, 'key' => b.key}}})
+    end
   end
   
   describe "board_set_ids" do

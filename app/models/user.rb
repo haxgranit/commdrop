@@ -8,6 +8,7 @@ class User < ActiveRecord::Base
   include Supervising
   include SecureSerialize
   include Notifiable
+  include Notifier
   include Subscription
   include Renaming
   has_many :log_sessions
@@ -315,7 +316,7 @@ class User < ActiveRecord::Base
     board_ids.uniq
   end
   
-  PREFERENCE_PARAMS = ['home_board', 'sidebar', 'auto_home_return', 'vocalize_buttons', 
+  PREFERENCE_PARAMS = ['sidebar', 'auto_home_return', 'vocalize_buttons', 
       'sharing', 'button_spacing', 'quick_sidebar', 'disable_quick_sidebar', 
       'lock_quick_sidebar', 'clear_on_vocalize', 'logging', 'geo_logging', 
       'require_speak_mode_pin', 'speak_mode_pin', 'activation_minimum',
@@ -463,6 +464,7 @@ class User < ActiveRecord::Base
   
   def process_home_board(home_board, non_user_params)
     board = Board.find_by_path(home_board['id'])
+    json = self.settings['preferences']['home_board'].to_json
     if board && board.allows?(self, 'view')
       self.settings['preferences']['home_board'] = {
         'id' => board.global_id,
@@ -476,6 +478,9 @@ class User < ActiveRecord::Base
       }
     else
       self.settings['preferences'].delete('home_board')
+    end
+    if self.settings['preferences']['home_board'].to_json != json
+      notify('home_board_changed')
     end
   end
   
@@ -571,6 +576,15 @@ class User < ActiveRecord::Base
         :occurred_at => record.started_at.iso8601
       })
       UserMailer.schedule_delivery(:log_message, self.global_id, record.global_id)
+    elsif notification_type == 'home_board_changed'
+      hb = (record.settings && record.settings['preferences'] && record.settings['preferences']['home_board']) || {}
+      self.add_user_notification({
+        :type => 'home_board_changed',
+        :occurred_at => record.updated_at.iso8601,
+        :user_name => record.user_name,
+        :key => hb['key'],
+        :id => hb['id']
+      })
     elsif notification_type == 'board_buttons_changed'
       my_ubcs = UserBoardConnection.where(:user_id => self.id, :board_id => record.id)
       supervisee_ubcs = UserBoardConnection.where(:user_id => supervisees.map(&:id), :board_id => record.id)
@@ -612,6 +626,15 @@ class User < ActiveRecord::Base
         :sharer_user_name => args['sharer']['user_name'],
         :text => args['text']
       })
+    end
+  end
+
+  def default_listeners(notification_type)
+    if notification_type == 'home_board_changed'
+      res = [self]
+      ([self] + self.supervisors).uniq.map(&:record_code)
+    else
+      []
     end
   end
   
