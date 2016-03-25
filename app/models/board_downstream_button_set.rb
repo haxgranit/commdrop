@@ -29,6 +29,11 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
     board = Board.find_by_global_id(board_id)
     if board
       set = BoardDownstreamButtonSet.find_or_create_by(:board_id => board.id)
+      boards_hash = {}
+      Board.find_all_by_global_id(board.settings['downstream_board_ids'] || []).each do |brd|
+        boards_hash[brd.global_id] = brd
+      end
+      
       boards_to_visit = [{:board => board, :depth => 0, :index => 0}]
       visited_board_ids = []
       linked_board_ids = []
@@ -54,7 +59,8 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
           }
           # check for any linked buttons
           if button['load_board'] && button['load_board']['id']
-            linked_board = Board.find_by_global_id(button['load_board']['id'])
+            linked_board = boards_hash[button['load_board']['id']]
+            linked_board ||= Board.find_by_global_id(button['load_board']['id'])
             if linked_board
               button_data['linked_board_id'] = linked_board.global_id
               button_data['linked_board_key'] = linked_board.key
