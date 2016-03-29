@@ -198,7 +198,7 @@
     {{/if}}
     <div style='margin-top: -15px;'>
       {{input value=user_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
-      <button disabled=no_licenses class="btn btn-default btn-sm" {{action "management_action" 'add_user'}}>{{t "Add Sponsored User" key='add_sponsored_user'}}</button>
+      <button disabled={{no_licenses}} class="btn btn-default btn-sm" {{action "management_action" 'add_user'}}>{{t "Add Sponsored User" key='add_sponsored_user'}}</button>
       <button class="btn btn-default btn-sm" {{action "management_action" 'add_unsponsored_user'}}>{{t "Add Unsponsored User" key='add_unsponsored_user'}}</button>
     </div>
   {{/if}}
