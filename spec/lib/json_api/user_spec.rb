@@ -74,6 +74,7 @@ describe JsonApi::User do
       u.settings['preferences'] = {'home_board' => {'id' => b.global_id}}
       hash = JsonApi::User.build_json(u, permissions: u)
       expect(hash['stats']['board_set_ids'].length).to eq(1)
+      expect(hash['preferences']['home_board']).to eq({'id' => b.global_id})
       
       u.settings['starred_board_ids'] = ["4_1", b.global_id]
       hash = JsonApi::User.build_json(u, permissions: u)

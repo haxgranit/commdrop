@@ -27,6 +27,7 @@ module JsonApi::User
       ::User::PREFERENCE_PARAMS.each do |attr|
         json['preferences'][attr] = user.settings['preferences'][attr]
       end
+      json['preferences']['home_board'] = user.settings['preferences']['home_board']
       json['preferences']['progress'] = user.settings['preferences']['progress']
       json['feature_flags'] = FeatureFlags.frontend_flags_for(user)
       json['prior_avatar_urls'] = user.prior_avatar_urls
