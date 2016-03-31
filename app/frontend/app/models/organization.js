@@ -39,8 +39,8 @@ CoughDrop.Organization = DS.Model.extend({
     }
   },
   licenses_available: function() {
-    return (this.get('total_licenses') || 0) > (this.get('used_licenses') || 0);
-  }.property('total_licenses', 'used_licenses'),
+    return (this.get('allotted_licenses') || 0) > (this.get('used_licenses') || 0);
+  }.property('allotted_licenses', 'total_licenses', 'used_licenses'),
   processed_purchase_history: function() {
     var res = [];
     (this.get('purchase_history') || []).forEach(function(e) {
