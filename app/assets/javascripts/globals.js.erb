@@ -1,2 +1,3 @@
 window.enabled_frontend_features = <%= FeatureFlags::ENABLED_FRONTEND_FEATURES.to_json %>;
 window.user_preferences = <%= User.preference_defaults.to_json %>;
+window.sale = <%= ENV['CURRENT_SALE'] %>;
