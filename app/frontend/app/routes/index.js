@@ -23,7 +23,7 @@ export default Ember.Route.extend({
   setupController: function(controller, model) {
     controller.set('user', this.get('store').createRecord('user', {preferences: {}}));
     controller.set('user.watch_user_name', true);
-    CoughDrop.sale = CoughDrop.sale || window.sale;
+    CoughDrop.sale = CoughDrop.sale || parseInt(window.sale, 10) || null;
     controller.set('subscription', Subscription.create());
     controller.set('model', model);
     // TODO: this seems messy. got to be a cleaner way...
