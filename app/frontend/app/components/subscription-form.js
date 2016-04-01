@@ -83,6 +83,10 @@ export default Ember.Component.extend({
               } else {
                 console.error('purchase_progress_failed');
               }
+            } else if(event.status == 'finished' && event.result && event.result.success == false && event.result.error == 'card_declined') {
+              _this.sendAction('subscription_error', i18n.t('card_declined', "Subscription failed, your card was declined. Please try a different card or contact support for help."));
+              _this.send('reset');
+              console.log(event);
             } else if(event.status == 'finished') {
               user.reload().then(function() {
                 user.set('preferences.progress.subscription_set', true);
@@ -90,7 +94,7 @@ export default Ember.Component.extend({
                 _this.send('reset');
                 _this.sendAction('subscription_success', i18n.t('user_subscribed', "Your subscription succeeded! Thank you for supporting CoughDrop!"));
               }, function() {
-                _this.sendAction('subscription_user_error', i18n.t('user_subscription_reload_failed', "There was a problem reloading your user account. Please try loading this page again."));
+                _this.sendAction('subscription_error', i18n.t('user_subscription_reload_failed', "Subscription succeeded, but there was a problem reloading your user account. Please try loading this page again."));
               });
             }
           });
@@ -101,7 +105,7 @@ export default Ember.Component.extend({
           _this.sendAction('subscription_error', i18n.t('user_subscription_update_failed', "Subscription failed unexpectedly. Please contact support for help."));
         });
       };
-      
+
       if(subscription.get('gift_type')) {
         subscribe({code: subscription.get('gift_code')}, 'gift_code');
       } else {
