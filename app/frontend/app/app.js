@@ -323,6 +323,17 @@ CoughDrop.YT = {
                     player.set('paused', false);
                   }
                 }
+              },
+              'onError': function(event) {
+                if(callback) {
+                  if(event.data == 5 || event.data == 101 || event.data == 150) {
+                    callback('embed_error');
+                    player.set('paused', true);
+                  } else {
+                    callback('error');
+                    player.set('paused', true);
+                  }
+                }
               }
             }
           }));
