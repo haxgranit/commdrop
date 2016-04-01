@@ -60,6 +60,14 @@ module Worker
     Resque.workers.each {|w| w.unregister_worker if w.processing['run_at'] && Time.now - w.processing['run_at'].to_time > timeout}    
   end
   
+  def self.prune_dead_workers
+    Resque.workers.each{|w| w.prune_dead_workers }
+  end
+  
+  def self.kill_all_workers
+    Resque.workers.each{|w| w.unregister_worker }
+  end
+  
   def self.process_queues
     schedules = []
     Resque.queues.each do |key|
