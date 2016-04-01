@@ -41,7 +41,7 @@ class Organization < ActiveRecord::Base
   
   def add_manager(user_key, full=false)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     user.settings ||= {}
     user.settings['manager_for'] ||= {}
     user.settings['manager_for'][self.global_id] = {'full_manager' => !!full, 'added' => Time.now.iso8601}
@@ -54,7 +54,7 @@ class Organization < ActiveRecord::Base
   
   def remove_manager(user_key)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     user.settings ||= {}
     user.settings['manager_for'] ||= {}
     user.settings['manager_for'].delete(self.global_id)
@@ -67,7 +67,7 @@ class Organization < ActiveRecord::Base
   
   def add_supervisor(user_key, pending=true)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     user.settings ||= {}
     user.settings['supervisor_for'] ||= {}
     user.settings['supervisor_for'][self.global_id] = {'pending' => pending, 'added' => Time.now.iso8601}
@@ -93,7 +93,7 @@ class Organization < ActiveRecord::Base
   
   def remove_supervisor(user_key)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     user.settings ||= {}
     user.settings['supervisor_for'] ||= {}
     pending = user.settings['supervisor_for'][self.global_id] && user.settings['supervisor_for'][self.global_id]['pending']
@@ -111,7 +111,7 @@ class Organization < ActiveRecord::Base
 
   def add_subscription(user_key)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     self.attach_user(user, 'subscription')
     self.log_purchase_event({
       'type' => 'add_subscription',
@@ -123,7 +123,7 @@ class Organization < ActiveRecord::Base
   
   def remove_subscription(user_key)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     self.detach_user(user, 'subscription')
     self.log_purchase_event({
       'type' => 'remove_subscription',
@@ -404,7 +404,7 @@ class Organization < ActiveRecord::Base
   
   def add_user(user_key, pending, sponsored=true)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     for_different_org ||= user.settings && user.settings['managed_by'] && (user.settings['managed_by'].keys - [self.global_id]).length > 0
     raise "already associated with a different organization" if for_different_org
     sponsored_user_count = self.sponsored_users(false).count
@@ -415,7 +415,7 @@ class Organization < ActiveRecord::Base
   
   def remove_user(user_key)
     user = User.find_by_path(user_key)
-    raise "invalid user" unless user
+    raise "invalid user, #{user_key}" unless user
     for_different_org ||= user.settings && user.settings['managed_by'] && (user.settings['managed_by'].keys - [self.global_id]).length > 0
     pending = user.settings['managed_by'] && user.settings['managed_by'][self.global_id] && user.settings['managed_by'][self.global_id]['pending']
     raise "already associated with a different organization" if for_different_org

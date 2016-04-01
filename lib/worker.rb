@@ -42,7 +42,7 @@ module Worker
     idx = Resque.size(queue)
     idx.times do |i|
       schedule = Resque.peek(queue, i)
-      if schedule['class'] == 'Worker' && schedule['args'][0] == klass.to_s && schedule['args'][1] == method_name.to_s
+      if schedule && schedule['class'] == 'Worker' && schedule['args'][0] == klass.to_s && schedule['args'][1] == method_name.to_s
         if args.to_json == schedule['args'][2..-1].to_json
           return true
         end

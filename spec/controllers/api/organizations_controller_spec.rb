@@ -173,7 +173,7 @@ describe Api::OrganizationsController, :type => :controller do
         expect(response.success?).to eq(false)
         json = JSON.parse(response.body)
         expect(json['error']).to eq('organization update failed')
-        expect(json['errors']).to eq(['user management action failed: invalid user'])
+        expect(json['errors']).to eq(['user management action failed: invalid user, bob'])
       end
 
       it "should allow removing a manager" do
@@ -210,7 +210,7 @@ describe Api::OrganizationsController, :type => :controller do
         expect(response.success?).to eq(false)
         json = JSON.parse(response.body)
         expect(json['error']).to eq('organization update failed')
-        expect(json['errors']).to eq(['user management action failed: invalid user'])
+        expect(json['errors']).to eq(['user management action failed: invalid user, bob'])
       end
     end
     
@@ -234,7 +234,7 @@ describe Api::OrganizationsController, :type => :controller do
         expect(response.success?).to eq(false)
         json = JSON.parse(response.body)
         expect(json['error']).to eq('organization update failed')
-        expect(json['errors']).to eq(['user management action failed: invalid user'])
+        expect(json['errors']).to eq(['user management action failed: invalid user, bob'])
       end
 
       it "should allow removing a supervisor" do
@@ -259,7 +259,7 @@ describe Api::OrganizationsController, :type => :controller do
         expect(response.success?).to eq(false)
         json = JSON.parse(response.body)
         expect(json['error']).to eq('organization update failed')
-        expect(json['errors']).to eq(['user management action failed: invalid user'])
+        expect(json['errors']).to eq(['user management action failed: invalid user, bob'])
       end
     end
 
@@ -300,7 +300,7 @@ describe Api::OrganizationsController, :type => :controller do
         expect(response.success?).to eq(false)
         json = JSON.parse(response.body)
         expect(json['error']).to eq('organization update failed')
-        expect(json['errors']).to eq(['user management action failed: invalid user'])
+        expect(json['errors']).to eq(['user management action failed: invalid user, bob'])
       end
       
       it "should fail gracefully when no available license for new user" do
@@ -337,7 +337,7 @@ describe Api::OrganizationsController, :type => :controller do
         expect(response.success?).to eq(false)
         json = JSON.parse(response.body)
         expect(json['error']).to eq('organization update failed')
-        expect(json['errors']).to eq(['user management action failed: invalid user'])
+        expect(json['errors']).to eq(['user management action failed: invalid user, bob'])
       end
     end
   end

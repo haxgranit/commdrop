@@ -28,7 +28,7 @@ describe Organization, :type => :model do
     
     it "should error on adding a manager that doesn't exist" do
       o = Organization.create
-      expect{ o.add_manager('frog') }.to raise_error("invalid user")
+      expect{ o.add_manager('frog') }.to raise_error("invalid user, frog")
     end
     
     it "should not error on adding a manager that is managing a different organization" do
@@ -82,7 +82,7 @@ describe Organization, :type => :model do
     
     it "should error on removing a manager that doesn't exist" do
       o = Organization.create
-      expect{ o.remove_manager('frog') }.to raise_error("invalid user")
+      expect{ o.remove_manager('frog') }.to raise_error("invalid user, frog")
     end
     
     it "should not error on removing a manager that is managing a different organization" do
@@ -125,13 +125,13 @@ describe Organization, :type => :model do
     it "should error adding a null user as a supervisor" do
       o = Organization.create
       u = User.create
-      expect { o.add_supervisor('bacon', true) }.to raise_error("invalid user")
+      expect { o.add_supervisor('bacon', true) }.to raise_error("invalid user, bacon")
     end
     
     it "should error removing a null user as a supervisor" do
       o = Organization.create
       u = User.create
-      expect { o.remove_supervisor('bacon') }.to raise_error("invalid user")
+      expect { o.remove_supervisor('bacon') }.to raise_error("invalid user, bacon")
     end
     
     it "should correctly remove a supervisor" do
@@ -265,7 +265,7 @@ describe Organization, :type => :model do
     
     it "should error on adding a user that doesn't exist" do
       o = Organization.create
-      expect{ o.add_user('bacon', false) }.to raise_error('invalid user')
+      expect{ o.add_user('bacon', false) }.to raise_error('invalid user, bacon')
     end
      
     it "should error on adding a user when there aren't any allotted" do
@@ -389,7 +389,7 @@ describe Organization, :type => :model do
     
     it "should error on removing a user that doesn't exist" do
       o = Organization.create
-      expect{ o.remove_user('fred') }.to raise_error("invalid user")
+      expect{ o.remove_user('fred') }.to raise_error("invalid user, fred")
     end
     
     it "should error on removing a user that is managed by a different organization" do
@@ -676,16 +676,18 @@ describe Organization, :type => :model do
     it "should handle management actions without overwriting changes in a subsequent save" do
       o = Organization.create(:settings => {'total_licenses' => 1})
       u = User.create
-      o.process({
-        :management_action => 'add_user-#{u.user_name}'
+      res = o.process({
+        :management_action => "add_user-#{u.user_name}"
       }, {'updater' => User.create})
       expect(res).to eq(true)
       expect(o.users.length).to eq(1)
       u.reload
       expect(o.attached_users('user').length).to eq(1)
-      expect(o.attached_users('pending_user').length).to eq(1)
-      expect(o.attached_users('sponsored_user').length).to eq(0)
-      expect(u.settings['managed_by']).to eq({})
+      expect(o.attached_users('approved_user').length).to eq(0)
+      expect(o.attached_users('sponsored_user').length).to eq(1)
+      expect(u.settings['managed_by'][o.global_id]['sponsored']).to eq(true)
+      expect(u.settings['managed_by'][o.global_id]['pending']).to eq(true)
+      expect(u.settings['managed_by'][o.global_id]['added']).to_not eq(nil)
     end
   end
   
@@ -763,7 +765,7 @@ describe Organization, :type => :model do
     
     it "should error when adding a subscription user that doesn't exist" do
       o = Organization.create
-      expect { o.add_subscription('bacon') }.to raise_error("invalid user")
+      expect { o.add_subscription('bacon') }.to raise_error("invalid user, bacon")
     end
     
     it "should log a purchase event when adding a subscription user" do
@@ -787,7 +789,7 @@ describe Organization, :type => :model do
     
     it "should erorr when removing a subscription user that doesn't exist" do
       o = Organization.create
-      expect { o.remove_subscription('bacon') }.to raise_error("invalid user")
+      expect { o.remove_subscription('bacon') }.to raise_error("invalid user, bacon")
     end
     
     it "should log a purchase event when removing a subscription user" do
