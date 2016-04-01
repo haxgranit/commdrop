@@ -710,6 +710,14 @@ var app_state = Ember.Object.extend({
     // TODO: does this need to trigger board resize event? maybe...
     return this.get('speak_mode') && (stashes.get('sidebarEnabled') || this.get('currentUser.preferences.quick_sidebar'));
   }.property('speak_mode', 'stashes.sidebarEnabled', 'currentUser', 'currentUser.preferences.quick_sidebar'),
+  sidebar_boards: function() {
+    var res = this.get('currentUser.sidebar_boards_with_fallbacks');
+    if(!res && window.user_preferences && window.user_preferences.any_user && window.user_preferences.any_user.default_sidebar_boards) {
+      res = window.user_preferences.any_user.default_sidebar_boards;
+    }
+    res = res || [];
+    return res;
+  }.property('currentUser', 'currentUser.sidebar_boards_with_fallbacks'),
   sidebar_pinned: function() {
     return this.get('speak_mode') && this.get('currentUser.preferences.quick_sidebar');
   }.property('speak_mode', 'currentUser', 'currentUser.preferences.quick_sidebar'),
