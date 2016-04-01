@@ -229,7 +229,7 @@ class LogSession < ActiveRecord::Base
               ref = "#{button['button_id']}::#{button['board_id']}"
               self.data['stats']['all_button_counts'][ref] ||= button
               self.data['stats']['all_button_counts'][ref]['count'] += 1
-              if button['text'] && button['text'].length > 0 && button['spoken']
+              if button['text'] && button['text'].length > 0 && event['button']['spoken']
                 button['text'].split(/\s+/).each do |word|
                   self.data['stats']['all_word_counts'][word] ||= 0
                   self.data['stats']['all_word_counts'][word] += 1
@@ -243,9 +243,7 @@ class LogSession < ActiveRecord::Base
             end
           end
         end
-        # TODO: only record part of speech if it's a button that was spoken/added to the 
-        # vocalization window.
-        if event['parts_of_speech'] && event['parts_of_speech']['types'] && event['button']
+        if event['parts_of_speech'] && event['parts_of_speech']['types'] && event['button'] && event['button']['spoken']
           part = event['parts_of_speech']['types'][0]
           if part
             self.data['stats']['parts_of_speech'][part] ||= 0

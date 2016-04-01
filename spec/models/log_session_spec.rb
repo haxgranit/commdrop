@@ -309,9 +309,9 @@ describe LogSession, :type => :model do
         {'type' => 'utterance', 'utterance' => {'text' => 'I am a good person', 'buttons' => [{}, {}]}, 'timestamp' => time},
         {'type' => 'utterance', 'utterance' => {'text' => 'are we friends', 'buttons' => [{}, {}, {}]}, 'timestamp' => time + 10},
         {'type' => 'utterance', 'utterance' => {'text' => 'what is your name', 'buttons' => [{}]}, 'timestamp' => time + 25},
-        {'type' => 'button', 'button' => {'button_id' => 1, 'board' => {'id' => '1'}, 'label' => 'radish'}, 'timestamp' => time + 38},
-        {'type' => 'button', 'button' => {'button_id' => 2, 'board' => {'id' => '1'}, 'label' => 'friend'}, 'timestamp' => time + 57},
-        {'type' => 'button', 'button' => {'button_id' => 1, 'board' => {'id' => '1'}, 'label' => 'radish'}, 'timestamp' => time + 59},
+        {'type' => 'button', 'button' => {'button_id' => 1, 'board' => {'id' => '1'}, 'label' => 'radish', 'spoken' => true}, 'timestamp' => time + 38},
+        {'type' => 'button', 'button' => {'button_id' => 2, 'board' => {'id' => '1'}, 'label' => 'friend', 'spoken' => true}, 'timestamp' => time + 57},
+        {'type' => 'button', 'button' => {'button_id' => 1, 'board' => {'id' => '1'}, 'label' => 'radish', 'spoken' => true}, 'timestamp' => time + 59},
         {'type' => 'button', 'button' => {'button_id' => 3, 'board' => {'id' => '1'}, 'label' => 'cheese'}, 'timestamp' => time + 100}
       ]
       s.generate_defaults
@@ -321,12 +321,12 @@ describe LogSession, :type => :model do
       expect(s.data['stats']['utterance_words']).to eql(12.0)
       expect(s.data['stats']['utterance_buttons']).to eql(6.0)
       expect(s.data['stats']['all_button_counts'].map{|k, v| v['count']}.sum).to eql(4)
-      expect(s.data['stats']['all_word_counts'].map{|k, v| k}).to eql(['radish', 'friend', 'cheese'])
-      expect(s.data['stats']['all_word_counts'].map{|k, v| v}).to eql([2, 1, 1])
+      expect(s.data['stats']['all_word_counts'].map{|k, v| k}).to eql(['radish', 'friend'])
+      expect(s.data['stats']['all_word_counts'].map{|k, v| v}).to eql([2, 1])
       expect(s.data['stats']['all_board_counts'].keys.length).to eql(1)
       expect(s.data['stats']['all_board_counts'].map{|k, v| v['count']}.sum).to eql(4)
       expect(s.data['stats']['parts_of_speech']).to eql({
-        'noun' => 4
+        'noun' => 3
       })
     end
   end

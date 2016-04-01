@@ -87,7 +87,7 @@ describe Stats do
       u = User.create
       d = Device.create
       s1 = LogSession.process_new({'events' => [
-        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
         {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
       ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2 = LogSession.process_new({'events' => [
@@ -143,7 +143,7 @@ describe Stats do
       u = User.create
       d = Device.create
       s1 = LogSession.process_new({'events' => [
-        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
         {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
       ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2 = LogSession.process_new({'events' => [
@@ -338,10 +338,10 @@ describe Stats do
     it "should include parts of speech" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       res = Stats.daily_use(u.global_id, {:start_at => Time.at(1444984571), :end_at => Time.at(1445137743)})
       
       expect(res[:parts_of_speech]).to eq({'noun' => 4, 'verb' => 1, 'adjective' => 1})
@@ -350,10 +350,10 @@ describe Stats do
     it "should include parts of speech combinations" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       res = Stats.daily_use(u.global_id, {:start_at => Time.at(1444984571), :end_at => Time.at(1445137743)})
       
       expect(res[:parts_of_speech_combinations]).to eq({'noun,noun' => 1, 'verb,noun,adjective' => 1, 'noun,adjective' => 1})
@@ -365,19 +365,19 @@ describe Stats do
       u = User.create
       d = Device.create
       
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '1', 'label' => 'ok go', 'board' => {'id' => '1_1'}}, 'geo' => ['13', '12'], 'timestamp' => 1400704208}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '2', 'label' => 'never again', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400704209}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '3', 'label' => 'ok go to the store', 'board' => {'id' => '1_1'}}, 'geo' => ['13', '12'], 'timestamp' => 1400704210}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '4', 'label' => 'never again on my watch', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400704211}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s5 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '5', 'label' => 'ok go again', 'board' => {'id' => '1_1'}}, 'geo' => ['13', '12'], 'timestamp' => 1400704212}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s6 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '6', 'label' => 'never', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400704213}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s7 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '7', 'label' => 'ice cream', 'board' => {'id' => '1_1'}}, 'geo' => ['15', '12'], 'timestamp' => 1400704214}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s8 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '8', 'label' => 'candy bar', 'board' => {'id' => '1_1'}}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => 1400704215}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s9 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '4', 'label' => 'never again on my watch', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400693400}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s10 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '5', 'label' => 'ok go again', 'board' => {'id' => '1_1'}}, 'geo' => ['13', '12'], 'timestamp' => 1400693401}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s11 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '6', 'label' => 'never', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400693402}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s12 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '7', 'label' => 'ice cream', 'board' => {'id' => '1_1'}}, 'geo' => ['15', '12'], 'timestamp' => 1400693403}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s13 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '8', 'label' => 'candy bar', 'board' => {'id' => '1_1'}}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => 1400693404}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '1', 'label' => 'ok go', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1400704208}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '2', 'label' => 'never again', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400704209}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '3', 'label' => 'ok go to the store', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1400704210}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '4', 'label' => 'never again on my watch', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400704211}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s5 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '5', 'label' => 'ok go again', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1400704212}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s6 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '6', 'label' => 'never', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400704213}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s7 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '7', 'label' => 'ice cream', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['15', '12'], 'timestamp' => 1400704214}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s8 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '8', 'label' => 'candy bar', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => 1400704215}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s9 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '4', 'label' => 'never again on my watch', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400693400}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s10 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '5', 'label' => 'ok go again', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1400693401}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s11 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '6', 'label' => 'never', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1400693402}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s12 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '7', 'label' => 'ice cream', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['15', '12'], 'timestamp' => 1400693403}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s13 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '8', 'label' => 'candy bar', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => 1400693404}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
       ClusterLocation.clusterize(u.global_id)
       start_at = Time.at(1400704200)
       end_at = Time.at(1400704221)
@@ -467,9 +467,9 @@ describe Stats do
       s1.data = {}
       now = Time.now.to_i
       s1.data['events'] = [
-        {'type' => 'button', 'button' => {'label' => 'I', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 10},
-        {'type' => 'button', 'button' => {'label' => 'like', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 8},
-        {'type' => 'button', 'button' => {'label' => 'ok go', 'board' => {'id' => '1_1'}}, 'timestamp' => now}
+        {'type' => 'button', 'button' => {'label' => 'I', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 10},
+        {'type' => 'button', 'button' => {'label' => 'like', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 8},
+        {'type' => 'button', 'button' => {'label' => 'ok go', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now}
       ]
       
       str = Stats.lam([s1])
@@ -490,16 +490,16 @@ describe Stats do
       s1.data = {}
       now = 1415743872
       s1.data['events'] = [
-        {'type' => 'button', 'button' => {'label' => 'I', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 10},
-        {'type' => 'button', 'button' => {'label' => 'like', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 8},
-        {'type' => 'button', 'button' => {'label' => 'ok go', 'board' => {'id' => '1_1'}}, 'timestamp' => now}
+        {'type' => 'button', 'button' => {'label' => 'I', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 10},
+        {'type' => 'button', 'button' => {'label' => 'like', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 8},
+        {'type' => 'button', 'button' => {'label' => 'ok go', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now}
       ]
       s2 = LogSession.new
       s2.data = {}
       s2.data['events'] = [
-        {'type' => 'button', 'button' => {'label' => 'do', 'board' => {'id' => '1_1'}}, 'timestamp' => now + 10},
-        {'type' => 'button', 'button' => {'label' => 'you', 'board' => {'id' => '1_1'}}, 'timestamp' => now + 20},
-        {'type' => 'button', 'button' => {'label' => 'too', 'board' => {'id' => '1_1'}}, 'timestamp' => now + 22}
+        {'type' => 'button', 'button' => {'label' => 'do', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now + 10},
+        {'type' => 'button', 'button' => {'label' => 'you', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now + 20},
+        {'type' => 'button', 'button' => {'label' => 'too', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now + 22}
       ]
       
       str = Stats.lam([s1, s2])
@@ -520,9 +520,9 @@ describe Stats do
       s1.data = {}
       now = 1415689201
       s1.data['events'] = [
-        {'type' => 'button', 'button' => {'label' => 'I', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 10},
-        {'type' => 'button', 'button' => {'label' => 'like', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 8},
-        {'type' => 'button', 'button' => {'label' => 'ok go', 'board' => {'id' => '1_1'}}, 'timestamp' => now}
+        {'type' => 'button', 'button' => {'label' => 'I', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 10},
+        {'type' => 'button', 'button' => {'label' => 'like', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 8},
+        {'type' => 'button', 'button' => {'label' => 'ok go', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now}
       ]
       
       str = Stats.lam([s1])
@@ -540,9 +540,9 @@ describe Stats do
       s1.data = {}
       now = 1415743872
       s1.data['events'] = [
-        {'type' => 'button', 'button' => {'label' => 'd', 'vocalization' => '+d', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 10},
-        {'type' => 'button', 'button' => {'label' => 'o', 'vocalization' => '+o', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 8},
-        {'type' => 'button', 'button' => {'label' => 'g', 'vocalization' => '+g', 'board' => {'id' => '1_1'}}, 'timestamp' => now}
+        {'type' => 'button', 'button' => {'label' => 'd', 'vocalization' => '+d', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 10},
+        {'type' => 'button', 'button' => {'label' => 'o', 'vocalization' => '+o', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 8},
+        {'type' => 'button', 'button' => {'label' => 'g', 'vocalization' => '+g', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now}
       ]
       
       str = Stats.lam([s1])
@@ -559,9 +559,9 @@ describe Stats do
       s1.data = {}
       now = 1415743872
       s1.data['events'] = [
-        {'type' => 'button', 'button' => {'label' => 'd', 'vocalization' => '+d', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 10},
-        {'type' => 'button', 'button' => {'label' => 'o', 'vocalization' => '+o', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 8},
-        {'type' => 'button', 'button' => {'completion' => 'dog', 'board' => {'id' => '1_1'}}, 'timestamp' => now}
+        {'type' => 'button', 'button' => {'label' => 'd', 'vocalization' => '+d', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 10},
+        {'type' => 'button', 'button' => {'label' => 'o', 'vocalization' => '+o', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 8},
+        {'type' => 'button', 'button' => {'completion' => 'dog', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now}
       ]
       
       str = Stats.lam([s1])
@@ -578,8 +578,8 @@ describe Stats do
       s1.data = {}
       now = 1415743872
       s1.data['events'] = [
-        {'type' => 'button', 'button' => {'label' => 'cat', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 10},
-        {'type' => 'button', 'button' => {'label' => '+s', 'vocalization' => ':plural', 'board' => {'id' => '1_1'}}, 'timestamp' => now - 8},
+        {'type' => 'button', 'button' => {'label' => 'cat', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 10},
+        {'type' => 'button', 'button' => {'label' => '+s', 'vocalization' => ':plural', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => now - 8},
         {'type' => 'action', 'action' => {'action' => 'open_board'}, 'timestamp' => now},
         {'type' => 'utterance', 'utterance' => {'sentence' => 'good things are happening'}, 'timestamp' => now}
       ]
@@ -623,10 +623,10 @@ describe Stats do
     it "should generate a list of timed_blocks chunked by the specified interval" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037743.1}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037743.1}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
       res = Stats.time_block_use_for_sessions([s1, s2, s3, s4])
       expect(res[:timed_blocks]).not_to eq(nil)
@@ -642,10 +642,10 @@ describe Stats do
     it "should combine all parts_of_speech values" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
       res = Stats.parts_of_speech_stats([s1, s2, s3, s4])
       expect(res[:parts_of_speech]).not_to eq(nil)
@@ -656,10 +656,10 @@ describe Stats do
     it "should create parts_of_speech 2-step and 3-step sequences" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994886}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
       res = Stats.parts_of_speech_stats([s1, s2, s3, s4])
       expect(res[:parts_of_speech_combinations]).to eq({'noun,noun' => 1, 'verb,noun,adjective' => 1, 'noun,adjective' => 1})
@@ -668,10 +668,10 @@ describe Stats do
     it "should not create multi-step sequences across a clear action" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994887}, {'type' => 'action', 'action' => 'clear', 'timestamp' => 1444994888}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994889}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994887}, {'type' => 'action', 'action' => 'clear', 'timestamp' => 1444994888}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994889}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
       res = Stats.parts_of_speech_stats([s1, s2, s3, s4])
       expect(res[:parts_of_speech_combinations]).to eq({'noun,noun' => 1, 'verb,noun' => 1})
@@ -680,10 +680,10 @@ describe Stats do
     it "should not create multi-step sequences across a vocalize action" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994887}, {'type' => 'utterance', 'utterance' => {'text' => 'ok cool'}, 'timestamp' => 1444994888}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994889}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994887}, {'type' => 'utterance', 'utterance' => {'text' => 'ok cool'}, 'timestamp' => 1444994888}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994889}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
       res = Stats.parts_of_speech_stats([s1, s2, s3, s4])
       expect(res[:parts_of_speech_combinations]).to eq({'noun,noun' => 1, 'verb,noun' => 1})
@@ -692,10 +692,10 @@ describe Stats do
     it "should create consecutive mutli-step sequences" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny'}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'ugly'}, 'timestamp' => 1444994887}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037743}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'funny', 'spoken' => true}, 'timestamp' => 1444994886}, {'type' => 'button', 'button' => {'label' => 'ugly', 'spoken' => true}, 'timestamp' => 1444994887}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
       res = Stats.parts_of_speech_stats([s1, s2, s3, s4])
       expect(res[:parts_of_speech_combinations]).to eq({'noun,noun' => 1, 'verb,noun,adjective' => 1, 'noun,adjective,adjective' => 1, 'adjective,adjective' => 1})
@@ -704,9 +704,9 @@ describe Stats do
     it "should handle spelling within sequences" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       events = [
         {'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994881}, 
         {'type' => 'button', 'button' => {'label' => 'f', 'vocalization' => '+f'}, 'timestamp' => 1444994883},
@@ -726,12 +726,12 @@ describe Stats do
     it "should handle spelling at the end of a sequence" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy'}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl'}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand'}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog'}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'boy', 'spoken' => true}, 'timestamp' => 1445037743}, {'type' => 'button', 'button' => {'label' => 'girl', 'spoken' => true}, 'timestamp' => 1445037744}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'hand', 'spoken' => true}, 'timestamp' => 1445044954}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'label' => 'dog', 'spoken' => true}, 'timestamp' => 1444994571}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       events = [
-        {'type' => 'button', 'button' => {'label' => 'run'}, 'timestamp' => 1444994881}, 
-        {'type' => 'button', 'button' => {'label' => 'cat'}, 'timestamp' => 1444994882}, 
+        {'type' => 'button', 'button' => {'label' => 'run', 'spoken' => true}, 'timestamp' => 1444994881}, 
+        {'type' => 'button', 'button' => {'label' => 'cat', 'spoken' => true}, 'timestamp' => 1444994882}, 
         {'type' => 'button', 'button' => {'label' => 'f', 'vocalization' => '+f'}, 'timestamp' => 1444994883},
         {'type' => 'button', 'button' => {'label' => 'u', 'vocalization' => '+u'}, 'timestamp' => 1444994884},
         {'type' => 'button', 'button' => {'label' => 'n', 'vocalization' => '+n'}, 'timestamp' => 1444994885},
