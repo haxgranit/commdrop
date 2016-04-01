@@ -6,7 +6,7 @@ module Subscription
     # and possibly to resume the subscription when the user is dropped by an organization.
     prior_org = self.managing_organization
     if org_id
-      new_org = Organization.find_by_global_id(org_id)
+      new_org = org_id.is_a?(Organization) ? org_id : Organization.find_by_global_id(org_id)
       self.settings['subscription'] ||= {}
       if sponsored
         self.settings['subscription']['started'] = nil

@@ -672,6 +672,21 @@ describe Organization, :type => :model do
       expect(res).to eq(false)
       expect(o.processing_errors).to eq(["too few licenses, remove some users first"])
     end
+    
+    it "should handle management actions without overwriting changes in a subsequent save" do
+      o = Organization.create(:settings => {'total_licenses' => 1})
+      u = User.create
+      o.process({
+        :management_action => 'add_user-#{u.user_name}'
+      }, {'updater' => User.create})
+      expect(res).to eq(true)
+      expect(o.users.length).to eq(1)
+      u.reload
+      expect(o.attached_users('user').length).to eq(1)
+      expect(o.attached_users('pending_user').length).to eq(1)
+      expect(o.attached_users('sponsored_user').length).to eq(0)
+      expect(u.settings['managed_by']).to eq({})
+    end
   end
   
   describe "log_sessions" do

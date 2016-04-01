@@ -409,7 +409,7 @@ class Organization < ActiveRecord::Base
     raise "already associated with a different organization" if for_different_org
     sponsored_user_count = self.sponsored_users(false).count
     raise "no licenses available" if sponsored && ((self.settings || {})['total_licenses'] || 0) <= sponsored_user_count
-    user.update_subscription_organization(self.global_id, pending, sponsored)
+    user.update_subscription_organization(self, pending, sponsored)
     true
   end
   
