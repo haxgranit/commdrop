@@ -365,6 +365,33 @@ describe('app_state', function() {
       expect(mode).toEqual('speak');
     });
 
+    it("should remember the preferred home board, but temp to current board as home, if 'currentAsHome' is the decision and not on the home board", function() {
+      var mode = null;
+      app_state.set('currentBoardState', {id: '2345', key: 'scarf'});
+      app_state.set('sessionUser', Ember.Object.create({
+        preferences: {
+          home_board: {id: '1234', key: 'shawl'}
+        }
+      }));
+      app_state.toggle_speak_mode('currentAsHome');
+      expect(app_state.get('speak_mode')).toEqual(true);
+      expect(stashes.get('temporary_root_board_state.id')).toEqual('2345');
+      expect(stashes.get('root_board_state.id')).toEqual('1234');
+    });
+
+    it("should not temp to current board as home if already on the home board", function() {
+      var mode = null;
+      app_state.set('currentBoardState', {id: '1234', key: 'shawl'});
+      app_state.set('sessionUser', Ember.Object.create({
+        preferences: {
+          home_board: {id: '1234', key: 'shawl'}
+        }
+      }));
+      app_state.toggle_speak_mode('currentAsHome');
+      expect(stashes.get('temporary_root_board_state.id')).toEqual(null);
+      expect(stashes.get('root_board_state.id')).toEqual('1234');
+    });
+
     it("should launch the current board in speak mode if the user has no home board set", function() {
       var mode = null;
       stub(app_state, 'toggle_mode', function(m) {
@@ -1674,18 +1701,18 @@ describe('app_state', function() {
     it("should return defaults if no user is set", function() {
       stub(window, 'user_preferences', {
         any_user: {
-          default_sidebar_boards, [2, 3]
+          default_sidebar_boards: [2, 3]
         }
       });
       expect(app_state.get('sidebar_boards')).toEqual([2, 3]);
     });
 
     it("should return the user's settings if set", function() {
-      app_state.set('sessionUser', Ember.Object.create({});
+      app_state.set('sessionUser', Ember.Object.create({}));
       app_state.set('sessionUser.sidebar_boards_with_fallbacks', [1, 2]);
       stub(window, 'user_preferences', {
         any_user: {
-          default_sidebar_boards, [2, 3]
+          default_sidebar_boards: [2, 3]
         }
       });
       expect(app_state.get('sidebar_boards')).toEqual([1, 2]);

@@ -295,7 +295,7 @@ var app_state = Ember.Object.extend({
       modal.close(true);
     }
     var current = app_state.get('currentBoardState');
-    var preferred = app_state.get('currentUser.preferences.home_board');
+    var preferred = app_state.get('speakModeUser.preferences.home_board') || app_state.get('currentUser.preferences.home_board');
 
     if(!app_state.get('speak_mode')) {
       // if it's in the speak-mode-user's board set, keep the original home board,
@@ -317,7 +317,7 @@ var app_state = Ember.Object.extend({
         this.toggle_mode('speak');
       }
     } else if(decision == 'currentAsHome' || !preferred || (preferred && current && preferred.key == current.key)) {
-      this.toggle_mode('speak');
+      this.toggle_mode('speak', {temporary_home: true, override_state: preferred});
     } else if(decision == 'rememberRealHome') {
       this.toggle_mode('speak', {override_state: preferred});
     } else {
@@ -346,9 +346,13 @@ var app_state = Ember.Object.extend({
     opts = opts || {};
     utterance.clear();
     var current_mode = stashes.get('current_mode');
+    var temporary_root_state = null;
     if(opts && opts.force) { current_mode = null; }
     if(mode == 'speak') {
       var board_state = app_state.get('currentBoardState');
+      if(opts.temporary_home) {
+        temporary_root_state = board_state;
+      }
       if(opts && opts.override_state) {
         board_state = opts.override_state;
       }
@@ -398,7 +402,7 @@ var app_state = Ember.Object.extend({
       }
       stashes.persist('current_mode', mode);
     }
-    stashes.persist('temporary_root_board_state', null);
+    stashes.persist('temporary_root_board_state', temporary_root_state);
     stashes.persist('sticky_board', false);
     editManager.clear_paint_mode();
   },
