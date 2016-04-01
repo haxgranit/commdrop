@@ -83,7 +83,7 @@ export default Ember.Component.extend({
               } else {
                 console.error('purchase_progress_failed');
               }
-            } else if(event.status == 'finished' && event.result && event.result.success == false && event.result.error == 'card_declined') {
+            } else if(event.status == 'finished' && event.result && event.result.success === false && event.result.error == 'card_declined') {
               _this.sendAction('subscription_error', i18n.t('card_declined', "Subscription failed, your card was declined. Please try a different card or contact support for help."));
               _this.send('reset');
               console.log(event);
