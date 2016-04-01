@@ -229,7 +229,7 @@ class LogSession < ActiveRecord::Base
               ref = "#{button['button_id']}::#{button['board_id']}"
               self.data['stats']['all_button_counts'][ref] ||= button
               self.data['stats']['all_button_counts'][ref]['count'] += 1
-              if button['text'] && button['text'].length > 0
+              if button['text'] && button['text'].length > 0 && button['spoken']
                 button['text'].split(/\s+/).each do |word|
                   self.data['stats']['all_word_counts'][word] ||= 0
                   self.data['stats']['all_word_counts'][word] += 1
