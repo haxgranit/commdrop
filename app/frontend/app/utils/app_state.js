@@ -350,10 +350,10 @@ var app_state = Ember.Object.extend({
     if(opts && opts.force) { current_mode = null; }
     if(mode == 'speak') {
       var board_state = app_state.get('currentBoardState');
-      if(opts.temporary_home) {
-        temporary_root_state = board_state;
-      }
       if(opts && opts.override_state) {
+        if(opts.temporary_home && board_state.id != opts.override_state.id) {
+          temporary_root_state = board_state;
+        }
         board_state = opts.override_state;
       }
       stashes.persist('root_board_state', board_state);

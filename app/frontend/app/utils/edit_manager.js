@@ -726,7 +726,7 @@ var editManager = Ember.Object.extend({
       var save = old_board.create_copy(user);
       save.then(function(board) {
         var done_callback = function(affected_board_ids) {
-          if(decision.match(/as_home$/)) {
+          if(decision && decision.match(/as_home$/)) {
             user.set('preferences.home_board', {
               id: board.get('id'),
               key: board.get('key')

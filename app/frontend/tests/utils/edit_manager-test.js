@@ -12,7 +12,7 @@ import Ember from 'ember';
 
 describe('editManager', function() {
   var board = null;
-  
+
   beforeEach(function() {
     var model = Ember.Object.extend({
       set_all_ready: function() {
@@ -37,7 +37,7 @@ describe('editManager', function() {
     }).create({sent_messages: []});
     editManager.controller = null;
   });
-  
+
   describe("setup", function() {
     it("should set board on init", function() {
       editManager.setup(board);
@@ -60,11 +60,11 @@ describe('editManager', function() {
       expect(editManager.controller.get('noUndo')).toEqual(true);
     });
   });
-  
+
   describe("state", function() {
     it("should create a deep copy of state on clone_state", function() {
       expect(editManager.clone_state()).toEqual(undefined);
-      
+
       var button = Button.create({
         id: 1482,
         label: "ham and cheese"
@@ -141,7 +141,7 @@ describe('editManager', function() {
       expect(clone_button.get('id')).toEqual(1482);
       expect(clone_button.get('label')).toEqual('ham and cheese');
     });
-    
+
     it("should clear future edits (redo) on state change", function() {
       editManager.setup(board);
       editManager.set('future', [{}]);
@@ -155,7 +155,7 @@ describe('editManager', function() {
       editManager.save_state();
       expect(editManager.get('future')).toEqual([]);
     });
-    
+
     it("should not save the same edit to history more than once", function() {
       editManager.setup(board);
       var button = Button.create({
@@ -209,7 +209,7 @@ describe('editManager', function() {
       expect(board.get('noUndo')).toEqual(true);
     });
   });
-  
+
   describe("start_edit_mode", function() {
     it("should not call toggleMode if long_press_edit not enabled", function() {
       var mode = null;
@@ -244,7 +244,7 @@ describe('editManager', function() {
       });
       runs();
     });
-    
+
     it("should open the pin confirmation dialog if protected", function() {
       var args = null;
       stub(modal, 'open', function(view, options) {
@@ -289,12 +289,12 @@ describe('editManager', function() {
       expect(button.get('empty')).toEqual(true);
       expect(button.get('chicken')).toEqual(true);
     });
-    
+
     it("should error gracefully when it can't find the button", function() {
       editManager.setup(board);
       board.set('ordered_buttons', [[]]);
       expect(function() { editManager.change_button(1, {}); }).not.toThrow();
-      
+
     });
     it("should update attributes on the button when found", function() {
       editManager.setup(board);
@@ -339,7 +339,7 @@ describe('editManager', function() {
       expect(button.get('empty')).toEqual(true);
     });
   });
-  
+
   describe("stashed buttons", function() {
     it("should allow stashing a button", function() {
       stashes.persist('stashed_buttons', []);
@@ -350,7 +350,7 @@ describe('editManager', function() {
       expect(stashes.get('stashed_buttons').length).toEqual(1);
       expect(stashes.get('stashed_buttons')[0].label).toEqual('heel');
     });
-    
+
     it("should fail gracefully if the button to stash is not found", function() {
       stashes.persist('stashed_buttons', []);
       editManager.setup(board);
@@ -358,7 +358,7 @@ describe('editManager', function() {
       editManager.stash_button(333);
       expect(stashes.get('stashed_buttons')).toEqual([]);
     });
-    
+
     it("should retrieve button's raw attributes when preparing to apply", function() {
       editManager.setup(board);
       var button = Button.create({label: 'mighty', yearling: 'water'});
@@ -366,7 +366,7 @@ describe('editManager', function() {
       editManager.get_ready_to_apply_stashed_button(button);
       expect(board.get('model.finding_target')).toEqual(true);
       expect(editManager.stashedButtonToApply).toEqual({label: 'mighty'});
-      
+
       var called = false;
       stub(window.console, 'error', function(msg) {
         called = (msg === "raw buttons won't work");
@@ -434,7 +434,7 @@ describe('editManager', function() {
       expect(last_call).toEqual(['stash', 456]);
     });
   });
-  
+
   describe("swapping buttons", function() {
     it("should properly handle apply_to_target", function() {
       var last_call = null;
@@ -459,7 +459,7 @@ describe('editManager', function() {
       editManager.apply_to_target(456);
       expect(last_call).toEqual(['stash', 456]);
     });
-    
+
     it("should properly initialize swap process", function() {
       editManager.setup(board);
       var b = Button.create({id: 123});
@@ -469,7 +469,7 @@ describe('editManager', function() {
       expect(board.get('model.finding_target')).toEqual(true);
       expect(b.get('for_swap')).toEqual(true);
     });
-    
+
     it("should not error in prep if button not found", function() {
       editManager.setup(board);
       board.set('ordered_buttons', [[]]);
@@ -477,7 +477,7 @@ describe('editManager', function() {
       expect(editManager.swapId).toEqual(null);
       expect(board.get('model.finding_target')).not.toEqual(true);
     });
-    
+
     it("should properly switch buttons", function() {
       var a = Button.create({id: 123, label: 'peanut butter', for_swap: true});
       var b = Button.create({id: 987, label: 'jelly', for_swap: true});
@@ -511,7 +511,7 @@ describe('editManager', function() {
       expect(buttons[0].length).toEqual(2);
       expect(buttons[0][0].id).toEqual(123);
       expect(buttons[0][1].id).toEqual(987);
-      
+
       editManager.switch_buttons(234, 987);
       buttons = board.get('ordered_buttons');
       expect(buttons.length).toEqual(1);
@@ -526,7 +526,7 @@ describe('editManager', function() {
       expect(buttons[0][0].id).toEqual(123);
       expect(buttons[0][1].id).toEqual(987);
     });
-    
+
     it("should ask before swapping onto a folder button", function() {
       var opts = null;
       var template = null;
@@ -554,7 +554,7 @@ describe('editManager', function() {
       expect(opts.folder).not.toEqual(null);
       expect(opts.folder.get('id')).toEqual(987);
     });
-    
+
     it("should not ask when swapping onto a folder button if decision is specified", function() {
       var a = Button.create({id: 123, label: 'peanut butter', for_swap: true});
       var b = Button.create({id: 987, label: 'jelly', for_swap: true, load_board: {key: 'a/b'}});
@@ -571,23 +571,23 @@ describe('editManager', function() {
       expect(buttons[0][0].id).toEqual(987);
       expect(buttons[0][1].id).toEqual(123);
     });
-    
+
     describe("move_button", function() {
       it("should do nothing on invalid ids", function() {
         var cleared = false;
-        stub(editManager, 'clear_button', function() {  
+        stub(editManager, 'clear_button', function() {
           cleared = true;
         });
         editManager.setup(board);
 
         editManager.move_button(1, 2).then(null, function() { });
         expect(cleared).toEqual(false);
-        
+
         var a = Button.create({id: 123, label: 'peanut butter', for_swap: true});
         var b = Button.create({id: 987, label: 'jelly', for_swap: true, load_board: {key: 'a/b'}});
         board.set('model.buttons', [a.raw(), b.raw()]);
         board.set('ordered_buttons', [[a, b]]);
-        
+
         var errored = 0;
         editManager.move_button(a.get('id'), 0).then(null, function() {
           errored = 1;
@@ -598,21 +598,21 @@ describe('editManager', function() {
             errored = 2;
           });
         });
-        
+
         waitsFor(function() { return errored === 2; });
         runs(function() {
           editManager.move_button(b.get('id'), a.get('id')).then(null, function() {
             errored = 3;
           });
         });
-        
+
         waitsFor(function() { return errored === 3; });
         runs();
       });
-      
+
       it("should clear the dropped button", function() {
         var cleared = false;
-        stub(editManager, 'clear_button', function() {  
+        stub(editManager, 'clear_button', function() {
           cleared = true;
         });
         editManager.setup(board);
@@ -623,7 +623,7 @@ describe('editManager', function() {
         var b = Button.create({id: 987, label: 'jelly', for_swap: true, load_board: {key: 'a/b'}});
         board.set('model.buttons', [a.raw(), b.raw()]);
         board.set('ordered_buttons', [[a, b]]);
-        
+
         var errored = false;
         editManager.move_button(a.get('id'), b.get('id')).then(null, function() {
           errored = true;
@@ -633,7 +633,7 @@ describe('editManager', function() {
           expect(cleared).toEqual(true);
         });
       });
-      
+
       it("should add the button to the linked board's list if the user has edit permissions", function() {
         editManager.setup(board);
         var matched = false;
@@ -673,7 +673,7 @@ describe('editManager', function() {
             return false;
           }
         });
-        
+
 
         var a = Button.create({id: 123, label: 'peanut butter', for_swap: true});
         var b = Button.create({id: 987, label: 'jelly', for_swap: true, load_board: {key: 'a/b'}});
@@ -712,7 +712,7 @@ describe('editManager', function() {
           id: 'a/b',
           response: Ember.RSVP.resolve(res)
         });
-        
+
 
         var a = Button.create({id: 123, label: 'peanut butter', for_swap: true});
         var b = Button.create({id: 987, label: 'jelly', for_swap: true, load_board: {key: 'a/b'}});
@@ -829,7 +829,7 @@ describe('editManager', function() {
             return false;
           }
         });
-        
+
 
         var a = Button.create({id: 123, label: 'peanut butter', for_swap: true});
         var b = Button.create({id: 987, label: 'jelly', for_swap: true, load_board: {key: 'a/b'}});
@@ -1007,7 +1007,7 @@ describe('editManager', function() {
       expect(editManager.get('history')[0][0].length).toEqual(0);
       expect(board.get('ordered_buttons')[0][0].get('id')).toEqual(b.get('id'));
     });
-    
+
     it("should clear redo history after undo and then another edit", function() {
       editManager.setup(board);
       var b = Button.create({id: 9124});
@@ -1055,7 +1055,7 @@ describe('editManager', function() {
       expect(state[0][0].get('id') < 0).toEqual(true);
       expect(editManager.get('history').length).toEqual(2);
     });
-    
+
     it("should properly add a new column of fake buttons whose size matches the grid", function() {
       editManager.setup(board);
       var b = Button.create({id: 9});
@@ -1078,13 +1078,13 @@ describe('editManager', function() {
       expect(state[0][0].get('id') < 0).toEqual(true);
       expect(editManager.get('history').length).toEqual(2);
     });
-    
+
     it("should force at least one row", function() {
       editManager.setup(board);
       var b = Button.create({id: 9});
       board.set('ordered_buttons', [[b]]);
       expect(editManager.get('history').length).toEqual(0);
-      
+
       editManager.modify_size('row', 'remove');
       var state = board.get('ordered_buttons');
       expect(state.length).toEqual(1);
@@ -1097,13 +1097,13 @@ describe('editManager', function() {
       expect(state[0].length).toEqual(1);
       expect(editManager.get('history').length).toEqual(2);
     });
-    
+
     it("should properly remove a row", function() {
       editManager.setup(board);
       var b = Button.create({id: 9});
       board.set('ordered_buttons', [[b]]);
       expect(editManager.get('history').length).toEqual(0);
-      
+
       editManager.modify_size('row', 'remove');
       var state = board.get('ordered_buttons');
       expect(state.length).toEqual(1);
@@ -1115,7 +1115,7 @@ describe('editManager', function() {
       expect(state.length).toEqual(1);
       expect(state[0].length).toEqual(1);
       expect(editManager.get('history').length).toEqual(2);
-      
+
       editManager.modify_size('row', 'add');
       editManager.modify_size('column', 'add');
       editManager.modify_size('row', 'add');
@@ -1124,13 +1124,13 @@ describe('editManager', function() {
       expect(state.length).toEqual(2);
       expect(state[0].length).toEqual(2);
     });
-    
+
     it("should force at least one column", function() {
       editManager.setup(board);
       var b = Button.create({id: 9});
       board.set('ordered_buttons', [[b]]);
       expect(editManager.get('history').length).toEqual(0);
-      
+
       editManager.modify_size('column', 'remove');
       var state = board.get('ordered_buttons');
       expect(state.length).toEqual(1);
@@ -1143,13 +1143,13 @@ describe('editManager', function() {
       expect(state[0].length).toEqual(1);
       expect(editManager.get('history').length).toEqual(2);
     });
-    
+
     it("should properly remove a column", function() {
       editManager.setup(board);
       var b = Button.create({id: 9});
       board.set('ordered_buttons', [[b]]);
       expect(editManager.get('history').length).toEqual(0);
-      
+
       editManager.modify_size('column', 'remove');
       var state = board.get('ordered_buttons');
       expect(state.length).toEqual(1);
@@ -1161,7 +1161,7 @@ describe('editManager', function() {
       expect(state.length).toEqual(1);
       expect(state[0].length).toEqual(1);
       expect(editManager.get('history').length).toEqual(2);
-      
+
       editManager.modify_size('column', 'add');
       editManager.modify_size('row', 'add');
       editManager.modify_size('column', 'add');
@@ -1187,19 +1187,19 @@ describe('editManager', function() {
       expect(editManager.paint_mode.hidden).toEqual(true);
       expect(editManager.paint_mode.paint_id).not.toEqual(null);
       var last_id = editManager.paint_mode.paint_id;
-      
+
       editManager.set_paint_mode('show');
       expect(editManager.paint_mode.hidden).toEqual(false);
       expect(editManager.paint_mode.paint_id).not.toEqual(null);
       expect(editManager.paint_mode.paint_id).not.toEqual(last_id);
       last_id = editManager.paint_mode.paint_id;
-      
+
       editManager.set_paint_mode('#abf');
       expect(editManager.paint_mode.border).toEqual('rgb(17, 65, 255)');
       expect(editManager.paint_mode.fill).toEqual('rgb(170, 187, 255)');
       expect(editManager.paint_mode.paint_id).not.toEqual(last_id);
       last_id = editManager.paint_mode.paint_id;
-      
+
       editManager.set_paint_mode('white');
       expect(editManager.paint_mode.border).toEqual('rgb(238, 238, 238)');
       expect(editManager.paint_mode.fill).toEqual('rgb(255, 255, 255)');
@@ -1218,7 +1218,7 @@ describe('editManager', function() {
       expect(editManager.paint_mode.paint_id).not.toEqual(last_id);
       last_id = editManager.paint_mode.paint_id;
     });
-    
+
     it("should allow setting part_of_speech on a paint stroke", function() {
       var b1 = Button.create({id: 123});
       var b2 = Button.create({id: 234, part_of_speech: 'noun', suggeseted_part_of_speech: 'noun'});
@@ -1260,7 +1260,7 @@ describe('editManager', function() {
       expect(b1.get('background_color')).toEqual('rgba(255, 0, 0, 0.5)');
       expect(b2.get('border_color')).toEqual('rgba(102, 0, 0, 0.5)');
       expect(b2.get('background_color')).toEqual('rgba(255, 0, 0, 0.5)');
-      
+
       editManager.undo();
       expect(editManager.get('history').length).toEqual(0);
       var newb1 = board.get('ordered_buttons')[0][0];
@@ -1270,7 +1270,7 @@ describe('editManager', function() {
       expect(newb2.get('border_color')).toEqual(undefined);
       expect(newb2.get('background_color')).toEqual(undefined);
     });
-    
+
     it("should create a new undo event when the stroke is reset", function() {
       var b1 = Button.create({id: 123});
       var b2 = Button.create({id: 234});
@@ -1293,7 +1293,7 @@ describe('editManager', function() {
       expect(b1.get('background_color')).toEqual('rgba(255, 0, 0, 0.5)');
       expect(b2.get('border_color')).toEqual('rgba(255, 22, 22, 0.5)');
       expect(b2.get('background_color')).toEqual('rgba(124, 0, 0, 0.5)');
-      
+
       editManager.release_stroke();
       editManager.paint_button(123);
       expect(editManager.get('history').length).toEqual(3);
@@ -1427,7 +1427,7 @@ describe('editManager', function() {
         expect(button.get('image_id')).toEqual(undefined);
         expect(button.get('pending_image')).toEqual(false);
       });
-    });    
+    });
     it("should search for parts of speech data", function() {
       editManager.setup(board);
       app_state.set('edit_mode', true);
@@ -1522,7 +1522,7 @@ describe('editManager', function() {
       });
     });
   });
-  
+
   describe("process_for_saving", function() {
     it("should update attributes for buttons", function() {
       editManager.setup(board);
@@ -1590,7 +1590,7 @@ describe('editManager', function() {
         add_to_vocalization: false
       });
     });
-    
+
     it("should set part_of_speech attributes for buttons", function() {
       editManager.setup(board);
       var button = Button.create({
@@ -1665,7 +1665,7 @@ describe('editManager', function() {
         add_to_vocalization: false
       });
     });
-    
+
     it("should clear removed buttons", function() {
       editManager.setup(board);
       var button = Button.create({
@@ -1721,7 +1721,7 @@ describe('editManager', function() {
       });
     });
   });
-  
+
   describe("process_for_displaying", function() {
     it("should only reload the model (in the route setup, prolly should be moved) if it is missing content data");
     it("should build ordered_buttons correctly", function() {
@@ -1882,14 +1882,14 @@ describe('editManager', function() {
       editManager.stash_image({url: 'abc'});
       expect(editManager.stashedImage).toEqual({url: "abc"});
     });
-    
+
     it("should post a request for image data properly", function() {
       editManager.stash_image({url: "http://www.example.com/pic.png"});
       window.postMessage('imageDataRequest', '*');
       waitsFor(function() { return editManager.imageEditorSource; });
       runs(function() {
         expect(editManager.imageEditorSource).toEqual(window);
-      
+
         var called = false;
         Ember.$(window).bind('message', function(event) {
           if(event.originalEvent && event.originalEvent.data == 'imageDataRequest') {
@@ -1920,7 +1920,7 @@ describe('editManager', function() {
       runs();
     });
   });
-  
+
   describe("copy_board", function() {
     it("should create a new board using the old board's settings", function() {
       stub(modal, 'flash', function() { });
@@ -1946,7 +1946,7 @@ describe('editManager', function() {
       waitsFor(function() { return found && rejected; });
       runs();
     });
-    
+
     it("should trigger a call to reload_including_all_downstream", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
@@ -1987,7 +1987,106 @@ describe('editManager', function() {
         expect(reload_called).toEqual(true);
       });
     });
-    
+
+    it("should update the user if decision included as_home options", function() {
+      app_state.set('currentBoardState', {id: '1_1'});
+      stub(modal, 'flash', function() { });
+      var user = Ember.Object.create({
+        stats: {
+          board_set_ids: ['1_2', '1_3', '1_1']
+        },
+        preferences: {
+        }
+      });
+      var saved = false;
+      stub(user, 'save', function() {
+        saved = true;
+        return Ember.RSVP.resolve();
+      });
+      app_state.set('sessionUser', user);
+      expect(app_state.get('board_in_current_user_set')).toEqual(true);
+      var b = CoughDrop.store.createRecord('board', {
+        key: 'example/fred',
+        buttons: [],
+        grid: {}
+      });
+      b.set('id', '1_1');
+      var reload_called = false;
+      stub(b, 'reload_including_all_downstream', function() {
+        reload_called = true;
+      });
+      var found = false;
+      queryLog.defineFixture({
+        method: 'POST',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '1_2'
+        }}),
+        compare: function(object) {
+          found = true;
+          return true;
+        }
+      });
+      var new_board = null;
+      editManager.copy_board(b, 'keep_links_as_home', user).then(function(res) { new_board = res; });
+      waitsFor(function() { return new_board; });
+      runs(function() {
+        expect(new_board.get('id')).toEqual('1_2');
+        expect(reload_called).toEqual(true);
+      });
+      waitsFor(function() { return saved; })
+      runs(function() {
+        expect(user.get('preferences.home_board.id')).toEqual('1_2');
+      });
+    });
+
+    it("should error if updating the user's home board failed", function() {
+      app_state.set('currentBoardState', {id: '1_1'});
+      stub(modal, 'flash', function() { });
+      var user = Ember.Object.create({
+        stats: {
+          board_set_ids: ['1_2', '1_3', '1_1']
+        },
+        preferences: {
+        }
+      });
+      var saved = false;
+      stub(user, 'save', function() {
+        saved = true;
+        return Ember.RSVP.reject();
+      });
+      app_state.set('sessionUser', user);
+      expect(app_state.get('board_in_current_user_set')).toEqual(true);
+      var b = CoughDrop.store.createRecord('board', {
+        key: 'example/fred',
+        buttons: [],
+        grid: {}
+      });
+      b.set('id', '1_1');
+      var reload_called = false;
+      stub(b, 'reload_including_all_downstream', function() {
+        reload_called = true;
+      });
+      var found = false;
+      queryLog.defineFixture({
+        method: 'POST',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '1_2'
+        }}),
+        compare: function(object) {
+          found = true;
+          return true;
+        }
+      });
+      var error = null;
+      editManager.copy_board(b, 'keep_links_as_home', user).then(null, function(err) { error = err; });
+      waitsFor(function() { return error; });
+      runs(function() {
+        expect(error).toEqual("Failed to update user's home board");
+        expect(reload_called).toEqual(true);
+      });
+    });
     it("should replace in the user's communication set if specified as the decision and in the user's set", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
@@ -2039,7 +2138,7 @@ describe('editManager', function() {
         });
       });
     });
-    
+
     it("should return the newly-created board in the copy_board promise resolution", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
@@ -2075,7 +2174,7 @@ describe('editManager', function() {
         expect(new_board.get('id')).toEqual('1_2');
       });
     });
-    
+
     it("should not replace in the user's communication set even if specified unless in the user's set", function() {
       expect(app_state.get('board_in_current_user_set')).toEqual(false);
 
@@ -2105,14 +2204,14 @@ describe('editManager', function() {
       });
       var new_board = null;
       editManager.copy_board(b, 'modify_links_copy', user).then(function(b) { new_board = b; });
-      
+
       waitsFor(function() { return new_board; });
       runs(function() {
         expect(ajaxed).toEqual(false);
         expect(new_board.get('id')).toEqual('1_2');
       });
     });
-    
+
     it("should not replace in the user's communication set if not specified but in the user's set", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       var user = Ember.Object.create({
@@ -2148,13 +2247,13 @@ describe('editManager', function() {
       });
       var new_board = null;
       editManager.copy_board(b).then(function(b) { new_board = b; });
-      
+
       waitsFor(function() { return new_board; });
       runs(function() {
         expect(new_board.get('id')).toEqual('1_2');
       });
     });
-    
+
     it("should error if the board replacement initial call fails", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
@@ -2195,7 +2294,7 @@ describe('editManager', function() {
         expect(error).toEqual("Board re-linking failed unexpectedly");
       });
     });
-    
+
     it("should error if the board replacement progress check fails", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
@@ -2236,7 +2335,7 @@ describe('editManager', function() {
         expect(error).toEqual("Board re-linking failed unexpectedly");
       });
     });
-    
+
     it("should alert when the copy process is completed", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
@@ -2280,7 +2379,7 @@ describe('editManager', function() {
         expect(error).toEqual("Board re-linking failed while processing");
       });
     });
-    
+
     it("should allow trying to copy for someone else", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
