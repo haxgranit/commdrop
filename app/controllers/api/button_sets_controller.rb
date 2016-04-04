@@ -14,13 +14,17 @@ class Api::ButtonSetsController < ApplicationController
     return unless exists?(button_set)
     allowed = false
     self.class.trace_execution_scoped(['button_set/board/permission_check']) do
-      allowed = allowed?(board, 'view')
+      if board.button_set_id == params['id']
+        allowed = true
+      else
+        allowed = allowed?(board, 'view')
+      end
     end
     return unless allowed
     json = {}
     json_str = "null"
     self.class.trace_execution_scoped(['button_set/board/json_render']) do
-      json = JsonApi::ButtonSet.as_json(button_set, :wrapper => true)
+      json = JsonApi::ButtonSet.as_json(button_set, :wrapper => true, :permissions => @api_user, :nocache => true)
     end
     self.class.trace_execution_scoped(['button_set/board/json_stringify']) do
       json_str = json.is_a?(String) ? json : json.to_json

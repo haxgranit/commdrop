@@ -6,15 +6,11 @@ module GlobalId
       if self.nonce == 'legacy'
         self.id ? "1_#{self.id}" : nil
       else
-        self.protected_global_id
+        self.id ? "1_#{self.id}_#{self.nonce}" : nil
       end
     else
       self.id ? "1_#{self.id}" : nil
     end
-  end
-  
-  def protected_global_id
-    self.id ? "1_#{self.id}_#{self.nonce}" : nil
   end
   
   def related_global_id(id)

@@ -75,6 +75,17 @@ class Board < ActiveRecord::Base
     self.save
   end
   
+  def button_set_id
+    id = self.settings && self.settings['board_downstream_button_set_id']
+    if !id
+      # TODO: sharding
+      bs = BoardDownstreamButtonSet.find_by(:board_id => self.id)
+      id = bs && bs.global_id
+    end
+    return nil unless id
+    full_id = id + "_" + Security.sha512(id, 'button_set_id')[0, 10]
+  end
+  
   def board_downstream_button_set
     if self.settings && self.settings['board_downstream_button_set_id']
       BoardDownstreamButtonSet.find_by_global_id(self.settings['board_downstream_button_set_id'])
@@ -82,7 +93,6 @@ class Board < ActiveRecord::Base
       BoardDownstreamButtonSet.find_by(:board_id => self.id)
     end
   end
-
   
   def non_author_starred?
     self.user && ((self.settings || {})['starred_user_ids'] || []).any?{|s| s != self.user.global_id }
