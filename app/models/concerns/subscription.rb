@@ -111,7 +111,7 @@ module Subscription
         if self.expires_at && self.expires_at > Time.now
           self.settings['subscription']['seconds_left'] = self.expires_at.to_i - Time.now.to_i
         end
-        self.settings['pending'] = false
+        self.settings['pending'] = false unless self.settings['subscription']['free_premium']
         self.expires_at = nil
         self.save
       end

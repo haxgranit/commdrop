@@ -1059,4 +1059,42 @@ describe User, :type => :model do
     expect(SecureJson).to receive(:dump).with(u.settings)
     u.save
   end
+  
+  describe "pending" do
+    it "should unpend the user when they are added to an org" do
+      u = User.create(:settings => {'pending' => true})
+      expect(u.settings['pending']).to eq(true)
+      o = Organization.create
+      o.add_user(u.user_name, true, false)
+      expect(u.reload.settings['pending']).to eq(false)
+    end
+    
+    it "should unpend a user when they add a paid subscription" do
+      u = User.create(:settings => {'pending' => true})
+      expect(u.settings['pending']).to eq(true)
+
+      res = u.update_subscription({
+        'subscribe' => true,
+        'subscription_id' => '12345',
+        'plan_id' => 'slp_monthly_free'
+      })
+      expect(res).to eq(true)
+      expect(u.settings['pending']).to eq(true)
+
+      res = u.update_subscription({
+        'subscribe' => true,
+        'subscription_id' => '123456',
+        'plan_id' => 'monthly_6'
+      })
+      expect(res).to eq(true)
+      expect(u.settings['pending']).to eq(false)
+    end
+    
+    it "should unpend a user when their subscription is manually overridden" do
+      u = User.create(:settings => {'pending' => true})
+      expect(u.settings['pending']).to eq(true)
+      expect(u.subscription_override('never_expires')).to eq(true)
+      expect(u.reload.settings['pending']).to eq(false)
+    end
+  end
 end

@@ -33,11 +33,13 @@ module BoardCaching
     supervisee_authored = []
     supervisee_view_shared = []
     supervisee_edit_shared = []
-    self.supervisees.select{|s| s.edit_permission_for?(self) }.each do |sup|
-      # TODO: sharding
-      supervisee_authored += Board.where(:public => false, :user_id => sup.id).select('id').map(&:global_id)
-      supervisee_view_shared += Board.all_shared_board_ids_for(sup, false)
-      supervisee_edit_shared += Board.all_shared_board_ids_for(sup, true)
+    self.supervisees.select{|s| self.edit_permission_for?(s) }.each do |sup|
+      supervisee_view_shared += sup.private_viewable_board_ids
+      supervisee_edit_shared += sup.private_editable_board_ids
+#       # TODO: sharding
+#       supervisee_authored += Board.where(:public => false, :user_id => sup.id).select('id').map(&:global_id)
+#       supervisee_view_shared += Board.all_shared_board_ids_for(sup, false)
+#       supervisee_edit_shared += Board.all_shared_board_ids_for(sup, true)
     end
     # generate a list of all private boards this user can edit/delete/share
     edit_ids = (authored + edit_shared + supervisee_authored + supervisee_edit_shared).uniq
