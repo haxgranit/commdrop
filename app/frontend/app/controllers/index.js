@@ -264,7 +264,7 @@ export default Ember.Controller.extend({
     },
     sync: function() {
       if(!persistence.get('syncing')) {
-        persistence.sync('self').then(null, function() { });
+        persistence.sync('self', true).then(null, function() { });
       }
     },
     load_reports: function() {

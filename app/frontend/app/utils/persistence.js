@@ -566,7 +566,7 @@ var persistence = Ember.Object.extend({
 
         // Step 4: If user has any supervisees, sync them as well
         if(user && user.get('supervisees') && !ignore_supervisees) {
-          sync_promises.push(persistence.sync_supervisees(user));
+          sync_promises.push(persistence.sync_supervisees(user, force));
         }
 
         // Step 5: Cache needed sound files
@@ -675,7 +675,7 @@ var persistence = Ember.Object.extend({
         var sync_supervisee = find_supervisee.then(function(supervisee_user) {
           if(supervisee_user.get('permissions.supervise')) {
             console.log('syncing supervisee: ' + supervisee.user_name + " " + supervisee.id);
-            return persistence.sync(supervisee.id, null, true);
+            return persistence.sync(supervisee.id, force, true);
           } else {
             return Ember.RSVP.reject({error: "supervise permission missing"});
           }

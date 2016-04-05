@@ -199,7 +199,7 @@ export default Ember.Controller.extend({
   }.observes('selected', 'persistence.online'),
   actions: {
     sync: function() {
-      persistence.sync(this.get('model.id')).then(null, function() { });
+      persistence.sync(this.get('model.id'), true).then(null, function() { });
     },
     quick_assessment: function() {
       app_state.check_for_full_premium(this.get('model', 'quick_assessment')).then(function() {
