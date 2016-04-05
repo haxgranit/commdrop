@@ -108,6 +108,10 @@ Ember.$(document).on('mousedown touchstart', function(event) {
   Ember.$(this).focus().select();
   event.preventDefault();
 });
+Ember.$(window).on('blur', function(event) {
+  Ember.run.cancel(buttonTracker.linger_clear_later);
+  Ember.run.cancel(buttonTracker.linger_close_enough_later);
+});
 
 var buttonTracker = Ember.Object.extend({
   setup: function() {
@@ -521,11 +525,13 @@ var buttonTracker = Ember.Object.extend({
     }
 
     Ember.run.cancel(buttonTracker.linger_clear_later);
+    Ember.run.cancel(buttonTracker.linger_close_enough_later);
     buttonTracker.dwell_timeout = buttonTracker.dwell_timeout || 1000;
     buttonTracker.dwell_animation = buttonTracker.dwell_animation || 'pie';
     var allowed_delay_between_events = 500;
+    var minimum_interaction_window = 50;
     if(event.type == 'mousemove') {
-      allowed_delay_between_events = buttonTracker.dwell_timeout + 500;
+      allowed_delay_between_events = buttonTracker.dwell_timeout - minimum_interaction_window;
     }
     if(!buttonTracker.dwell_delay && buttonTracker.dwell_delay !== 0) {
       buttonTracker.dwell_delay = 100;
@@ -595,9 +601,11 @@ var buttonTracker = Ember.Object.extend({
         clone.classList.add(buttonTracker.dwell_animation);
         buttonTracker.dwell_elem = clone;
       }
+
       buttonTracker.last_dwell_linger.updated = now;
       buttonTracker.last_dwell_linger.events = buttonTracker.last_dwell_linger.events || [];
       buttonTracker.last_dwell_linger.events.push(event);
+      // trigger selection if dwell has been for long enough
       if(now - buttonTracker.last_dwell_linger.started > buttonTracker.dwell_timeout) {
         buttonTracker.element_release(buttonTracker.last_dwell_linger, event);
         buttonTracker.last_dwell_linger = null;
@@ -608,6 +616,17 @@ var buttonTracker = Ember.Object.extend({
           }, buttonTracker.dwell_delay);
         }
         // TODO: timeout before starting next selection
+      } else {
+        // if we're getting close to the dwell timeout, schedule a listener to trigger
+        // it in case we don't get a follow-on event in time
+        var will_trigger_at = buttonTracker.last_dwell_linger.started + buttonTracker.dwell_timeout;
+        var ms_since_start = now - buttonTracker.last_dwell_linger.started;
+        var ms_until_trigger = will_trigger_at - now;
+        if((event.type == 'mousemove' && ms_since_start > minimum_interaction_window) || ms_until_trigger < allowed_delay_between_events / 3) {
+          buttonTracker.linger_close_enough_later = Ember.run.later(function() {
+            buttonTracker.dwell_linger(event);
+          }, ms_until_trigger - 50);
+        }
       }
     } else {
       // stick the dwell icon wherever it goes, with a sad nothing-here styling
@@ -621,7 +640,7 @@ var buttonTracker = Ember.Object.extend({
     if(event.clientX === undefined || event.clientY === undefined) { return null; }
     var left = 0;
     if(buttonTracker.dwell_elem) {
-      var left = buttonTracker.dwell_elem.style.left
+      var left = buttonTracker.dwell_elem.style.left;
       buttonTracker.dwell_elem.style.left = '-1000px';
     }
     var $target = Ember.$(document.elementFromPoint(event.clientX, event.clientY));

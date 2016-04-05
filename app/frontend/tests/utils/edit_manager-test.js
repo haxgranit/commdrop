@@ -2034,7 +2034,7 @@ describe('editManager', function() {
         expect(new_board.get('id')).toEqual('1_2');
         expect(reload_called).toEqual(true);
       });
-      waitsFor(function() { return saved; })
+      waitsFor(function() { return saved; });
       runs(function() {
         expect(user.get('preferences.home_board.id')).toEqual('1_2');
       });
