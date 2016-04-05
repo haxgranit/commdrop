@@ -31,6 +31,10 @@ module Permissions
     cache
   end
   
+  def clear_cached(prefix)
+    RedisInit.permissions.del(self.cache_key(prefix))
+  end
+  
   def allows?(user, action)
     if self.class.allow_cached_permissions
       # check for an existing result keyed off the record's id and updated_at

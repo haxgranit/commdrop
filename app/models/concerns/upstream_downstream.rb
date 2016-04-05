@@ -88,23 +88,40 @@ module UpstreamDownstream
       self.save_without_post_processing
       self.complete_stream_checks(already_visited_ids)
     end
+    
+    # step 4: update any authors whose list of visible/editable private boards may have changed
+    self.schedule_update_available_boards('downstream')
     true
   end
   
+  def schedule_update_available_boards(breadth='all')
+    ids = []
+    if breadth == 'all'
+      ids = self.share_ids
+    elsif breadth == 'downstream'
+      ids = self.downstream_share_ids
+    elsif breadth == 'author'
+      ids = self.author_ids
+    end
+    User.find_all_by_global_id(ids).each do |user|
+      user.schedule_once(:update_available_boards)
+    end
+  end
+    
   def complete_stream_checks(notify_upstream_with_visited_ids)
     # TODO: as-is this won't unlink from boards when a linked button is removed or modified
     # TODO: this is way too eager
     # Step 1: reach in and add to immediately_upstream_board_ids without triggering any background processes
-    (self.settings['immediately_downstream_board_ids'] || []).each do |id|
-      board = Board.find_by_path(id)
+    downs = Board.find_all_by_global_id(self.settings['immediately_downstream_board_ids'] || [])
+    downs.each do |board|
       if board && (!board.settings['immediately_upstream_board_ids'] || !board.settings['immediately_upstream_board_ids'].include?(self.global_id))
         board.add_upstream_board_id!(self.global_id)
       end
     end
     # Step 2: trigger background heavy update for all immediately-upstream boards
     if notify_upstream_with_visited_ids
-      (self.settings['immediately_upstream_board_ids'] || []).each do |id|
-        board = Board.find_by_path(id)
+      ups = Board.find_all_by_global_id(self.settings['immediately_upstream_board_ids'] || [])
+      ups.each do |board|
         if board && !notify_upstream_with_visited_ids.include?(board.global_id)
           board.track_downstream_boards!(notify_upstream_with_visited_ids)
         end
@@ -162,5 +179,10 @@ module UpstreamDownstream
   
 
   module ClassMethods
+  end
+  
+  included do
+    after_create :schedule_update_available_boards
+    after_destroy :schedule_update_available_boards
   end
 end

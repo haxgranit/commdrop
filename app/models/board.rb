@@ -37,6 +37,9 @@ class Board < ActiveRecord::Base
   # - the author's supervision settings change
   # public boards anyone can view
   add_permissions('view') { self.public }
+  # check cached list of explicitly-allowed private boards
+  add_permissions('view') {|user| user.can_view?(self) }
+  add_permissions('view', 'edit', 'delete', 'share') {|user| user.can_edit?(self) }
   # explicitly-shared boards are viewable
   add_permissions('view') {|user| self.shared_with?(user) }
   # the author's supervisors can view the author's boards
@@ -396,9 +399,12 @@ class Board < ActiveRecord::Base
 #         add_processing_error("only premium users can make boards private")
 #         return false
 #       end
-      @edit_notes << "set to public" if params['public'] && !self.public
+      @edit_notes << "set to public" if !!params['public'] && !self.public
       @edit_notes << "set to private" if !params['public'] && self.public
-      self.public = params['public'] 
+      if self.public != !!params['public'] && self.id
+        self.schedule_update_available_boards('all')
+      end
+      self.public = !!params['public'] 
     end
     if params['sharing_key']
       return false unless self.process_share(params['sharing_key'])

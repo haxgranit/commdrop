@@ -134,6 +134,7 @@ module Supervising
       user.save
       supervisor.settings['supervisees'] = (supervisor.settings['supervisees'] || []).select{|s| s['user_id'] != user.global_id }
       # TODO: force browser refresh for supervisor after an unlink?
+      supervisor.schedule_once(:update_available_boards)
       supervisor.save
     end
     
@@ -157,6 +158,7 @@ module Supervising
         'user_name' => user.user_name,
         'edit_permission' => editor
       }
+      supervisor.schedule_once(:update_available_boards)
       supervisor.save
     end
   end

@@ -282,12 +282,15 @@ describe BoardDownstreamButtonSet, :type => :model do
       expect(bs2).not_to eq(nil)
       expect(bs2.data['buttons'].length).to eq(1)
       
-      b2.process({'buttons' => [
+      b2.reload.process({'buttons' => [
         {'id' => 1, 'label' => 'blouse'},
         {'id' => 2, 'label' => 'banana'}
       ]}, :user => u)
       Worker.process_queues
-      Worker.process_queues
+      expect(Worker.scheduled?(BoardDownstreamButtonSet, :perform_action, {'method' => 'update_for', 'arguments' => [b.global_id]})).to eq(true)
+      expect(Worker.scheduled?(BoardDownstreamButtonSet, :perform_action, {'method' => 'update_for', 'arguments' => [b2.global_id]})).to eq(true)
+      BoardDownstreamButtonSet.update_for(b.global_id)
+      BoardDownstreamButtonSet.update_for(b2.global_id)
       
       bs2.reload
       expect(bs2).not_to eq(nil)
@@ -298,3 +301,4 @@ describe BoardDownstreamButtonSet, :type => :model do
     end
   end
 end
+

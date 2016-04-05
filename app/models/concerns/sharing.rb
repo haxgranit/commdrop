@@ -27,6 +27,30 @@ module Sharing
     self.author_ids.include?(user.global_id)
   end
   
+  def share_ids
+    author = self.user
+    res = []
+    res << author.global_id if author
+    if author && author.settings && author.settings['boards_i_shared'] && author.settings['boards_i_shared'][self.global_id]
+      author.settings['boards_i_shared'][self.global_id].each do |share|
+        res << share['user_id']
+      end
+    end
+    res
+  end
+  
+  def downstream_share_ids
+    author = self.user
+    res = []
+    res << author.global_id if author
+    if author && author.settings && author.settings['boards_i_shared'] && author.settings['boards_i_shared'][self.global_id]
+      author.settings['boards_i_shared'][self.global_id].each do |share|
+        res << share['user_id'] if share['include_downstream'] && !share['pending']
+      end
+    end
+    res
+  end
+  
   def author_ids(plus_downstream_editing=false)
     author = self.user
     res = []
@@ -91,6 +115,7 @@ module Sharing
     user.settings['boards_shared_with_me'] = list
     author.save
     user.save
+    self.schedule_update_available_boards('all')
     schedule(:touch_downstreams)
     true
   end
@@ -156,6 +181,7 @@ module Sharing
       
       # all explicitly-shared boards that are set to include downstream
       deep_board_ids = (user.settings['boards_shared_with_me'] || []).select{|b| plus_editing ? (b['allow_editing'] && !b['pending']) : b }.select{|b| b['include_downstream'] }.map{|b| b['board_id'] }
+      deep_board_ids += (user.settings['boards_i_shared'] || []).map{|id, list| id if list.any?{|s| s['include_downstream'] && s['allow_editing'] && !s['pending'] } }
       if plus_editing
         (user.settings['boards_i_shared'] || []).each do |board_id, shares|
           deep_board_ids << board_id if shares.any?{|s| s['allow_editing'] && !s['pending'] && s['include_downstream'] }

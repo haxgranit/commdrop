@@ -10,6 +10,7 @@ class User < ActiveRecord::Base
   include Notifiable
   include Notifier
   include Subscription
+  include BoardCaching
   include Renaming
   has_many :log_sessions
   has_many :boards

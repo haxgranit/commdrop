@@ -230,8 +230,9 @@ describe UpstreamDownstream, :type => :model do
         {'id' => 1, 'load_board' => {'id' => b2.global_id}}
       ]
       b1.save
-      allow(Board).to receive(:find_by).with(:id => b1.id.to_s).and_return(b1).at_least(1).times
-      allow(Board).to receive(:find_by).with(:id => b2.id.to_s).and_return(b2).at_least(1).times
+
+      allow(Board).to receive(:find_all_by_global_id).with([b2.global_id]).and_return([b2]).at_least(1).times
+      allow(Board).to receive(:find_all_by_global_id).with([]).and_return([]).at_least(1).times
       expect(b2).to receive(:add_upstream_board_id!).with(b1.global_id).at_least(1).times
       Worker.process_queues      
 

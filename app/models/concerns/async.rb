@@ -11,6 +11,20 @@ module Async
     }
     Worker.schedule(self.class, :perform_action, settings)
   end
+  
+  def schedule_once(method, *args)
+    return nil unless method && id
+    already_scheduled = Worker.scheduled?(self.class, :perform_action, {
+      'id' => id,
+      'method' => method,
+      'arguments' => args
+    })
+    if !already_scheduled
+      schedule(method, *args)
+    else
+      false
+    end
+  end
 
   module ClassMethods
     def schedule(method, *args)
