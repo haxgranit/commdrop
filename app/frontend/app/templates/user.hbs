@@ -2,7 +2,7 @@
   <div class="dropdown skinny_bio" style="margin-bottom: 10px;">
     <a class='btn btn-default' href="#" data-toggle="dropdown">
       <img src={{model.avatar_url_with_fallback}} style="max-height: 30px;"/>
-      {{ model.name }} 
+      {{ model.name }}
       {{#if model.subroute_name}}
         <span class="text-muted">- {{model.subroute_name}}</span>
       {{/if}}
@@ -29,7 +29,7 @@
           {{/if}}
         {{/if}}
       <li role="presentation">
-        {{#link-to 'user.logs' model.user_name}}
+        {{#link-to 'user.logs' model.user_name (query-params type=null)}}
           {{t "logs &amp; messages" key='messages'}}
           {{#if app_state.currentUser.unread_messages}}
             <span class="label label-danger">{{app_state.currentUser.unread_messages}}</span>
@@ -52,7 +52,7 @@
             {{#link-to 'user.subscription' model.user_name class="btn btn-default"}}{{t "subscription" key='subscription'}}{{/link-to}}
           {{/if}}
         {{/if}}
-        {{#link-to 'user.logs' model.user_name class="btn btn-default"}}
+        {{#link-to 'user.logs' model.user_name (query-params type=null) class="btn btn-default"}}
           {{t "logs &amp; messages" key='messages'}}
           {{#if app_state.currentUser.unread_messages}}
             <span class="label label-danger">{{app_state.currentUser.unread_messages}}</span>
