@@ -66,11 +66,11 @@
             </p>
           {{/if}}
         </div>
+        <div class="col-sm-10 col-sm-offset-2">
+          <button class="btn btn-default" {{action "close"}}>{{t "Close" key='close'}}</button>
+        </div>
       {{/if}}
     </form>
     <div style="clear: left;"></div>
-  </div>    
-  <div class="modal-footer">
-    <a href="#" class="btn" {{action 'close'}}>{{t "Close" key='close'}}</a>
   </div>
 {{/modal-dialog}}
