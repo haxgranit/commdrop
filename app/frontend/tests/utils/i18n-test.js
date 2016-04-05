@@ -132,6 +132,8 @@ describe("i18n", function() {
       expect(i18n.tense('contemplate', {present_participle: true})).toEqual("contemplating");
       expect(i18n.tense('care', {present_participle: true})).toEqual("caring");
       expect(i18n.tense('bury', {present_participle: true})).toEqual("burying");
+      expect(i18n.tense('hit', {present_participle: true})).toEqual("hitting");
+      expect(i18n.tense('bus', {present_participle: true})).toEqual("bussing");
     });
 
     it("should properly tensify a simple-past", function() {
@@ -145,6 +147,25 @@ describe("i18n", function() {
       expect(i18n.tense('admit', {simple_past: true})).toEqual("admitted");
       expect(i18n.tense('like', {simple_past: true})).toEqual("liked");
       expect(i18n.tense('bury', {simple_past: true})).toEqual("buried");
+      expect(i18n.tense('hurry', {simple_past: true})).toEqual("hurried");
+      expect(i18n.tense('hit', {simple_past: true})).toEqual("hit");
+      expect(i18n.tense('bus', {simple_past: true})).toEqual("bussed");
+    });
+
+    it("should properly tensify a simple-present", function() {
+      expect(i18n.tense('laugh', {simple_present: true})).toEqual("laughs");
+      expect(i18n.tense('know', {simple_present: true})).toEqual("knows");
+      expect(i18n.tense('fix', {simple_present: true})).toEqual("fixes");
+      expect(i18n.tense('relax', {simple_present: true})).toEqual("relaxes");
+      expect(i18n.tense('sit', {simple_present: true})).toEqual("sits");
+      expect(i18n.tense('put', {simple_present: true})).toEqual("puts");
+      expect(i18n.tense('miss', {simple_present: true})).toEqual("misses");
+      expect(i18n.tense('admit', {simple_present: true})).toEqual("admits");
+      expect(i18n.tense('like', {simple_present: true})).toEqual("likes");
+      expect(i18n.tense('bury', {simple_present: true})).toEqual("buries");
+      expect(i18n.tense('hurry', {simple_present: true})).toEqual("hurries");
+      expect(i18n.tense('hit', {simple_present: true})).toEqual("hits");
+      expect(i18n.tense('bus', {simple_present: true})).toEqual("buses");
     });
 
     it("should properly tensify a past-participle", function() {
@@ -152,6 +173,10 @@ describe("i18n", function() {
       expect(i18n.tense('know', {past_participle: true})).toEqual("known");
       expect(i18n.tense('box', {past_participle: true})).toEqual("boxed");
       expect(i18n.tense('commit', {past_participle: true})).toEqual("committed");
+      expect(i18n.tense('bury', {past_participle: true})).toEqual("buried");
+      expect(i18n.tense('hurry', {past_participle: true})).toEqual("hurried");
+      expect(i18n.tense('hit', {past_participle: true})).toEqual("hit");
+      expect(i18n.tense('bus', {past_participle: true})).toEqual("bussed");
     });
   });
 });

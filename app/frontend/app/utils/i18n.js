@@ -232,12 +232,23 @@ var i18n = Ember.Object.extend({
     if(res) {
     } else if(check[check.length - 1] == 'e') {
       res = str.substring(0, str.length - 1) + modifier;
-      if(check[check.length - 2] == 'e' && modifier == 'ing') {
+      if(check[check.length - 2] == 'e' && (options.present_participle || options.simple_present)) {
+        res = str + modifier;
+      } else if(options.simple_present) {
         res = str + modifier;
       }
     } else if(check[check.length - 1] == 'c') {
       res = str + 'k' + modifier;
-    } else if(vowel_cons && ending_stress) { // single vowel plus consonant ending, stress at end of word
+    } else if(check[check.length - 1] == 'x' && options.simple_present) {
+      res = str + 'e' + modifier;
+    } else if(check[check.length - 1] == 's' && options.simple_present) {
+      res = str + 'e' + modifier;
+    } else if(check[check.length - 1] == 'y' && !options.present_participle) {
+      if(options.simple_present) {
+        modifier = 'es';
+      }
+      res = str.substring(0, str.length - 1) + 'i' + modifier;
+    } else if(vowel_cons && ending_stress && !options.simple_present) { // single vowel plus consonant ending, stress at end of word
       res = str + str[str.length - 1] + modifier;
     } else if(vowel_cons && syllables == 1) { // single vowel plus consonant ending, one syllable
       res = str + str[str.length - 1] + modifier;
