@@ -204,13 +204,22 @@ class Api::UsersController < ApplicationController
   
   def confirm_registration
     user = User.find_by_path(params['user_id'])
-    confirmed = false
-    if params['code'] && user && params['code'] == user.registration_code
-      confirmed = true
-      user.settings['pending'] = false
-      user.save
+    if params['resend']
+      sent = false
+      if user.settings['pending'] != false
+        sent = true
+        UserMailer.schedule_delivery(:confirm_registration, user.global_id)
+      end
+      render json: {sent: sent}.to_json
+    else
+      confirmed = false
+      if params['code'] && user && params['code'] == user.registration_code
+        confirmed = true
+        user.settings['pending'] = false
+        user.save
+      end
+      render json: {:confirmed => confirmed}.to_json
     end
-    render json: {:confirmed => confirmed}.to_json
   end
   
   def forgot_password

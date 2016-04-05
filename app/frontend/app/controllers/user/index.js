@@ -266,6 +266,18 @@ export default Ember.Controller.extend({
     remove_board: function(action, board) {
       modal.open('confirm-remove-board', {action: action, board: board, user: this.get('model')});
     },
+    resendConfirmation: function() {
+      persistence.ajax('/api/v1/users/' + this.get('model.user_name') + '/confirm_registration', {
+        type: 'POST',
+        data: {
+          resend: true
+        }
+      }).then(function(res) {
+        modal.success(i18n.t('confirmation_resent', "Confirmation email sent, please check your spam box if you can't find it!"));
+      }, function() {
+        modal.error(i18n.t('confirmation_resend_failed', "There was an unexpected error requesting a confirmation email."));
+      });
+    },
     set_subscription: function(action) {
       if(action == 'cancel') {
         this.set('subscription_settings', null);
