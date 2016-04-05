@@ -98,7 +98,7 @@ var app_state = Ember.Object.extend({
 
       find.then(function(user) {
         console.log("user initialization working..");
-        if(user.get('local_result') && stashes.get('online')) {
+        if(!user.get('fresh') && stashes.get('online')) {
           user.reload().then(function(user) {
             app_state.set('sessionUser', user);
           }, function() { });
@@ -460,7 +460,7 @@ var app_state = Ember.Object.extend({
   },
   refresh_session_user: function() {
     CoughDrop.store.findRecord('user', 'self').then(function(user) {
-      if(user.get('local_result')) {
+      if(!user.get('fresh')) {
         user.reload().then(function(user) {
           app_state.set('sessionUser', user);
         }, function() { });
@@ -485,7 +485,7 @@ var app_state = Ember.Object.extend({
 
       CoughDrop.store.findRecord('user', board_user_id).then(function(u) {
         var data = Ember.RSVP.resolve(u);
-        if(u.get('local_result') && stashes.get('online')) {
+        if(!u.get('fresh') && stashes.get('online')) {
           data = u.reload();
         }
         data.then(function(u) {

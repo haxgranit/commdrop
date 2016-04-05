@@ -14,7 +14,6 @@ CoughDrop.Board = DS.Model.extend({
   name: DS.attr('string'),
   key: DS.attr('string'),
   description: DS.attr('string'),
-  local_result: DS.attr('boolean'),
   created: DS.attr('date'),
   updated: DS.attr('date'),
   user_name: DS.attr('string'),
@@ -427,7 +426,7 @@ CoughDrop.Board.reopenClass({
       "view": true,
       "edit": true
     };
-  
+
     hash.board.buttons = hash.board.buttons || [];
     delete hash.board.images;
     hash.board.grid = {

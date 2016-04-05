@@ -208,6 +208,143 @@ describe("persistence", function() {
         });
       });
     });
+    it("should mark recent results as fresh", function() {
+      db_wait(function() {
+        var rnd = persistence.temporary_id();
+        var record = null;
+        var obj = {
+          raw: {hat: rnd, retrieved: (new Date()).getTime()},
+          storageId: 'hat'
+        };
+        coughDropExtras.storage.store('settings', obj, 'hat').then(function() {
+          setTimeout(function() {
+            persistence.find('settings', 'hat').then(function(res) {
+              record = res;
+            });
+          }, 10);
+        });
+        waitsFor(function() { return record; });
+        runs(function() {
+          var rec = CoughDrop.store.createRecord('board', record);
+          expect(record.hat).toEqual(rnd);
+          expect(rec.get('fresh')).toEqual(true);
+        });
+      });
+    });
+    it("should update freshness of results as applicable", function() {
+      db_wait(function() {
+        var rnd = persistence.temporary_id();
+        var record = null;
+        var obj = {
+          raw: {hat: rnd, retrieved: ((new Date()).getTime() - (5*60*1000 - 300))},
+          storageId: 'hat'
+        };
+        coughDropExtras.storage.store('settings', obj, 'hat').then(function() {
+          setTimeout(function() {
+            persistence.find('settings', 'hat').then(function(res) {
+              record = res;
+            });
+          }, 10);
+        });
+        var refreshed = false;
+        var board = null;
+        waitsFor(function() { return record; });
+        runs(function() {
+          board = CoughDrop.store.createRecord('board', record);
+          expect(record.hat).toEqual(rnd);
+          expect(board.get('fresh')).toEqual(true);
+          Ember.run.later(function() {
+            app_state.set('refresh_stamp', 1234);
+            refreshed = true;
+          }, 500);
+        });
+        waitsFor(function() { return refreshed; });
+        runs(function() {
+          expect(board.get('fresh')).toEqual(false);
+        });
+      });
+    });
+    it("should not mark older results as fresh", function() {
+      db_wait(function() {
+        var rnd = persistence.temporary_id();
+        var record = null;
+        var obj = {
+          raw: {hat: rnd, retrieved: 1459871157678},
+          storageId: 'hat'
+        };
+        coughDropExtras.storage.store('settings', obj, 'hat').then(function() {
+          setTimeout(function() {
+            persistence.find('settings', 'hat').then(function(res) {
+              record = res;
+            });
+          }, 10);
+        });
+        waitsFor(function() { return record; });
+        runs(function() {
+          var rec = CoughDrop.store.createRecord('board', record);
+          expect(record.hat).toEqual(rnd);
+          expect(rec.get('fresh')).toEqual(false);
+        });
+      });
+    });
+    it("should mark ajax-retrieved results as fresh", function() {
+      db_wait(function() {
+        var rnd = persistence.temporary_id();
+        var record = null;
+
+        queryLog.real_lookup = true;
+        stub(Ember.$, 'realAjax', function(options) {
+          if(options.url === '/api/v1/boards/1234') {
+            return Ember.RSVP.resolve({board: {
+              id: '1234',
+              name: 'Cool Board'
+            }});
+          } else {
+            return Ember.RSVP.reject({});
+          }
+        });
+        CoughDrop.store.findRecord('board', '1234').then(function(res) {
+          record = res;
+        });
+        waitsFor(function() { return record; });
+        runs(function() {
+          expect(record.get('name')).toEqual('Cool Board');
+          expect(record.get('fresh')).toEqual(true);
+        });
+      });
+    });
+    it("should mark retrieved attribute for sideloaded results", function() {
+      db_wait(function() {
+        var record = null;
+
+        queryLog.real_lookup = true;
+        stub(Ember.$, 'realAjax', function(options) {
+          if(options.url === '/api/v1/boards/1234') {
+            return Ember.RSVP.resolve({board: {
+              id: '1234',
+              name: 'Cool Board'
+            },
+            images: [
+              {id: '1111', url: 'http://www.image.com'}
+            ]});
+          } else {
+            return Ember.RSVP.reject({});
+          }
+        });
+        CoughDrop.store.findRecord('board', '1234').then(function(res) {
+          record = res;
+        });
+        waitsFor(function() { return record; });
+        runs(function() {
+          expect(record.get('name')).toEqual('Cool Board');
+          expect(record.get('fresh')).toEqual(true);
+          var img = CoughDrop.store.peekRecord('image', '1111');
+          expect(img).toNotEqual(null);
+          expect(img.get('url')).toEqual('http://www.image.com');
+          expect(img.get('fresh')).toEqual(true);
+        });
+      });
+    });
   });
 
   describe("remember_access", function() {

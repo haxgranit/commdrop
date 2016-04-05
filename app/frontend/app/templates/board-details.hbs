@@ -37,10 +37,10 @@
           {{model.non_author_uses}}
           <a href="#" {{action 'boardStats'}}>{{t "more info" key='more_info'}}</a>
         </dd>
-      {{#if model.local_result}}
+      {{#unless model.fresh}}
         <dt>{{t "Local Result" key='local_result'}}</dt>
           <dd>{{t "retrieved from local storage" key='retrieved_from_local'}}</dd>
-      {{/if}}
+      {{/unless}}
       <dt>{{t "Dimensions" key='dimensions'}}</dt>
         <dd>{{model.grid.rows}} x {{model.grid.columns}}</dd>
       <dt>{{t "Connected Boards" key='connected_boards'}}</dt>

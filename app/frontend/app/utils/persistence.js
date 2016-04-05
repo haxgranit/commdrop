@@ -660,13 +660,12 @@ var persistence = Ember.Object.extend({
 //       });
 //     });
   },
-  sync_supervisees: function(user) {
+  sync_supervisees: function(user, force) {
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var supervisee_promises = [];
       user.get('supervisees').forEach(function(supervisee) {
         var find_supervisee = CoughDrop.store.findRecord('user', supervisee.id).then(function(record) {
-          var meta = persistence.meta('user', record); //CoughDrop.store.metadataFor('user');
-          if(meta && meta.local_result) {
+          if(!record.get('fresh') || force) {
             return record.reload();
           } else {
             return record;
@@ -748,17 +747,18 @@ var persistence = Ember.Object.extend({
             console.log('finding board... ' + id);
             var local_full_set_revision = null;
             var peeked = CoughDrop.store.peekRecord('board', id);
+            var key_for_id = id.match(/\//);
             if(peeked && !peeked.get('permissions')) { peeked = null; }
             var find_board = CoughDrop.store.findRecord('board', id);
             find_board = find_board.then(function(record) {
               importantIds.push('board_' + id);
-              var meta = persistence.meta('board', record); //CoughDrop.store.metadataFor('board');
-              if(peeked || (meta && meta.local_result)) {
+              if(peeked || key_for_id || !record.get('fresh')) {
                 local_full_set_revision = record.get('full_set_revision');
-                // TODO: if the board is in the list of already-up-to-date, don't call reload
+                // If the board is in the list of already-up-to-date, don't call reload
                 if(safely_cached_boards[id]) {
                   return record;
                 } else {
+                  console.log('reloading board... ' + id);
                   return record.reload();
                 }
               } else {
@@ -771,7 +771,7 @@ var persistence = Ember.Object.extend({
               board.load_button_set();
               var visited_board_promises = [];
               var safely_cached = !!safely_cached_boards[board.id];
-              // if the retrieved board's revision matches the synced cache's revision,
+              // If the retrieved board's revision matches the synced cache's revision,
               // then this board and all its children should be already in the db.
               safely_cached = safely_cached || (full_set_revisions[board.get('id')] && board.get('full_set_revision') == full_set_revisions[board.get('id')]);
               if(force) { safely_cached = false; }
@@ -816,7 +816,7 @@ var persistence = Ember.Object.extend({
                 }
                 if(safely_cached) {
                   // (this check is hypothesizing it's possible to lose some data via leakage
-                  // in the indexeddb)
+                  // in the indexeddb, and really should never get an error result)
                   visited_board_promises.push(persistence.find('board', board.id).then(function(b) {
                     var necessary_finds = [];
                     var tmp_board = CoughDrop.store.createRecord('board', Ember.$.extend({}, b, {id: null}));
@@ -834,7 +834,8 @@ var persistence = Ember.Object.extend({
                     });
                     return Ember.RSVP.all_wait(necessary_finds).then(function() {
                       safely_cached_boards[board.id] = true;
-                    }, function() {
+                    }, function(error) {
+                      console.log(error);
                       console.error("should have been safely cached, but board content wasn't in db:" + board.id);
                       return Ember.RSVP.resolve();
                     });
@@ -1161,12 +1162,21 @@ persistence.DSExtend = {
         return _super.call(_this, store, type, id).then(function(record) {
           if(record[type.modelName]) {
             delete record[type.modelName].local_result;
+            var now = (new Date()).getTime();
+            record[type.modelName].retrieved = now;
+            if(record.images) {
+              record.images.forEach(function(i) { i.retrieved = now; });
+            }
+            if(record.sounds) {
+              record.sounds.forEach(function(i) { i.retrieved = now; });
+            }
           }
           var ref_id = null;
           if(type.modelName == 'user' && id == 'self') {
             ref_id = 'self';
           }
           return persistence.store_eventually(type.modelName, record, ref_id).then(function() {
+            console.log(record);
             return Ember.RSVP.resolve(record);
           }, function() {
             return Ember.RSVP.reject({error: "failed to delayed-persist to local db"});
@@ -1273,5 +1283,6 @@ persistence.DSExtend = {
     }
   }
 };
+window.persistence = persistence;
 
 export default persistence;
