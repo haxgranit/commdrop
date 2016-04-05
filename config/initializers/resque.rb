@@ -11,13 +11,17 @@ module RedisInit
     uri = redis_uri
     return if !uri && ENV['SKIP_VALIDATIONS']
     raise "redis URI needed for resque" unless uri
+    ns_suffix = ""
+    if !Rails.env.production?
+      ns_suffix = "-#{Rails.env}"
+    end
     if defined?(Resque)
       Resque.redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-      Resque.redis.namespace = "coughdrop"
+      Resque.redis.namespace = "coughdrop#{ns_suffix}"
     end
     redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-    @default = Redis::Namespace.new("coughdrop-stash", :redis => redis)
-    @permissions = Redis::Namespace.new("coughdrop-permissions", :redis => redis)
+    @default = Redis::Namespace.new("coughdrop-stash#{ns_suffix}", :redis => redis)
+    @permissions = Redis::Namespace.new("coughdrop-permissions#{ns_suffix}", :redis => redis)
     self.cache_token = 'abc'
   end
   
