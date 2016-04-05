@@ -20,6 +20,7 @@ module Subscription
       self.settings['subscription']['org_pending'] = pending || false
       self.settings['preferences'] ||= {}
       self.settings['preferences']['role'] = 'communicator'
+      self.settings['pending'] = false
       if new_org
         Organization.detach_user(self, 'user', new_org)
         new_org.attach_user(self, 'user', {'approved_user' => !pending, 'sponsored_user' => sponsored})
@@ -110,6 +111,7 @@ module Subscription
         if self.expires_at && self.expires_at > Time.now
           self.settings['subscription']['seconds_left'] = self.expires_at.to_i - Time.now.to_i
         end
+        self.settings['pending'] = false
         self.expires_at = nil
         self.save
       end
@@ -126,6 +128,7 @@ module Subscription
         self.settings['subscription'].delete('plan_id')     
         self.settings['subscription'].delete('free_pemium')
         self.settings['subscription'].delete('never_expires')
+        self.settings['pending'] = false
         self.save
       else
         res = false
@@ -149,6 +152,7 @@ module Subscription
         self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_long_term_free'
         self.settings['subscription'].delete('never_expires')
         self.settings['subscription']['prior_purchase_ids'] ||= []
+        self.settings['pending'] = false
         if self.settings['subscription']['prior_purchase_ids'].include?(args['purchase_id'])
           res = false
         else
@@ -209,7 +213,7 @@ module Subscription
   
   def subscription_override(type, user_id=nil)
     if type == 'never_expires'
-      self.process({}, {'premium_until' => 'forever'})
+      self.process({}, {'pending' => false, 'premium_until' => 'forever'})
     elsif type == 'eval'
       self.update_subscription({
         'subscribe' => true,
@@ -223,6 +227,7 @@ module Subscription
         self.settings ||= {}
         self.settings['subscription_adders'] ||= []
         self.settings['subscription_adders'] << [user_id, Time.now.to_i]
+        self.settings['pending'] = false
         self.save
       end
     elsif type == 'manual_supporter'
