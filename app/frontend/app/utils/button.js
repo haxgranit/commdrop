@@ -70,7 +70,7 @@ var Button = Ember.Object.extend({
       return i18n.t('unknown_action', "unknown action");
     }
   }.property('buttonAction', 'video.popup'),
-  youtube_regex: (/(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/watch\?(?:.*?&(?:amp;)?)?v=|\.be\/)([\w \-]+)(?:&(?:amp;)?[\w\?=]*)?/), 
+  youtube_regex: (/(?:https?:\/\/)?(?:www\.)?youtu(?:be\.com\/watch\?(?:.*?&(?:amp;)?)?v=|\.be\/)([\w \-]+)(?:&(?:amp;)?[\w\?=]*)?/),
   video_from_url: function() {
     var url = this.get('url');
     var match = url && url.match(this.youtube_regex);
@@ -202,7 +202,7 @@ var Button = Ember.Object.extend({
     if(this.image_id && !this.get('image')) {
       var rec = CoughDrop.store.peekRecord('image', this.image_id);
       if(!rec || !rec.get('isLoaded')) { return false; }
-    } 
+    }
     if(this.sound_id && !this.get('sound')) {
       var rec = CoughDrop.store.peekRecord('sound', this.sound_id);
       if(!rec || !rec.get('isLoaded')) { return false; }
@@ -259,8 +259,8 @@ var Button = Ember.Object.extend({
           sound.checkForDataURL().then(null, function() { });
         }
       }
-      
-      
+
+
       Ember.RSVP.all(promises).then(function() {
         _this.set('content_status', 'ready');
         resolve(true);
@@ -269,9 +269,9 @@ var Button = Ember.Object.extend({
         resolve(false);
         return Ember.RSVP.resolve();
       });
-      
+
       promises.forEach(function(p) { p.then(null, function() { }); });
-      
+
     });
   }.observes('image_id', 'sound_id'),
   check_for_parts_of_speech: function() {
@@ -310,10 +310,10 @@ var Button = Ember.Object.extend({
       // Prevents browsers that don't respect non-enumerability from
       // copying internal Ember properties
       if (key.substring(0,2) === '__') { continue; }
-      
+
       if (this.constructor.prototype[key]) { continue; }
-      
-      if (Button.attributes.contains(key)) { 
+
+      if (Button.attributes.contains(key)) {
         ret[key] = this.get(key);
       }
     }
@@ -321,6 +321,26 @@ var Button = Ember.Object.extend({
   }
 });
 Button.attributes = ['label', 'background_color', 'border_color', 'image_id', 'sound_id', 'load_board', 'hide_label', 'completion'];
+
+Button.style = function(style) {
+  var res = {};
+
+  style = style || "";
+  if(style.match(/caps$/)) {
+    res.upper = true;
+  } else if(style.match(/small$/)) {
+    res.lower = true;
+  }
+  if(style.match(/^comic_sans/)) {
+    res.font_class = "comic_sans";
+  } else if(style.match(/open_dyslexic/)) {
+    res.font_class = "open_dyslexic";
+  } else if(style.match(/architects_daughter/)) {
+    res.font_class = "architects_daughter";
+  }
+
+  return res;
+};
 
 Button.broken_image = function(image) {
   var fallback = Ember.templateHelpers.path('images/square.svg');

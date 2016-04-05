@@ -6,6 +6,10 @@
   font-family:'OpenDyslexic';
   src:url(../fonts/OpenDyslexicAlta-Regular.otf) format('opentype');
 }
+@font-face{
+  font-family:'ArchitectsDaughter';
+  src:url(../fonts/ArchitectsDaughter.ttf) format('truetype');
+}
 
 #within_ember {
   position: relative;
@@ -589,6 +593,26 @@ footer .wide_links {
   }
   &.open_dyslexic .button .button-label {
     font-family: "OpenDyslexic", Arial, sans-serif;
+  }
+  &.architects_daughter .button .button-label {
+    font-family: "ArchitectsDaughter", Arial, sans-serif;
+  }
+}
+.text_sample {
+  &.upper {
+    text-transform: uppercase;
+  }
+  &.lower {
+    text-transform: lowercase;
+  }
+  &.comic_sans {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+  }
+  &.open_dyslexic {
+    font-family: "OpenDyslexic", Arial, sans-serif;
+  }
+  &.architects_daughter {
+    font-family: "ArchitectsDaughter", Arial, sans-serif;
   }
 }
 .button {

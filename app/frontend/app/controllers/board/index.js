@@ -8,6 +8,7 @@ import capabilities from '../../utils/capabilities';
 import persistence from '../../utils/persistence';
 import i18n from '../../utils/i18n';
 import modal from '../../utils/modal';
+import Button from '../../utils/button';
 
 var cached_images = {};
 
@@ -67,7 +68,7 @@ export default Ember.Controller.extend({
     }
     var last_finished_word = ((last_button && (last_button.vocalization || last_button.label)) || "").toLowerCase();
     var word_in_progress = ((current_button && (current_button.vocalization || current_button.label)) || "").toLowerCase();
-    
+
     word_suggestions.lookup({
       last_finished_word: last_finished_word,
       word_in_progress: word_in_progress
@@ -83,14 +84,14 @@ export default Ember.Controller.extend({
     if(this.get('model.license')) {
       this.set('model.license.copyright_notice_url', CoughDrop.licenseOptions.license_url(this.get('model.license.type')));
     }
-    
+
     this.set('model.buttons', state.buttons);
     this.set('model.grid', state.grid);
     boundClasses.setup(true);
     this.processButtons();
     var board = this.get('model');
     board.save().then(null, function() { });
-    
+
     // TODO: on commit, only send attributes that have changed
     // to prevent stepping on other edits if all you're doing is
     // updating the name, for example. Side note: this is one
@@ -144,7 +145,7 @@ export default Ember.Controller.extend({
     if(!grid) {
       return;
     }
-    
+
     var starting_height = Math.floor((this.get('height') / (grid.rows || 2)) * 100) / 100;
     var starting_width = Math.floor((this.get('width') / (grid.columns || 2)) * 100) / 100;
     var extra_pad = this.get('extra_pad');
@@ -152,7 +153,7 @@ export default Ember.Controller.extend({
     var double_pad = inner_pad * 2;
     var radius = 4;
     var context = null;
-    
+
     var currentLabelHeight = this.get('base_text_height') - 3;
     this.set('model.text_size', 'normal');
     if(starting_height < 45) {
@@ -160,7 +161,7 @@ export default Ember.Controller.extend({
     } else if(starting_height < 75) {
       this.set('model.text_size', 'small_text');
     }
-    
+
     var $canvas = Ember.$("#board_canvas");
     // TODO: I commented out the canvas element because, while it was a few
     // seconds faster rendering a large board, it also causes a lot of headaches with
@@ -180,13 +181,13 @@ export default Ember.Controller.extend({
         context.clearRect(0, 0, width, height);
       }
     }
-    
+
 
     var _this = this;
     var stretchable = !app_state.get('edit_mode') && app_state.get('currentUser.preferences.stretch_buttons') && app_state.get('currentUser.preferences.stretch_buttons') != 'none'; // not edit mode and user-enabled
     var buttons = this.get('ordered_buttons');
     var ob = this.get('ordered_buttons');
-    
+
     var img_checker = function(url, callback) {
       if(cached_images[url]) {
         callback(cached_images[url]);
@@ -228,7 +229,7 @@ export default Ember.Controller.extend({
         }
         var top = extra_pad + (i * starting_height) + inner_pad;
         var left = extra_pad + (j * starting_width) + inner_pad;
-        
+
         if(stretchable) {
           var can_go = directions(ob, i, j);
           var went_up = false;
@@ -249,7 +250,7 @@ export default Ember.Controller.extend({
             if(stretchable == 'prefer_tall' || (can_go.downleft && can_go.downright)) {
               button_height = button_height + extra_pad + (button_height / 2);
               if(went_up) {
-                button_height = button_height - (starting_height / 4); 
+                button_height = button_height - (starting_height / 4);
               }
               var lower_can_go = directions(ob, i + 1, j);
               if(lower_can_go.down !== false && stretchable == 'prefer_tall' && !can_go.downright && !can_go.downleft) {
@@ -284,7 +285,7 @@ export default Ember.Controller.extend({
         }
         var image_height = button_height - currentLabelHeight - CoughDrop.boxPad - (inner_pad * 2) + 8;
         var image_width = button_width - CoughDrop.boxPad - (inner_pad * 2) + 8;
-        
+
         if(_this.get('model.text_size') == 'really_small_text') {
           if(currentLabelHeight > 0) {
             image_height = image_height + currentLabelHeight - CoughDrop.labelHeight + 25;
@@ -311,13 +312,13 @@ export default Ember.Controller.extend({
           image_square: Math.min(image_height, image_width),
           border: inner_pad
         });
-        
+
         if(context) {
           if(!button.get('empty_or_hidden') && (!redraw_button_id || redraw_button_id == button.id)) {
             var image_left = (button_width - image_height) / 2 - inner_pad;
             var image_top = inner_pad + 2;
             var text_top = image_height + image_top + 3;
-          
+
             var w = (button_width - double_pad) * 3 + 3.5; // FIX: added 3.5 here
             var h = (button_height - double_pad) * 3 + 2; // FIX: added 2 here
             var x = left * 3 - 1.5; // FIX: minused 1.5 here
@@ -345,7 +346,7 @@ export default Ember.Controller.extend({
               context.lineWidth = 6;
               extra = 3;
             }
-        
+
             context.moveTo(x + r - extra, y - extra);
             context.lineTo(x + w - r + extra, y - extra);
             context.quadraticCurveTo(x + w + extra, y - extra, x + w + extra, y + r - extra);
@@ -364,7 +365,7 @@ export default Ember.Controller.extend({
             context.fill();
             context.stroke();
             context.lineWidth = 3;
-        
+
             context.save();
             context.textAlign = 'center';
             context.textBaseline = 'top';
@@ -382,7 +383,7 @@ export default Ember.Controller.extend({
             context.fillStyle = '#fff';
             context.closePath();
             context.fill();
-            
+
             var draw_action = function() {
               if(button.get('action_image') && !button.get('talkAction')) {
                 img_checker(button.get('action_image'), function(img) {
@@ -461,7 +462,7 @@ export default Ember.Controller.extend({
   }.property('ordered_buttons'),
   extra_pad: function() {
     var spacing = app_state.get('currentUser.preferences.device.button_spacing') || window.user_preferences.device.button_spacing;
-    if(spacing == "extra-small") { 
+    if(spacing == "extra-small") {
       return 2;
     } else if(spacing == "medium") {
       return 10;
@@ -475,7 +476,7 @@ export default Ember.Controller.extend({
   }.property('app_state.currentUser.preferences.device.button_spacing'),
   inner_pad: function() {
     var spacing = app_state.get('currentUser.preferences.device.button_border') || window.user_preferences.device.button_border;
-    if(spacing == "none") { 
+    if(spacing == "none") {
       return 0;
     } else if(spacing == "medium") {
       return 2;
@@ -489,7 +490,7 @@ export default Ember.Controller.extend({
   }.property('app_state.currentUser.preferences.device.button_border'),
   base_text_height: function() {
     var spacing = app_state.get('currentUser.preferences.device.button_text') || window.user_preferences.device.button_text;
-    if(spacing == "small") { 
+    if(spacing == "small") {
       return 14;
     } else if(spacing == "none") {
       return 0;
@@ -539,15 +540,14 @@ export default Ember.Controller.extend({
       res = res + this.get('text_style') + " ";
     }
     if(this.get('button_style')) {
-      if(this.get('button_style').match(/caps$/)) {
+      var style = Button.style(this.get('button_style'));
+      if(style.upper) {
         res = res + "upper ";
-      } else if(this.get('button_style').match(/small$/)) {
+      } else if(style.lower) {
         res = res + "lower ";
       }
-      if(this.get('button_style').match(/^comic_sans/)) {
-        res = res + "comic_sans ";
-      } else if(this.get('button_style').match(/open_dyslexic/)) {
-        res = res + "open_dyslexic ";
+      if(style.font_class) {
+        res = res + style.font_class + " ";
       }
     }
     return res;
@@ -575,7 +575,7 @@ export default Ember.Controller.extend({
     buttonSelect: function(id, event) {
       var controller = this;
       var board = this.get('model');
-      if(app_state.get('edit_mode')) { 
+      if(app_state.get('edit_mode')) {
         if(editManager.finding_target()) {
           editManager.apply_to_target(id);
         } else {
@@ -599,7 +599,7 @@ export default Ember.Controller.extend({
       var button = editManager.fake_button();
       button.label = ":complete";
       button.completion = text;
-      
+
       var controller = this;
       var board = this.get('model');
       var app = app_state.controller;

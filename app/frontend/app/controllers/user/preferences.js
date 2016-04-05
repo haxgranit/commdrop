@@ -5,6 +5,7 @@ import utterance from '../../utils/utterance';
 import capabilities from '../../utils/capabilities';
 import buttonTracker from '../../utils/raw_events';
 import modal from '../../utils/modal';
+import Button from '../../utils/button';
 
 export default Ember.Controller.extend({
   application: Ember.inject.controller(),
@@ -42,7 +43,23 @@ export default Ember.Controller.extend({
     {name: i18n.t('open_dyslexic', "OpenDyslexic"), id: "open_dyslexic"},
     {name: i18n.t('open_dyslexic_caps', "OpenDyslexic, All Uppercase"), id: "open_dyslexic_caps"},
     {name: i18n.t('open_dyslexic_small', "OpenDyslexic, All Lowercase"), id: "open_dyslexic_small"},
+    {name: i18n.t('architects_daughter', "Architect's Daughter"), id: "architects_daughter"},
+    {name: i18n.t('architects_daughter_caps', "Architect's Daughter, All Uppercase"), id: "architects_daughter_caps"},
+    {name: i18n.t('architects_daughter_small', "Architect's Daughter, All Lowercase"), id: "architects_daughter_small"},
   ],
+  text_sample_class: function() {
+    var res = "text_sample ";
+    var style = Button.style(this.get('model.preferences.device.button_style'));
+    if(style.upper) {
+      res = res + "upper ";
+    } else if(style.lower) {
+      res = res + "lower ";
+    }
+    if(style.font_class) {
+      res = res + style.font_class + " ";
+    }
+    return res;
+  }.property('model.preferences.device.button_style'),
   activationLocationList: [
     {name: i18n.t('pointer_release', "Where I Release My Pointer"), id: "end"},
     {name: i18n.t('pointer_start', "Where I First Press"), id: "start"}

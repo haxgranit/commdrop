@@ -390,6 +390,7 @@
   <label for="button_text" class="col-sm-3 control-label">{{t "Button Text Style" key='button_style'}}</label>
   <div class="col-sm-5">
     {{bound-select select_class="form-control" select_id="button_style" content=buttonStyleList selection=model.preferences.device.button_style action=(action (mut model.preferences.device.button_style)) }}
+    <div class={{text_sample_class}} style="margin-left: 20px; margin-top: 5px;">{{t "This is a Text Sample" key='this_is_a_text_sample'}}</div>
   </div>
 </div>
 {{/if}}

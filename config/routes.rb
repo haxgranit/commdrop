@@ -46,6 +46,7 @@ Coughdrop::Application.routes.draw do
       cache "/fonts/glyphicons-halflings-regular.ttf"
       cache "/fonts/glyphicons-halflings-regular.woff"
       cache "/fonts/OpenDyslexicAlta-Regular.otf"
+      cache "/fonts/ArchitectsDaughter.ttf"
       cache "/images/star.png"
       cache "/images/logo-small.png"
       cache "/images/logo-big.png"
