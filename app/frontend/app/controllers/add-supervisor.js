@@ -10,7 +10,7 @@ export default modal.ModalController.extend({
     this.set('new_user', false);
     var sup = CoughDrop.store.createRecord('user', {
       preferences: {
-        user_type: 'supervisor'
+        registration_type: 'manually-added-supervisor'
       }
     });
     sup.set('watch_user_name', true);
