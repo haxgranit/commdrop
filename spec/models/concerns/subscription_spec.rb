@@ -837,28 +837,29 @@ describe Subscription, :type => :model do
     
     it "should notify recently-created inactive users" do
       u1 = User.create
+      b = Board.create(:user => u1, :public => true)
       u2 = User.process_new({'preferences' => {'logging' => true}})
-      u3 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {}, 'role' => 'supporter'}})
-      u4 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {}}})
+      u3 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {'id' => b.global_id}, 'role' => 'supporter'}})
+      u4 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {'id' => b.global_id}}})
       d4 = Device.create(:user => u4)
-      u5 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {}}})
+      u5 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {'id' => b.global_id}}})
       d5 = Device.create(:user => u5)
       Device.where({:user_id => u5.id}).update_all({:updated_at => 10.days.ago})
       u6 = User.create
-      u7 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {}, 'role' => 'supporter'}})
+      u7 = User.process_new({'preferences' => {'logging' => true, 'home_board' => {'id' => b.global_id}, 'role' => 'supporter'}})
       d7 = Device.create(:user => u7)
       User.link_supervisor_to_user(u7, u6)
       User.where({:id => [u1.id, u2.id, u3.id, u4.id, u5.id, u6.id, u7.id]}).update_all({:created_at => 7.days.ago})
       
-      expect(UserMailer).to receive(:deliver_message).with(:usage_reminder, u1.global_id)
-      expect(UserMailer).to receive(:deliver_message).with(:usage_reminder, u2.global_id)
-      expect(UserMailer).to receive(:deliver_message).with(:usage_reminder, u3.global_id)
-      expect(UserMailer).to receive(:deliver_message).with(:usage_reminder, u5.global_id)
-      expect(UserMailer).to receive(:deliver_message).with(:usage_reminder, u6.global_id)
+      ids = []
+      expect(UserMailer).to receive(:deliver_message){|message, id|
+        ids << id if message == :usage_reminder
+      }.at_least(1).times
       res = User.check_for_subscription_updates
+      expect(ids.sort).to eq([u1.global_id, u2.global_id, u3.global_id, u5.global_id, u6.global_id])
       expect(res[:recent_less_active]).to eq(5)
     end
-    
+
     it "should not notify recently-created inactive users more than once" do
       u1 = User.create
       User.where({:id => u1.id}).update_all({:created_at => 7.days.ago})
