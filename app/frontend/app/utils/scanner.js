@@ -26,7 +26,7 @@ var scanner = Ember.Object.extend({
       return;
     } else {
       var row = {
-        children: [], 
+        children: [],
         dom: Ember.$("header"),
         label: i18n.t('header', "Header")
       };
@@ -48,7 +48,7 @@ var scanner = Ember.Object.extend({
           });
         }
       });
-    
+
       var menu = {
         dom: Ember.$("#identity a.btn"),
         label: i18n.t('menu', "Menu"),
@@ -63,8 +63,8 @@ var scanner = Ember.Object.extend({
       });
       console.log(menu);
       row.children.push(menu);
-    
-      // TODO: figure out sidebar, when teaser is visible and also when the 
+
+      // TODO: figure out sidebar, when teaser is visible and also when the
       // whole sidebar is visible, including toggling between the two
   //     if(Ember.$("#sidebar_tease:visible").length) {
   //       row.children.push({
@@ -72,6 +72,28 @@ var scanner = Ember.Object.extend({
   //       });
   //     }
       rows.push(row);
+      if(Ember.$("#word_suggestions").length) {
+        var row = {
+          children: [],
+          dom: Ember.$("#word_suggestions"),
+          label: i18n.t('suggestions', "Suggestions"),
+          reload_children: function() {
+            var res = [];
+            Ember.$("#word_suggestions").find(".suggestion").each(function() {
+              var $elem = Ember.$(this);
+              res.push({
+                dom: $elem,
+                label: $elem.text()
+              });
+            });
+            return res;
+          }
+        };
+        row.children = row.reload_children();
+
+        rows.push(row);
+      }
+
       if(options.scan_mode == 'row' || options.scan_mode == 'button') {
         var grid = editManager.controller.get('model.grid');
         for(var idx = 0; idx < grid.rows; idx++) {
@@ -243,11 +265,14 @@ var scanner = Ember.Object.extend({
     if(!elem.higher_level && elem.children && elem.children.length == 1) {
       elem = elem.children[0];
     }
-    
+
     if(elem.dom.hasClass('btn') && elem.dom.closest("#identity").length > 0) {
       var e = Ember.$.Event( "click" );
       e.pass_through = true;
       Ember.$(elem.dom).trigger(e);
+      setTimeout(function() {
+        Ember.$("#home_button").focus().select();
+      }, 100);
     }
 
     if(elem.higher_level) {
@@ -258,13 +283,7 @@ var scanner = Ember.Object.extend({
         scanner.next_element();
       });
     } else if(elem.children) {
-      var parent = Ember.$.extend({higher_level: scanner.elements, higher_level_index: scanner.element_index}, elem);
-      scanner.elements = elem.children.concat([parent]);
-      scanner.element_index = 0;
-      Ember.run.cancel(scanner.interval);
-      scanner.interval = Ember.run.later(function() {
-        scanner.next_element();
-      });
+      scanner.load_children(elem, scanner.elements, scanner.element_index);
     } else {
       if(elem.dom.hasClass('button') && elem.dom.attr('data-id')) {
         var id = elem.dom.attr('data-id');
@@ -284,6 +303,18 @@ var scanner = Ember.Object.extend({
       });
     }
   },
+  load_children: function(elem, elements, index) {
+    var parent = Ember.$.extend({higher_level: elements, higher_level_index: index}, elem);
+    if(elem.reload_children) {
+      elem.children = elem.reload_children();
+    }
+    scanner.elements = elem.children.concat([parent]);
+    scanner.element_index = 0;
+    Ember.run.cancel(scanner.interval);
+    scanner.interval = Ember.run.later(function() {
+      scanner.next_element();
+    });
+  },
   next: function() {
     Ember.run.cancel(scanner.interval);
     scanner.element_index = scanner.element_index + 1;
@@ -294,6 +325,17 @@ var scanner = Ember.Object.extend({
   },
   next_element: function() {
     var elem = this.elements[this.element_index];
+    if(!elem) {
+      elem = elem || this.elements[0];
+      this.element_index = 0;
+    }
+    if(!document.body.contains(elem.dom[0])) {
+      var last = this.elements[this.elements.length - 1];
+      if(last && last.higher_level && last.reload_children) {
+        scanner.load_children(last.higher_level[last.higher_level_index], last.higher_level, last.higher_level_index);
+        return;
+      }
+    }
     scanner.current_element = elem;
     var options = scanner.options;
     options.prevent_close = true;
@@ -303,12 +345,13 @@ var scanner = Ember.Object.extend({
       options.overlay = true;
       options.clear_overlay = false;
     }
-    
+
     if(this.options && this.options.audio) {
       if(elem && elem.sound) {
         speecher.speak_audio(elem.sound, 'text', false, {interrupt: false});
       } else if(elem && elem.label) {
-        speecher.speak_text(elem.label, false, {interrupt: false});
+        var clean_label = (elem.label || "").replace(/^[\+\:]/, '');
+        speecher.speak_text(clean_label, false, {interrupt: false});
       }
     }
     if(capabilities.mobile && capabilities.installed_app && app_state.get('speak_mode') && Ember.$("#hidden_input:focus").length === 0) {

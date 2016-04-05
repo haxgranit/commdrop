@@ -434,7 +434,8 @@ var app_state = Ember.Object.extend({
           scan_mode: _this.get('currentUser.preferences.device.scanning_mode'),
           interval: _this.get('currentUser.preferences.device.scanning_interval'),
           vertical_chunks: _this.get('currentUser.preferences.device.scanning_region_rows'),
-          horizontal_chunks: _this.get('currentUser.preferences.device.scanning_region_columns')
+          horizontal_chunks: _this.get('currentUser.preferences.device.scanning_region_columns'),
+          audio: _this.get('currentUser.preferences.device.scanning_prompt')
         });
       } else {
         buttonTracker.scanning_enabled = false;

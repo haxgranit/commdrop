@@ -488,6 +488,17 @@
       </div>
     </div>
     <div class="form-group">
+      <label for="scanning_prompt" class="col-sm-3 control-label">{{t "Scanning Prompt" key='scanning_prompt'}}</label>
+      <div class="col-sm-5">
+        <div class="checkbox">
+          <label>
+            {{input type="checkbox" checked=model.preferences.device.scanning_prompt id="scanning_prompt"}}
+            {{t "Speak Audio Prompts While Scanning" key='speak_audio_prompts'}}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
       <label for="scanning_select_on_any_event" class="col-sm-3 control-label">{{t "Scanning Pseudo-Switch" key='psuedo-switch'}}</label>
       <div class="col-sm-5">
         <div class="checkbox">
