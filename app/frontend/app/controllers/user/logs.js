@@ -41,9 +41,9 @@ export default Ember.Controller.extend({
       });
     },
     quick_assessment: function() {
-      app_state.check_for_full_premium(this.get('model'), 'quick_assessment').then(function() {
-        var _this = this;
-        modal.open('quick-assessment', this.get('model')).then(function() {
+      var _this = this;
+      app_state.check_for_full_premium(_this.get('model'), 'quick_assessment').then(function() {
+        modal.open('quick-assessment', _this.get('model')).then(function() {
           _this.send('refresh');
         });
       });
@@ -60,7 +60,7 @@ export default Ember.Controller.extend({
       if(this.get('end')) { args.end = this.get('end'); }
       if(this.get('device_id')) { args.device_id = this.get('device_id'); }
       if(this.get('location_id')) { args.location_id = this.get('location_id'); }
-      
+
       this.set('logs', {loading: true});
 
       this.store.query('log', args).then(function(list) {
@@ -83,7 +83,7 @@ export default Ember.Controller.extend({
             }, 1000);
           }
         }
-      }, function() { 
+      }, function() {
         controller.set('logs', {error: true});
       });
     },
