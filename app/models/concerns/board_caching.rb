@@ -47,7 +47,7 @@ module BoardCaching
     view_ids = (edit_ids + view_shared + supervisee_view_shared).uniq
     # TODO: sharding
     view_ids = Board.where(:public => false, :id => self.class.local_ids(view_ids)).select('id').map(&:global_id).sort
-    edit_ids = Board.where(:public => false, :id => self.class.local_ids(edit_ids)).select('id').map(&:global_id).sort
+    edit_ids = Board.where(:id => self.class.local_ids(edit_ids)).select('id').map(&:global_id).sort
     self.settings ||= {}
     self.settings['available_private_board_ids'] ||= {
       'view' => [],
@@ -73,6 +73,7 @@ module BoardCaching
   end
   
   def private_editable_board_ids
+    # kind of a lie, since it includes shared public boards as well
     self.settings ||= {}
     ((self.settings['available_private_board_ids'] || {})['edit'] || [])
   end

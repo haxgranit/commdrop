@@ -38,20 +38,20 @@ class Board < ActiveRecord::Base
   # public boards anyone can view
   add_permissions('view') { self.public }
   # check cached list of explicitly-allowed private boards
-  add_permissions('view') {|user| user.can_view?(self) }
+  add_permissions('view') {|user| !self.public && user.can_view?(self) }
   add_permissions('view', 'edit', 'delete', 'share') {|user| user.can_edit?(self) }
   # explicitly-shared boards are viewable
-  add_permissions('view') {|user| self.shared_with?(user) }
+  add_permissions('view') {|user| self.shared_with?(user) } # should be redundant due to board_caching
   # the author's supervisors can view the author's boards
   # the user (and co-authors) should have edit and sharing access
-  add_permissions('view', 'edit', 'delete', 'share') {|user| self.author?(user) }
+  add_permissions('view', 'edit', 'delete', 'share') {|user| self.author?(user) } # should be redundant due to board_caching
   add_permissions('view') {|user| self.user && self.user.allows?(user, 'supervise') }
   # the user and any of their editing supervisors should have edit access
   add_permissions('view', 'edit', 'delete', 'share') {|user| self.user && self.user.allows?(user, 'edit') }
   # the user should have edit and sharing access if a parent board is edit-shared including downstream with them
-  add_permissions('view', 'edit', 'delete', 'share') {|user| self.shared_with?(user, true) }
+  add_permissions('view', 'edit', 'delete', 'share') {|user| self.shared_with?(user, true) } # should be redundant due to board_caching
   # the user should have view access if the board is shared with any of their supervisees
-  add_permissions('view') {|user| user.supervisees.any?{|u| self.shared_with?(u) } }
+  add_permissions('view') {|user| user.supervisees.any?{|u| self.shared_with?(u) } } # should be redundant due to board_caching
   cache_permissions
 
   def starred_by?(user)
