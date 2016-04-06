@@ -76,6 +76,7 @@ class Api::BoardsController < ApplicationController
   end
   
   def show
+    Rails.logger.warn('looking up board')
     board = Board.find_by_path(params['id'])
     if !board
       deleted_board = DeletedBoard.find_by_path(params['id'])
@@ -96,15 +97,19 @@ class Api::BoardsController < ApplicationController
       return unless exists?(board)
     end
     allowed = false
+    Rails.logger.warn('checking permission')
     self.class.trace_execution_scoped(['boards/board/permission_check']) do
       allowed = allowed?(board, 'view')
     end
     return unless allowed
     json = {}
+    Rails.logger.warn('rendering json')
     self.class.trace_execution_scoped(['boards/board/json_render']) do
       json = JsonApi::Board.as_json(board, :wrapper => true, :permissions => @api_user)
     end
+    Rails.logger.warn('rails render')
     render json: json.to_json
+    Rails.logger.warn('done with controller')
   end
   
   def create
