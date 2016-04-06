@@ -52,6 +52,7 @@ Coughdrop::Application.routes.draw do
       cache "/images/logo-big.png"
       cache "/images/star_gray.png"
       cache "/images/folder.png"
+      cache "/images/folder_home.png"
       cache "/images/spinner.gif"
       cache "/images/talk.png"
       cache "/images/link.png"

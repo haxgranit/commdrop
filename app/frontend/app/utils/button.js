@@ -36,7 +36,11 @@ var Button = Ember.Object.extend({
     var path = Ember.templateHelpers.path;
     var action = this.get('buttonAction');
     if(action == 'folder') {
-      return path('images/folder.png');
+      if(this.get('home_lock')) {
+        return path('images/folder_home.png');
+      } else {
+        return path('images/folder.png');
+      }
     } else if(action == 'talk') {
       return path('images/talk.png');
     } else if(action == 'link') {
@@ -50,7 +54,7 @@ var Button = Ember.Object.extend({
     } else {
       return path('images/unknown_action.png');
     }
-  }.property('buttonAction', 'video.popup'),
+  }.property('buttonAction', 'video.popup', 'home_lock'),
   action_alt: function() {
     var path = Ember.templateHelpers.path;
     var action = this.get('buttonAction');

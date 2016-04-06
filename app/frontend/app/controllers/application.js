@@ -28,14 +28,14 @@ export default Ember.Controller.extend({
       modal.error(i18n.t('need_online_for_copying', "You must be connected to the Internet to make copies of boards."));
       return Ember.RSVP.reject();
     }
-    // If a board has any sub-boards or if the current user has any supervisees, 
+    // If a board has any sub-boards or if the current user has any supervisees,
     // or if the board is in the current user's board set,
     // then there's a confirmation step before copying.
     var needs_decision = (oldBoard.get('linked_boards') || []).length > 0;
     var _this = this;
     needs_decision = needs_decision || (app_state.get('currentUser.supervisees') || []).length > 0;
     needs_decision = needs_decision || (app_state.get('currentUser.stats.board_set_ids') || []).indexOf(oldBoard.get('id')) >= 0;
-    
+
     if(!decision && needs_decision) {
       return modal.open('copy-board', {board: oldBoard, for_editing: for_editing}).then(function(opts) {
         return _this.copy_board(opts);
@@ -138,7 +138,7 @@ export default Ember.Controller.extend({
                 persistence.sync('self').then(null, function() { });
               }, 1000);
             }
-          }, function() { 
+          }, function() {
             modal.error(i18n.t('set_as_home_failed', "Home board update failed unexpectedly"));
           });
         }
@@ -166,7 +166,7 @@ export default Ember.Controller.extend({
       // TODO: true back button vs. separate history? one is better for browser,
       // other is better if you end up with intermediate pages at all.. what about
       // full screen browser mode? Prolly needs a localstorage component as well,
-      // since if I reload and then click the browser back button it's all kinds 
+      // since if I reload and then click the browser back button it's all kinds
       // of backward.
       if(stashes.get('sticky_board') && app_state.get('speak_mode')) {
         modal.warning(i18n.t('sticky_board_notice', "Board lock is enabled, disable to leave this board."), true);
@@ -201,7 +201,7 @@ export default Ember.Controller.extend({
     editBoardDetails: function() {
       if(!app_state.get('edit_mode')) { return; }
       modal.open('edit-board-details', {board: this.get('board.model')});
-    },    
+    },
     toggle_sticky_board: function() {
       stashes.persist('sticky_board', !stashes.get('sticky_board'));
     },
@@ -301,7 +301,7 @@ export default Ember.Controller.extend({
       editManager.redo();
     },
     modifyGrid: function(action, type, location) {
-      if(location == 'top' || location == 'left') { 
+      if(location == 'top' || location == 'left') {
         location = 0;
       } else {
         location = null;
@@ -424,7 +424,7 @@ export default Ember.Controller.extend({
     } else if(button.load_board) {
       obj.type = 'link';
     }
-    
+
     var button_to_speak = obj;
     var specialty = utterance.specialty_button(obj);
     if(button.load_board && button.load_board.key && !button.add_to_vocalization) {
@@ -434,7 +434,7 @@ export default Ember.Controller.extend({
       button_to_speak = utterance.add_button(obj, button);
     }
 //     Ember.$(".hover_button").remove();
-    
+
     if(obj.label) {
       if(app_state.get('speak_mode')) {
         if(app_state.get('currentUser.preferences.vocalize_buttons') || (!app_state.get('currentUser') && window.user_preferences.any_user.vocalize_buttons)) {
@@ -450,7 +450,7 @@ export default Ember.Controller.extend({
       } else {
         utterance.silent_speak_button(button_to_speak);
       }
-    } 
+    }
 
 //     console.log(obj.label);
     if(button_to_speak.modified && !button_to_speak.in_progress) {
@@ -458,7 +458,7 @@ export default Ember.Controller.extend({
     }
     console.log(obj);
     stashes.log(obj);
-    
+
     if(button.load_board && button.load_board.key) {
       if(stashes.get('sticky_board') && app_state.get('speak_mode')) {
         modal.warning(i18n.t('sticky_board_notice', "Board lock is enabled, disable to leave this board."), true);
@@ -482,10 +482,10 @@ export default Ember.Controller.extend({
 //         width: width,
 //         height: height
 //       });
-//       
+//
 //       Ember.$("body").append($clone);
 //       $clone.addClass('selecting');
-// 
+//
 //       Ember.run.later(function() {
 //         $button.addClass('selecting');
 //         var later = Ember.run.later(function() {
@@ -494,11 +494,12 @@ export default Ember.Controller.extend({
 //         $button.data('later', later);
 //       });
 //     }
-    
+
         Ember.run.later(function() {
         _this.jumpToBoard({
           id: button.load_board.id,
-          key: button.load_board.key
+          key: button.load_board.key,
+          home_lock: button.home_lock
         }, oldState);
         }, 100);
       }
@@ -508,7 +509,7 @@ export default Ember.Controller.extend({
       } else {
         if(button.video && button.video.popup) {
           modal.open('inline-video', button);
-        } else { 
+        } else {
           if((!app_state.get('currentUser') && window.user_preferences.any_user.confirm_external_links) || app_state.get('currentUser.preferences.confirm_external_links')) {
             modal.open('confirm-external-link', {url: button.url});
           } else {

@@ -2,33 +2,33 @@
 <div class={{if actionState 'active' 'hidden'}}>
   <div class="form-group">
     <label for="action" class="col-sm-2 control-label">{{t "Action" key="action"}}</label>
-    <div class="col-sm-10"> 
+    <div class="col-sm-10">
       {{bound-select select_class="form-control" select_id="action" content=buttonActions selection=model.buttonAction action=(action (mut model.buttonAction)) }}
     </div>
   </div>
   {{#if model.folderAction}}
     <div class="form-group">
       <label class="col-sm-2 control-label">{{t "Board" key='board'}}</label>
-      <div class="col-sm-10"> 
+      <div class="col-sm-10">
         <p class="form-control-static">
           {{#if model.load_board.key}}
             <img src={{model.icon}} style="height: 20px;"/>
             <a href={{model.link}} target="_blank">{{model.load_board.key}}</a>
           {{else}}
             {{t "None set" key='none_set'}}
-          {{/if}} 
+          {{/if}}
         </p>
       </div>
     </div>
     <div class="form-group">
       <label for="change_to" class="col-sm-2 control-label">{{t "Find/Add" key='find_add'}}</label>
-      <div class="col-sm-10 options"> 
+      <div class="col-sm-10 options">
         <span class="board_search_field">
           {{input value=linkedBoardName class="form-control" id="change_to" placeholder="Board name or key"}}
         </span>
         <button class="btn btn-default" {{action "find_board"}}>{{t "Find" key='find'}}</button>
         <button class="btn btn-default" {{action "build_board"}}>{{t "New" key='new'}}</button>
-        {{#unless pending_board}}                    
+        {{#unless pending_board}}
           <div class="row" style="margin-top: 5px;">
             <div class="col-sm-12">
               {{bound-select select_class="form-control" select_id="board_search_type" content=board_search_options selection=board_search_type action=(action (mut board_search_type)) }}
@@ -137,7 +137,7 @@
           {{/if}}
            {{t "URL" key='url'}}
         </label>
-        <div class="col-sm-10 options"> 
+        <div class="col-sm-10 options">
           {{input value=model.url class="form-control" id="link_to" placeholder="https://"}}
         </div>
       </div>
@@ -170,10 +170,10 @@
         {{#if model.video.popup}}
           <div class="form-group">
             <label for="youtube_start" class="col-sm-2 control-label">{{t "Start" key='start_at'}}</label>
-            <div class="col-sm-3"> 
+            <div class="col-sm-3">
               {{input value=model.video.start class="form-control" id="youtube_start" placeholder="0"}}
             </div>
-            <div class="col-sm-3"> 
+            <div class="col-sm-3">
               <p class="form-control-static">
                 {{t "seconds" key='seconds'}}
               </p>
@@ -181,10 +181,10 @@
           </div>
           <div class="form-group">
             <label for="youtube_end" class="col-sm-2 control-label">{{t "End" key='end_at'}}</label>
-            <div class="col-sm-3"> 
+            <div class="col-sm-3">
               {{input value=model.video.end class="form-control" id="youtube_end" placeholder="ending"}}
             </div>
-            <div class="col-sm-3"> 
+            <div class="col-sm-3">
               <p class="form-control-static">
                 {{t "seconds" key='seconds'}}
               </p>
@@ -205,7 +205,7 @@
     {{else}}
       {{#if model.appAction}}
         <div class="form-group">
-          <div class="col-sm-10"> 
+          <div class="col-sm-10">
             <p class="form-control-static">
               <a href="#" {{action 'set_app_find_mode' 'ios'}} class={{if ios_search 'really_bold'}}><span class={{ios_status_class}}></span> {{t "iOS" key='ios'}}</a> &nbsp;&nbsp;&nbsp;&nbsp;
               <a href="#" {{action 'set_app_find_mode' 'android'}} class={{if android_search 'really_bold'}}><span class={{android_status_class}}></span> {{t "Android" key='android'}}</a> &nbsp;&nbsp;&nbsp;&nbsp;
@@ -221,7 +221,7 @@
           </div>
           <div class="form-group">
             <label for="app_name" class="col-sm-2 control-label">{{t "App" key='app'}}</label>
-            <div class="col-sm-10"> 
+            <div class="col-sm-10">
               {{#if model.apps.ios}}
                 <div style="margin-bottom: 10px;">
                   <span style="white-space: nowrap; overflow: hidden;">
@@ -248,7 +248,7 @@
           </div>
           <div class="form-group">
             <label for="app_search" class="col-sm-2 control-label">{{t "Find" key='find'}}</label>
-            <div class="col-sm-10 options"> 
+            <div class="col-sm-10 options">
               <span class="board_search_field">
                 {{input value=ios_app_name class="form-control" id="app_search" placeholder="App name"}}
               </span>
@@ -299,7 +299,7 @@
           </div>
           <div class="form-group">
             <label for="app_name" class="col-sm-2 control-label">{{t "App" key='app'}}</label>
-            <div class="col-sm-10"> 
+            <div class="col-sm-10">
               {{#if model.apps.android}}
                 <div style="margin-bottom: 10px;">
                   <span style="white-space: nowrap; overflow: hidden;">
@@ -326,7 +326,7 @@
           </div>
           <div class="form-group">
             <label for="app_search" class="col-sm-2 control-label">{{t "Find" key='find'}}</label>
-            <div class="col-sm-10 options"> 
+            <div class="col-sm-10 options">
               <span class="board_search_field">
                 {{input value=android_app_name class="form-control" id="app_search" placeholder="App name"}}
               </span>
@@ -377,7 +377,7 @@
           </div>
           <div class="form-group">
             <label for="app_url" class="col-sm-2 control-label">{{t "URL" key='url'}}</label>
-            <div class="col-sm-10"> 
+            <div class="col-sm-10">
               {{input value=model.apps.web.launch_url class="form-control" id="app_url" placeholder="https://"}}
             </div>
           </div>
@@ -391,7 +391,7 @@
             </div>
           {{/if}}
         {{/if}}
-        
+
       {{else}}
         <img src="{{path 'images/talk.png'}}" style="height: 20px;"/> {{t "Button will play sound or speech" key='button_will_play'}}
       {{/if}}
@@ -406,6 +406,14 @@
             {{t "Also add button to the vocalization window" key='add_to_vocalization'}}
           </label>
         </div>
+        {{#if model.folderAction}}
+          <div class="checkbox">
+            <label>
+              {{input checked=model.home_lock type="checkbox"}}
+              {{t "Set as temporary home when loaded" key='set_home_lock'}}
+            </label>
+          </div>
+        {{/if}}
         <div class="checkbox">
           <label>
             {{input checked=model.link_disabled type="checkbox"}}
