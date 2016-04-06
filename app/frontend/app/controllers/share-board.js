@@ -4,20 +4,13 @@ import i18n from '../utils/i18n';
 import coughDropExtras from '../utils/extras';
 
 export default modal.ModalController.extend({
-  show_share: function() {
-    if(this.get('board.link')) {
-      var _this = this;
-      Ember.run.later(function() {
-        coughDropExtras.share.load({link: _this.get('board.link'), text: _this.get('board.name')});
-      });
-    }
-  },
   opening: function() {
     var controller = this;
     var board = controller.get('model.board');
     controller.set('model', {});
     controller.set('board', board);
-    controller.show_share();
+    this.set('confirm_public_board', false);
+    this.set('error_confirming_public_board', false);
   },
   actions: {
     share_with_user: function() {
@@ -52,6 +45,31 @@ export default modal.ModalController.extend({
         console.log(xhr.responseJSON);
         modal.error(i18n.t('unsharing_failed', "Board unsharing action failed"));
       });
+    },
+    make_public: function(action) {
+      if(action == 'confirm') {
+        var board = this.get('board');
+        board.set('public', true);
+        var _this = this;
+        board.save().then(function() {
+          _this.set('confirm_public_board', false);
+        }, function() {
+          _this.set('confirm_public_board', false);
+          _this.set('error_confirming_public_board', true);
+          board.set('public', false);
+        });
+      } else if(action == 'cancel') {
+        this.set('confirm_public_board', false);
+      } else {
+        this.set('confirm_public_board', true);
+      }
+    },
+    copy_event(res) {
+      if(res) {
+        this.set('copy_result', {succeeded: true});
+      } else {
+        this.set('copy_result', {failed: true});
+      }
     }
   }
 });

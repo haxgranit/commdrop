@@ -5,22 +5,41 @@
   </div>
   <div class="modal-body">
     {{#if board.public}}
-      <p>{{t "Copy the link to this board to share it on other apps/sites<br/><!--TODO: (for better sharing install the CoughDrop mobile app).-->" key='copy_board_link'}}</p>
-    
+      <p>{{t "This board is public, and available to share with anyone. Copy the link to this board to share it on other apps/sites.<br/><!--TODO: (for better sharing install the CoughDrop mobile app).-->" key='copy_board_link'}}</p>
+
       <div class="row" style="margin: 30px 0 0;">
         <div class="col-sm-12">
-          <p class="form-control-static" style="line-height: 34px; vertical-align: middle;">
+          <p class="form-control-static" style="line-height: 34px; vertical-align: middle; margin-bottom: 10px;">
             <img src={{board.icon_url_with_fallback}} style="height: 30px; padding-right: 5px;"/>
             {{#if board.link}}
               <a href={{board.link}} target="_blank">Link to {{board.name}} ({{board.key}}) <span class="glyphicon glyphicon-hand-up"></span></a>
+              <span id="board_link" style="position: absolute; height: 0; left: -1000px;">{{board.link}}</span>
             {{/if}}
           </p>
-          <div id="share_links" style="min-height: 40px; margin-left: -3px; margin-top: 15px;">
-          </div>
+          {{share-bar url=board.link user=app_state.currentUser element_id='board_link' board=board copy_event='copy_event'}}
+          {{#if copy_result.succeeded}}
+            <p class='text-success'>{{t "Link copied to the clipboard!" key='copied_to_clipboard'}}</p>
+          {{else if copy_result.failed}}
+            <p class='text-danger'>{{t "Copying to the clipboard failed." key='copy_failed'}}</p>
+          {{/if}}
         </div>
       </div>
+    {{else}}
+      <p>{{t "This board is private, only shared users, supervisors and admins can see it." key='board_is_private_limited_users'}}</p>
+      {{#if board.permissions.edit}}
+        {{#if error_confirming_public_board}}
+          <p class='text-danger'>{{t "There was an unexpected error while trying to update the board" key='board_update_error'}}</p>
+        {{/if}}
+        {{#if confirm_public_board}}
+          <p>{{t "Are you sure you want to make this board public? Anyone will be able to search for and see it. This is not recommended for boards containing any personal information." key='confirm_make_public'}}</p>
+          <button class='btn btn-default' {{action 'make_public' 'confirm'}}>{{t "Make the Board Public" key='make_it_public'}}</button>
+          <button class='btn btn-default' {{action 'make_public' 'cancel'}}>{{t "Cancel" key='cancel'}}</button>
+        {{else}}
+          <button class='btn btn-default' {{action 'make_public'}}>{{t "Make the Board Public" key='make_it_public'}}</button>
+        {{/if}}
+      {{/if}}
     {{/if}}
-    
+
     {{#if board.permissions.share}}
       <div style="margin: 20px 0;">
         <h4>
@@ -88,5 +107,5 @@
         </form>
       </div>
     {{/if}}
-  </div>    
+  </div>
 {{/modal-dialog}}
