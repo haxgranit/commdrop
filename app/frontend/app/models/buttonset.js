@@ -30,7 +30,6 @@ CoughDrop.Buttonset = DS.Model.extend({
     var all_buttons_enabled = stashes.get('all_buttons_enabled');
 
     if(from_board_id && from_board_id != this.get('id')) {
-      alert('using different button set!');
       // re-depthify all the buttons based on the starting board
       var new_buttons = [];
       var boards_to_check = [{id: from_board_id, depth: 0}];
@@ -41,9 +40,9 @@ CoughDrop.Buttonset = DS.Model.extend({
           if(b.board_id == board_to_check.id) {
             var new_b = Ember.$.extend({}, b, {depth: board_to_check.depth});
             new_buttons.push(new_b);
-            if(b.load_board_id && found_boards.indexOf(b.load_board_id) == -1) {
-              found_boards.push(b.load_board_id)
-              boards_to_check.push({id: b.load_board_id, depth: board_to_check.depth + 1});
+            if(b.linked_board_id && found_boards.indexOf(b.linked_board_id) == -1) {
+              found_boards.push(b.linked_board_id)
+              boards_to_check.push({id: b.linked_board_id, depth: board_to_check.depth + 1});
             }
           }
         });
