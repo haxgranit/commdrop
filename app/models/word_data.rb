@@ -1,6 +1,7 @@
 class WordData < ActiveRecord::Base
   include SecureSerialize
   secure_serialize :data
+  replicated_model  
   
   def self.find_word(text, locale='en')
     return nil if text && text.match(/^[\+\:]/)

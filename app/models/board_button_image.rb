@@ -1,6 +1,7 @@
 class BoardButtonImage < ActiveRecord::Base
   belongs_to :board
   belongs_to :button_image
+  replicated_model  
   
   def self.images_for_board(board_id)
     BoardButtonImage.includes(:button_image).where(:board_id => board_id).map(&:button_image)

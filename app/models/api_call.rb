@@ -1,6 +1,7 @@
 class ApiCall < ActiveRecord::Base
   include SecureSerialize
   secure_serialize :data
+  replicated_model
   
   def self.log(token, user, request, response, time)
     if request && request.path && request.path.match(/^\/api\/v\d+/) && token && user && response

@@ -6,6 +6,7 @@ class Organization < ActiveRecord::Base
   include Notifier
   secure_serialize :settings
   before_save :generate_defaults
+  replicated_model  
   
   # cache should be invalidated if:
   # - a manager/assistant is added or removed

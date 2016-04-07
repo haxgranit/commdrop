@@ -37,6 +37,7 @@ gem 'rack-attack'
 gem 'newrelic_rpm'
 gem 'rack-timeout'
 gem 'pg_search'
+gem 'ar-octopus', require: 'octopus'
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.

@@ -5,6 +5,7 @@ class DeletedBoard < ActiveRecord::Base
   before_save :generate_defaults
   belongs_to :user
   belongs_to :board
+  replicated_model  
   
   def generate_defaults
     self.cleared ||= false

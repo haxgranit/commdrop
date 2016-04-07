@@ -6,6 +6,7 @@ class GiftPurchase < ActiveRecord::Base
   secure_serialize :settings
   before_save :generate_defaults
   after_create :notify_of_creation
+  replicated_model  
   
   add_permissions('view') { self.active == true }
 

@@ -11,6 +11,7 @@ class ButtonImage < ActiveRecord::Base
   belongs_to :user
   before_save :generate_defaults
   after_create :track_image_use_later
+  replicated_model  
 
   has_paper_trail :only => [:settings, :board_id, :user_id, :public, :path, :url, :data]
   secure_serialize :settings
