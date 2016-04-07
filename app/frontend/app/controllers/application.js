@@ -380,6 +380,14 @@ export default Ember.Controller.extend({
           findButtonElem();
         }
       }
+    },
+    about_modal: function() {
+      modal.open('about-coughdrop');
+    },
+    full_screen: function() {
+      capabilities.fullscreen(true).then(null, function() {
+        modal.warning(i18n.t('fullscreen_failed', "Full Screen Mode failed to load"), true);
+      });
     }
   },
   activateButton: function(button, options) {

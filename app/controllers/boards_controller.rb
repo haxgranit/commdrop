@@ -35,6 +35,9 @@ class BoardsController < ApplicationController
     if request.path.match(/\./)
       raise ActiveRecord::RecordNotFound.new("Board paths can't have dots, so this is invalid: #{request.path}")
     end
+    if params['embed']
+      response.headers.except! 'X-Frame-Options'
+    end
     render :index
   end
   

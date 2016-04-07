@@ -70,6 +70,7 @@ var CoughDrop = Ember.Application.extend({
   }
 });
 
+CoughDrop.embedded = !!location.href.match(/embed=1/);
 
 loadInitializers(CoughDrop, config.modulePrefix);
 

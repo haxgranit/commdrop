@@ -194,6 +194,11 @@ var app_state = Ember.Object.extend({
        this.controller.set('footer', true);
       } catch(e) { }
     }
+    if(CoughDrop.embedded && !this.get('speak_mode')) {
+      if(window.top && window.top != window.self) {
+        window.top.location.replace(window.location);
+      }
+    }
   },
   set_latest_board_id: function() {
     this.set('latest_board_id', this.get('currentBoardState.id'));
@@ -311,7 +316,9 @@ var app_state = Ember.Object.extend({
     if(!current || decision == 'goHome') {
       this.home_in_speak_mode();
     } else if(stashes.get('current_mode') == 'speak') {
-      if(app_state.get('currentUser.preferences.require_speak_mode_pin') && decision != 'off' && app_state.get('currentUser.preferences.speak_mode_pin')) {
+      if(this.get('embedded')) {
+        modal.open('about-coughdrop', {no_exit: true});
+      } else if(app_state.get('currentUser.preferences.require_speak_mode_pin') && decision != 'off' && app_state.get('currentUser.preferences.speak_mode_pin')) {
         modal.open('speak-mode-pin', {actual_pin: app_state.get('currentUser.preferences.speak_mode_pin')});
       } else {
         this.toggle_mode('speak');
@@ -642,8 +649,9 @@ var app_state = Ember.Object.extend({
             modal.warning(i18n.t('volume_is_low', "Volume is low, you may not be able to hear speech"), true);
           }
         });
-
       }
+      this.set('embedded', !!(CoughDrop.embedded));
+      this.set('full_screen_capable', capabilities.fullscreen_capable());
     } else if(!this.get('speak_mode') && this.get('last_speak_mode') !== undefined) {
       capabilities.wakelock('speak', false);
       stashes.persist('temporary_root_board_state', null);
@@ -668,6 +676,9 @@ var app_state = Ember.Object.extend({
     // TODO: decide if this should be an option at all
     //return this.get('speak_mode') && this.get('currentUser.preferences.require_speak_mode_pin');
   }.property('speak_mode', 'currentUser.preferences.require_speak_mode_pin'),
+  superProtectedSpeakMode: function() {
+    return this.get('speak_mode') && this.get('embedded');
+  }.property('speak_mode', 'embedded'),
   current_board_name: function() {
     var state = this.get('currentBoardState');
     if(state && state.key) {

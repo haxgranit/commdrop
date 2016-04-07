@@ -386,7 +386,19 @@
             <li role="presentation" style="font-size: 20px;">
               <a href="#" {{action "toggleSpeakMode"}}>{{t "Exit Speak Mode" key="exit_speak_mode"}}</a>
             </li>
-            {{#unless superProtectedSpeakMode}}
+            {{#if app_state.embedded}}
+              <li class="divider"></li>
+              {{#if app_state.full_screen_capable}}
+                <li role="presentation">
+                  <a href="#" {{action "full_screen"}}>{{t "Full Screen" key="full_screen"}}</a>
+                </li>
+              {{/if}}
+              <li role="presentation">
+                <a href="#" {{action "about_modal"}}>{{t "About CoughDrop" key="about_coughdrop"}}</a>
+              </li>
+              <li><a href="#" {{action "find_button"}}>{{t "Find a Button" key='find_a_button'}}</a></li>
+            {{/if}}
+            {{#unless app_state.superProtectedSpeakMode}}
               {{#if session.isAuthenticated}}
                 <li class="divider"></li>
               {{/if}}
@@ -411,7 +423,7 @@
               {{/unless}}
             {{/if}}
           {{/unless}}
-          {{#unless superProtectedSpeakMode}}
+          {{#unless app_state.superProtectedSpeakMode}}
             {{#if app_state.speak_mode}}
               {{#if app_state.feature_flags.enable_all_buttons}}
                 <li><a href="#" {{action 'toggle_all_buttons'}}>
