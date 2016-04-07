@@ -857,7 +857,7 @@ var capabilities;
     var request = {};
     var errored = false;
     try {
-      request = indexedDBSafe.open(key, 1);
+      request = indexedDBSafe.open(key, 2);
     } catch(e) {
       console.error("COUGHDROP: unexpected db throw");
       console.log(e);
@@ -924,7 +924,7 @@ var capabilities;
       console.log("COUGHDROP: db upgrade needed");
       var db = event.target.result;
 
-      if(event.oldVersion < 1 || event.oldVersion > 99999) {
+      if(event.oldVersion < 1 || event.oldVersion > 99999 || true) {
         try {
           var store_names = db.objectStoreNames || [];
           var index_names;
@@ -947,6 +947,10 @@ var capabilities;
             if(!index_names.contains('changed') && indexes_allowed) {
               images.createIndex("changed", "changed", {unique: false});
             }
+          }
+          if(!store_names.contains('buttonset')) {
+            var button_sets = db.createObjectStore("buttonset", { keyPath: "id" });
+            index_names = button_sets.index_names || [];
           }
           if(!store_names.contains('sound')) {
             var sounds = db.createObjectStore("sound", { keyPath: "id" });

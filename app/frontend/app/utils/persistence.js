@@ -9,6 +9,7 @@ import Utils from './misc';
 import modal from './modal';
 import capabilities from './capabilities';
 
+var valid_stores = ['user', 'board', 'image', 'sound', 'settings', 'dataCache', 'buttonset'];
 var persistence = Ember.Object.extend({
   setup: function(container, application) {
     application.register('cough_drop:persistence', persistence, { instantiate: false, singleton: true });
@@ -55,7 +56,7 @@ var persistence = Ember.Object.extend({
     }
     if(!key) { /*debugger;*/ }
     return new Ember.RSVP.Promise(function(resolve, reject) {
-      if(store != 'user' && store != 'board' && store != 'image' && store != 'sound' && store != 'settings' && store != 'dataCache') {
+      if(valid_stores.indexOf(store) == -1) {
         reject({error: "invalid type: " + store});
         return;
       }
@@ -292,7 +293,7 @@ var persistence = Ember.Object.extend({
         persistence.stores = persistence.stores || [];
         var promises = [];
         var store_method = eventually ? persistence.store_eventually : persistence.store;
-        if(store == 'user' || store == 'board' || store == 'image' || store == 'sound' || store == 'settings' || store == 'dataCache') {
+        if(valid_stores.indexOf(store) != -1) {
           var record = {raw: (obj[store] || obj)};
           if(store == 'settings') {
             record.storageId = key;
@@ -1139,7 +1140,9 @@ persistence.DSExtend = {
     var _super = this.__nextSuper;
 
     var find = persistence.find(type.modelName, id, true);
-    if(persistence.force_reload == id) { find.then(null, function() { }); find = Ember.RSVP.reject(); }
+
+    var full_id = type.modelName + "_" + id;
+    if(persistence.force_reload == full_id) { find.then(null, function() { }); find = Ember.RSVP.reject(); }
     else if(!stashes.get('enabled')) { find.then(null, function() { }); find = Ember.RSVP.reject(); }
 
     return find.then(function(data) {

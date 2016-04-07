@@ -77,7 +77,7 @@ loadInitializers(CoughDrop, config.modulePrefix);
 DS.Model.reopen({
   reload: function(allow_local) {
     if(allow_local !== false) {
-      persistence.force_reload = this.get('id');
+      persistence.force_reload = this._internalModel.modelName + "_" + this.get('id');
     }
     return this._super();
   },

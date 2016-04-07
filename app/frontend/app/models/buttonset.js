@@ -10,7 +10,9 @@ CoughDrop.Buttonset = DS.Model.extend({
   key: DS.attr('string'),
   buttons_json: DS.attr('raw'),
   buttons: DS.attr('raw'),
+  board_ids: DS.attr('raw'),
   name: DS.attr('string'),
+  full_set_revision: DS.attr('string'),
   set_buttons: function() {
     var buttons = null;
     try {
@@ -18,14 +20,39 @@ CoughDrop.Buttonset = DS.Model.extend({
     } catch(e) { }
     this.set('buttons', buttons);
   }.observes('buttons_json'),
-  find_buttons: function(str, user, include_home_and_sidebar) {
+  find_buttons: function(str, from_board_id, user, include_home_and_sidebar) {
     if(str.length === 0) { return []; }
     var buttons = this.get('buttons') || [];
     var images = CoughDrop.store.peekAll('image');
-    
+
     var matching_buttons = [];
     var re = new RegExp("\\b" + str, 'i');
     var all_buttons_enabled = stashes.get('all_buttons_enabled');
+
+    if(from_board_id && from_board_id != this.get('id')) {
+      alert('using different button set!');
+      // re-depthify all the buttons based on the starting board
+      var new_buttons = [];
+      var boards_to_check = [{id: from_board_id, depth: 0}];
+      var found_boards = [];
+      while(boards_to_check.length > 0) {
+        var board_to_check = boards_to_check.shift();
+        buttons.forEach(function(b) {
+          if(b.board_id == board_to_check.id) {
+            var new_b = Ember.$.extend({}, b, {depth: board_to_check.depth});
+            new_buttons.push(new_b);
+            if(b.load_board_id && found_boards.indexOf(b.load_board_id) == -1) {
+              found_boards.push(b.load_board_id)
+              boards_to_check.push({id: b.load_board_id, depth: board_to_check.depth + 1});
+            }
+          }
+        });
+        // make sure to keep the list breadth-first!
+        boards_to_check.sort(function(a, b) { return b.depth - a.depth; })
+      }
+      buttons = new_buttons;
+    }
+
     buttons.forEach(function(button, idx) {
       // TODO: optionally show buttons on link-disabled boards
       if(!button.hidden || all_buttons_enabled) {
@@ -81,17 +108,17 @@ CoughDrop.Buttonset = DS.Model.extend({
         }
       }
     });
-    
+
     var other_lookups = Ember.RSVP.resolve();
-    
+
     var other_find_buttons = [];
-    // TODO: include additional buttons if they are accessible from "home" or 
+    // TODO: include additional buttons if they are accessible from "home" or
     // the "sidebar" button sets.
     if(include_home_and_sidebar && user && user.get('preferences.home_board.id')) {
       other_lookups = new Ember.RSVP.Promise(function(lookup_resolve, lookup_reject) {
         var root_button_set_lookups = [];
         var button_sets = [];
-        
+
         var lookup = function(key, home_lock) {
           var button_set = CoughDrop.store.peekRecord('buttonset', key);
           if(button_set) {
@@ -139,14 +166,14 @@ CoughDrop.Buttonset = DS.Model.extend({
         }, function() {
           lookup_reject();
         });
-        
+
       });
     }
-    
+
     var other_buttons = other_lookups.then(function() {
       return Ember.RSVP.all_wait(other_find_buttons);
     });
-    
+
     var image_lookups = other_buttons.then(function() {
       var image_lookup_promises = [];
       matching_buttons.forEach(function(button) {
@@ -161,7 +188,7 @@ CoughDrop.Buttonset = DS.Model.extend({
       });
       return Ember.RSVP.all_wait(image_lookup_promises);
     });
-    
+
     return image_lookups.then(function() {
       matching_buttons = matching_buttons.sort(function(a, b) {
         var a_depth = a.current_depth ? 1 : 0;

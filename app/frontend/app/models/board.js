@@ -384,8 +384,30 @@ CoughDrop.Board = DS.Model.extend({
       this.set('button_set', button_set);
       return Ember.RSVP.resolve(button_set);
     } else {
+      var valid_button_set = null;
+      var button_sets = CoughDrop.store.peekAll('buttonset').content.forEach(function(bs) {
+        bs = bs.record;
+        if((bs.get('board_ids') || []).indexOf(_this.get('id')) != -1) {
+          if(bs.get('fresh') || !valid_button_set) {
+            valid_button_set = bs;
+          }
+        }
+      });
+      if(valid_button_set) {
+        if(!_this.get('fresh') || valid_button_set.get('fresh')) {
+          _this.set('button_set', valid_button_set);
+          return Ember.RSVP.resolve(valid_button_set);
+        } else{
+        }
+      }
+      // first check if there's a satisfactory higher-level buttonset that can be used instead
       var res = CoughDrop.store.findRecord('buttonset', this.get('id')).then(function(button_set) {
         _this.set('button_set', button_set);
+        if(_this.get('fresh') && !button_set.get('fresh')) {
+          return button_set.reload();
+        } else {
+          return button_set;
+        }
       });
       res.then(null, function() { });
       return res;

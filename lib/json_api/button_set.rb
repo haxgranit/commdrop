@@ -12,6 +12,7 @@ module JsonApi::ButtonSet
       json['id'] = board.global_id
       json['key'] = board.key
       json['name'] = board.settings && board.settings['name']
+      json['full_set_revision'] = board.full_set_revision
     end
     # TODO: remove this for better perf once all apps are updated
     json['buttons'] = button_set.data['buttons']
@@ -19,7 +20,6 @@ module JsonApi::ButtonSet
     
     # TODO: sharding
     allowed_ids = {}
-    public_board_ids = 
     Board.where(:id => Board.local_ids(board_ids), :public => true).select('id').each do |b|
       allowed_ids[b.global_id] = true
     end
@@ -30,6 +30,7 @@ module JsonApi::ButtonSet
     end
     
     json['buttons'] = json['buttons'].select{|b| allowed_ids[b['board_id']] }
+    json['board_ids'] = json['buttons'].map{|b| b['board_id'] }.compact.uniq
 
     json
   end

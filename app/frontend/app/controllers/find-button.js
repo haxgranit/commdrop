@@ -25,7 +25,7 @@ export default modal.ModalController.extend({
       if(board.get('button_set')) {
         var user = app_state.get('currentUser');
         var include_home = app_state.get('speak_mode');
-        board.get('button_set').find_buttons(this.get('searchString'), user, include_home).then(function(results) {
+        board.get('button_set').find_buttons(this.get('searchString'), board.get('id'), user, include_home).then(function(results) {
           if(persistence.get('online')) {
             _this.set('results', results);
             _this.set('loading', false);
@@ -56,7 +56,7 @@ export default modal.ModalController.extend({
       } else {
         _this.set('loading', false);
         _this.set('error', i18n.t('button_set_not_found', "Button set not downloaded, please syncing or going online and reopening this board"));
-      }      
+      }
     }
   }.observes('searchString'),
   actions: {
