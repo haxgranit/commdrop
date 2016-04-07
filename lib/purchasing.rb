@@ -194,7 +194,7 @@ module Purchasing
           }
         })
         time = 5.years.to_i
-        user && user.log_subscription_event({:log => 'persisting subscription update'})
+        user && user.log_subscription_event({:log => 'persisting long-term purchase update'})
         User.subscription_event({
           'purchase' => true,
           'user_id' => user.global_id,
@@ -258,7 +258,7 @@ module Purchasing
     rescue => err
       type = (err.respond_to?('[]') && err[:type])
       code = (err.respond_to?('[]') && err[:code]) || 'unknown'
-      user && user.log_subscription_event({:error => 'other_exception', :err => err.to_s})
+      user && user.log_subscription_event({:error => 'other_exception', :err => err.to_s + err.backtrace[0].to_s })
       return {success: false, error: 'unexpected_error', error_message: err.to_s, error_type: type, error_code: code}
     end
     {success: true, type: type}
@@ -349,6 +349,7 @@ module Purchasing
   end
   
   def self.change_user_id(customer_id, from_user_id, to_user_id)
+    Stripe.api_key = ENV['STRIPE_SECRET_KEY']
     customer = Stripe::Customer.retrieve(customer_id) rescue nil
     if customer
       raise "wrong existing user_id" unless customer.metadata && customer.metadata['user_id'] == from_user_id

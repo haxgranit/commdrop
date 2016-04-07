@@ -118,7 +118,7 @@ module Subscription
     elsif args['unsubscribe']
       if (args['subscription_id'] && self.settings['subscription']['subscription_id'] == args['subscription_id']) || args['subscription_id'] == 'all'
         if self.settings['subscription']['seconds_left']
-          self.expires_at = Time.now + self.settings['subscription']['seconds_left']
+          self.expires_at = [self.expires_at, Time.now + self.settings['subscription']['seconds_left']].compact.max
           self.settings['subscription'].delete('seconds_left')
         end
         self.expires_at = [self.expires_at, 2.weeks.from_now].compact.max
