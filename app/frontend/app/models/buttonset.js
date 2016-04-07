@@ -34,20 +34,21 @@ CoughDrop.Buttonset = DS.Model.extend({
       var new_buttons = [];
       var boards_to_check = [{id: from_board_id, depth: 0}];
       var found_boards = [];
+      var check_button = function(b) {
+        if(b.board_id == board_to_check.id) {
+          var new_b = Ember.$.extend({}, b, {depth: board_to_check.depth});
+          new_buttons.push(new_b);
+          if(b.linked_board_id && found_boards.indexOf(b.linked_board_id) == -1) {
+            found_boards.push(b.linked_board_id);
+            boards_to_check.push({id: b.linked_board_id, depth: board_to_check.depth + 1});
+          }
+        }
+      };
       while(boards_to_check.length > 0) {
         var board_to_check = boards_to_check.shift();
-        buttons.forEach(function(b) {
-          if(b.board_id == board_to_check.id) {
-            var new_b = Ember.$.extend({}, b, {depth: board_to_check.depth});
-            new_buttons.push(new_b);
-            if(b.linked_board_id && found_boards.indexOf(b.linked_board_id) == -1) {
-              found_boards.push(b.linked_board_id)
-              boards_to_check.push({id: b.linked_board_id, depth: board_to_check.depth + 1});
-            }
-          }
-        });
+        buttons.forEach(check_button);
         // make sure to keep the list breadth-first!
-        boards_to_check.sort(function(a, b) { return b.depth - a.depth; })
+        boards_to_check.sort(function(a, b) { return b.depth - a.depth; });
       }
       buttons = new_buttons;
     }

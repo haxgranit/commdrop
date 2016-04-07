@@ -1567,7 +1567,8 @@ describe('editManager', function() {
         border_color: 'rgba(170, 187, 255, 0.53)',
         link_disabled: false,
         hidden: false,
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
       expect(state.buttons[1]).toEqual({
         id: 2,
@@ -1578,7 +1579,8 @@ describe('editManager', function() {
         background_color: 'rgb(255, 0, 0)',
         link_disabled: false,
         hidden: false,
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
       expect(state.buttons[2]).toEqual({
         id: 3,
@@ -1587,7 +1589,8 @@ describe('editManager', function() {
         border_color: 'rgb(150, 0, 100)',
         link_disabled: false,
         hidden: false,
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
     });
 
@@ -1640,7 +1643,8 @@ describe('editManager', function() {
         hidden: false,
         part_of_speech: 'noun',
         suggested_part_of_speech: 'verb',
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
       expect(state.buttons[1]).toEqual({
         id: 2,
@@ -1653,7 +1657,8 @@ describe('editManager', function() {
         hidden: false,
         part_of_speech: 'noun',
         painted_part_of_speech: 'noun',
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
       expect(state.buttons[2]).toEqual({
         id: 3,
@@ -1662,7 +1667,8 @@ describe('editManager', function() {
         border_color: 'rgb(150, 0, 100)',
         link_disabled: false,
         hidden: false,
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
     });
 
@@ -1708,7 +1714,8 @@ describe('editManager', function() {
         link_disabled: false,
         background_color: 'rgb(255, 0, 0)',
         hidden: false,
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
       expect(state.buttons[1]).toEqual({
         id: 2,
@@ -1717,7 +1724,8 @@ describe('editManager', function() {
         border_color: 'rgb(150, 0, 100)',
         link_disabled: false,
         hidden: false,
-        add_to_vocalization: false
+        add_to_vocalization: false,
+        home_lock: false
       });
     });
   });

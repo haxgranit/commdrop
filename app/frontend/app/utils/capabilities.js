@@ -850,6 +850,7 @@ var capabilities;
     indexedDBSafe.deleteDatabase(capabilities.db_name);
   };
   function setup_database() {
+    console.log("setting up database");
     delete capabilities['db'];
     var user_name = stashes.get_db_id();
     var key = "coughDropStorage::" + (user_name || "__") + "===" + capabilities.db_key;

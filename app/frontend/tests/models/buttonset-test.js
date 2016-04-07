@@ -12,13 +12,13 @@ describe('Buttonset', function() {
     it("should return an empty list for no search string", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {});
       expect(bs.find_buttons('')).toEqual([]);
-      
+
       bs.set('buttons', [
         {'label': 'hat'}
       ]);
       expect(bs.find_buttons('')).toEqual([]);
     });
-    
+
     it("should return matching buttons from the current board", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -32,7 +32,7 @@ describe('Buttonset', function() {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('hat');
       });
-      
+
       queue_promise(bs.find_buttons('hat')).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('hat');
@@ -53,7 +53,7 @@ describe('Buttonset', function() {
         expect(res[1].label).toEqual('nasty');
       });
     });
-    
+
     it("should return matching buttons from linked boards, including a path to access", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -65,7 +65,7 @@ describe('Buttonset', function() {
           {label: 'olive', depth: 4, board_id: '5'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('ca')).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('can');
@@ -74,11 +74,11 @@ describe('Buttonset', function() {
         expect(res[0].pre_buttons.length).toEqual(1);
         expect(res[0].pre_buttons[0].label).toEqual('hat');
       });
-      
+
       queue_promise(bs.find_buttons('fri')).then(function(res) {
         expect(res.length).toEqual(1);
       });
-      
+
       queue_promise(bs.find_buttons('ol')).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('olive');
@@ -90,7 +90,7 @@ describe('Buttonset', function() {
         expect(res[0].pre_buttons[3].label).toEqual('quarter');
       });
     });
-    
+
     it("should ignore hidden buttons by default", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -100,7 +100,7 @@ describe('Buttonset', function() {
           {label: 'halt', depth: 2, board_id: '3', hidden: true}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('ha')).then(function(res) {
         expect(res.length).toEqual(2);
         expect(res[0].label).toEqual('hat');
@@ -111,7 +111,7 @@ describe('Buttonset', function() {
         expect(res[1].pre_buttons[0].label).toEqual('hat');
       });
     });
-    
+
     it("should not use paths created by link_disabled buttons", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -120,7 +120,7 @@ describe('Buttonset', function() {
           {label: 'hair', depth: 1, board_id: '2', linked_board_id: '3'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('hair')).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('hair');
@@ -130,7 +130,7 @@ describe('Buttonset', function() {
         expect(res[0].pre_buttons[0].label).toEqual('have');
       });
     });
-    
+
     it("should default to preferred_link buttons", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -139,7 +139,7 @@ describe('Buttonset', function() {
           {label: 'hair', depth: 1, board_id: '2', linked_board_id: '3'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('hair')).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('hair');
@@ -149,7 +149,7 @@ describe('Buttonset', function() {
         expect(res[0].pre_buttons[0].label).toEqual('have');
       });
     });
-    
+
     it("should use the shortest viable path", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -161,7 +161,7 @@ describe('Buttonset', function() {
           {label: 'olive', depth: 4, board_id: '5'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('oliv')).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('olive');
@@ -170,7 +170,7 @@ describe('Buttonset', function() {
         expect(res[0].pre_buttons[0].label).toEqual('box');
       });
     });
-    
+
     it("should not infinite loop on a matched button that can't be accessed from the current board", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -185,16 +185,16 @@ describe('Buttonset', function() {
           {label: 'truck', depth: 2, board_id: '7'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('pon')).then(function(res) {
         expect(res.length).toEqual(0);
       });
-      
+
       queue_promise(bs.find_buttons('truck')).then(function(res) {
         expect(res.length).toEqual(0);
       });
     });
-    
+
     it("should not infinite loop on unexpected links", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -203,11 +203,11 @@ describe('Buttonset', function() {
           {label: 'friend', depth: 2, board_id: '3', linked_board_id: '2'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('friend')).then(function(res) {
         expect(res.length).toEqual(0);
       });
-      
+
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
           {label: 'a1', depth: 0, board_id: '1', linked_board_id: '2'},
@@ -232,7 +232,7 @@ describe('Buttonset', function() {
           {label: 't20', depth: 19, board_id: '20'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('m')).then(function(res) {
         expect(res.length).toEqual(1);
       });
@@ -258,7 +258,7 @@ describe('Buttonset', function() {
         expect(res.length).toEqual(0);
       });
     });
-    
+
     it("should look up locally-cached images for use if available", function() {
       db_wait(function() {
         var stored = false;
@@ -271,7 +271,7 @@ describe('Buttonset', function() {
         persistence.store_url('http://www.example.com').then(function() {
           stored = true;
         });
-        
+
         var results = null;
         waitsFor(function() { return stored; });
         runs(function() {
@@ -286,7 +286,7 @@ describe('Buttonset', function() {
             });
           }, 100);
         });
-        
+
         waitsFor(function() { return results; });
         runs(function() {
           expect(results.length).toEqual(1);
@@ -294,7 +294,7 @@ describe('Buttonset', function() {
         });
       });
     });
-    
+
     it("should optionally include buttons accessed via the home board if specified", function() {
       var user = CoughDrop.store.createRecord('user', {
         preferences: {
@@ -317,15 +317,15 @@ describe('Buttonset', function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: []
       });
-      
-      queue_promise(bs.find_buttons('hat', user, true)).then(function(res) {
+
+      queue_promise(bs.find_buttons('hat', '123', user, true)).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('hat');
         expect(res[0].pre_buttons.length).toEqual(1);
         expect(res[0].pre_buttons[0].board_id).toEqual('home');
       });
     });
-    
+
     it("should not repeat buttons if they are accessible via the current board and the home board", function() {
       var user = CoughDrop.store.createRecord('user', {
         preferences: {
@@ -351,14 +351,14 @@ describe('Buttonset', function() {
           {label: 'cheese', depth: 0, id: '1', board_id: '2',}
         ]
       });
-     
-      queue_promise(bs.find_buttons('cheese', user, true)).then(function(res) {
+
+      queue_promise(bs.find_buttons('cheese', null, user, true)).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('cheese');
         expect(res[0].pre_buttons).toEqual([]);
       });
     });
-    
+
     it("should optionally include buttons accessed via the sidebar if specified", function() {
       var user = CoughDrop.store.createRecord('user', {
         preferences: {
@@ -397,8 +397,8 @@ describe('Buttonset', function() {
           {label: 'charbroil', depth: 1, id: '1', board_id: '4'}
         ]
       });
-     
-      queue_promise(bs.find_buttons('ch', user, true)).then(function(res) {
+
+      queue_promise(bs.find_buttons('ch', null, user, true)).then(function(res) {
         expect(res.length).toEqual(4);
         expect(res[0].label).toEqual('cheese');
         expect(res[0].pre_buttons.length).toEqual(0);
@@ -410,7 +410,7 @@ describe('Buttonset', function() {
         expect(res[3].pre_buttons.length).toEqual(1);
       });
     });
-    
+
     it("should order results first by on-current-board and then alphabetically", function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -425,7 +425,7 @@ describe('Buttonset', function() {
           {label: 'apatosaur', depth: 2, board_id: '7'}
         ]
       });
-      
+
       queue_promise(bs.find_buttons('a')).then(function(res) {
         expect(res.length).toEqual(9);
         expect(res[0].label).toEqual('alabaster');
@@ -439,7 +439,7 @@ describe('Buttonset', function() {
         expect(res[8].label).toEqual('axed');
       });
     });
-    
+
     it('should include home board search results if specified', function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -451,7 +451,7 @@ describe('Buttonset', function() {
           {label: 'olive', depth: 4, board_id: '5'}
         ]
       });
-      
+
       var user = CoughDrop.store.createRecord('user', {
         preferences: {
           home_board: {
@@ -471,7 +471,7 @@ describe('Buttonset', function() {
         id: '123',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '123', 
+            id: '123',
             key: 'a/a',
             buttons: [
               {label: 'hand', depth: 0, board_id: '123', linked_board_id: '1232'},
@@ -486,7 +486,7 @@ describe('Buttonset', function() {
         id: '124',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '124', 
+            id: '124',
             key: 'a/b',
             buttons: [
             ]
@@ -499,14 +499,14 @@ describe('Buttonset', function() {
         id: '125',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '125', 
+            id: '125',
             key: 'a/c',
             buttons: [
             ]
           }
         })
       });
-      queue_promise(bs.find_buttons('h', user, true)).then(function(res) {
+      queue_promise(bs.find_buttons('h', null, user, true)).then(function(res) {
         expect(res.length).toEqual(3);
         expect(res[0].label).toEqual('hat');
         expect(res[0].current_depth).toEqual(0);
@@ -542,7 +542,7 @@ describe('Buttonset', function() {
         }]);
       });
     });
-    
+
     it('should include sidebar board search results if specified', function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -554,7 +554,7 @@ describe('Buttonset', function() {
           {label: 'olive', depth: 4, board_id: '5'}
         ]
       });
-      
+
       var user = CoughDrop.store.createRecord('user', {
         preferences: {
           home_board: {
@@ -574,7 +574,7 @@ describe('Buttonset', function() {
         id: '123',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '123', 
+            id: '123',
             key: 'a/a',
             buttons: [
             ]
@@ -587,7 +587,7 @@ describe('Buttonset', function() {
         id: '124',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '124', 
+            id: '124',
             key: 'a/b',
             name: 'friends',
             buttons: [
@@ -603,7 +603,7 @@ describe('Buttonset', function() {
         id: '125',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '125', 
+            id: '125',
             key: 'a/c',
             name: 'chicken',
             buttons: [
@@ -611,7 +611,7 @@ describe('Buttonset', function() {
           }
         })
       });
-      queue_promise(bs.find_buttons('h', user, true)).then(function(res) {
+      queue_promise(bs.find_buttons('h', null, user, true)).then(function(res) {
         expect(res.length).toEqual(3);
         expect(res[0].label).toEqual('hat');
         expect(res[0].current_depth).toEqual(0);
@@ -647,7 +647,7 @@ describe('Buttonset', function() {
         }]);
       });
     });
-    
+
     it('should not duplicate results when a linked board matches the home board or sidebar board', function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -659,7 +659,7 @@ describe('Buttonset', function() {
           {label: 'olive', depth: 4, board_id: '5'}
         ]
       });
-      
+
       var user = CoughDrop.store.createRecord('user', {
         preferences: {
           home_board: {
@@ -679,7 +679,7 @@ describe('Buttonset', function() {
         id: '123',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '123', 
+            id: '123',
             key: 'a/a',
             buttons: [
               {label: 'hand', depth: 0, board_id: '123', linked_board_id: '1232'},
@@ -694,7 +694,7 @@ describe('Buttonset', function() {
         id: '124',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '124', 
+            id: '124',
             key: 'a/b',
             name: 'friends',
             buttons: [
@@ -710,7 +710,7 @@ describe('Buttonset', function() {
         id: '125',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '125', 
+            id: '125',
             key: 'a/c',
             name: 'chicken',
             buttons: [
@@ -720,7 +720,7 @@ describe('Buttonset', function() {
           }
         })
       });
-      queue_promise(bs.find_buttons('h', user, true)).then(function(res) {
+      queue_promise(bs.find_buttons('h', null, user, true)).then(function(res) {
         expect(res.length).toEqual(3);
         expect(res[0].label).toEqual('hat');
         expect(res[0].current_depth).toEqual(0);
@@ -756,7 +756,7 @@ describe('Buttonset', function() {
         }]);
       });
     });
-    
+
     it('should show the shortest path to a home-linked button, even after a longer path is found via a sidebar board', function() {
       var bs = CoughDrop.store.createRecord('buttonset', {
         buttons: [
@@ -768,7 +768,7 @@ describe('Buttonset', function() {
           {label: 'olive', depth: 4, board_id: '5'}
         ]
       });
-      
+
       var user = CoughDrop.store.createRecord('user', {
         preferences: {
           home_board: {
@@ -788,7 +788,7 @@ describe('Buttonset', function() {
         id: '123',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '123', 
+            id: '123',
             key: 'a/a',
             buttons: [
               {label: 'hat', depth: 0, board_id: '1', linked_board_id: '2'},
@@ -803,7 +803,7 @@ describe('Buttonset', function() {
         id: '124',
         response: Ember.RSVP.resolve({
           buttonset: {
-            id: '124', 
+            id: '124',
             key: 'a/b',
             name: 'friends',
             buttons: [
@@ -815,14 +815,14 @@ describe('Buttonset', function() {
           }
         })
       });
-      queue_promise(bs.find_buttons('hat', user, true)).then(function(res) {
+      queue_promise(bs.find_buttons('hat', null, user, true)).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('hat');
         expect(res[0].current_depth).toEqual(0);
         expect(res[0].pre_buttons).toEqual([]);
       });
 
-      queue_promise(bs.find_buttons('can', user, true)).then(function(res) {
+      queue_promise(bs.find_buttons('can', null, user, true)).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('can');
         expect(res[0].current_depth).toEqual(1);
@@ -834,7 +834,7 @@ describe('Buttonset', function() {
         }]);
       });
 
-      queue_promise(bs.find_buttons('quart', user, true)).then(function(res) {
+      queue_promise(bs.find_buttons('quart', null, user, true)).then(function(res) {
         expect(res.length).toEqual(1);
         expect(res[0].label).toEqual('quart');
         expect(res[0].current_depth).toEqual(1);
@@ -850,5 +850,46 @@ describe('Buttonset', function() {
         }]);
       });
     });
+
+    it('should correctly handle loading results for a board different than the button_set', function() {
+      var bs = CoughDrop.store.createRecord('buttonset', {
+        buttons: [
+          {label: 'hat', depth: 0, board_id: '1', linked_board_id: '2'},
+          {label: 'box', depth: 0, board_id: '1'},
+          {label: 'can', depth: 1, board_id: '2', linked_board_id: '3'},
+          {label: 'crack', depth: 1, board_id: '2', linked_board_id: '1'},
+          {label: 'friend', depth: 2, board_id: '3', linked_board_id: '4'},
+          {label: 'quarter', depth: 3, board_id: '4', linked_board_id: '5'},
+          {label: 'olive', depth: 4, board_id: '5'},
+          {label: 'cracker', depth: 4, board_id: '5', linked_board_id: '1'}
+        ]
+      });
+      bs.set('id', '1');
+
+      queue_promise(bs.find_buttons('h', '1')).then(function(res) {
+        expect(res.length).toEqual(1);
+        expect(res[0].label).toEqual('hat');
+        expect(res[0].current_depth).toEqual(0);
+        expect(res[0].pre_buttons.length).toEqual(0);
+      });
+
+      queue_promise(bs.find_buttons('h', '2')).then(function(res) {
+        expect(res.length).toEqual(1);
+        expect(res[0].label).toEqual('hat');
+        expect(res[0].current_depth).toEqual(1);
+        expect(res[0].pre_buttons.length).toEqual(1);
+        expect(res[0].pre_buttons[0]).toEqual({
+          board_id: '2', depth: 0, label: 'crack', linked_board_id: '1'
+        });
+      });
+
+      queue_promise(bs.find_buttons('h', '3')).then(function(res) {
+        expect(res.length).toEqual(1);
+        expect(res[0].label).toEqual('hat');
+        expect(res[0].current_depth).toEqual(3);
+        expect(res[0].pre_buttons.length).toEqual(3);
+      });
+    });
+
   });
 });

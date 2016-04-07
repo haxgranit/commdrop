@@ -25,7 +25,7 @@ export default Ember.Route.extend({
     if(CoughDrop.embedded && !app_state.get('speak_mode')) {
       var state = app_state.get('currentBoardState');
       app_state.toggle_mode('speak', {override_state: state});
-      stashes.persist('root_board_state', state)
+      stashes.persist('root_board_state', state);
     }
     editManager.setup(controller);
     app_state.set('board_virtual_dom.sendAction', function(action, id, extra) {
