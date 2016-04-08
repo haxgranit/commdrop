@@ -82,7 +82,7 @@ class Board < ActiveRecord::Base
     id = self.settings && self.settings['board_downstream_button_set_id']
     if !id
       # TODO: sharding
-      bs = BoardDownstreamButtonSet.find_by(:board_id => self.id)
+      bs = BoardDownstreamButtonSet.select('id').find_by(:board_id => self.id)
       id = bs && bs.global_id
     end
     return nil unless id

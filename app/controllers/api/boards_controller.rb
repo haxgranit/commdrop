@@ -4,75 +4,98 @@ class Api::BoardsController < ApplicationController
 
   def index
     boards = Board
-    if params['user_id']
-      user = User.find_by_path(params['user_id'])
-      return unless allowed?(user, 'view_detailed')
-      unless params['starred']
-        if params['shared']
-          arel = Board.arel_table
-          shared_board_ids = Board.all_shared_board_ids_for(user)
-          # TODO: fix when sharding actually happens
-          boards = boards.where(arel[:id].in(Board.local_ids(shared_board_ids)))
-        elsif params['include_shared'] && (user.settings['boards_shared_with_me'] || []).length > 0
-          arel = Board.arel_table
-          shared_board_ids = Board.all_shared_board_ids_for(user)
-          # TODO: fix when sharding actually happens
-          boards = boards.where(arel[:user_id].eq(user.id).or(arel[:id].in(Board.local_ids(shared_board_ids))))
-        else
-          boards = boards.where(:user_id => user.id)
+    conn = Octopus.config[Rails.env].keys.sample
+    boards = boards.using(conn) if conn
+    self.class.trace_execution_scoped(['boards/user_filter']) do
+      if params['user_id']
+        user = User.find_by_path(params['user_id'])
+        return unless allowed?(user, 'view_detailed')
+        unless params['starred']
+          if params['shared']
+            arel = Board.arel_table
+            shared_board_ids = Board.all_shared_board_ids_for(user)
+            # TODO: fix when sharding actually happens
+            boards = boards.where(arel[:id].in(Board.local_ids(shared_board_ids)))
+          elsif params['include_shared'] && (user.settings['boards_shared_with_me'] || []).length > 0
+            arel = Board.arel_table
+            shared_board_ids = Board.all_shared_board_ids_for(user)
+            # TODO: fix when sharding actually happens
+            boards = boards.where(arel[:user_id].eq(user.id).or(arel[:id].in(Board.local_ids(shared_board_ids))))
+          else
+            boards = boards.where(:user_id => user.id)
+          end
         end
+        if !params['public']
+          return unless allowed?(user, 'supervise')
+        end
+        if params['private']
+          boards = boards.where(:public => false)
+        end
+        if params['starred']
+          # TODO: this still won't include boards of people I supervise... (because it shouldn't)
+          boards = boards.where(['user_id = ? OR public = ?', user.id, true])
+          ids = (user.settings['starred_board_ids'] || [])
+          # TODO: fix when sharding actually happens
+          boards = boards.where(:id => Board.local_ids(ids))
+        end
+      else
+        boards = boards.where(:public => true)
       end
-      if !params['public']
-        return unless allowed?(user, 'supervise')
-      end
-      if params['private']
-        boards = boards.where(:public => false)
-      end
-      if params['starred']
-        # TODO: this still won't include boards of people I supervise... (because it shouldn't)
-        boards = boards.where(['user_id = ? OR public = ?', user.id, true])
-        ids = (user.settings['starred_board_ids'] || [])
-        # TODO: fix when sharding actually happens
-        boards = boards.where(:id => Board.local_ids(ids))
-      end
-    else
-      boards = boards.where(:public => true)
     end
+    
     # TODO: where(:public => true) as the cancellable default
-    if params['key']
-      keys = [params['key']]
-      if @api_user
-        keys << "#{@api_user.user_name}/#{params['key']}"
+    self.class.trace_execution_scoped(['boards/key_check']) do
+      if params['key']
+        keys = [params['key']]
+        if @api_user
+          keys << "#{@api_user.user_name}/#{params['key']}"
+        end
+        boards = boards.where(:key => keys)
       end
-      boards = boards.where(:key => keys)
     end
-    if params['q'] && params['public']
-      q = CGI.unescape(params['q']).downcase
-      # TODO: real search via https://github.com/casecommons/pg_search or elasticsearch with facets
-      boards = boards.search_by_text(q) #where(['search_string ILIKE ?', "%#{q}%"])
-    end
-    if params['public']
-      boards = boards.where(:public => true)
-    end
-    if params['sort']
-      if params['sort'] == 'popularity'
-        boards = boards.order(popularity: :desc, home_popularity: :desc, id: :desc)
-      elsif params['sort'] == 'home_popularity'
-        boards = boards.where(['home_popularity > ?', 0]).order(home_popularity: :desc, id: :desc)
+    
+    self.class.trace_execution_scoped(['boards/public_query']) do
+      if params['q'] && params['public']
+        q = CGI.unescape(params['q']).downcase
+        # TODO: real search via https://github.com/casecommons/pg_search or elasticsearch with facets
+        boards = boards.search_by_text(q) #where(['search_string ILIKE ?', "%#{q}%"])
       end
-    else
-      boards = boards.order(popularity: :desc, any_upstream: :asc, id: :desc)
+    end
+
+    self.class.trace_execution_scoped(['boards/public_check']) do
+      if params['public']
+        boards = boards.where(:public => true)
+      end
+    end
+
+    self.class.trace_execution_scoped(['boards/sort']) do
+      if params['sort']
+        if params['sort'] == 'popularity'
+          boards = boards.order(popularity: :desc, home_popularity: :desc, id: :desc)
+        elsif params['sort'] == 'home_popularity'
+          boards = boards.where(['home_popularity > ?', 0]).order(home_popularity: :desc, id: :desc)
+        end
+      else
+        boards = boards.order(popularity: :desc, any_upstream: :asc, id: :desc)
+      end
     end
     
     # Private boards don't have search_string set as a column to protect against 
     # leakage of private information. This iterative method is slower than a db clause
     # but the number of private boards is probably going to be small enough that it's ok.
     # TODO: assumptions containing the word "probably" tend to break sooner than you think
-    if params['q'] && !params['public']
-      boards = boards.select{|b| (b.settings['search_string'] || "").match(/#{CGI.unescape(params['q']).downcase}/i) }
+    self.class.trace_execution_scoped(['boards/private_query']) do
+      if params['q'] && !params['public']
+        boards = boards.select{|b| (b.settings['search_string'] || "").match(/#{CGI.unescape(params['q']).downcase}/i) }
+      end
+    end
+    
+    json = nil
+    self.class.trace_execution_scoped(['boards/json_paginate']) do
+      json = JsonApi::Board.paginate(params, boards)
     end
 
-    render json: JsonApi::Board.paginate(params, boards)
+    render json: json
   end
   
   def show

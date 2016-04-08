@@ -63,7 +63,7 @@ octopus:
   replicated: true
   fully_replicated: false
   environments:
-  <% if configs.present? %>
+  <% if configs.present? && !Rails.env.test? %>
     <%= "- #{ENV["RAILS_ENV"] || ENV["RACK_ENV"] || Rails.env}" %>
   <%= ENV["RAILS_ENV"] || ENV["RACK_ENV"] || Rails.env %>:
     <% configs.each_with_index do |c, i| %>
