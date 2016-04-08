@@ -115,6 +115,8 @@ class SessionController < ApplicationController
       u = nil
       if params['client_id'] == 'browser' && Security.valid_browser_token?(params['client_secret'])
         u = pending_u
+      else
+        return api_erorr 400, { error: "Invalid client secret" }
       end
       if u && u.valid_password?(params['password'])
         # generated based on request headers
@@ -135,7 +137,7 @@ class SessionController < ApplicationController
         api_error 400, { error: "Invalid authentication attempt" }
       end
     else
-      api_error 400, { error: "Invalid authentication attempt" }
+      api_error 400, { error: "Invalid authentication approach" }
     end
   end
   
