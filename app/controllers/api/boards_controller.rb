@@ -39,7 +39,7 @@ class Api::BoardsController < ApplicationController
           boards = boards.where(:id => Board.local_ids(ids))
         end
       else
-        boards = boards.where(:public => true)
+        params['public'] = true
       end
     end
     
@@ -55,7 +55,7 @@ class Api::BoardsController < ApplicationController
     end
     
     self.class.trace_execution_scoped(['boards/public_query']) do
-      if params['q'] && params['public']
+      if params['q'] && params['q'].length > 0 && params['public']
         q = CGI.unescape(params['q']).downcase
         # TODO: real search via https://github.com/casecommons/pg_search or elasticsearch with facets
         boards = boards.search_by_text(q) #where(['search_string ILIKE ?', "%#{q}%"])
@@ -85,7 +85,7 @@ class Api::BoardsController < ApplicationController
     # but the number of private boards is probably going to be small enough that it's ok.
     # TODO: assumptions containing the word "probably" tend to break sooner than you think
     self.class.trace_execution_scoped(['boards/private_query']) do
-      if params['q'] && !params['public']
+      if params['q'] && params['q'].length > 0 && !params['public']
         boards = boards.select{|b| (b.settings['search_string'] || "").match(/#{CGI.unescape(params['q']).downcase}/i) }
       end
     end
