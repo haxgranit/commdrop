@@ -69,7 +69,7 @@ export default Ember.Component.extend({
           _this.set('logging_in', false);
           if(err.error == "Invalid authentication attempt") {
             _this.set('login_error', i18n.t('invalid_login', "Invalid user name or password"));
-          } else iif(err.error == "Invalid client secret") {
+          } else if(err.error == "Invalid client secret") {
             _this.set('login_error', i18n.t('invalid_login', "Your login token is expired, please try again"));
           } else {
             _this.set('login_error', i18n.t('login_error', "There was an unexpected problem logging in"));
