@@ -790,7 +790,7 @@ describe Purchasing do
       Purchasing.purchase(u, {'id' => 'token'}, 'long_term_150')
       u.reload
       expect(u.settings['subscription_events'].length).to eq(4)
-      expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting subscription update'])
+      expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting long-term purchase update'])
     end
   end
 end
