@@ -4,7 +4,7 @@ class Api::BoardsController < ApplicationController
 
   def index
     boards = Board
-    conn = Octopus.config[Rails.env].keys.sample
+    conn = (Octopus.config[Rails.env] || {}).keys.sample
     boards = boards.using(conn) if conn
     self.class.trace_execution_scoped(['boards/user_filter']) do
       if params['user_id']
