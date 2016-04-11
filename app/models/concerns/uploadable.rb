@@ -105,6 +105,20 @@ module Uploadable
       if res.success? && res.headers['Content-Type'].match(re)
         self.settings['content_type'] = res.headers['Content-Type']
         file.write(res.body)
+
+        if file_type == 'images' && !self.settings['width']
+          identify_data = `identify -verbose #{file.path}`
+          identify_data.split(/\n/).each do |line|
+            pre, post = line.sub(/^\s+/, '').split(/:\s/, 2)
+            if pre == 'Geometry'
+              match = (post || "").match(/(\d+)x(\d+)/)
+              if match && match[1] && match[2]
+                self.settings['width'] = match[1].to_i
+                self.settings['height'] = match[2].to_i
+              end
+            end
+          end
+        end
       else
         self.settings['errored_pending_url'] = url
         self.save
