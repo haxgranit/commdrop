@@ -416,6 +416,13 @@ var capabilities;
           return promise;
         }
       },
+      storage: {
+        available: function() {
+        },
+        store_data_uri: function() {
+          corodva.file.dataDirectory
+        }
+      },
       battery: {
         listen: function(callback) {
           capabilities.battery_callbacks = capabilities.battery_callbacks || [];
