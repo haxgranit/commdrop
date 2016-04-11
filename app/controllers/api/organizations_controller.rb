@@ -143,6 +143,7 @@ class Api::OrganizationsController < ApplicationController
       stats['devices'] = Device.count
       stats['logs'] = LogSession.count
       stats['organizations'] = Organization.count
+      stats['versions'] = PaperTrail::Version.count
     else
       return api_error 400, {:error => "unrecognized report: #{params['report']}"}
     end
