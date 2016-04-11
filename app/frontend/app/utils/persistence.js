@@ -453,7 +453,7 @@ var persistence = Ember.Object.extend({
             };
             return Ember.RSVP.resolve(object);
           }, function(xhr) {
-            reject({error: "URL lookup failed during proxy"});
+            reject({error: "URL lookup failed during proxy for " + url});
           });
         });
       });
@@ -475,6 +475,7 @@ var persistence = Ember.Object.extend({
         // TODO: if mobile app, use files api instead?? have to make sure that
         // the is-everything-synced check is looking for missing files, as well as
         // the is-this-board-safely-cached-already check.
+        // TODO: size images if it makes them faster to render
         return persistence.store('dataCache', object, object.url);
       }).then(function(object) {
         resolve(object);
@@ -726,7 +727,7 @@ var persistence = Ember.Object.extend({
         if(user.get('preferences.sidebar_boards')) {
           user.get('preferences.sidebar_boards').forEach(function(b) {
             if(b.key) {
-              to_visit_boards.push({key: b.key, depth: 1});
+              to_visit_boards.push({key: b.key, depth: 1, image: b.image});
             }
           });
         }
@@ -798,22 +799,35 @@ var persistence = Ember.Object.extend({
               // TODO: if not set to force=true, don't re-download already-stored icons from
               // possibly-changing URLs
               if(board.get('icon_url_with_fallback').match(/^http/)) {
-                visited_board_promises.push(persistence.store_url(board.get('icon_url_with_fallback'), 'image'));
+                visited_board_promises.push(persistence.store_url(board.get('icon_url_with_fallback'), 'image').then(null, function() {
+                  return Ember.RSVP.reject({error: "icon url failed to sync, " + board.get('icon_url_with_fallback')});
+                });
                 importantIds.push("dataCache_" + board.get('icon_url_with_fallback'));
+              }
+
+              if(next.image) {
+                visited_board_promises.push(persistence.store_url(next.image, 'image').then(null, function() {
+                  return Ember.RSVP.reject({error: "sidebar icon url failed to sync, " + next.image});
+                });
+                importantIds.push("dataCache_" + next.image);
               }
 
               board.get('local_images_with_license').forEach(function(image) {
                 importantIds.push("image_" + image.get('id'));
                 // TODO: don't re-request URLs that are already in the cache and most likely haven't changed
                 if(image.get('url') && image.get('url').match(/^http/)) {
-                  visited_board_promises.push(persistence.store_url(image.get('url'), 'image'));
+                  visited_board_promises.push(persistence.store_url(image.get('url'), 'image').then(null, function() {
+                    return Ember.RSVP.reject({error: "button image failed to sync, " + image.get('url')});
+                  });
                   importantIds.push("dataCache_" + image.get('url'));
                 }
               });
               board.get('local_sounds_with_license').forEach(function(sound) {
                 importantIds.push("sound_" + sound.get('id'));
                 if(sound.get('url') && sound.get('url').match(/^http/)) {
-                   visited_board_promises.push(persistence.store_url(sound.get('url'), 'sound'));
+                   visited_board_promises.push(persistence.store_url(sound.get('url'), 'sound').then(null, function() {
+                    return Ember.RSVP.reject({error: "button sound failed to sync, " + sound.get('url')});
+                   });
                   importantIds.push("dataCache_" + sound.get('url'));
                 }
               });
@@ -865,8 +879,14 @@ var persistence = Ember.Object.extend({
                 Ember.run.later(function() {
                   nextBoard(defer);
                 }, 150);
-              }, function() {
-                defer.reject.apply(null, arguments);
+              }, function(err) {
+                var msg = "board " + (key || id) + " failed to sync completely";
+                if(typeof err == 'string') {
+                  msg = msg + ": " + err;
+                } else if(err && err.error) {
+                  msg = msg + ": " + err.error;
+                }
+                defer.reject({error: msg});
               });
             }, function(err) {
               var board_unauthorized = (err && err.error == "Not authorized");
