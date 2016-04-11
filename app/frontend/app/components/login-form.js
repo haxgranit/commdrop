@@ -4,6 +4,7 @@ import stashes from '../utils/_stashes';
 import persistence from '../utils/persistence';
 import i18n from '../utils/i18n';
 import app_state from '../utils/app_state';
+import session from '../utils/session';
 
 export default Ember.Component.extend({
   willInsertElement: function() {
@@ -20,7 +21,7 @@ export default Ember.Component.extend({
       this.set('client_id', 'browser');
       this.set('client_secret', token);
     } else {
-      this.get('session.store').restore(true);
+      session.restore(true);
     }
     if(this.get('set_overflow')) {
       Ember.$("body").css('overflow', 'hidden');
@@ -53,7 +54,7 @@ export default Ember.Component.extend({
       if (!Ember.isEmpty(data.identification) && !Ember.isEmpty(data.password)) {
         this.set('password', null);
         var _this = this;
-        this.get('session').authenticate('authenticator:coughdrop', data).then(function(data) {
+        session.authenticate(data).then(function(data) {
           stashes.flush(null, 'auth_');
           stashes.setup();
           _this.set('logging_in', false);

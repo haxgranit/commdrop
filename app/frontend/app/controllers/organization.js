@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import modal from '../utils/modal';
 import i18n from '../utils/i18n';
+import session from '../utils/session';
 import CoughDrop from '../app';
 
 export default Ember.Controller.extend({
@@ -17,12 +18,11 @@ export default Ember.Controller.extend({
         var user_name = this.get('masquerade_user_name');
         var _this = this;
         this.store.findRecord('user', user_name).then(function(u) {
-          var session = _this.get('session');
-          var data = session.store.restore();
+          var data = session.restore();
           data.original_user_name = data.user_name;
           data.as_user_id = user_name;
           data.user_name = user_name;
-          session.store.persist(data);
+          session.persist(data);
           _this.transitionToRoute('index');
           location.reload();
         }, function() {

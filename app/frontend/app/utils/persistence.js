@@ -1111,8 +1111,8 @@ var persistence = Ember.Object.extend({
         // TODO: maybe do a quick xhr to a static asset to make sure we're for reals online?
         _this.sync('self').then(null, function() { });
         _this.tokens = {};
-        if(CoughDrop.session && CoughDrop.session.store) {
-          CoughDrop.session.store.restore(!persistence.get('browserToken'));
+        if(CoughDrop.session) {
+          CoughDrop.session.restore(!persistence.get('browserToken'));
         }
       }, 500);
     }

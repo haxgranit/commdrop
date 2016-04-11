@@ -3,29 +3,28 @@ import app_state from '../utils/app_state';
 import speecher from '../utils/speecher';
 import modal from '../utils/modal';
 import capabilities from '../utils/capabilities';
-import ApplicationRouteMixin from 'simple-auth/mixins/application-route-mixin';
 
-ApplicationRouteMixin.reopen({
-  actions: {
-    sessionAuthenticationSucceeded: function() {
-      if(capabilities.installed_app) {
-        location.href = '#/';
-        location.reload();
-      } else {
-        location.href = '/';
-      }
-    },
-    sessionInvalidationSucceeded: function() {
-      if(capabilities.installed_app) {
-        location.href = '#/';
-        location.reload();
-      } else {
-        location.href = '/';
-      }
-    }
-  }
-});
-export default Ember.Route.extend(ApplicationRouteMixin, {
+// ApplicationRouteMixin.reopen({
+//   actions: {
+//     sessionAuthenticationSucceeded: function() {
+//       if(capabilities.installed_app) {
+//         location.href = '#/';
+//         location.reload();
+//       } else {
+//         location.href = '/';
+//       }
+//     },
+//     sessionInvalidationSucceeded: function() {
+//       if(capabilities.installed_app) {
+//         location.href = '#/';
+//         location.reload();
+//       } else {
+//         location.href = '/';
+//       }
+//     }
+//   }
+// });
+export default Ember.Route.extend({
   setupController: function(controller) {
     app_state.setup_controller(this, controller);
     speecher.refresh_voices();

@@ -9,6 +9,7 @@ import editManager from './edit_manager';
 import buttonTracker from './raw_events';
 import capabilities from './capabilities';
 import scanner from './scanner';
+import session from './session';
 import i18n from './i18n';
 
 
@@ -79,7 +80,7 @@ var app_state = Ember.Object.extend({
   setup_controller: function(route, controller) {
     this.route = route;
     this.controller = controller;
-    if(!controller.get('session.isAuthenticated') && capabilities.mobile && capabilities.browserless) {
+    if(!session.get('isAuthenticated') && capabilities.mobile && capabilities.browserless) {
       this.set('login_modal', true);
     }
     modal.setup(route);
@@ -93,7 +94,7 @@ var app_state = Ember.Object.extend({
     this.dom_changes_on_board_state_change();
     CoughDrop.session = route.get('session');
     modal.close();
-    if(route.get('session.access_token')) {
+    if(session.get('access_token')) {
       var find = CoughDrop.store.findRecord('user', 'self');
 
       find.then(function(user) {
@@ -118,12 +119,12 @@ var app_state = Ember.Object.extend({
         }
         console.log(err);
         console.error("user initialization failed");
-        if(err.status == 400 && err.error == 'Not authorized') {
-          CoughDrop.session.invalidate(true);
+        if(err.status == 400 && (err.error == 'Not authorized' || err.error == "Invalid token")) {
+          session.invalidate(true);
         }
       });
     }
-    CoughDrop.session.addObserver('access_token', function() {
+    session.addObserver('access_token', function() {
       Ember.run.later(function() {
         app_state.refresh_session_user();
       }, 10);
@@ -177,7 +178,7 @@ var app_state = Ember.Object.extend({
     if(transition.targetName != 'board.index') {
       app_state.set('currentBoardState', null);
     }
-    if(!app_state.get('sessionUser') && this.route.get('session.isAuthenticated')) {
+    if(!app_state.get('sessionUser') && session.get('isAuthenticated')) {
       app_state.refresh_session_user();
     }
   },

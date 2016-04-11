@@ -7,10 +7,11 @@ import persistence from '../utils/persistence';
 import capabilities from '../utils/capabilities';
 import CoughDrop from '../app';
 import coughDropExtras from '../utils/extras';
+import session from '../utils/session';
 
 export default Ember.Route.extend({
   model: function() {
-    if(this.get('session.access_token')) {
+    if(session.get('access_token')) {
       return CoughDrop.store.findRecord('user', 'self').then(function(user) {
         return Ember.RSVP.resolve(user);
       }, function() {
@@ -56,7 +57,7 @@ export default Ember.Route.extend({
         controller.set('starting_boards', boards);
       }, function() { });
     }
-    if(!this.get('session.isAuthenticated')) {
+    if(!session.get('isAuthenticated')) {
       controller.set('homeBoards', {loading: true});
       controller.store.query('board', {sort: 'home_popularity', per_page: 9}).then(function(data) {
         controller.set('homeBoards', data);
@@ -101,7 +102,7 @@ export default Ember.Route.extend({
         user.set('password', null);
         _this.transitionTo('index');
         if(meta && meta.access_token) {
-          _this.get('session').override(meta);
+          session.override(meta);
         }
       }, function() { });
     }

@@ -8,6 +8,7 @@ import i18n from './utils/i18n';
 import persistence from './utils/persistence';
 import coughDropExtras from './utils/extras';
 import misc from './utils/misc';
+import session from './utils/session';
 
 Ember.MODEL_FACTORY_INJECTIONS = true;
 

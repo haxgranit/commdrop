@@ -10,6 +10,7 @@ import editManager from '../utils/edit_manager';
 import buttonTracker from '../utils/raw_events';
 import capabilities from '../utils/capabilities';
 import speecher from '../utils/speecher';
+import session from '../utils/session';
 
 export default Ember.Controller.extend({
   board: Ember.inject.controller('board.index'),
@@ -47,6 +48,12 @@ export default Ember.Controller.extend({
     return modal.open('copying-board', {board: oldBoard, action: decision.action, user: decision.user, shares: decision.shares});
   },
   actions: {
+    invalidateSession: function() {
+      session.invalidate(true);
+    },
+    authenticateSession: function() {
+      this.transitionToRoute('login');
+    },
     index: function() {
       this.transitionToRoute('index');
     },
@@ -154,12 +161,11 @@ export default Ember.Controller.extend({
       }});
     },
     stopMasquerading: function() {
-      var session = this.get('session');
-      var data = session.store.restore();
+      var data = session.restore();
       data.user_name = data.original_user_name;
       delete data.original_user_name;
       delete data.as_user_id;
-      session.store.persist(data);
+      session.persist(data);
       location.reload();
     },
     back: function() {

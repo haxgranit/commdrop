@@ -2,6 +2,7 @@ import Ember from 'ember';
 import CoughDrop from '../app';
 import persistence from '../utils/persistence';
 import app_state from '../utils/app_state';
+import session from '../utils/session';
 import Utils from '../utils/misc';
 
 export default Ember.Controller.extend({
@@ -13,7 +14,7 @@ export default Ember.Controller.extend({
     this.set('online_results', {loading: true, results: []});
     this.set('local_results', {loading: true, results: []});
 
-    if(this.get('session.isAuthenticated')) {
+    if(session.get('isAuthenticated')) {
       persistence.find_boards(str).then(function(res) {
         _this.set('local_results', {results: res});
       }, function() { _this.set('local_results', {results: []}); });
@@ -45,7 +46,7 @@ export default Ember.Controller.extend({
       }
     }
     loadBoards();
-    
+
     persistence.addObserver('online', function() {
       loadBoards();
     });
