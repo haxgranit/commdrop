@@ -458,7 +458,20 @@ var persistence = Ember.Object.extend({
         });
       });
 
-      fallback.then(function(object) {
+      var size_image = fallback.then(function(object) {
+        if(capabilities.system != "Android") {
+          return object;
+        } else {
+          return contentGrabbers.pictureGrabber.size_image(object.url, 50).then(function(res) {
+            object.url = res.url;
+            return object;
+          }, function() {
+            return Ember.RSVP.resolve(object);
+          });
+        }
+      });
+
+      size_image.then(function(object) {
         // TODO: if mobile app, use files api instead?? have to make sure that
         // the is-everything-synced check is looking for missing files, as well as
         // the is-this-board-safely-cached-already check.

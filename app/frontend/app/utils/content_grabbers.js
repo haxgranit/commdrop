@@ -74,7 +74,7 @@ var contentGrabbers = Ember.Object.extend({
         fd.append(idx, params.upload_params[idx]);
       }
       fd.append('file', _this.data_uri_to_blob(params.data_url));
-    
+
       persistence.ajax({
         url: params.upload_url,
         type: 'POST',
@@ -112,7 +112,7 @@ var contentGrabbers = Ember.Object.extend({
       type: type,
       file: file
     };
-    
+
     var state = type == 'image' ? 'picture' : 'sound';
     this.board_controller.send('buttonSelect', id, state);
   },
@@ -243,15 +243,16 @@ var pictureGrabber = Ember.Object.extend({
     _this.controller.addObserver('image_preview', _this, _this.default_image_preview_license);
   },
   default_size: 300,
-  size_image: function(data_url) {
+  size_image: function(data_url, stored_size) {
     var _this = this;
     return new Ember.RSVP.Promise(function(resolve, reject) {
       if(data_url.match(/^http/)) { return resolve({url: data_url}); }
       if(!window.scratch_canvas) {
         window.scratch_canvas = document.createElement('canvas');
-        window.scratch_canvas.width = _this.default_size;
-        window.scratch_canvas.height = _this.default_size;
       }
+      window.scratch_canvas.width = stored_size || _this.default_size;
+      window.scratch_canvas.height = stored_size || _this.default_size;
+
       var context = window.scratch_canvas.getContext('2d');
       var img = document.createElement('img');
       var result = null;
@@ -281,7 +282,7 @@ var pictureGrabber = Ember.Object.extend({
             result = canvas.toDataURL();
           } catch(e) { }
           if(result) {
-            resolve({url: result, width: _this.default_size, height: _this.default_size});
+            resolve({url: result, width: canvas.width, height: canvas.height});
           } else {
             resolve({url: data_url});
           }
@@ -360,8 +361,8 @@ var pictureGrabber = Ember.Object.extend({
     this.clear_image_preview();
     this.controller.set('image_search', null);
     var stream = this.controller.get('webcam.stream');
-    if(stream && stream.stop) { 
-      stream.stop(); 
+    if(stream && stream.stop) {
+      stream.stop();
     } else if(stream && stream.getVideoTracks) {
       stream.getVideoTracks().forEach(function(track) {
         track.stop();
@@ -449,7 +450,7 @@ var pictureGrabber = Ember.Object.extend({
   edit_image_preview: function() {
     var preview = this.controller.get('image_preview');
     var _this = this;
-    
+
     (new Ember.RSVP.Promise(function(resolve, reject) {
       if(preview.url.match(/^http/)) {
         persistence.ajax('/api/v1/search/proxy?url=' + encodeURIComponent(preview.url), { type: 'GET'
@@ -487,16 +488,16 @@ var pictureGrabber = Ember.Object.extend({
       _this.edit_image_preview();
     });
   },
-  select_image_preview: function(url) { 
+  select_image_preview: function(url) {
     var preview = this.controller && this.controller.get('image_preview');
     if(!preview || !preview.url) { return; }
     this.controller.set('model.pending_image', true);
     var _this = this;
-    
+
     if(this.controller.get('image_preview.editor')) {
       if(!url) {
         if(_this.edited_image_data) {
-          _this.select_image_preview(_this.edited_image_data); 
+          _this.select_image_preview(_this.edited_image_data);
         } else {
           editManager.get_edited_image().then(function(data) {
             _this.select_image_preview(data);
@@ -535,7 +536,7 @@ var pictureGrabber = Ember.Object.extend({
       };
       i.src = preview.url;
     });
-    
+
     var save_image = image_load.then(function(data) {
       var image = CoughDrop.store.createRecord('image', {
         url: preview.url,
@@ -565,7 +566,7 @@ var pictureGrabber = Ember.Object.extend({
       err = err || {};
       err.error = err.error || "unexpected error";
       coughDropExtras.track_error("upload failed: " + err.error);
-      alert(i18n.t('upload_failed', "upload failed:" + err.error)); 
+      alert(i18n.t('upload_failed', "upload failed:" + err.error));
       _this.controller.set('model.pending_image', false);
     });
   },
@@ -675,8 +676,8 @@ var pictureGrabber = Ember.Object.extend({
       var stream_id = streams[index] && streams[index].id;
       if(stream_id) {
         var stream = _this.controller.get('webcam.stream');
-        if(stream && stream.stop) { 
-          stream.stop(); 
+        if(stream && stream.stop) {
+          stream.stop();
         } else if(stream && stream.getVideoTracks) {
           stream.getVideoTracks().forEach(function(track) {
             track.stop();
@@ -784,7 +785,7 @@ var soundGrabber = Ember.Object.extend({
       ready: true
     });
     this.controller.set('sound_preview', null);
-    
+
     function stream_ready(stream) {
       _this.controller.set('sound_recording.stream', stream);
       var mr = new window.MediaRecorder(stream);
@@ -812,13 +813,13 @@ var soundGrabber = Ember.Object.extend({
 
       return mr;
     }
-    
+
     if(navigator.getUserMedia) {
       if(this.controller.get('sound_recording.stream')) {
         stream_ready(this.controller.get('sound_recording.stream'));
         return;
       }
-      navigator.getUserMedia({audio: true}, function(stream) {  
+      navigator.getUserMedia({audio: true}, function(stream) {
         var mr = stream_ready(stream);
 
         if(stream && stream.id) {
@@ -862,7 +863,7 @@ var soundGrabber = Ember.Object.extend({
   //        source.connect(analyser);
   //        analyser.connect(js);
   //        js.connect(context.destination);
-        }      
+        }
       }, function() {
         console.log("permission not granted");
       });
@@ -892,7 +893,7 @@ var soundGrabber = Ember.Object.extend({
     var preview = this.controller && this.controller.get('sound_preview');
     if(!preview || !preview.url) { return; }
     var _this = this;
-    
+
     this.controller.set('model.pending_sound', true);
     if(preview.url.match(/^data:/)) {
       preview.content_type = preview.content_type || preview.url.split(/;/)[0].split(/:/)[1];
@@ -908,7 +909,7 @@ var soundGrabber = Ember.Object.extend({
       }
       preview.license.copyright_notice_url = license_url;
     }
-    
+
     var sound_load = new Ember.RSVP.Promise(function(resolve, reject) {
       var a = new window.Audio();
       a.ondurationchange = function() {
@@ -921,7 +922,7 @@ var soundGrabber = Ember.Object.extend({
       };
       a.src = preview.url;
     });
-    
+
     var save_sound = sound_load.then(function(data) {
       var sound = CoughDrop.store.createRecord('sound', {
         content_type: preview.content_type || '',
@@ -932,7 +933,7 @@ var soundGrabber = Ember.Object.extend({
 
       return contentGrabbers.save_record(sound);
     });
-    
+
     save_sound.then(function(sound) {
       var button_sound = {url: sound.get('url'), id: sound.id};
       _this.controller.set('model.sound', sound);
@@ -942,11 +943,11 @@ var soundGrabber = Ember.Object.extend({
         'sound_id': sound.id
       });
       _this.controller.set('model.pending_sound', false);
-    }, function(err) { 
+    }, function(err) {
       err = err || {};
       err.error = err.error || "unexpected error";
       coughDropExtras.track_error("upload failed: " + err.error);
-      alert(i18n.t('upload_failed', "upload failed: " + err.error)); 
+      alert(i18n.t('upload_failed', "upload failed: " + err.error));
       _this.controller.set('model.pending_sound', false);
     });
   },
@@ -1004,7 +1005,7 @@ var boardGrabber = Ember.Object.extend({
     var url_prefix = new RegExp("^" + location.protocol + "//" + location.host + "/");
     var key = (this.controller.get('linkedBoardName') || "").replace(url_prefix, "");
     var keyed_find = Ember.RSVP.resolve([]);
-    if(key.match(/^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+|\d+_\d+$/) || key) { 
+    if(key.match(/^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+|\d+_\d+$/) || key) {
       // right now this is always doing a double-lookup, first for an exact
       // match by key and then by query string. It'd be better if it were only
       // one lookup..
@@ -1093,19 +1094,19 @@ var boardGrabber = Ember.Object.extend({
   },
   file_selected: function(board) {
     var data_uri = null;
-    
+
     if(!board) {
       modal.close();
       modal.error(i18n.t('invalid_board_file', "Please select a valid board file (.obf or .obz)"));
       return;
     }
     var generate_data_uri = contentGrabbers.read_file(board);
-    
+
     var progressor = Ember.Object.create();
     var error = modal.error;
-    
+
     modal.open('importing-boards', progressor);
-    
+
     var type = 'obf';
     if(board.name && board.name.match(/\.obz$/)) {
       type = 'obz';
@@ -1120,13 +1121,13 @@ var boardGrabber = Ember.Object.extend({
         }
       });
     });
-    
+
     var upload = prep.then(function(meta) {
       meta.remote_upload.data_url = data_uri;
       meta.remote_upload.success_method = 'POST';
       return contentGrabbers.upload_to_remote(meta.remote_upload);
     });
-    
+
     var progress = upload.then(function(data) {
       if(data.progress) {
         return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -1144,7 +1145,7 @@ var boardGrabber = Ember.Object.extend({
         return Ember.RSVP.reject({error: 'not confirmed'});
       }
     });
-    
+
     progress.then(function(boards) {
       if(boards[0] && boards[0].key) {
         if(modal.is_open('importing-boards')) {
@@ -1180,10 +1181,10 @@ var linkGrabber = Ember.Object.extend({
     var q = this.controller.get(os + '_app_name');
     this.controller.set('foundApps', {term: q, ready: false});
     if(os == 'ios' || os == 'android') {
-      var lookup = persistence.ajax('/api/v1/search/apps?q=' + encodeURIComponent(q) + '&os=' + os, { 
+      var lookup = persistence.ajax('/api/v1/search/apps?q=' + encodeURIComponent(q) + '&os=' + os, {
         type: 'GET'
       });
-      
+
       return lookup.then(function(results) {
         _this.controller.set('foundApps.ready', true);
         _this.controller.set('foundApps.results', results);
