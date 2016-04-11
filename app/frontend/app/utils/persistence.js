@@ -913,7 +913,7 @@ var persistence = Ember.Object.extend({
         }
         // threaded lookups, though a pool would probably be better since all
         // could resolve and then the final one finds a ton more boards
-        for(var threads = 0; threads < 1; threads++) {
+        for(var threads = 0; threads < 2; threads++) {
           var defer = Ember.RSVP.defer();
           nextBoard(defer);
           board_load_promises.push(defer.promise);
