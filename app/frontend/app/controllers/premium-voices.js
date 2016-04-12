@@ -39,7 +39,7 @@ export default modal.ModalController.extend({
       if(claimed_voices.indexOf(v.get('voice_id')) >= 0) {
         v.set('claimed', true);
       }
-      
+
       res.push(v);
     });
     this.set('voices', res);
@@ -52,7 +52,7 @@ export default modal.ModalController.extend({
           found_voice.set('active', true);
         }
       });
-    }, function() { 
+    }, function() {
       _this.set('voice_error', i18n.t('error_loading_voices', "There was an unexpected problem retrieving the premium voices."));
     });
   },
@@ -68,7 +68,7 @@ export default modal.ModalController.extend({
       voice.set('download_progress', 0);
       capabilities.wakelock('download_voice', true);
       var data = {voice_id: voice.voice_id, voice_url: voice.get('voice_url') };
-      
+
       // claim the voice and get in return a signed download URL
       persistence.ajax('/api/v1/users/' + this.get('model.user.id') + '/claim_voice', {type: 'POST', data: data}).then(function(data) {
         // refresh the user to get the updated list of premium voices claimed by the user
@@ -94,8 +94,10 @@ export default modal.ModalController.extend({
         capabilities.wakelock('download_voice', false);
         if(err && err.result && err.result.error == 'no more voices available') {
           _this.set('voice_error', i18n.t('no_more_voices', "This user has already claimed the maximum number of premium voices and can't claim any more."));
+        } else if(!persistence.get('online')) {
+          _this.set('voice_error', i18n.t('online_requiest', "You must be online in order to download premium voices."));
         } else {
-          _this.set('voice_error', i18n.t('error_finding_voice', "There was an unexpected problem while trying to start downloading the voice"));
+          _this.set('voice_error', i18n.t('error_finding_voice', "There was an unexpected problem while trying to start downloading the voice."));
         }
       });
     },
