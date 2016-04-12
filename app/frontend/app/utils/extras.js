@@ -60,6 +60,15 @@ import capabilities from './capabilities';
         capabilities.invoke({type: 'coughDropExtras', method: 'storage_find', options: {id: defer_key, store: store, key: key}});
         return defer.promise;
       },
+      find_all: function(store) {
+        var defer = Ember.RSVP.defer();
+        defer.method = 'storage.find_all';
+        defer.store = store;
+        var defer_key = "defer_" + (new Date()).getTime().toString() + "_" + Math.random().toString();
+        extras.storage.defers[defer_key] = defer;
+        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find_all', options: {id: defer_key, store: store}});
+        return defer.promise;
+      },
       find_changed: function() {
         var defer = Ember.RSVP.defer();
         defer.method = 'storage.find_changed';

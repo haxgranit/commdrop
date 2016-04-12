@@ -132,7 +132,7 @@ var speecher = Ember.Object.extend({
       voice = voice || voices.find(function(v) { return locale && v.lang && (v.lang.toLowerCase() == locale || v.lang.toLowerCase().replace(/-/, '_') == locale); });
       voice = voice || voices.find(function(v) { return language && v.lang && v.lang.toLowerCase().split(/[-_]/)[0] == language; });
       voice = voice || voices.find(function(v) { return v['default']; });
-      
+
       var speak_utterance = function() {
         utterance.voice = voice;
         if(voice) {
@@ -149,7 +149,7 @@ var speecher = Ember.Object.extend({
         }
         speecher.scope.speechSynthesis.speak(utterance);
       };
-      
+
       if(voice && voice.voiceURI && voice.voiceURI.match(/^extra:/)) {
         var voice_id = voice.voiceURI.replace(/^extra:/, '');
         Ember.run.later(function() {
@@ -204,19 +204,20 @@ var speecher = Ember.Object.extend({
   load_beep: function() {
     if(speecher.beep_url) {
       if(speecher.beep_url.match(/^data:/)) { return Ember.RSVP.resolve(true); }
+      else if(!speecher.beep_url.match(/^http/)) { return Ember.RSVP.resolve(true); }
       return persistence.find_url(speecher.beep_url, 'sound').then(function(data_uri) {
         if(data_uri) {
           speecher.beep_url = data_uri;
           return true;
         } else {
-          return persistence.store_url(speecher.beep_url).then(function(data) {
-            speecher.beep_url = data.data_uri;
+          return persistence.store_url(speecher.beep_url, 'sound').then(function(data) {
+            speecher.beep_url = data.local_url || data.data_uri;
             return true;
           });
         }
       }, function() {
-        return persistence.store_url(speecher.beep_url).then(function(data) {
-          speecher.beep_url = data.data_uri;
+        return persistence.store_url(speecher.beep_url, 'sound').then(function(data) {
+          speecher.beep_url = data.local_url || data.data_uri;
           return true;
         });
       });
@@ -225,7 +226,7 @@ var speecher = Ember.Object.extend({
     }
   },
   play_audio: function(elem) {
-    // the check for lastListener  is weird, but there was a lag where if you played 
+    // the check for lastListener  is weird, but there was a lag where if you played
     // the same audio multiple times in a row then it would trigger an 'ended' event
     // on the newly-attached listener. This approach tacks on a new audio element
     // if that's likely to happen. The "throwaway" class and the setTimeouts in here
@@ -293,7 +294,7 @@ var speecher = Ember.Object.extend({
     this.audio = this.audio || {};
     type = type || 'text';
     this.stop(type);
-    
+
     var $audio = this.find_or_create_element(url);
     if($audio.length) {
       var audio = $audio[0];

@@ -34,6 +34,17 @@ var persistence = Ember.Object.extend({
         persistence.sync('self');
       }, 2000);
     }
+    if(!Ember.testing) {
+      capabilities.storage.status().then(function(res) {
+        if(res.available && !res.requires_confirmation) {
+          res.allowed = true;
+        }
+        persistence.set('local_system', res);
+      });
+      Ember.run.later(function() {
+        persistence.prime_caches().then(null, function() { });
+      }, 1000);
+    }
   },
   test: function(method, args) {
     method.apply(this, args).then(function(res) {
@@ -350,22 +361,87 @@ var persistence = Ember.Object.extend({
       return Ember.RSVP.resolve(this.url_cache[url]);
     } else {
       var _this = this;
-      var find = null;
-      if(capabilities.installed_app && false) { // I think this can be disabled because I found the CPS setting
-        find = this.store_url(url, type);
-      } else {
-        // TODO: if mobile app, use the files api instead??
-        find = this.find('dataCache', url);
-      }
+      var find = this.find('dataCache', url);
       return find.then(function(data) {
         _this.url_cache = _this.url_cache || {};
-        _this.url_cache[url] = data.data_uri;
-        return data.data_uri;
+        if(data.local_url) {
+          if(data.local_filename) {
+            if(type == 'image' && this.image_filename_cache && this.image_filename_cache[data.local_filename]) {
+              return data.local_url;
+            } else if(type == 'sound' && this.sound_filename_cache && this.sound_filename_cache[data.local_filename]) {
+              return data.local_url;
+            } else {
+              // confirm that the file is where it's supposed to be before returning
+              return capabilities.storage.get_file_url(type, data.local_filename).then(function(local_url) {
+                _this.url_cache[url] = local_url;
+                return local_url;
+              }, function() {
+                if(data.data_uri) {
+                  return Ember.RSVP.resolve(data.data_uri);
+                } else {
+                  return Ember.RSVP.reject({error: "missing local file"});
+                }
+              });
+            }
+          }
+          _this.url_cache[url] = data.local_url;
+          return data.local_url || data.data_uri;
+        } else if(data.data_uri) {
+          // methinks caching data URIs would fill up memory mighty quick
+          return data.data_uri;
+        } else {
+          return Ember.RSVP.reject({error: "no data URI or filename found for cached URL"});
+        }
       });
     }
   },
+  prime_caches: function() {
+    var _this = this;
+    _this.url_cache = _this.url_cache || {};
+    _this.image_filename_cache = _this.image_filename_cache || {};
+    _this.sound_filename_cache = _this.sound_filename_cache || {};
+
+    var prime_promises = [];
+    if(_this.get('local_system.available') && _this.get('local_system.allowed') && !stashes.get('auth_settings')) {
+    } else {
+      return Ember.RSVP.reject();
+    }
+
+    prime_promises.push(capabilities.storage.list_files('image').then(function(images) {
+      images.forEach(function(image) {
+        _this.image_filename_cache[image] = true;
+      });
+    }));
+    prime_promises.push(capabilities.storage.list_files('sound').then(function(sounds) {
+      sounds.forEach(function(sound) {
+        _this.sound_filename_cache[sound] = true;
+      });
+    }));
+    return Ember.RSVP.all_wait(prime_promises).then(function() {
+      return coughDropExtras.storage.find_all('dataCache').then(function(list) {
+        var promises = [];
+        list.forEach(function(item) {
+          if(item.data && item.data.raw && item.data.raw.url && item.data.raw.type && item.data.raw.local_filename) {
+            if(item.data.raw.type == 'image' && item.data.raw.local_url && _this.image_filename_cache && _this.image_filename_cache[item.data.raw.local_filename]) {
+              _this.url_cache[item.data.raw.url] = item.data.raw.local_url;
+            } else if(item.data.raw.type == 'sound' && item.data.raw.local_url && _this.sound_filename_cache && _this.sound_filename_cache[item.data.raw.local_filename]) {
+              _this.url_cache[item.data.raw.url] = item.data.raw.local_url;
+            } else {
+              promises.push(capabilities.storage.get_file_url(item.data.raw.type, item.data.raw.local_filename).then(function(local_url) {
+                _this.url_cache[item.data.raw.url] = local_url;
+              }));
+            }
+          }
+        });
+        return Ember.RSVP.all_wait(promises).then(function() {
+          return list;
+        });
+      });
+    });
+  },
   url_cache: [],
-  store_url: function(url, type) {
+  store_url: function(url, type, keep_big, force_reload) {
+    if(!type) { return Ember.RSVP.reject('type required for storing'); }
     if(!window.coughDropExtras || !window.coughDropExtras.ready || url.match(/^data:/)) {
       return Ember.RSVP.resolve({
         url: url,
@@ -379,7 +455,12 @@ var persistence = Ember.Object.extend({
                   url.match(/coughdrop-usercontent\.s3\.amazonaws\.com/) || url.match(/s3\.amazonaws\.com\/coughdrop-usercontent/);
 
       if(capabilities.installed_app) { match = true; }
-      if(match) {
+      // TODO: need a clean way to not be quite so eager about downloading
+      // images that we're pretty sure haven't changed, even when force=true.
+      // Really this was just added in case of corruption issues, or in
+      // case images/sounds get saved with bad filenames and need to
+      // be repaired.
+      if(match && !force_reload) {
         // skip the remote request if it's stored locally from a location we
         // know won't ever modify static assets
         lookup = lookup.then(null, function() {
@@ -459,11 +540,14 @@ var persistence = Ember.Object.extend({
       });
 
       var size_image = fallback.then(function(object) {
-        if(capabilities.system != "Android") {
+        if(type != 'image' || capabilities.system != "Android" || keep_big) {
           return object;
         } else {
           return contentGrabbers.pictureGrabber.size_image(object.url, 50).then(function(res) {
-            object.url = res.url;
+            if(res.url && res.url.match(/^data/)) {
+              object.data_uri = res.url;
+              object.content_type = (res.url.split(/:/)[1] || "").split(/;/)[0] || "image/png";
+            }
             return object;
           }, function() {
             return Ember.RSVP.resolve(object);
@@ -475,8 +559,42 @@ var persistence = Ember.Object.extend({
         // TODO: if mobile app, use files api instead?? have to make sure that
         // the is-everything-synced check is looking for missing files, as well as
         // the is-this-board-safely-cached-already check.
-        // TODO: size images if it makes them faster to render
-        return persistence.store('dataCache', object, object.url);
+        if(persistence.get('local_system.available') && persistence.get('local_system.allowed') && stashes.get('auth_settings')) {
+          if(object.data_uri) {
+            var local_system_filename = object.local_filename;
+            if(!local_system_filename) {
+              var file_code = 0;
+              for(var idx = 0; idx < url.length; idx++) { file_code = file_code + url.charCodeAt(idx); }
+              var pieces = url.split(/\?/)[0].split(/\//);
+              var extension = contentGrabbers.file_type_extensions[object.content_type];
+              if(object.content_type.match(/^image\//) || object.content_type.match(/^audio\//)) {
+                extension = "." + object.content_type.split(/\//)[1].split(/\+/)[0];
+              }
+              var url_extension = pieces[pieces.length - 1].split(/\./).pop();
+              if(!extension && url_extension) {
+                extension = "." + url_extension;
+              }
+              extension = extension || ".png";
+              local_system_filename = (file_code % 1000).toString() + "0000." + pieces.pop() + "." + file_code.toString() + extension;
+            }
+            return capabilities.storage.write_file(type, local_system_filename, contentGrabbers.data_uri_to_blob(object.data_uri)).then(function(res) {
+              object.data_uri = null;
+              object.local_filename = local_system_filename;
+              object.local_url = res;
+              object.persisted = true;
+              return persistence.store('dataCache', object, object.url);
+            });
+          } else {
+            return object;
+          }
+        } else {
+          if(!object.persisted) {
+            object.persisted = true;
+            return persistence.store('dataCache', object, object.url);
+          } else {
+            return object;
+          }
+        }
       }).then(function(object) {
         resolve(object);
       }, function() {
@@ -537,11 +655,35 @@ var persistence = Ember.Object.extend({
         sync_reject({error: "failed to retrieve user details"});
       }
 
-      var find_user = CoughDrop.store.findRecord('user', user_id).then(null, function() {
-        sync_reject({error: "failed to retrieve user details"});
+      var prime_caches = persistence.prime_caches().then(null, function() { return Ember.RSVP.resolve(); });
+
+      var find_user = prime_caches.then(function() {
+        return CoughDrop.store.findRecord('user', user_id).then(null, function() {
+          sync_reject({error: "failed to retrieve user details"});
+        });
       });
 
-      find_user.then(function(user) {
+      var confirm_quota_for_user = find_user.then(function(user) {
+        if(user) {
+          if(persistence.get('local_system.available') && user.get('preferences.home_board') &&
+                    !persistence.get('local_system.allowed') && persistence.get('local_system.requires_confirmation') &&
+                    stashes.get('allow_local_filesystem_request')) {
+            return new Ember.RSVP.Promise(function(check_resolve, check_reject) {
+              return capabilities.storage.root_entry().then(function() {
+                persistence.set('local_system.allowed', true);
+                check_resolve(user);
+              }, function() {
+                persistence.set('local_system.available', false);
+                persistence.set('local_system.allowed', false);
+                check_resolve(user);
+              });
+            });
+          }
+        }
+        return user;
+      });
+
+      confirm_quota_for_user.then(function(user) {
         if(user) {
           user_id = user.get('id');
         }
@@ -697,6 +839,7 @@ var persistence = Ember.Object.extend({
         });
         var complete = sync_supervisee.then(null, function(err) {
           console.log(err);
+          console.error("supervisee sync failed");
           modal.warning(i18n.t('supervisee_sync_failed', "Couldn't sync boards for supervisee \"" + supervisee.user_name + "\""));
           return Ember.RSVP.resolve({});
         });
@@ -746,7 +889,9 @@ var persistence = Ember.Object.extend({
           persistence.update_sync_progress();
         }
         var board_load_promises = [];
+        var dead_thread = false;
         function nextBoard(defer) {
+          if(dead_thread) { defer.reject({error: "someone else failed"}); return; }
           var p_for = persistence.get('sync_progress.progress_for');
           if(p_for) {
             p_for[user.get('id')] = {
@@ -759,7 +904,6 @@ var persistence = Ember.Object.extend({
           var id = next && (next.id || next.key);
           var key = next && next.key;
           if(next && next.depth < 20 && id && !visited_boards.find(function(i) { return i == id; })) {
-            console.log('finding board... ' + id);
             var local_full_set_revision = null;
             var peeked = CoughDrop.store.peekRecord('board', id);
             var key_for_id = id.match(/\//);
@@ -773,7 +917,6 @@ var persistence = Ember.Object.extend({
                 if(safely_cached_boards[id]) {
                   return record;
                 } else {
-                  console.log('reloading board... ' + id);
                   return record.reload();
                 }
               } else {
@@ -782,7 +925,6 @@ var persistence = Ember.Object.extend({
             });
 
             find_board.then(function(board) {
-              console.log('checking board ' + board.get('key'));
               board.load_button_set();
               var visited_board_promises = [];
               var safely_cached = !!safely_cached_boards[board.id];
@@ -799,35 +941,36 @@ var persistence = Ember.Object.extend({
               // TODO: if not set to force=true, don't re-download already-stored icons from
               // possibly-changing URLs
               if(board.get('icon_url_with_fallback').match(/^http/)) {
-                visited_board_promises.push(persistence.store_url(board.get('icon_url_with_fallback'), 'image').then(null, function() {
+                visited_board_promises.push(persistence.store_url(board.get('icon_url_with_fallback'), 'image', false, force).then(null, function() {
                   return Ember.RSVP.reject({error: "icon url failed to sync, " + board.get('icon_url_with_fallback')});
-                });
+                }));
                 importantIds.push("dataCache_" + board.get('icon_url_with_fallback'));
               }
 
               if(next.image) {
-                visited_board_promises.push(persistence.store_url(next.image, 'image').then(null, function() {
+                visited_board_promises.push(persistence.store_url(next.image, 'image', false, force).then(null, function() {
                   return Ember.RSVP.reject({error: "sidebar icon url failed to sync, " + next.image});
-                });
+                }));
                 importantIds.push("dataCache_" + next.image);
               }
 
               board.get('local_images_with_license').forEach(function(image) {
                 importantIds.push("image_" + image.get('id'));
                 // TODO: don't re-request URLs that are already in the cache and most likely haven't changed
+                var keep_big = !!(board.get('grid.rows') < 3 || board.get('grid.columns') < 6);
                 if(image.get('url') && image.get('url').match(/^http/)) {
-                  visited_board_promises.push(persistence.store_url(image.get('url'), 'image').then(null, function() {
+                  visited_board_promises.push(persistence.store_url(image.get('url'), 'image', keep_big, force).then(null, function() {
                     return Ember.RSVP.reject({error: "button image failed to sync, " + image.get('url')});
-                  });
+                  }));
                   importantIds.push("dataCache_" + image.get('url'));
                 }
               });
               board.get('local_sounds_with_license').forEach(function(sound) {
                 importantIds.push("sound_" + sound.get('id'));
                 if(sound.get('url') && sound.get('url').match(/^http/)) {
-                   visited_board_promises.push(persistence.store_url(sound.get('url'), 'sound').then(null, function() {
+                   visited_board_promises.push(persistence.store_url(sound.get('url'), 'sound', false, force).then(null, function() {
                     return Ember.RSVP.reject({error: "button sound failed to sync, " + sound.get('url')});
-                   });
+                   }));
                   importantIds.push("dataCache_" + sound.get('url'));
                 }
               });
@@ -911,7 +1054,7 @@ var persistence = Ember.Object.extend({
             }, 50);
           }
         }
-        // threaded lookups, though a pool would probably be better since all
+        // threaded lookups, though a polling pool would probably be better since all
         // could resolve and then the final one finds a ton more boards
         for(var threads = 0; threads < 2; threads++) {
           var defer = Ember.RSVP.defer();
@@ -921,6 +1064,7 @@ var persistence = Ember.Object.extend({
         Ember.RSVP.all_wait(board_load_promises).then(function() {
           resolve(full_set_revisions);
         }, function(err) {
+          dead_thread = true;
           reject.apply(null, arguments);
         });
       });

@@ -349,6 +349,7 @@ Button.style = function(style) {
 Button.broken_image = function(image) {
   var fallback = Ember.templateHelpers.path('images/square.svg');
   if(image.src && image.src != fallback && !image.src.match(/^data/)) {
+    console.log("bad image url: " + image.src);
     image.onerror = "";
     image.src = fallback;
     persistence.find_url(image.src).then(function(data_uri) {

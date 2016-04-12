@@ -225,6 +225,29 @@ var contentGrabbers = Ember.Object.extend({
       pictureGrabber.save_pending();
       return Ember.RSVP.resolve({ready: true});
     });
+  },
+  file_type_extensions: {
+    'image/png': '.png',
+    'image/svg+xml': '.xvg',
+    'image/gif': '.gif',
+    'image/x-icon': '.ico',
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/tiff': '.tif',
+    'image/x-tiff': '.tif',
+    'audio/mpeg': '.mp2',
+    'audio/midi': '.mid',
+    'audio/x-mid': '.mid',
+    'audio/x-midi': '.mid',
+    'audio/x-mpeg': '.mp2',
+    'audio/mpeg3': '.mp3',
+    'audio/x-mpeg3': '.mp3',
+    'audio/wav': '.wav',
+    'audio/x-wav': '.wav',
+    'audio/ogg': '.oga',
+    'audio/flac': '.flac',
+    'audio/webm': '.webm'
+
   }
 }).create();
 var pictureGrabber = Ember.Object.extend({
@@ -1243,4 +1266,5 @@ contentGrabbers.boardGrabber = boardGrabber;
 contentGrabbers.soundGrabber = soundGrabber;
 contentGrabbers.linkGrabber = linkGrabber;
 contentGrabbers.pictureGrabber = pictureGrabber;
+window.cg = contentGrabbers;
 export default contentGrabbers;

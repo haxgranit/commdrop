@@ -584,6 +584,9 @@ var app_state = Ember.Object.extend({
     });
     return res;
   }.property('currentUser.feature_flags'),
+  set_filesystem: function() {
+    stashes.set('allow_local_filesystem_request', !!this.get('feature_flags.chrome_filesystem'));
+  }.observes('feature_flags.chrome_filesystem'),
   empty_header: function() {
     return !!(this.get('default_mode') && !this.get('currentBoardState') && !this.get('hide_search'));
   }.property('default_mode', 'currentBoardState', 'hide_search'),
