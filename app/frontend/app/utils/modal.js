@@ -12,17 +12,17 @@ var modal = Ember.Object.extend({
     this.route = null;
   },
   open: function(template, options) {
-    if(template != 'highlight' && scanner.scanning) { 
+    if(template != 'highlight' && scanner.scanning) {
       this.resume_scanning = true;
-      scanner.stop(); 
+      scanner.stop();
     }
-    // TODO: one option should be to have a gray background (dull out the 
+    // TODO: one option should be to have a gray background (dull out the
     // prior context as unimportant), which would be used in the new-board modal
     if((this.last_promise || this.last_template) && template != 'highlight') {
       this.close();
     }
     if(!this.route) { throw "must call setup before trying to open a modal"; }
-    
+
     this.settings_for[template] = options;
     this.last_template = template;
     this.route.render(template, { into: 'application', outlet: 'modal'});
@@ -95,11 +95,11 @@ var modal = Ember.Object.extend({
   },
   close: function(success) {
     if(!this.route) { return; }
-    if(this.last_promise) { 
+    if(this.last_promise) {
       if(success || success === undefined) {
-        this.last_promise.resolve(success); 
+        this.last_promise.resolve(success);
       } else {
-        this.last_promise.reject('force close'); 
+        this.last_promise.reject('force close');
       }
       this.last_promise = null;
     }
@@ -112,7 +112,7 @@ var modal = Ember.Object.extend({
       Ember.run.later(function() {
         if(!modal.is_open()) {
           _this.resume_scanning = false;
-          scanner.start(); 
+          scanner.start();
         }
       });
     }
@@ -173,7 +173,7 @@ modal.ModalView = Ember.View.extend({
 //   }
 });
 modal.ModalController = Ember.Controller.extend({
-  actions: { 
+  actions: {
     opening: function() {
       var template = this.get('templateName') || this.get('renderedName') || this.constructor.toString().split(/:/)[1];
       var settings = modal.settings_for[template] || {};
