@@ -564,11 +564,19 @@ describe("persistence", function() {
     it("should return a promise", function() {
       var res = persistence.store_url("data:bacon");
       expect(res.then).not.toEqual(null);
+      var error = false;
+      res.then(null, function(err) {
+        error = err;
+      });
+      waitsFor(function() { return error; });
+      runs(function() {
+        expect(error).toEqual('type required for storing');
+      });
     });
 
     it("should resolve immediately on a data_uri", function() {
       var done = false;
-      var res = persistence.store_url("data:bacon").then(function() {
+      var res = persistence.store_url("data:bacon", 'image').then(function() {
         done = true;
       });
       waitsFor(function() { return done; });
@@ -635,7 +643,7 @@ describe("persistence", function() {
         });
         waitsFor(function() { return result; });
         runs(function() {
-          expect(result.error).toEqual('URL lookup failed during proxy');
+          expect(result.error).toEqual('URL lookup failed during proxy for http://www.example.com/pic.png');
         });
       });
     });

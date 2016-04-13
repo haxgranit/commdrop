@@ -24,7 +24,7 @@ describe('session', function() {
         }
       };
       session.setup(null, app);
-      expect(CoughDrop.session).toEqual(session)
+      expect(CoughDrop.session).toEqual(session);
       expect(injections).toEqual(['model', 'controller', 'view', 'route']);
       expect(registered).toEqual(true);
     });
@@ -156,7 +156,7 @@ describe('session', function() {
         if(extra && key == 'auth_settings') {
           return {
             a: 1
-          }
+          };
         }
       });
       var res = session.restore();
@@ -172,7 +172,7 @@ describe('session', function() {
         if(extra && key == 'auth_settings') {
           return {
             a: 1
-          }
+          };
         }
       });
       var res = session.restore();
@@ -186,7 +186,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var res = session.restore();
@@ -203,7 +203,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var queried = false;
@@ -230,7 +230,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var queried = false;
@@ -257,7 +257,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var queried = false;
@@ -281,7 +281,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var queried = false;
@@ -312,7 +312,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var queried = false;
@@ -347,7 +347,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var queried = false;
@@ -381,7 +381,7 @@ describe('session', function() {
           return {
             user_name: 'cheddar',
             access_token: '12345'
-          }
+          };
         }
       });
       var queried = false;
@@ -455,6 +455,8 @@ describe('session', function() {
       session.set('isAuthenticated', true);
       session.set('access_token', 'asdf');
       session.set('as_user_id', '12345');
+      app_state.set('sessionUser', null);
+      expect(app_state.get('currentUser')).toEqual(null);
       session.invalidate();
       expect(flushed).toEqual(true);
       expect(setup).toEqual(true);

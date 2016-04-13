@@ -8,6 +8,7 @@ import stashes from '../../utils/_stashes';
 import editManager from '../../utils/edit_manager';
 import contentGrabbers from '../../utils/content_grabbers';
 import scanner from '../../utils/scanner';
+import session from '../../utils/session';
 import capabilities from '../../utils/capabilities';
 import utterance from '../../utils/utterance';
 import CoughDrop from '../../app';
@@ -221,7 +222,7 @@ describe('app_state', function() {
       stub(app_state, 'refresh_session_user', function() {
         refresh_called = true;
       });
-      app_state.route.session.set('isAuthenticated', true);
+      session.set('isAuthenticated', true);
       app_state.global_transition({});
       expect(refresh_called).toEqual(true);
     });

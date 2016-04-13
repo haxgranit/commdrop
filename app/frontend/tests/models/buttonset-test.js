@@ -268,7 +268,7 @@ describe('Buttonset', function() {
             data: 'data:image/png;0'
           });
         });
-        persistence.store_url('http://www.example.com').then(function() {
+        persistence.store_url('http://www.example.com', 'image').then(function() {
           stored = true;
         });
 

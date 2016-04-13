@@ -34,7 +34,7 @@ var persistence = Ember.Object.extend({
         persistence.sync('self');
       }, 2000);
     }
-    if(!Ember.testing) {
+    if(!CoughDrop.ignore_filesystem) {
       capabilities.storage.status().then(function(res) {
         if(res.available && !res.requires_confirmation) {
           res.allowed = true;
@@ -366,21 +366,23 @@ var persistence = Ember.Object.extend({
         _this.url_cache = _this.url_cache || {};
         if(data.local_url) {
           if(data.local_filename) {
-            if(type == 'image' && this.image_filename_cache && this.image_filename_cache[data.local_filename]) {
+            if(type == 'image' && _this.image_filename_cache && _this.image_filename_cache[data.local_filename]) {
               return data.local_url;
-            } else if(type == 'sound' && this.sound_filename_cache && this.sound_filename_cache[data.local_filename]) {
+            } else if(type == 'sound' && _this.sound_filename_cache && _this.sound_filename_cache[data.local_filename]) {
               return data.local_url;
             } else {
               // confirm that the file is where it's supposed to be before returning
-              return capabilities.storage.get_file_url(type, data.local_filename).then(function(local_url) {
-                _this.url_cache[url] = local_url;
-                return local_url;
-              }, function() {
-                if(data.data_uri) {
-                  return Ember.RSVP.resolve(data.data_uri);
-                } else {
-                  return Ember.RSVP.reject({error: "missing local file"});
-                }
+              return new Ember.RSVP.Promise(function(file_url_resolve, file_url_reject) {
+                capabilities.storage.get_file_url(type, data.local_filename).then(function(local_url) {
+                  _this.url_cache[url] = local_url;
+                  file_url_resolve(local_url);
+                }, function() {
+                  if(data.data_uri) {
+                    file_url_resolve(data.data_uri);
+                  } else {
+                    file_url_reject({error: "missing local file"});
+                  }
+                });
               });
             }
           }
@@ -402,20 +404,26 @@ var persistence = Ember.Object.extend({
     _this.sound_filename_cache = _this.sound_filename_cache || {};
 
     var prime_promises = [];
-    if(_this.get('local_system.available') && _this.get('local_system.allowed') && !stashes.get('auth_settings')) {
+    if(_this.get('local_system.available') && _this.get('local_system.allowed') && stashes.get('auth_settings')) {
     } else {
-      return Ember.RSVP.reject();
+      return Ember.RSVP.reject({error: 'not enabled or no user set'});
     }
 
-    prime_promises.push(capabilities.storage.list_files('image').then(function(images) {
-      images.forEach(function(image) {
-        _this.image_filename_cache[image] = true;
-      });
+    prime_promises.push(new Ember.RSVP.Promise(function(res, rej) {
+      capabilities.storage.list_files('image').then(function(images) {
+        images.forEach(function(image) {
+          _this.image_filename_cache[image] = true;
+        });
+        res(images);
+      }, function(err) { rej(err); });
     }));
-    prime_promises.push(capabilities.storage.list_files('sound').then(function(sounds) {
-      sounds.forEach(function(sound) {
-        _this.sound_filename_cache[sound] = true;
-      });
+    prime_promises.push(new Ember.RSVP.Promise(function(res, rej) {
+      capabilities.storage.list_files('sound').then(function(sounds) {
+        sounds.forEach(function(sound) {
+          _this.sound_filename_cache[sound] = true;
+        });
+        res(sounds);
+      }, function(err) { rej(err); });
     }));
     return Ember.RSVP.all_wait(prime_promises).then(function() {
       return coughDropExtras.storage.find_all('dataCache').then(function(list) {
@@ -427,8 +435,11 @@ var persistence = Ember.Object.extend({
             } else if(item.data.raw.type == 'sound' && item.data.raw.local_url && _this.sound_filename_cache && _this.sound_filename_cache[item.data.raw.local_filename]) {
               _this.url_cache[item.data.raw.url] = item.data.raw.local_url;
             } else {
-              promises.push(capabilities.storage.get_file_url(item.data.raw.type, item.data.raw.local_filename).then(function(local_url) {
-                _this.url_cache[item.data.raw.url] = local_url;
+              promises.push(new Ember.RSVP.Promise(function(res, rej) {
+                capabilities.storage.get_file_url(item.data.raw.type, item.data.raw.local_filename).then(function(local_url) {
+                  _this.url_cache[item.data.raw.url] = local_url;
+                  res(local_url);
+                }, function(err) { rej(err); });
               }));
             }
           }
@@ -439,7 +450,7 @@ var persistence = Ember.Object.extend({
       });
     });
   },
-  url_cache: [],
+  url_cache: {},
   store_url: function(url, type, keep_big, force_reload) {
     if(!type) { return Ember.RSVP.reject('type required for storing'); }
     if(!window.coughDropExtras || !window.coughDropExtras.ready || url.match(/^data:/)) {
@@ -575,14 +586,16 @@ var persistence = Ember.Object.extend({
                 extension = "." + url_extension;
               }
               extension = extension || ".png";
-              local_system_filename = (file_code % 1000).toString() + "0000." + pieces.pop() + "." + file_code.toString() + extension;
+              local_system_filename = (file_code % 10000).toString() + "0000." + pieces.pop() + "." + file_code.toString() + extension;
             }
-            return capabilities.storage.write_file(type, local_system_filename, contentGrabbers.data_uri_to_blob(object.data_uri)).then(function(res) {
-              object.data_uri = null;
-              object.local_filename = local_system_filename;
-              object.local_url = res;
-              object.persisted = true;
-              return persistence.store('dataCache', object, object.url);
+            return new Ember.RSVP.Promise(function(write_resolve, write_reject) {
+              capabilities.storage.write_file(type, local_system_filename, contentGrabbers.data_uri_to_blob(object.data_uri)).then(function(res) {
+                object.data_uri = null;
+                object.local_filename = local_system_filename;
+                object.local_url = res;
+                object.persisted = true;
+                write_resolve(persistence.store('dataCache', object, object.url));
+              }, function(err) { write_reject(err); });
             });
           } else {
             return object;
@@ -669,7 +682,7 @@ var persistence = Ember.Object.extend({
                     !persistence.get('local_system.allowed') && persistence.get('local_system.requires_confirmation') &&
                     stashes.get('allow_local_filesystem_request')) {
             return new Ember.RSVP.Promise(function(check_resolve, check_reject) {
-              return capabilities.storage.root_entry().then(function() {
+              capabilities.storage.root_entry().then(function() {
                 persistence.set('local_system.allowed', true);
                 check_resolve(user);
               }, function() {

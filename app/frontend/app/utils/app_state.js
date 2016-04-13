@@ -66,6 +66,7 @@ var app_state = Ember.Object.extend({
   },
   reset: function() {
     this.set('currentBoardState', null);
+    this.set('currentUser', null);
     this.set('sessionUser', null);
     this.set('speakModeUser', null);
     stashes.set('current_mode', 'default');

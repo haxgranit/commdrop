@@ -15,6 +15,9 @@ if(navigator.standalone) {
   // indexedDBSafe = window.shimIndexedDB;
 }
 
+window.cd_request_file_system = window.webkitRequestFileSystem || window.requestFileSystem;
+window.cd_persistent_storage = window.navigator.webkitPersistentStorage || window.navigator.persistentStorage
+
 var capabilities;
 (function() {
   var console_debug = function(str) {
@@ -422,12 +425,12 @@ var capabilities;
           var promise = capabilities.mini_promise();
           if(window.resolveLocalFileSystemURL && window.cordova && window.cordova.file && window.cordova.file.dataDirectory) {
             promise.resolve({available: true, requires_confirmation: false});
-          } else if((window.webkitRequestFileSystem || window.requestFileSystem) && window.navigator.webkitPersistentStorage && window.navigator.webkitPersistentStorage.requestQuota) {
+          } else if(window.cd_request_file_system && window.cd_persistent_storage && window.cd_persistent_storage.requestQuota) {
             // Chrome won't allow storing to the file system in incognito, but still
             // acts like it will. This is the only check I can find that correctly
             // fails in incognito but not in regular browsing mode.
-            window.webkitRequestFileSystem(window.TEMPORARY, 100, function(r) {
-              window.navigator.webkitPersistentStorage.queryUsageAndQuota(function(used, requested) {
+            window.cd_request_file_system(window.TEMPORARY, 100, function(r) {
+              window.cd_persistent_storage.queryUsageAndQuota(function(used, requested) {
                 if(requested && requested > 0) {
                   promise.resolve({available: true, requires_confirmation: false});
                 } else {
@@ -519,7 +522,6 @@ var capabilities;
           return promise;
         },
         write_file: function(dirname, filename, blob) {
-          if(!dirname) { debugger }
           var promise = capabilities.mini_promise();
           capabilities.storage.root_entry().then(function() {
             capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
@@ -576,11 +578,11 @@ var capabilities;
                 promise.reject(e);
               });
             }
-          } else if((window.webkitRequestFileSystem || window.requestFileSystem) && window.navigator.webkitPersistentStorage && window.navigator.webkitPersistentStorage.requestQuota) {
+          } else if(window.cd_request_file_system && window.cd_persistent_storage && window.cd_persistent_storage.requestQuota) {
             var req_size = 1024*1024*50;
-            window.navigator.webkitPersistentStorage.queryUsageAndQuota(function(used, requested) {
+            window.cd_persistent_storage.queryUsageAndQuota(function(used, requested) {
               var get_file_system = function() {
-                (window.webkitRequestFileSystem || window.requestFileSystem)(window.PERSISTENT, req_size, function(dir) {
+                window.cd_request_file_system(window.PERSISTENT, req_size, function(dir) {
                   capabilities.root_dir_entry = dir.root;
                   promise.resolve(dir.root);
                 }, function(err) {
@@ -588,12 +590,13 @@ var capabilities;
                 });
               };
 
-              if((req_size - (used || 0)) < (1024*1024*50) || (requested || 0) < (1024*10248*50)) {
+              var full_size = Math.max(req_size, requested);
+              if((full_size - (used || 0)) < (1024*1024*50) || (requested || 0) < (1024*1024*50)) {
                 req_size = req_size + (1024*1024*50);
                 setTimeout(function() {
                   promise.reject({error: "timeout"});
                 }, 5000);
-                window.navigator.webkitPersistentStorage.requestQuota(req_size, function(allotted_size) {
+                window.cd_persistent_storage.requestQuota(req_size, function(allotted_size) {
                   if(allotted_size && allotted_size > 0) {
                     get_file_system();
                   } else {

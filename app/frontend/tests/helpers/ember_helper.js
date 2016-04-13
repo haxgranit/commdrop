@@ -6,6 +6,7 @@ import capabilities from '../../utils/capabilities';
 import persistence from '../../utils/persistence';
 import coughDropExtras from '../../utils/extras';
 import stashes from '../../utils/_stashes';
+import session from '../../utils/session';
 import buttonTracker from '../../utils/raw_events';
 import ApplicationAdapter from 'frontend/adapters/application';
 import startApp from '../helpers/start-app';
@@ -72,7 +73,7 @@ queryLog.respondAndLog = function(event, defaultResponse) {
         found = true;
         // findQuery
       }
-      if(found) { 
+      if(found) {
         if(fixture.response._result && fixture.response._result.meta) {
           coughDropExtras.meta_push({
             method: event.method,
@@ -134,7 +135,7 @@ var fake_dbman = function() {
     },
     store_internal: function(store, record, success, error) {
       repo[store] = repo[store] || [];
-      
+
       var original_id = record[index_id(store)].replace(new RegExp("^" + store + "::"), '');
       result.remove(store, original_id, function() {
         var new_record = {};
@@ -194,13 +195,13 @@ function fakeAudio() {
   var listeners = {};
   var triggers = [];
   return Ember.Object.extend({
-    addEventListener: function(event, callback) { 
-      this.listenersAdded = true; 
+    addEventListener: function(event, callback) {
+      this.listenersAdded = true;
       listeners[event] = listeners[event] || [];
       listeners[event].push(callback);
     },
-    removeEventListener: function(event, callback) { 
-      this.listenersRemoved = true; 
+    removeEventListener: function(event, callback) {
+      this.listenersRemoved = true;
       listeners[event] = (listeners[event] || []).filter(function(f) { return f != callback; });
     },
     trigger: function(event) {
@@ -210,8 +211,8 @@ function fakeAudio() {
       });
     },
     pause: function() { this.pauseCalled = true; this.playing = false; },
-    play: function() { 
-      this.playCalled = true; 
+    play: function() {
+      this.playCalled = true;
       this.playing = true;
       var _this = this;
       setTimeout(function() {
@@ -283,15 +284,15 @@ function easyPromise() {
     res = resolve;
     rej = reject;
   });
-  promise.resolve = function(data) { 
+  promise.resolve = function(data) {
     Ember.run(function() {
-      promise.resolved = true; res(data); 
+      promise.resolved = true; res(data);
     });
   };
   // TODO: default handler for reject trigger an exception, which is bad
-  promise.reject = function() { 
+  promise.reject = function() {
     Ember.run(function() {
-      promise.rejected = true; 
+      promise.rejected = true;
     });
   };
   return promise;
@@ -377,6 +378,10 @@ ApplicationAdapter.reopen({
 
 var App;
 beforeEach(function() {
+  stub(session, 'reload', function() {
+    session.reloaded = true;
+  });
+  CoughDrop.ignore_filesystem = true;
   capabilities.dbman = capabilities.dbman || capabilities.original_dbman;
   window.cough_drop_readiness = false;
   App = startApp();
@@ -388,7 +393,7 @@ beforeEach(function() {
   CoughDrop.all_wait = false;
 });
 
-afterEach(function() {  
+afterEach(function() {
   capabilities.setup_database.already_tried = false;
   capabilities.setup_database.already_tried_deleting = false;
   capabilities.setup_database.already_tried_deleting_all = false;
