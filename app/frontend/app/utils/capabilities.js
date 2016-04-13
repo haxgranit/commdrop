@@ -16,7 +16,7 @@ if(navigator.standalone) {
 }
 
 window.cd_request_file_system = window.webkitRequestFileSystem || window.requestFileSystem;
-window.cd_persistent_storage = window.navigator.webkitPersistentStorage || window.navigator.persistentStorage
+window.cd_persistent_storage = window.navigator.webkitPersistentStorage || window.navigator.persistentStorage;
 
 var capabilities;
 (function() {

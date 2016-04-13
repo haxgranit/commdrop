@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } from 'frontend/tests/helpers/jasmine';
 import { db_wait } from 'frontend/tests/helpers/ember_helper';
 import capabilities from '../../utils/capabilities';
+import persistence from '../../utils/persistence';
+import stashes from '../../utils/_stashes';
 import coughDropExtras from '../../utils/extras';
 import Ember from 'ember';
 import CoughDrop from '../../app';
@@ -199,7 +201,7 @@ describe("filesystem", function() {
       it("should show default status", function() {
         var result = null;
         capabilities.storage.status().then(function(res) { result = res; });
-        waitsFor(function() { return result; })
+        waitsFor(function() { return result; });
         runs(function() {
           expect(result).toEqual({available: true, requires_confirmation: false});
         });
@@ -209,7 +211,7 @@ describe("filesystem", function() {
         CoughDrop.quota_settings.allowed_quota = 0;
         var result = null;
         capabilities.storage.status().then(function(res) { result = res; });
-        waitsFor(function() { return result; })
+        waitsFor(function() { return result; });
         runs(function() {
           expect(result).toEqual({available: true, requires_confirmation: true});
         });
@@ -219,7 +221,7 @@ describe("filesystem", function() {
         CoughDrop.quota_settings.allow_quota_check = false;
         var result = null;
         capabilities.storage.status().then(function(res) { result = res; });
-        waitsFor(function() { return result; })
+        waitsFor(function() { return result; });
         runs(function() {
           expect(result).toEqual({available: false});
         });
@@ -229,7 +231,7 @@ describe("filesystem", function() {
         CoughDrop.quota_settings.allow_temporary = false;
         var result = null;
         capabilities.storage.status().then(function(res) { result = res; });
-        waitsFor(function() { return result; })
+        waitsFor(function() { return result; });
         runs(function() {
           expect(result).toEqual({available: false});
         });
@@ -239,7 +241,7 @@ describe("filesystem", function() {
         stub(window, 'cd_request_file_system', null);
         var result = null;
         capabilities.storage.status().then(function(res) { result = res; });
-        waitsFor(function() { return result; })
+        waitsFor(function() { return result; });
         runs(function() {
           expect(result).toEqual({available: false});
         });
@@ -256,7 +258,7 @@ describe("filesystem", function() {
         });
         var result = null;
         capabilities.storage.status().then(function(res) { result = res; });
-        waitsFor(function() { return result; })
+        waitsFor(function() { return result; });
         runs(function() {
           expect(result).toEqual({available: true, requires_confirmation: false});
         });
@@ -439,7 +441,7 @@ describe("filesystem", function() {
         });
         var error = null;
         capabilities.storage.list_files('image').then(function(list) {
-        }, function(e) { error = e });
+        }, function(e) { error = e; });
         waitsFor(function() { return error; });
         runs(function() {
           expect(error).toEqual('listing not allowed');
@@ -547,7 +549,7 @@ describe("filesystem", function() {
         var blob = {a: 1};
         var error = null;
         capabilities.storage.write_file('image', 'wonderful.png', blob).then(function(res) {
-        }, function(err) { error = err });
+        }, function(err) { error = err; });
         waitsFor(function() { return error; });
         runs(function() {
           expect(error).toEqual('write failed');
@@ -566,7 +568,7 @@ describe("filesystem", function() {
         var blob = {a: 1};
         var error = null;
         capabilities.storage.write_file('image', 'wonderful.png', blob).then(function(res) {
-        }, function(err) { error = err });
+        }, function(err) { error = err; });
         waitsFor(function() { return error; });
         runs(function() {
           expect(error).toEqual('writer not allowed');
@@ -610,7 +612,7 @@ describe("filesystem", function() {
 
         var error = null;
         capabilities.storage.remove_file('image', 'chicken.gif').then(function(res) {
-        }, function(err) { error = err });
+        }, function(err) { error = err; });
         waitsFor(function() { return error; });
         runs(function() {
           expect(error).toEqual('file not found');
@@ -631,7 +633,7 @@ describe("filesystem", function() {
 
         var error = null;
         capabilities.storage.remove_file('image', 'chicken.gif').then(function(res) {
-        }, function(err) { error = err });
+        }, function(err) { error = err; });
         waitsFor(function() { return error; });
         runs(function() {
           expect(error).toEqual('remove not allowed');
@@ -829,8 +831,8 @@ describe("filesystem", function() {
       var result = null;
       persistence.store_url(url, 'image', true, false).then(function(res) {
         result = res;
-      }, function(err) { debugger });
-      waitsFor(function() { return result; })
+      }, function(err) { });
+      waitsFor(function() { return result; });
       runs(function() {
         expect(result).toEqual({
           data_uri: null,
@@ -872,8 +874,8 @@ describe("filesystem", function() {
       var result = null;
       persistence.store_url(url, 'image', true, false).then(function(res) {
         result = res;
-      }, function(err) { debugger });
-      waitsFor(function() { return result; })
+      }, function(err) { });
+      waitsFor(function() { return result; });
       runs(function() {
         expect(result).toEqual({
           data_uri: null,
@@ -913,8 +915,8 @@ describe("filesystem", function() {
       var result = null;
       persistence.store_url(url, 'image', true, false).then(function(res) {
         result = res;
-      }, function(err) { debugger });
-      waitsFor(function() { return result; })
+      }, function(err) { });
+      waitsFor(function() { return result; });
       runs(function() {
         expect(result).toEqual({
           content_type: 'image/png',
@@ -945,8 +947,8 @@ describe("filesystem", function() {
       var url = 'http://opensymbols.s3.amazonaws.com/remote/picture.png';
       var error = null;
       persistence.store_url(url, 'image', true, false).then(function(res) {
-      }, function(err) { error = err });
-      waitsFor(function() { return error; })
+      }, function(err) { error = err; });
+      waitsFor(function() { return error; });
       runs(function() {
         expect(error.error).toEqual('saving to data cache failed');
       });
@@ -997,8 +999,8 @@ describe("filesystem", function() {
       var result = null;
       persistence.prime_caches().then(function(res) {
         result = res;
-      }, function(err) { debugger });
-      waitsFor(function() { return result; })
+      }, function(err) { });
+      waitsFor(function() { return result; });
       runs(function() {
         expect(persistence.image_filename_cache).toEqual({
           'chicadee.gif': true,
@@ -1015,7 +1017,7 @@ describe("filesystem", function() {
           "http://www.example.com/remote/d.mp3": 'http://www.example.com/whatever.mp3',
         });
       });
-    })
+    });
   });
 
   describe("persistence.find_url", function() {
@@ -1135,7 +1137,7 @@ describe("filesystem", function() {
       var result1 = null, result2 = null;
       persistence.find_url('http://www.example.com/remote/picture.png', 'image').then(function(res) {
         result1 = res;
-      }, function(err) {debugger });
+      }, function(err) {});
       persistence.find_url('http://www.example.com/remote/water.mp3', 'sound').then(function(res) {
         result2 = res;
       }, function(err) { });
