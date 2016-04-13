@@ -19,7 +19,9 @@ module Worker
     klass_string = args_copy.shift
     klass = Object.const_get(klass_string)
     method_name = args_copy.shift
-    Rails.logger.info("performed #{klass_string} . #{method_name}")
+    hash = args_copy[0] if args_copy[0].is_a?(Hash)
+    hash ||= {'method' => 'unknown'}
+    Rails.logger.info("performing #{klass_string} . #{hash['method']} (#{hash['id']})")
     klass.send(method_name, *args_copy)
   rescue Resque::TermException
     Resque.enqueue(self, *args)
