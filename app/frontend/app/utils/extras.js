@@ -30,126 +30,57 @@ import capabilities from './capabilities';
       if(window.speechSynthesis) {
         console_debug("COUGHDROP: tts enabled");
       }
-//      this.eye_gaze({enable: true});
-      if(!CoughDrop.app) {
+      if(!CoughDrop || !CoughDrop.app) {
         window.cough_drop_readiness = true;
       } else {
         CoughDrop.app.advanceReadiness();
       }
     },
-    logout: function() {
-      if(capabilities.host) {
-        capabilities.invoke({type: 'coughDropExtras', method: 'logout'});
-        return true;
-      } else {
-        return false;
-      }
-    },
-    eye_gaze: function(options) {
-      capabilities.invoke({type: 'coughDropExtras', method: 'eye_gaze', options: {enable: true}});
-    },
     storage: {
-      defers: {},
       find: function(store, key) {
         var defer = Ember.RSVP.defer();
-        defer.method = 'storage.find';
-        defer.store = store;
-        defer.key = key;
-        var defer_key = "defer_" + (new Date()).getTime().toString() + "_" + Math.random().toString();
-        extras.storage.defers[defer_key] = defer;
-        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find', options: {id: defer_key, store: store, key: key}});
+        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find', options: {store: store, key: key}}).then(function(res) {
+          defer.resolve(res);
+        }, function(err) {
+          defer.reject(err);
+        });
         return defer.promise;
       },
       find_all: function(store) {
         var defer = Ember.RSVP.defer();
-        defer.method = 'storage.find_all';
-        defer.store = store;
-        var defer_key = "defer_" + (new Date()).getTime().toString() + "_" + Math.random().toString();
-        extras.storage.defers[defer_key] = defer;
-        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find_all', options: {id: defer_key, store: store}});
+        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find_all', options: {store: store}}).then(function(res) {
+          defer.resolve(res);
+        }, function(err) {
+          defer.reject(err);
+        });
         return defer.promise;
       },
       find_changed: function() {
         var defer = Ember.RSVP.defer();
-        defer.method = 'storage.find_changed';
-        var defer_key = "defer_" + (new Date()).getTime().toString() + "_" + Math.random().toString();
-        extras.storage.defers[defer_key] = defer;
-        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find_changed', options: {id: defer_key}});
+        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find_changed', options: {}}).then(function(res) {
+          defer.resolve(res);
+        }, function(err) {
+          defer.reject(err);
+        });
         return defer.promise;
       },
       store: function(store, obj, key) {
         var defer = Ember.RSVP.defer();
-        defer.method = 'storage.store';
-        defer.store = store;
-        defer.key = key;
-        var defer_key = "defer_" + (new Date()).getTime().toString() + "_" + Math.random().toString();
-        extras.storage.defers[defer_key] = defer;
-        capabilities.invoke({type: 'coughDropExtras', method: 'storage_store', options: {id: defer_key, store: store, record: obj}});
+        capabilities.invoke({type: 'coughDropExtras', method: 'storage_store', options: {store: store, record: obj}}).then(function(res) {
+          defer.resolve(res);
+        }, function(err) {
+          defer.reject(err);
+        });
         return defer.promise;
       },
       remove: function(store, id) {
         var defer = Ember.RSVP.defer();
-        defer.method = 'storage.remove';
-        defer.store = store;
-        defer.key = id;
-        var defer_key = "defer_" + (new Date()).getTime().toString() + "_" + Math.random().toString();
-        extras.storage.defers[defer_key] = defer;
-        capabilities.invoke({type: 'coughDropExtras', method: 'storage_remove', options: {id: defer_key, store: store, record_id: id}});
+        capabilities.invoke({type: 'coughDropExtras', method: 'storage_remove', options: {store: store, record_id: id}}).then(function(res) {
+          defer.resolve(res);
+        }, function(err) {
+          defer.reject(err);
+        });
         return defer.promise;
-      }
-    },
-    extension_message: function(message) {
-      if(message.type == 'coughDropExtras' && message.ready) {
-        extras.enable();
-      } else if(message.type == 'share') {
-        if(message.result_type == 'not_supported') {
-          extras.share.default_load(message.options);
-        }
-      } else if(message.type == 'eye_gaze_event') {
-        if(message.event_type == 'tracker') {
-          extras.set('eye_gaze_state', message.track_type);
-        } else if(message.event_type == 'tracker_disabled') {
-          extras.set('eye_gaze_state', null);
-        }
-        console.log(message);
-      } else if(message.type == 'storage_result') {
-        var defer = extras.storage.defers[message.id];
-        if(defer) {
-          delete extras.storage.defers[message.id];
-          if(message.result_type == 'success') {
-            Ember.run(function() {
-              defer.resolve(message.result);
-            });
-          } else {
-            Ember.run(function() {
-              var res = message.result;
-              if(defer.method) {
-                res.defer_method = defer.method;
-              }
-              if(defer.store) {
-                res.defer_store = defer.store;
-              }
-              if(defer.key) {
-                res.defer_key = defer.key;
-              }
-              defer.reject(res);
-            });
-          }
-        }
-      } else if(message.type == 'ajax_result') {
-        var defer = extras.ajax.defers[message.id];
-        if(defer) {
-          delete extras.ajax.defers[message.id];
-          if(message.result_type == 'success') {
-            Ember.run(function() {
-              defer.resolve(message.result[0]);
-            });
-          } else {
-            Ember.run(function() {
-              defer.reject(message.result[0]);
-            });
-          }
-        }
       }
     },
     track_error: function(message) {
@@ -330,13 +261,10 @@ import capabilities from './capabilities';
   extras.meta_push = Ember.$.ajax.meta_push;
 
   window.coughDropExtras = extras;
-  window.addEventListener('message', function(event) {
-    if(event.source != window) { return; }
-    if(event.data && event.data.from_extension) {
-      extras.extension_message(event.data);
-    }
+  capabilities.invoke({type: 'coughDropExtras', method: 'init'}).then(function(res) {
+    extras.enable();
+  }, function(err) {
   });
-  capabilities.invoke({type: 'coughDropExtras', method: 'init'});
 })();
 
 export default window.coughDropExtras;

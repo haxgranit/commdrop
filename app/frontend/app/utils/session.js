@@ -132,9 +132,7 @@ var session = Ember.Object.extend({
     stashes.flush();
     stashes.setup();
     if(full_invalidate) {
-      if(!coughDropExtras.ready || !coughDropExtras.logout()) {
-        session.reload('/');
-      }
+      session.reload('/');
     }
     var _this = this;
     Ember.run.later(function() {
