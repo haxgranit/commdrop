@@ -26,6 +26,7 @@ export default Ember.Controller.extend({
         list.push({id: 'overridden_parts_of_speech', name: i18n.t('overridden_parts_of_speech', "Manually-set parts of speech")});
         list.push({id: 'missing_symbols', name: i18n.t('missing_symbols', "Search terms that don't return any matching symbols")});
         list.push({id: 'premium_voices', name: i18n.t('premium_voice_downloads', "Premium Voice Downloads")});
+        list.push({id: 'feature_flags', name: i18n.t('feature_flags', "Beta/Feature Flags")});
         list.push({id: 'totals', name: i18n.t('record_totals', "Total counts")});
       } else {
         list.push({id: 'logged_2', name: i18n.t('logged_2', "Generated usage logs in the last 2 weeks")});

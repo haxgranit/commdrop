@@ -136,6 +136,15 @@ class Api::OrganizationsController < ApplicationController
         stats[str] ||= 0
         stats[str] += 1
       end
+    elsif params['report'] == 'feature_flags'
+      available = FeatureFlags::AVAILABLE_FRONTEND_FEATURES
+      enabled = FeatureFlags::ENABLED_FRONTEND_FEATURES
+      stats = {}
+      available.each do |flag|
+        key = flag
+        key += " (enabled)" if enabled.include?(flag)
+        stats[key] = enabled.include?(flag) ? 1 : 0
+      end
     elsif params['report'] == 'totals'
       stats = {}
       stats['users'] = User.count
