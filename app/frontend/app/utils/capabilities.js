@@ -107,13 +107,14 @@ var capabilities;
         }
         stashes.persist_raw('cd_db_key', stashes.get_raw('cd_db_key') || ("db_" + Math.random().toString() + "_" + (new Date()).getTime().toString()));
         capabilities.db_key = stashes.get_raw('cd_db_key');
+        var res = true;
         if(indexedDBSafe) {
-          setup_database();
+          res = capabilities.setup_database();
         }
         capabilities.credentials = capabilities.auth_credentials;
         capabilities.access_token = auth_settings.access_token;
 
-        return true;
+        return res;
       },
       eye_gaze: {
         listen: function() {
@@ -646,7 +647,7 @@ var capabilities;
       },
       storage_clear: function(options) {
         var promise = capabilities.mini_promise();
-        if(capabilities.dbman.not_ready(capabilities.storage_clear, options, promise)) { return; }
+        if(capabilities.dbman.not_ready(capabilities.storage_clear, options, promise)) { return promise; }
 
         capabilities.dbman.clear(options.store, function(record) {
           promise.resolve(record);
@@ -758,7 +759,7 @@ var capabilities;
       },
       storage_find: function(options) {
         var res = capabilities.mini_promise();
-        if(capabilities.dbman.not_ready(capabilities.storage_find, options, res)) { return; }
+        if(capabilities.dbman.not_ready(capabilities.storage_find, options, res)) { return res; }
 
         capabilities.dbman.find(options.store, options.key, function(record) {
           res.resolve(record);
@@ -769,7 +770,7 @@ var capabilities;
       },
       storage_find_all: function(options) {
         var res = capabilities.mini_promise();
-        if(capabilities.dbman.not_ready(capabilities.storage_find_all, options, res)) { return; }
+        if(capabilities.dbman.not_ready(capabilities.storage_find_all, options, res)) { return res; }
 
         capabilities.dbman.find_all(options.store, null, null, function(list) {
           res.resolve(list);
@@ -780,7 +781,7 @@ var capabilities;
       },
       storage_store: function(options) {
         var promise = capabilities.mini_promise();
-        if(capabilities.dbman.not_ready(capabilities.storage_store, options, promise)) { return; }
+        if(capabilities.dbman.not_ready(capabilities.storage_store, options, promise)) { return promise; }
 
         capabilities.dbman.store(options.store, options.record, function(record) {
           promise.resolve(record);
@@ -791,7 +792,7 @@ var capabilities;
       },
       storage_remove: function(options) {
         var promise = capabilities.mini_promise();
-        if(capabilities.dbman.not_ready(capabilities.storage_remove, options, promise)) { return; }
+        if(capabilities.dbman.not_ready(capabilities.storage_remove, options, promise)) { return promise; }
 
         capabilities.dbman.remove(options.store, options.record_id, function(record) {
           promise.resolve(record);
@@ -841,210 +842,37 @@ var capabilities;
 
   })();
 
-  capabilities.setup_database = setup_database;
-  capabilities.idb = indexedDBSafe;
-  capabilities.delete_database = function() {
-    indexedDBSafe.deleteDatabase(capabilities.db_name);
-  };
-  function setup_database() {
-    console.log("setting up database");
+  capabilities.setup_database = function() {
     delete capabilities['db'];
     var user_name = stashes.get_db_id();
     var key = "coughDropStorage::" + (user_name || "__") + "===" + capabilities.db_key;
     capabilities.db_name = key;
-    var request = {};
-    var errored = false;
-    try {
-      request = indexedDBSafe.open(key, 2);
-    } catch(e) {
-      console.error("COUGHDROP: unexpected db throw");
-      console.log(e);
-      errored = true;
-    }
-    request = request || {};
-    request.onerror = function(event) {
-      if(!setup_database.already_tried) {
-        console.log('COUGHDROP: db failed once, trying again');
-        setup_database.already_tried = true;
-        setTimeout(function() {
-          setup_database();
-        }, 1500);
-      } else {
-        console.log(event);
-        if(!setup_database.already_tried_deleting) {
-          console.error("COUGHDROP: db failed to initialize, deleting database..");
-          indexedDBSafe.deleteDatabase(key);
-          setup_database.already_tried_deleting = true;
-          setTimeout(function() {
-            setup_database();
-          }, 500);
-        } else {
-          if(!setup_database.already_tried_deleting_all) {
-            console.error("COUGHDROP: db failed to initialize even after deleting, deleting other databases");
-            setup_database.already_tried_deleting_all = true;
-            if(indexedDBSafe.webkitGetDatabaseNames) {
-              indexedDBSafe.webkitGetDatabaseNames().onsuccess = function(res) {
-                if(res && res.target && res.target.result) {
-                  var count = res.target.result.length;
-                  for(var idx = 0; idx < count; idx++) {
-                    var str = res.target.result[idx];
-                    if(str && str.match(/^coughDropStorage/)) {
-                      indexedDBSafe.deleteDatabase(str);
-                    }
-                  }
-                  if(count > 0) {
-                    setTimeout(function() {
-                      setup_database();
-                    }, 500);
-                  }
-                }
-              };
-            }
-          } else {
-            console.error("COUGHDROP: db failed to initialize after repeated attempts");
-          }
-        }
-        capabilities.db_error_event = event;
-        capabilities.db = false;
-      }
-    };
-    request.onsuccess = function(event) {
-      console.log("COUGHDROP: db succeeded");
-      capabilities.db = request.result;
+
+    var promise = capabilities.mini_promise();
+
+    capabilities.dbman.setup_database(key, 2).then(function(db) {
+      stashes.db_connect(capabilities);
       setTimeout(function() {
-        use_database(capabilities.db);
-      }, 10);
-    };
+        (capabilities.queued_db_actions || []).forEach(function(m) {
+          m[0](m[1]).then(function(res) {
+            m[2].resolve(res);
+          }, function(err) {
+            m[2].reject(err);
+          });
+        });
+        capabilities.queued_db_actions = [];
+        promise.resolve();
+      }, 100);
+    }, function(err) {
+      promise.reject(err);
+    });
 
-    request.onupgradeneeded = function(event) {
-      var indexes_allowed = capabilities.system && capabilities.system != 'iOS';
-      var done_after_upgrade = capabilities.system && capabilities.system == 'iOS';
-      console.log("COUGHDROP: db upgrade needed");
-      var db = event.target.result;
-
-      if(event.oldVersion < 1 || event.oldVersion > 99999 || true) {
-        try {
-          var store_names = db.objectStoreNames || [];
-          var index_names;
-          if(!store_names.contains('board')) {
-            var boards = db.createObjectStore("board", { keyPath: "id" });
-            index_names = boards.indexNames || [];
-            if(!index_names.contains('key') && indexes_allowed) {
-              boards.createIndex("key", "key", {unique: false});
-            }
-            if(!index_names.contains('tmp_key') && indexes_allowed) {
-              boards.createIndex("tmp_key", "tmp_key", {unique: false});
-            }
-            if(!index_names.contains('changed') && indexes_allowed) {
-              boards.createIndex("changed", "changed", {unique: false});
-            }
-          }
-          if(!store_names.contains('image')) {
-            var images = db.createObjectStore("image", { keyPath: "id" });
-            index_names = images.index_names || [];
-            if(!index_names.contains('changed') && indexes_allowed) {
-              images.createIndex("changed", "changed", {unique: false});
-            }
-          }
-          if(!store_names.contains('buttonset')) {
-            var button_sets = db.createObjectStore("buttonset", { keyPath: "id" });
-            index_names = button_sets.index_names || [];
-          }
-          if(!store_names.contains('sound')) {
-            var sounds = db.createObjectStore("sound", { keyPath: "id" });
-            index_names = sounds.index_names || [];
-            if(!index_names.contains('changed') && indexes_allowed) {
-              sounds.createIndex("changed", "changed", {unique: false});
-            }
-          }
-          if(!store_names.contains('user')) {
-            var users = db.createObjectStore("user", { keyPath: "id" });
-            index_names = users.index_names || [];
-            if(!index_names.contains('changed') && indexes_allowed) {
-              users.createIndex("changed", "changed", {unique: false});
-            }
-            if(!index_names.contains('key') && indexes_allowed) {
-              users.createIndex("key", "key", {unique: false});
-            }
-          }
-          if(!store_names.contains('settings')) {
-            var settings = db.createObjectStore("settings", { keyPath: "storageId" });
-            index_names = settings.index_names || [];
-            if(!index_names.contains('changed') && indexes_allowed) {
-              settings.createIndex("changed", "changed", {unique: false});
-            }
-          }
-          if(!store_names.contains('dataCache')) {
-            var dataCache = db.createObjectStore("dataCache", { keyPath: "id" });
-            index_names = dataCache.index_names || [];
-          }
-          if(!store_names.contains('deletion')) {
-            var deletion = db.createObjectStore("deletion", { keyPath: "storageId" });
-            index_names = deletion.index_names || [];
-          }
-        } catch(e) {
-          console.error("COUGHDROP: db migrations failed");
-          console.error(e);
-          request.onerror();
-          db = null;
-        }
-        if(db && done_after_upgrade) {
-          setTimeout(function() {
-            if(!capabilities.db) {
-              capabilities.db = db;
-              console.log("COUGHDROP: db succeeded through onupgradeneeded");
-              use_database(capabilities.db);
-            }
-          }, 100);
-        }
-      }
-//       setTimeout(function() {
-//         capabilities.db = capabilities.db || db;
-//       }, 100)
-    };
-
-    request.onblocked = function(event) {
-      // If some other tab is loaded with the database, then it needs to be closed
-      // before we can proceed.
-      alert("Please close all other tabs with this site open!");
-    };
-
-    if(errored) {
-      request.onerror();
-    }
-  }
-
-  function use_database(db) {
-    console_debug("COUGHDROP: using indexedDB for offline sync"); // - " + capabilities.db_name);
-    stashes.db_connect(capabilities);
-    capabilities.db.onerror = function(event) {
-      // Generic error handler for all errors targeted at this database's
-      // requests!
-      var error = event.target && event.target.errorCode;
-      error = error || (event.target && event.target.error && event.target.error.message);
-      error = error || (event.target && event.target.__versionTransaction && event.target.__versionTransaction.error && event.target.__versionTransaction.error.message);
-      error = error || "unknown error";
-      console.log(event.target.error);
-      console.log(event.target);
-      console.error("Database error: " + error);
-      // capabilities.db = false;
-    };
-
-    capabilities.db.onversionchange = function(event) {
-      capabilities.db.close();
-      alert("A new version of this page is ready. Please reload!");
-      capabilities.db = false;
-    };
-
-    setTimeout(function() {
-      for(var idx = 0; idx < (capabilities.queued_db_actions || []).length; idx++) {
-        var m = capabilities.queued_db_actions[idx];
-        m[0](m[1]);
-      }
-      capabilities.queued_db_actions = [];
-    }, 100);
-    // https://developer.mozilla.org/en-US/docs/IndexedDB/Using_IndexedDB
-  }
+    return promise;
+  };
+  capabilities.delete_database = function() {
+    capabilities.dbman.delete_database(capabilities.db_name);
+  };
+  capabilities.idb = indexedDBSafe;
 
   capabilities.dbman = dbman;
   capabilities.original_dbman = capabilities.dbman;

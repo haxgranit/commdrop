@@ -42,10 +42,10 @@
 
     {{#if board.permissions.share}}
       <div style="margin: 20px 0;">
-        <h4>
-          {{t "Share with other users" key='share_with_others'}}
-        </h4>
         {{#if board.shared_users}}
+          <h4>
+            {{t "Shared with" key='shared_with_others'}}
+          </h4>
           <table class="table table-hover">
             {{#each board.shared_users as |user|}}
               <tr>
@@ -74,6 +74,9 @@
             {{/each}}
           </table>
         {{/if}}
+        <h4>
+          {{t "Share with other users" key='share_with_others'}}
+        </h4>
         <form {{action 'share_with_user'  on='submit'}} class="form-inline">
           <div class="row">
             <div class="col-sm-5 col-xs-6" style="margin-top: 5px;">
