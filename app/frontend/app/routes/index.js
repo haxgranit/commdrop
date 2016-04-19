@@ -22,7 +22,7 @@ export default Ember.Route.extend({
     }
   },
   setupController: function(controller, model) {
-    controller.set('user', this.get('store').createRecord('user', {preferences: {}}));
+    controller.set('user', this.get('store').createRecord('user', {preferences: {}, referrer: CoughDrop.referrer, ad_referrer: CoughDrop.ad_referrer}));
     controller.set('user.watch_user_name', true);
     CoughDrop.sale = CoughDrop.sale || parseInt(window.sale, 10) || null;
     controller.set('subscription', Subscription.create());
