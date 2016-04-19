@@ -8,7 +8,11 @@
       <div class="col-sm-12">
         <p>{{t "CoughDrop offers a set of additional voices for paid users on Android and iOS. Listen to the voice samples to find the voice that will work best for you. You can download up to %{available} premium voices for use on your devices." available=model.user.premium_voices.allowed key='premium_voices_select'}}</p>
         {{#unless premium_available}}
-          <p class="text-info">{{t "Premium voices are only available to paid users, and currently only work on the iOS and Android apps. If you would like to install a premium voice during your free trial, please let us know." key='premium_only_available_paid'}}</p>
+          {{#if app_state.currentUser.full_premium}}
+            <p class="text-info">{{t "Premium voices are only available on the iOS, Android and Amazon apps. Please install from the app store and try again." key='premium_only_available_mobile'}}</p>
+          {{else}}
+            <p class="text-info">{{t "Premium voices are available to paid users. If you would like to install a premium voice during your free trial, please reach out to us and let us know." key='premium_only_available_paid'}}</p>
+          {{/if}}
         {{else if voice_error}}
           <p class='text-danger'>{{voice_error}}</p>
         {{/unless}}
@@ -27,7 +31,7 @@
                   {{#if voice.claimed}}
                     <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
                   {{/if}}
-                  {{ voice.name }} - 
+                  {{ voice.name }} -
                   {{locale voice.locale}}
                 </td>
                 <td>
