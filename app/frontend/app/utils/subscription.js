@@ -301,6 +301,8 @@ var Subscription = Ember.Object.extend({
     if(!plan) {
       if(this.get('user.subscription.never_expires')) {
         return "free forever";
+      } else if(this.get('user.subscription.org_sponsored')) {
+        return "sponsored by " + this.get('user.subscription.managing_org_name');
       } else {
         return "no plan";
       }
@@ -319,7 +321,7 @@ var Subscription = Ember.Object.extend({
       schedule = "long-term ";
     }
     return type + schedule + amount;
-  }.property('subscription_plan', 'user.subscription.never_expires'),
+  }.property('subscription_plan', 'user.subscription.never_expires', 'user.subscription.org_sponsored'),
   purchase_description: function() {
     if(this.get('subscription_type') == 'monthly') {
       return i18n.t('subscribe', "Subscribe");
