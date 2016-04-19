@@ -72,7 +72,7 @@ class Device < ActiveRecord::Base
   end
   
   def inactivity_timeout(force_long_timeout=false)
-    (self.default_device? && !force_long_timeout) ? 6.hours.to_i : 14.days.to_i
+    force_long_timeout ? 14.days.to_i : 24.hours.to_i
   end
   
   def clean_old_keys
@@ -100,6 +100,7 @@ class Device < ActiveRecord::Base
       self.settings['app_version'] = app_version
       self.settings['app_versions'] ||= []
       self.settings['app_versions'] << [app_version, Time.now.to_i]
+      self.settings['app_versions'].uniq!(&:first)
       do_save = true
     end
     self.save if do_save

@@ -47,7 +47,7 @@ export default Ember.Component.extend({
       this.set('logging_in', true);
       this.set('login_error', null);
       var data = this.getProperties('identification', 'password', 'client_secret', 'long_token', 'browserless');
-      if(capabilities.browserless) {
+      if(capabilities.browserless || capabilities.installed_app) {
         data.long_token = true;
         data.browserless = true;
       }
