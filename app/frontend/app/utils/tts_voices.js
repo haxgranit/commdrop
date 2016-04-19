@@ -29,7 +29,7 @@ var voices = Ember.Object.extend({
   voices: [
     {
       name: "Ella", voice_id: "acap:Ella", size: 51,
-      locale: "en-US", gender: "f", age: "child", hq: true, 
+      locale: "en-US", gender: "f", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-USEnglish-Ella-22khz.zip",
       voice_dir: "hqm-ref-USEnglish-Ella-22khz",
       ref_id: "enu_ella_22k_ns",
@@ -37,7 +37,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Josh", voice_id: "acap:Josh", size: 32,
-      locale: "en-US", gender: "m", age: "child", hq: true, 
+      locale: "en-US", gender: "m", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-USEnglish-Josh-22khz.zip",
       voice_dir: "hqm-ref-USEnglish-Josh-22khz",
       ref_id: "enu_josh_22k_ns",
@@ -45,7 +45,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Scott", voice_id: "acap:Scott", size: 47,
-      locale: "en-US", gender: "m", age: "teen", hq: true, 
+      locale: "en-US", gender: "m", age: "teen", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-USEnglish-Scott-22khz.zip",
       voice_dir: "hqm-ref-USEnglish-Scott-22khz",
       ref_id: "enu_scott_22k_ns",
@@ -53,7 +53,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Emilio", voice_id: "acap:Emilio", size: 25,
-      locale: "en-US", gender: "m", age: "child", hq: true, 
+      locale: "en-US", gender: "m", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-USEnglish-Emilio-English-22khz.zip",
       voice_dir: "hqm-ref-USEnglish-Emilio-English-22khz",
       ref_id: "enu_emilioenglish_22k_ns",
@@ -61,7 +61,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Valeria", voice_id: "acap:Valeria", size: 26,
-      locale: "en-US", gender: "f", age: "child", hq: true, 
+      locale: "en-US", gender: "f", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-USEnglish-Valeria-English-22khz.zip",
       voice_dir: "hqm-ref-USEnglish-Valeria-English-22khz",
       ref_id: "enu_valeriaenglish_22k_ns",
@@ -159,7 +159,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Liam", voice_id: "acap:Liam", size: 36,
-      locale: "en-AU", gender: "m", age: "child", hq: true, 
+      locale: "en-AU", gender: "m", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-AustralianEnglish-Liam-22khz.zip",
       voice_dir: "hqm-ref-AustralianEnglish-Liam-22khz",
       ref_id: "en_au_liam_22k_ns",
@@ -167,7 +167,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Olivia", voice_id: "acap:Olivia", size: 36,
-      locale: "en-AU", gender: "f", age: "child", hq: true, 
+      locale: "en-AU", gender: "f", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-AustralianEnglish-Olivia-22khz.zip",
       voice_dir: "hqm-ref-AustralianEnglish-Olivia-22khz",
       ref_id: "en_au_olivia_22k_ns",
@@ -187,7 +187,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Harry", voice_id: "acap:Harry", size: 45,
-      locale: "en-UK", gender: "m", age: "child", hq: true, 
+      locale: "en-UK", gender: "m", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-British-Harry-22khz.zip",
       voice_dir: "hqm-ref-British-Harry-22khz",
       ref_id: "eng_harry_22k_ns",
@@ -195,7 +195,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Rosie", voice_id: "acap:Rosie", size: 42,
-      locale: "en-UK", gender: "f", age: "child", hq: true, 
+      locale: "en-UK", gender: "f", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-British-Rosie-22khz.zip",
       voice_dir: "hqm-ref-British-Rosie-22khz",
       ref_id: "eng_rosie_22k_ns",
@@ -239,7 +239,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Jonas", voice_id: "acap:Jonas", size: 39,
-      locale: "de-DE", gender: "m", age: "child", hq: true, 
+      locale: "de-DE", gender: "m", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-German-Jonas-22khz.zip",
       ref_id: "ged_jonas_22k_ns",
       voice_dir: "hqm-ref-German-Jonas-22khz",
@@ -247,7 +247,7 @@ var voices = Ember.Object.extend({
     },
     {
       name: "Lea", voice_id: "acap:Lea", size: 41,
-      locale: "de-DE", gender: "f", age: "child", hq: true, 
+      locale: "de-DE", gender: "f", age: "child", hq: true,
       voice_url: "https://s3.amazonaws.com/coughdrop/voices/hqm-ref-German-Lea-22khz.zip",
       ref_id: "ged_lea_22k_ns",
       voice_dir: "hqm-ref-German-Lea-22khz",
