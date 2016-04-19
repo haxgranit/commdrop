@@ -32,14 +32,13 @@ class ApplicationController < ActionController::Base
     end
     @token = token
     if token
-      # TODO: track last_used_at for each token, also device in general
       id = token.split(/~/)[0]
       @api_device = Device.find_by_global_id(id)
       if !['/api/v1/token_check'].include?(request.path)
         if !@api_device || !@api_device.valid_token?(token, request.headers['X-CoughDrop-Version'])
           @api_device = nil
           set_browser_token_header
-          api_error 400, {error: "Invalid token", token: token}
+          api_error 400, {error: (@api_device ? "Expired token" : "Invalid token"), token: token}
           return false
         end
       end
@@ -48,14 +47,11 @@ class ApplicationController < ActionController::Base
       Time.zone = "Mountain Time (US & Canada)"
       PaperTrail.whodunnit = user_for_paper_trail
 
-      # TODO: masquerading is too technical for end users, just have "speak mode as..."
-      # instead, and leave masquerading as an admin-only function if absolutely necessary
-      # to have at all.
       as_user = params['as_user_id'] || request.headers['X-As-User-Id']
       if @api_user && as_user
         @linked_user = User.find_by_path(as_user)
         admin = Organization.admin
-        if admin && admin.manager?(@api_user) && @linked_user #@linked_user && @linked_user != @api_user && @linked_user.allows?(@api_user, 'edit') 
+        if admin && admin.manager?(@api_user) && @linked_user
           @true_user = @api_user
           @api_user = @linked_user
           PaperTrail.whodunnit = "user:#{@true_user.global_id}:as:#{@api_user.global_id}"
