@@ -3,7 +3,7 @@
 <div id="loading_box" <% if crawler? %>style="display: none;"<% end %>>
   <h2 id="loading">
     <img src="/images/logo-big.png"/>
-    Loading CoughDrop...
+    Loading CoughDrop<%= " Demo" if params['embed'] %>...
     <span id="loading_message" style="display: none; font-size: 14px; font-weight: normal;">(this may take a little while...)</span>
   </h2>
   <%= render 'shared/footer' %>
@@ -17,15 +17,6 @@
     window.load_state = window.load_state || {};
     window.load_state.state = "init";
     window.load_state.init = true;
-
-//     window.addEventListener('message', function(event) {
-//       if(event.data && event.data == 'app_not_cached') {
-//         var slowly = document.getElementById('loading_slowly');
-//         if(slowly) {
-//           slowly.style.display = 'block';
-//         }
-//       }
-//     });
 
     function loadingSay(html) {
       var message = document.getElementById('loading_message');
