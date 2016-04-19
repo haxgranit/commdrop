@@ -1250,11 +1250,11 @@ Ember.$(document).on('change', '#image_upload,#sound_upload,#board_upload,#avata
   if(event.target.id == 'avatar_upload') { type = 'avatar'; }
   var files = event.target.files;
   contentGrabbers.file_selected(type, files);
-}).on('drop', '.button_container', function(event) {
+}).on('drop', '.button', function(event) {
   event.preventDefault();
   event.stopPropagation();
-  Ember.$('.button_container.drop_target').removeClass('drop_target');
-  var id = Ember.$(this).find('.button').attr('data-id');
+  Ember.$('.button.drop_target').removeClass('drop_target');
+  var id = Ember.$(this).attr('data-id');
   contentGrabbers.content_dropped(id, event.dataTransfer);
 }).on('drop', '.board_drop', function(event) {
   event.preventDefault();
