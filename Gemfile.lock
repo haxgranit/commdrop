@@ -141,7 +141,7 @@ GEM
     notiffany (0.0.8)
       nenv (~> 0.1)
       shellany (~> 0.0)
-    obf (0.7.1)
+    obf (0.7.2)
       CFPropertyList
       json
       mime-types
@@ -160,8 +160,8 @@ GEM
       activesupport (>= 3.1)
       arel
     phantomjs (1.9.8.0)
-    prawn (2.0.2)
-      pdf-core (~> 0.6.0)
+    prawn (2.1.0)
+      pdf-core (~> 0.6.1)
       ttfunk (~> 1.4.0)
     proxies (0.2.1)
     pry (0.10.3)
