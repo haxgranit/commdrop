@@ -412,6 +412,8 @@ var i18n = Ember.Object.extend({
       'alga': 'algae',
       'alumnus': 'alumnae',
       'larva': 'larvae',
+      'mouse': 'mice',
+      'goose': 'geese'
     },
     singulars: {
       'halves': 'half',
