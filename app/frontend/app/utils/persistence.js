@@ -1299,14 +1299,31 @@ var persistence = Ember.Object.extend({
       var _this = this;
       Ember.run.later(function() {
         // TODO: maybe do a quick xhr to a static asset to make sure we're for reals online?
-        _this.sync('self').then(null, function() { });
+        if(stashes.get('auth_settings')) {
+          var synced = _this.get('last_sync_at') || 1;
+          var now = (new Date()).getTime() / 1000;
+          // if we haven't synced in 1 hour and we're online, do a background sync
+          if((now - synced) > (60 * 60) && _this.get('online')) {
+            _this.sync('self').then(null, function() { });
+          }
+        }
         _this.tokens = {};
         if(CoughDrop.session) {
           CoughDrop.session.restore(!persistence.get('browserToken'));
         }
       }, 500);
     }
-  }.observes('online')
+  }.observes('online'),
+  check_for_needs_sync: function() {
+    if(stashes.get('auth_settings')) {
+      var synced = _this.get('last_sync_at') || 1;
+      var now = (new Date()).getTime() / 1000;
+      // if we haven't synced in 12 hours and we're online, do a background sync
+      if((now - synced) > (12 * 60 * 60) && persistence.get('online')) {
+        persistence.sync('self');
+      }
+    }
+  }.observes('refresh_stamp')
 }).create({online: (navigator.onLine)});
 stashes.set('online', navigator.onLine);
 
