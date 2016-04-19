@@ -6,7 +6,7 @@ export default Ember.Route.extend({
     var obj = this.store.findRecord('user', params.user_id);
     var _this = this;
     return obj.then(function(data) {
-      if(!data.get('fresh') && persistence.get('online')) {
+      if(!data.get('really_fresh') && persistence.get('online')) {
         Ember.run.later(function() {data.reload();});
       }
       return data;

@@ -13,6 +13,10 @@ export default Ember.Route.extend({
   model: function() {
     if(session.get('access_token')) {
       return CoughDrop.store.findRecord('user', 'self').then(function(user) {
+        // notifications and logs should show up when you re-visit the dashboard
+        if(!user.get('really_fresh') && persistence.get('online')) {
+          user.reload();
+        }
         return Ember.RSVP.resolve(user);
       }, function() {
         return Ember.RSVP.resolve(null);
