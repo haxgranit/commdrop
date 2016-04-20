@@ -20,6 +20,15 @@
       {{/if}}
     </div>
   </div>
+  {{#unless subscription.communicator_type}}
+    {{#if subscription.user.supervisors}}
+      <div class="form_group">
+        <div class="col-sm-9" style="padding-top: 10px;">
+          <p class='text-danger'>{{t "You have one or more supervisors assigned to your account. Supporter accounts aren't allowed to have supervisors, so keep in mind that signing up for this account type will automatically remove your supervisors." key='warning_supervisors_will_be_removed'}}</p>
+        </div>
+      </div>
+    {{/if}}
+  {{/unless}}
   {{#if subscription.special_type}}
     <div class="form-group">
       <div class="col-sm-12" style="padding-top: 20px;">
