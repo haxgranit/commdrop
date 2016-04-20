@@ -17,7 +17,8 @@ export default Ember.Controller.extend({
         list.push({id: 'recent_3', name: i18n.t('recent_3', "Signed up more than 3 weeks ago, used in the last week")});
         list.push({id: 'logged_2', name: i18n.t('logged_2', "Generated usage logs in the last 2 weeks")});
         list.push({id: 'setup_but_expired', name: i18n.t('setup_but_expired', "Used initially but now expired")});
-        list.push({id: 'free_supervisor_without_supervisees', name: i18n.t('free_supervisor_without_supervisees', "Free supervisors without any supervisees")});
+        list.push({id: 'active_free_supervisor_without_supervisees_or_org', name: i18n.t('active_free_supervisor_without_supervisees_or_org', "Active free supervisors without any supervisees or org")});
+        list.push({id: 'free_supervisor_with_supervisors', name: i18n.t('free_supervisor_with_supervisors', "Free supervisors with their own supervisors")});
         list.push({id: 'unused_3', name: i18n.t('unused_3', "Not used for the last 3 months")});
         list.push({id: 'unused_6', name: i18n.t('unused_6', "Not used for the last 6 months")});
         list.push({id: 'multiple_emails', name: i18n.t('multiple_emails', "Emails with multiple signups")});

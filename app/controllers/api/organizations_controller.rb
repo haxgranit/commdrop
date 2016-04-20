@@ -81,9 +81,9 @@ class Api::OrganizationsController < ApplicationController
       users = User.where(['created_at < ?', x.months.ago])
       if !org.admin?
         # TODO: sharding
-        users = user.where(:id => org.approved_users(false).map(&:id))
+        users = users.where(:id => org.approved_users(false).map(&:id))
       end
-      users = user.select{|u| u.devices.where(['updated_at < ?', x.months.ago]).count > 0 }
+      users = users.select{|u| u.devices.where(['updated_at < ?', x.months.ago]).count > 0 }
     elsif params['report'] == 'setup_but_expired'
       # logins that have set a home board, used it at least a week after registering, and have an expired trial
       x = 2
@@ -91,15 +91,29 @@ class Api::OrganizationsController < ApplicationController
     elsif params['report'] == 'current_but_expired'
       # logins that have set a home board, used it in the last two weeks, and have an expired trial
       x = 2
-      users = User.where(['expires_at < ?', Time.now]).select{|u| u.settings['preferences'] && u.settings['preferences']['home_board'] && u.devices.where(['updated_at > ?', x.weeks.ago]).count > 0 }
+      users = User.where(['expires_at < ?', Time.now]).select{|u| u.settings && u.settings['preferences'] && u.settings['preferences']['home_board'] }
+      # TODO: sharding
+      active_user_ids = Device.where(:user_id => users.map(&:id)).where(['updated_at > ?', x.weeks.ago]).map(&:user_id).uniq
+      users = users.select{|u| active_user_ids.include?(u.id) }
     elsif params['report'] == 'free_supervisor_without_supervisees'
       # logins that have changed to a free subscription after their trial but don't have any supervisees
       users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['free_premium'] && u.supervised_user_ids.blank? }
+    elsif params['report'] == 'free_supervisors_with_supervisors'
+      users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['free_premium'] && !u.supervisor_user_ids.blank? }
+    elsif params['report'] == 'active_free_supervisor_without_supervisees_or_org'
+      users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['free_premium'] && u.supervised_user_ids.blank? && !Organization.supervisor?(u) }
+      # TODO: sharding
+      active_user_ids = Device.where(:user_id => users.map(&:id)).where(['updated_at > ?', 2.weeks.ago]).map(&:user_id).uniq
+      users = users.select{|u| active_user_ids.include?(u.id) }
+    elsif params['report'] == 'eval_accounts'
+      users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['plan_id'] == 'eval_monthly_free' }
     elsif params['report'].match(/recent_/)
       # logins signed up more than 3 weeks ago that have been used in the last week
-      # TODO: this is too slow
       x = 3
-      users = User.where(['created_at < ?', x.weeks.ago]).select{|u| u.devices.where(['updated_at > ?', 1.week.ago]).count > 0 }
+      users = User.where(['created_at < ?', x.weeks.ago])
+      # TODO: sharding
+      active_user_ids = Device.where(:user_id => users.map(&:id)).where(['updated_at > ?', 1.week.ago]).map(&:user_id).uniq 
+      users = users.select{|u| active_user_ids.include?(u.id) }
     elsif params['report'] == 'new_users'
       x = 2
       users = User.where(['created_at > ?', x.weeks.ago])
