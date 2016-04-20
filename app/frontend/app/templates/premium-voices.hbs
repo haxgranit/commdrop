@@ -62,11 +62,12 @@
                     {{t "%{percent}%" percent=voice.download_progress}}
                     <span class="glyphicon glyphicon-refresh spinning"></span>
                   {{else}}
-                    {{#if voice.size}}
-                      {{t "%{size}Mb" size=voice.size key='megabytes'}}
-                    {{/if}}
                     {{#if premium_available}}
-                      <a href="#" {{action 'download_voice' voice}}><span class="glyphicon glyphicon-save"></span></a>
+                      <a href="#" {{action 'download_voice' voice}}>{{#if voice.size}}{{t "%{size}Mb " size=voice.size key='megabytes'}}{{/if}}<span class="glyphicon glyphicon-save"></span></a>
+                    {{else}}
+                      {{#if voice.size}}
+                        {{t "%{size}Mb " size=voice.size key='megabytes'}}
+                      {{/if}}
                     {{/if}}
                   {{/if}}
                 </td>
