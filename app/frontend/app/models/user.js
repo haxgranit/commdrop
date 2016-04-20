@@ -156,7 +156,7 @@ CoughDrop.User = DS.Model.extend({
   really_really_expired: function() {
     if(!this.get('expired')) { return false; }
     var now = window.moment();
-    var expires = window.moment(this.get('subscription.expires')).add(1000, 'day');
+    var expires = window.moment(this.get('subscription.expires')).add(5, 'year');
     return (expires < now);
   }.property('expired', 'subscription.expires'),
   expired_or_grace_period: function() {

@@ -78,24 +78,24 @@ describe Device, :type => :model do
       expect(d.settings['keys'][0]['value']).not_to eq(nil)
     end
     
-    it "should generate a short key for default devices" do
+    it "should generate a short key when no long-key specified" do
       d = Device.create(:device_key => 'default', :developer_key_id => 0)
       d.generate_token!
       expect(d.settings['keys']).not_to be_nil
       expect(d.settings['keys'].length).to eq(1)
       expect(d.settings['keys'][0]['timestamp']).to be > Time.now.to_i - 100
       expect(d.settings['keys'][0]['value']).not_to eq(nil)
-      expect(d.settings['keys'][0]['timeout']).to eq(6.hours.to_i)
+      expect(d.settings['keys'][0]['timeout']).to eq(24.hours.to_i)
     end
     
-    it "should generate a long key for non-default devices" do
+    it "should generate a short key for non-default devices when not specified" do
       d = Device.create()
       d.generate_token!
       expect(d.settings['keys']).not_to be_nil
       expect(d.settings['keys'].length).to eq(1)
       expect(d.settings['keys'][0]['timestamp']).to be > Time.now.to_i - 100
       expect(d.settings['keys'][0]['value']).not_to eq(nil)
-      expect(d.settings['keys'][0]['timeout']).to eq(14.days.to_i)
+      expect(d.settings['keys'][0]['timeout']).to eq(24.hours.to_i)
     end
     
     it "should generate a long key for default devices if specified" do
@@ -105,7 +105,7 @@ describe Device, :type => :model do
       expect(d.settings['keys'].length).to eq(1)
       expect(d.settings['keys'][0]['timestamp']).to be > Time.now.to_i - 100
       expect(d.settings['keys'][0]['value']).not_to eq(nil)
-      expect(d.settings['keys'][0]['timeout']).to eq(14.days.to_i)
+      expect(d.settings['keys'][0]['timeout']).to eq(28.days.to_i)
     end
     
     it "should track token generation history" do

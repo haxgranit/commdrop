@@ -72,7 +72,7 @@ class Device < ActiveRecord::Base
   end
   
   def inactivity_timeout(force_long_timeout=false)
-    force_long_timeout ? 14.days.to_i : 24.hours.to_i
+    force_long_timeout ? 28.days.to_i : 24.hours.to_i
   end
   
   def clean_old_keys
