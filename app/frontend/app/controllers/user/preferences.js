@@ -161,6 +161,12 @@ export default Ember.Controller.extend({
         result.push(voice);
       }
     });
+    if(result.length > 1) {
+      result.unshift({
+        id: 'default',
+        name: '[ Select A Voice ]'
+      });
+    }
     return result;
   }.property('application.voiceList', 'model.premium_voices.claimed'),
   active_sidebar_options: function() {
