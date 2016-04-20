@@ -100,7 +100,7 @@ class Device < ActiveRecord::Base
       self.settings['app_version'] = app_version
       self.settings['app_versions'] ||= []
       self.settings['app_versions'] << [app_version, Time.now.to_i]
-      self.settings['app_versions'].uniq!(&:first)
+      self.settings['app_versions'] = self.settings['app_versions'].uniq(&:first)
       do_save = true
     end
     self.save if do_save
