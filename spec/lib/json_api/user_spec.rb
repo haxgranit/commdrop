@@ -591,6 +591,58 @@ describe JsonApi::User do
       end
     end
     
+#       if json['subscription'] && json['subscription']['free_premium']
+#         json['subscription']['limited_supervisor'] = true
+#         json['subscription']['limited_supervisor'] = false if Organization.supervisor?(user)
+#         json['subscription']['limited_supervisor'] = false if supervisees.any?{|u| u.premium? }
+#       end
+
+    it "should mark the subscription as limited_supervisor if appropriate" do
+      u = User.create
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['subscription']['limited_supervisor']).to eq(nil)
+      
+      res = u.update_subscription({
+        'subscribe' => true,
+        'subscription_id' => '12345',
+        'plan_id' => 'slp_monthly_free'
+      })
+      expect(res).to eq(true)
+
+      u.reload
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['subscription']['free_premium']).to eq(true)
+      expect(hash['subscription']['limited_supervisor']).to eq(true)
+      
+      o = Organization.create
+      o.add_supervisor(u.user_name)
+      
+      u.reload
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['subscription']['free_premium']).to eq(true)
+      expect(hash['subscription']['limited_supervisor']).to eq(false)
+      
+      o.remove_supervisor(u.user_name)
+      u.reload
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['subscription']['free_premium']).to eq(true)
+      expect(hash['subscription']['limited_supervisor']).to eq(true)
+      
+      u2 = User.create
+      User.link_supervisor_to_user(u, u2)
+      u.reload
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['subscription']['free_premium']).to eq(true)
+      expect(hash['subscription']['limited_supervisor']).to eq(false)
+      
+      u2.expires_at = 1.week.ago
+      u2.save
+      u.reload
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['subscription']['free_premium']).to eq(true)
+      expect(hash['subscription']['limited_supervisor']).to eq(true)
+    end
+    
     describe "feature_flags" do
       it "should return a feature_flags object" do
         u = User.create

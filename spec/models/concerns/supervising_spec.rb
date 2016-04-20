@@ -326,6 +326,49 @@ describe Supervising, :type => :model do
       expect(o.reload.managed_user?(u)).to eq(false)
       expect(u.reload.managing_organization).to eq(nil)
     end
+    
+    it "should update a user's subscription if they're on a free trial and get added as a supervisor" do
+      u = User.create
+      u2 = User.create
+      User.link_supervisor_to_user(u, u2)
+      expect(u.reload.settings['subscription']['plan_id']).to eq('slp_monthly_free')
+      expect(u.settings['subscription']['subscription_id']).to eq('free_auto_adjusted')
+      expect(u.grace_period?).to eq(false)
+    end
+    
+    it "should unsubscribe an auto-subscribed user if they were on a free trial, got added as a supervisor, and then removed" do
+      u = User.create
+      exp = u.expires_at.to_i
+      u2 = User.create
+      User.link_supervisor_to_user(u, u2)
+      expect(u.reload.settings['subscription']['plan_id']).to eq('slp_monthly_free')
+      expect(u.settings['subscription']['subscription_id']).to eq('free_auto_adjusted')
+      expect(u.settings['subscription']['seconds_left']).to be > 2.weeks.to_i
+      expect(u.grace_period?).to eq(false)
+
+      User.unlink_supervisor_from_user(u, u2)
+      expect(u.reload.settings['subscription']['plan_id']).to eq(nil)
+      expect(u.settings['subscription']['subscription_id']).to eq(nil)
+      expect(u.settings['subscription']['seconds_left']).to eq(nil)
+      expect(u.expires_at.to_i).to eq(exp)
+      expect(u.grace_period?).to eq(true)
+    end
+    
+    it "should remove all supervisors when a user subscribes to a free supporter plan" do
+      u = User.create
+      u2 = User.create
+      u3 = User.create
+      User.link_supervisor_to_user(u3, u)
+      u.reload
+      User.link_supervisor_to_user(u, u2)
+      u.reload
+      expect(u.reload.settings['subscription']['plan_id']).to eq('slp_monthly_free')
+      expect(u.settings['subscription']['subscription_id']).to eq('free_auto_adjusted')
+      expect(u.grace_period?).to eq(false)
+      expect(u.supervisors).to eq([u3])
+      Worker.process_queues
+      expect(u.reload.supervisors).to eq([])
+    end
   end
   
   describe "managed_users" do

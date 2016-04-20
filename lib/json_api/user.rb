@@ -85,7 +85,7 @@ module JsonApi::User
       end
       if json['subscription'] && json['subscription']['free_premium']
         json['subscription']['limited_supervisor'] = true
-        json['subscription']['limited_supervisor'] = false if Organization.supervisor?(self)
+        json['subscription']['limited_supervisor'] = false if Organization.supervisor?(user)
         json['subscription']['limited_supervisor'] = false if supervisees.any?{|u| u.premium? }
       end
       

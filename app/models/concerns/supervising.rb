@@ -129,6 +129,7 @@ module Supervising
   end
   
   def remove_supervisors!
+    user = self
     self.supervisors.each do |sup|
       User.unlink_supervisor_from_user(sup, user)
     end
@@ -141,7 +142,7 @@ module Supervising
       supervisor.settings['supervisees'] = (supervisor.settings['supervisees'] || []).select{|s| s['user_id'] != user.global_id }
       # TODO: force browser refresh for supervisor after an unlink?
       # If a user was auto-subscribed for being added as a supervisor, un-subscribe them when removed
-      if supervisor.settings['supervisees'].empty? && supervisor.settings && supervisor.settings['subscription'] && supervisor.settings['subscription_id'] == 'free_auto_adjusted'
+      if supervisor.settings['supervisees'].empty? && supervisor.settings && supervisor.settings['subscription'] && supervisor.settings['subscription']['subscription_id'] == 'free_auto_adjusted'
         supervisor.update_subscription({
           'unsubscribe' => true,
           'subscription_id' => 'free_auto_adjusted',
@@ -153,7 +154,7 @@ module Supervising
     end
     
     def link_supervisor_to_user(supervisor, user, code=nil, editor=true)
-      raise "free_premium users can't add supervisors" if user.free_premium?
+      # raise "free_premium users can't add supervisors" if user.free_premium?
       user.settings['supervisors'] = (user.settings['supervisors'] || []).select{|s| s['user_id'] != supervisor.global_id }
       user.settings['supervisors'] << {
         'user_id' => supervisor.global_id,

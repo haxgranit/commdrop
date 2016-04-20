@@ -932,30 +932,6 @@ describe Subscription, :type => :model do
     end
   end
   
-#   def transfer_subscription_to(user, skip_remote_update=false)
-#     transfer_keys = ['started', 'plan_id', 'subscription_id', 'token_summary', 'free_premium', 
-#       'never_expires', 'seconds_left', 'customer_id', 'prior_customer_ids', 'prior_purchase_ids']
-#     did_change = false
-#     transfer_keys.each do |key|
-#       self.settings['subscription'] ||= {}
-#       user.settings['subscription'] ||= {}
-#       if self.settings['subscription'][key] != nil
-#         did_change = true if ['subscription_id', 'customer_id'].include?(key)
-#         user.settings['subscription'][key] = self.settings['subscription'][key]
-#         self.settings['subscription'].delete(key)
-#       end
-#     end
-#     if did_change && !skip_remote_update
-#       Purchasing.change_user_id(user.settings['subscription']['customer_id'], self.global_id, user.global_id)
-#     end
-#     user.settings['subscription']['transferred_from'] ||= []
-#     user.settings['subscription']['transferred_from'] << self.global_id
-#     user.save
-#     self.settings['subscription']['transferred_to'] ||= []
-#     self.settings['subscription']['transferred_to'] << user.global_id
-#     self.save
-#   end
-
   describe "transfer_subscription_to" do
     it "should move attributes from one user to another" do
       u1 = User.create

@@ -176,7 +176,7 @@ class User < ActiveRecord::Base
     self.settings['preferences']['devices']['default']['name'] ||= "Web browser for Desktop"
     self.settings['preferences']['devices'].each do |key, hash|
       User.preference_defaults['device'].each do |attr, val|
-        self.settings['preferences']['devices'][key][attr] ||= val
+        self.settings['preferences']['devices'][key][attr] = val if self.settings['preferences']['devices'][key][attr] == nil
       end
     end
     self.settings['preferences']['disable_quick_sidebar'] = false if self.settings['preferences']['quick_sidebar']
