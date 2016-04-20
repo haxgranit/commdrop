@@ -114,6 +114,7 @@ module Subscription
         self.settings['pending'] = false unless self.settings['subscription']['free_premium']
         self.expires_at = nil
         self.save
+        self.schedule(:remove_supervisors!) if self.free_premium?
       end
     elsif args['unsubscribe']
       if (args['subscription_id'] && self.settings['subscription']['subscription_id'] == args['subscription_id']) || args['subscription_id'] == 'all'

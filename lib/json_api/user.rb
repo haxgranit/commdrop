@@ -83,6 +83,11 @@ module JsonApi::User
       if supervisees.length > 0
         json['supervisees'] = supervisees[0, 10].map{|u| JsonApi::User.as_json(u, limited_identity: true, supervisor: user) }
       end
+      if json['subscription'] && json['subscription']['free_premium']
+        json['subscription']['limited_supervisor'] = true
+        json['subscription']['limited_supervisor'] = false if Organization.supervisor?(self)
+        json['subscription']['limited_supervisor'] = false if supervisees.any?{|u| u.premium? }
+      end
       
       if user.settings['user_notifications'] && user.settings['user_notifications'].length > 0
         json['notifications'] = user.settings['user_notifications'].select{|n| Time.parse(n['added_at']) > 2.weeks.ago }[0, 5]

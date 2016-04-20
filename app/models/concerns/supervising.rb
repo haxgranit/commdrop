@@ -128,17 +128,32 @@ module Supervising
     end
   end
   
+  def remove_supervisors!
+    self.supervisors.each do |sup|
+      User.unlink_supervisor_from_user(sup, user)
+    end
+  end
+  
   module ClassMethods  
     def unlink_supervisor_from_user(supervisor, user)
       user.settings['supervisors'] = (user.settings['supervisors'] || []).select{|s| s['user_id'] != supervisor.global_id }
       user.save
       supervisor.settings['supervisees'] = (supervisor.settings['supervisees'] || []).select{|s| s['user_id'] != user.global_id }
       # TODO: force browser refresh for supervisor after an unlink?
+      # If a user was auto-subscribed for being added as a supervisor, un-subscribe them when removed
+      if supervisor.settings['supervisees'].empty? && supervisor.settings && supervisor.settings['subscription'] && supervisor.settings['subscription_id'] == 'free_auto_adjusted'
+        supervisor.update_subscription({
+          'unsubscribe' => true,
+          'subscription_id' => 'free_auto_adjusted',
+          'plan_id' => 'slp_monthly_free'
+        })
+      end
       supervisor.schedule_once(:update_available_boards)
       supervisor.save
     end
     
     def link_supervisor_to_user(supervisor, user, code=nil, editor=true)
+      raise "free_premium users can't add supervisors" if user.free_premium?
       user.settings['supervisors'] = (user.settings['supervisors'] || []).select{|s| s['user_id'] != supervisor.global_id }
       user.settings['supervisors'] << {
         'user_id' => supervisor.global_id,
@@ -151,6 +166,15 @@ module Supervising
       if !supervisor.settings['supporter_role_auto_set']
         supervisor.settings['supporter_role_auto_set'] = true
         supervisor.settings['preferences']['role'] = 'supporter'
+      end
+      # If a user is on a free trial and they're added as a supervisor, set them to a free supporter subscription
+      if supervisor.grace_period?
+        supervisor.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => 'free_auto_adjusted',
+          'token_summary' => "Automatically-set Supporter Account",
+          'plan_id' => 'slp_monthly_free'
+        })
       end
       supervisor.settings['supervisees'] = (supervisor.settings['supervisees'] || []).select{|s| s['user_id'] != user.global_id }
       supervisor.settings['supervisees'] << {
