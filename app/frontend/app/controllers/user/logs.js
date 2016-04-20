@@ -46,7 +46,7 @@ export default Ember.Controller.extend({
         modal.open('quick-assessment', _this.get('model')).then(function() {
           _this.send('refresh');
         });
-      });
+      }, function() { });
     },
     refresh: function() {
       if(!this.get('model.id')) { return; }

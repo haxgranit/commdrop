@@ -248,7 +248,7 @@ export default Ember.Controller.extend({
         var _this = this;
         modal.open('quick-assessment', user);
       } else {
-        modal.open('premium-required', {action: 'quick_assessment'});
+        modal.open('premium-required', {user_name: user.user_name, action: 'quick_assessment'});
       }
     },
     getting_started: function() {

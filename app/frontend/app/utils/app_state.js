@@ -378,11 +378,9 @@ var app_state = Ember.Object.extend({
       if(mode == 'edit') {
         stashes.persist('last_mode', stashes.get('current_mode'));
       } else if(mode == 'speak') {
-        var speaking_as_someone_else = app_state.get('speakModeUser.id') && app_state.get('speakModeUser.id') != app_state.get('sessionUser.id');
-        // TODO: consider some kind of reminder for free subscription accounts, if you
-        // think they shouldn't be using as a speak mode user
-        if(app_state.get('currentUser') && !opts.reminded && app_state.get('currentUser.expired') && !speaking_as_someone_else) {
-          return modal.open('premium-required', {remind_to_upgrade: true, action: 'app_speak_mode'}).then(function() {
+        var already_speaking_as_someone_else = app_state.get('speakModeUser.id') && app_state.get('speakModeUser.id') != app_state.get('sessionUser.id');
+        if(app_state.get('currentUser') && !opts.reminded && app_state.get('currentUser.expired_or_limited_supervisor') && !already_speaking_as_someone_else) {
+          return modal.open('premium-required', {user_name: app_state.get('currentUser.user_name'), limited_supervisor: app_state.get('currentUser.subscription.limited_supervisor'), remind_to_upgrade: true, action: 'app_speak_mode'}).then(function() {
             opts.reminded = true;
             app_state.toggle_mode(mode, opts);
           });
@@ -421,7 +419,7 @@ var app_state = Ember.Object.extend({
     var preferred = (speak_mode_user && speak_mode_user.get('preferences.home_board')) || opts.fallback_board_state || stashes.get('root_board_state') || {key: 'example/yesno'};
     // TODO: same as above, in .toggle_mode
     if(speak_mode_user && !opts.reminded && speak_mode_user.get('expired')) {
-      return modal.open('premium-required', {remind_to_upgrade: true, action: 'app_speak_mode'}).then(function() {
+      return modal.open('premium-required', {user_name: speak_mode_user.get('user_name'), remind_to_upgrade: true, action: 'app_speak_mode'}).then(function() {
         opts.reminded = true;
         app_state.home_in_speak_mode(opts);
       });
@@ -615,16 +613,20 @@ var app_state = Ember.Object.extend({
   }.property('header_size', 'speak_mode'),
   check_for_full_premium: function(user, action) {
     if(user && user.get('expired')) {
-      return modal.open('premium-required', {action: action});
+      return modal.open('premium-required', {user_name: user.get('user_name'), action: action}).then(function() {
+        return Ember.RSVP.reject({dialog: true});;
+      });
     } else {
-      return Ember.RSVP.resolve();
+      return Ember.RSVP.resolve({dialog: false});
     }
   },
   check_for_really_expired: function(user) {
     if(user && user.get('really_expired')) {
-      return modal.open('premium-required', {cancel_on_close: true, remind_to_upgrade: true});
+      return modal.open('premium-required', {user_name: user.get('user_name'), cancel_on_close: true, remind_to_upgrade: true}).then(function() {
+        return Ember.RSVP.reject({dialog: true});
+      });
     } else {
-      return Ember.RSVP.resolve();
+      return Ember.RSVP.resolve({dialog: false});
     }
   },
   speak_mode_handlers: function() {

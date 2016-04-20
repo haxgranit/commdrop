@@ -202,12 +202,12 @@ export default Ember.Controller.extend({
       persistence.sync(this.get('model.id'), true).then(null, function() { });
     },
     quick_assessment: function() {
-      app_state.check_for_full_premium(this.get('model', 'quick_assessment')).then(function() {
-        var _this = this;
-        modal.open('quick-assessment', this.get('model')).then(function() {
+      var _this = this;
+      app_state.check_for_full_premium(_this.get('model', 'quick_assessment')).then(function() {
+        modal.open('quick-assessment', _this.get('model')).then(function() {
           _this.reload_logs();
         });
-      });
+      }, function() { });
     },
     approve_or_reject_org: function(approve) {
       var user = this.get('model');
@@ -231,7 +231,7 @@ export default Ember.Controller.extend({
       var _this = this;
       app_state.check_for_full_premium(this.get('model'), 'add_supervisor').then(function() {
         modal.open('add-supervisor', {user: _this.get('model')});
-      });
+      }, function() { });
     },
     view_devices: function() {
       modal.open('device-settings', this.get('model'));

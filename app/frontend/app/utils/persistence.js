@@ -1315,6 +1315,7 @@ var persistence = Ember.Object.extend({
     }
   }.observes('online'),
   check_for_needs_sync: function() {
+    var _this = this;
     if(stashes.get('auth_settings')) {
       var synced = _this.get('last_sync_at') || 1;
       var now = (new Date()).getTime() / 1000;

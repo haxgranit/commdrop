@@ -197,7 +197,7 @@ export default Ember.Controller.extend({
       // currently-speaking user must have active paid subscription to do video recording
       app_state.check_for_full_premium(app_state.get('speakModeUser'), 'record_session').then(function() {
         alert("not yet implemented");
-      });
+      }, function() { });
     },
     toggleEditMode: function(decision) {
       app_state.check_for_really_expired(app_state.get('sessionUser')).then(function() {

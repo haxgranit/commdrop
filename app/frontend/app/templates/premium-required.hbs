@@ -6,25 +6,36 @@
     </h3>
   </div>
   <div class="modal-body">
-    <span class="glyphicon glyphicon-info-sign" style="float: left; margin-right: 10px; font-size: 30px;"></span> 
+    <span class="glyphicon glyphicon-info-sign" style="float: left; margin-right: 10px; font-size: 30px;"></span>
     {{#if model.remind_to_upgrade}}
       <p>
-        {{t "Your premium membership has expired. CoughDrop is a powerful service that helps many users communicate. Please " key='please_subscribe_1'}}
-        {{#link-to 'user.subscription' app_state.currentUser.user_name}}{{t "purchase a premium subscription" key='please_subscribe_2'}}{{/link-to}}
+        {{t "This user's premium membership has expired. CoughDrop is a powerful service that helps many users communicate. Please " key='please_subscribe_1'}}
+        {{#link-to 'user.subscription' model.user_name}}{{t "purchase a premium subscription" key='please_subscribe_2'}}{{/link-to}}
         {{t "to support this good cause." key='please_subscribe_3'}}
       </p>
-      <p>
-        {{t "Remember, therapists, parents and other supporting users can sign up for a free subscription used for supporting communicators. If you need help with your subscription, please don't hesitate to reach out to us." key='please_subscribe_4'}}
-      </p>
+      {{#if model.limited_supervisor}}
+        <p>
+          {{t "Are you a professional using CoughDrop to do evals for your clients? We want you to be able to show your clients everything CoughDrop can do! Please" key='update_to_eval_if_needed_1'}}
+          {{#link-to 'contact'}}{{t "reach out to us" key='reach_out_to_us'}}{{/link-to}}
+          {{t " and we can update your account for you." key='update_to_eval_if_needed_2'}}
+        </p>
+      {{else}}
+        <p>
+          {{t "Remember, therapists, parents and other supporting users can sign up for a free subscription used for supporting communicators. If you need help with your subscription, please don't hesitate to reach out to us." key='please_subscribe_4'}}
+        </p>
+      {{/if}}
     {{else}}
       <p>
         {{t "CoughDrop is a powerful, flexible communication tool with lots of great features. Some features, including this one, are only available to users who have a paid premium subscription. Please " key='purchase_subscription_1'}}
-        {{#if app_state.currentUser}}
-          {{#link-to 'user.subscription' app_state.currentUser.user_name}}{{t "purchase a premium subscription" key='purchase_subscription_2'}}{{/link-to}}
+        {{#if model.user_name}}
+          {{#link-to 'user.subscription' model.user_name}}{{t "purchase a premium subscription" key='purchase_subscription_2'}}{{/link-to}}
         {{else}}
           {{t "purchase a premium subscription" key='purchase_subscription_2'}}
         {{/if}}
-        {{t "to support this good cause and to unlock this feature. Remember, therapists, parents and other supporting users can sign up for a free subscription used for supporting communicators." key='purchase_subscription_3'}}
+        {{t "to support this good cause and to unlock this feature." key='purchase_subscription_3'}}
+      </p>
+      <p>
+        {{t "Remember, therapists, parents and other supporting users can sign up for a free subscription used for supporting communicators." key='purchase_subscription_4'}}
       </p>
     {{/if}}
     <div style="clear: left;"></div>
