@@ -98,7 +98,7 @@ class Api::OrganizationsController < ApplicationController
     elsif params['report'] == 'free_supervisor_without_supervisees'
       # logins that have changed to a free subscription after their trial but don't have any supervisees
       users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['free_premium'] && u.supervised_user_ids.blank? }
-    elsif params['report'] == 'free_supervisors_with_supervisors'
+    elsif params['report'] == 'free_supervisor_with_supervisors'
       users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['free_premium'] && !u.supervisor_user_ids.blank? }
     elsif params['report'] == 'active_free_supervisor_without_supervisees_or_org'
       users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['free_premium'] && u.supervised_user_ids.blank? && !Organization.supervisor?(u) }
