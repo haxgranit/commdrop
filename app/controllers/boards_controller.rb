@@ -31,7 +31,7 @@ class BoardsController < ApplicationController
     if board && board.old_link? && request.path != "/#{board.key}"
       return redirect_to "/#{board.key}"
     end
-    @meta_record = board && board.meta_record
+    @meta_record = board && board.public && board.meta_record
     if request.path.match(/\./)
       raise ActiveRecord::RecordNotFound.new("Board paths can't have dots, so this is invalid: #{request.path}")
     end
