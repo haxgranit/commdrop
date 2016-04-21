@@ -255,19 +255,19 @@ describe SessionController, :type => :controller do
       expect(d.user).to eq(u)
     end
     
-    it "should not respect expired browser token" do
-      token = 15.days.ago.strftime('%Y%j')
-      token += '-' + Security.sha512(token, 'browser_token')
-      expect(Security.valid_browser_token_signature?(token)).to eq(true)
-      expect(Security.valid_browser_token?(token)).to eq(false)
-      u = User.new(:user_name => "fred")
-      u.generate_password("seashell")
-      u.save
-      post :token, :grant_type => 'password', :client_id => 'browser', :client_secret => token, :username => 'fred', :password => 'seashell'
-      expect(response).not_to be_success
-      json = JSON.parse(response.body)
-      expect(json['error']).to eq('Invalid authentication attempt')
-    end
+#     it "should not respect expired browser token" do
+#       token = 15.days.ago.strftime('%Y%j')
+#       token += '-' + Security.sha512(token, 'browser_token')
+#       expect(Security.valid_browser_token_signature?(token)).to eq(true)
+#       expect(Security.valid_browser_token?(token)).to eq(false)
+#       u = User.new(:user_name => "fred")
+#       u.generate_password("seashell")
+#       u.save
+#       post :token, :grant_type => 'password', :client_id => 'browser', :client_secret => token, :username => 'fred', :password => 'seashell'
+#       expect(response).not_to be_success
+#       json = JSON.parse(response.body)
+#       expect(json['error']).to eq('Invalid authentication attempt')
+#     end
     
     it "should error on invalid login attempt" do
       token = Security.browser_token

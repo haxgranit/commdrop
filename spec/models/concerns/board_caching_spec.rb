@@ -291,12 +291,17 @@ describe BoardCaching, :type => :model do
     # if me and someone else supervise each other, we shouldn't get caught in a loop on update
     it "should not get stuck in supervision loops" do
       u1 = User.create(:user_name => "user1")
+      u1.update_subscription('subscribe' => true, 'plan_id' => 'slp_monthly_free', 'subscription_id' => 'free')
       u2 = User.create(:user_name => "user2")
+      u2.update_subscription('subscribe' => true, 'plan_id' => 'slp_monthly_free', 'subscription_id' => 'free')
+      Worker.process_queues
+      expect(u1.reload.grace_period?).to eq(false)
+      expect(u2.reload.grace_period?).to eq(false)
       b = Board.create(:user => u1)
       User.link_supervisor_to_user(u1.reload, u2.reload)
       User.link_supervisor_to_user(u2.reload, u1.reload)
-      expect(u1.supervisors).to eq([u2])
-      expect(u2.supervisors).to eq([u1])
+      expect(u1.reload.supervisors).to eq([u2])
+      expect(u2.reload.supervisors).to eq([u1])
       u1.reload.update_available_boards
       expect(Worker.scheduled?(User, :perform_action, {
         'id' => u2.id,
@@ -304,6 +309,8 @@ describe BoardCaching, :type => :model do
         'arguments' => []
       })).to eq(true)
       Worker.process_queues
+      expect(u1.reload.supervisors).to eq([u2])
+      expect(u2.reload.supervisors).to eq([u1])
       expect(Worker.scheduled?(User, :perform_action, {
         'id' => u1.id,
         'method' => 'update_available_boards',

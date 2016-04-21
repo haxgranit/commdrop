@@ -587,10 +587,10 @@ describe('app_state', function() {
       });
       var browserless = capabilities.browserless;
       capabilities.browserless = true;
-      app_state.set('sessionUser', Ember.Object.create({expired: true}));
+      app_state.set('sessionUser', Ember.Object.create({expired_or_limited_supervisor: true, user_name: 'frederick'}));
       app_state.toggle_mode('speak');
       expect(found_template).toEqual('premium-required');
-      expect(found_settings).toEqual({remind_to_upgrade: true, action: 'app_speak_mode'});
+      expect(found_settings).toEqual({remind_to_upgrade: true, action: 'app_speak_mode', user_name: 'frederick', limited_supervisor: undefined});
       capabilities.browserless = browserless;
     });
 
