@@ -614,7 +614,7 @@ var app_state = Ember.Object.extend({
   check_for_full_premium: function(user, action) {
     if(user && user.get('expired')) {
       return modal.open('premium-required', {user_name: user.get('user_name'), action: action}).then(function() {
-        return Ember.RSVP.reject({dialog: true});;
+        return Ember.RSVP.reject({dialog: true});
       });
     } else {
       return Ember.RSVP.resolve({dialog: false});
