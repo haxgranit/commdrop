@@ -470,7 +470,7 @@ export default Ember.Controller.extend({
     if(button_to_speak.modified && !button_to_speak.in_progress) {
       obj.completion = obj.completion || button_to_speak.label;
     }
-    console.log(obj);
+//    console.log(obj);
     stashes.log(obj);
 
     if(button.load_board && button.load_board.key) {

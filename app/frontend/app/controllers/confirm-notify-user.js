@@ -6,7 +6,6 @@ import CoughDrop from '../app';
 export default modal.ModalController.extend({
   opening: function() {
     this.set('loading', false);
-    console.log(this.get('model.user'));
     this.set('error', false);
   },
   actions: {

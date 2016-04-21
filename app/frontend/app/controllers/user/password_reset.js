@@ -18,7 +18,6 @@ export default Ember.Controller.extend({
     }
   }.observes('model.password', 'model.password2'),
   cantSubmit: function() {
-    console.log('ahem');
     this.checkPassword();
     return !!(this.get('badPassword') || this.get('password_reset.succeeded'));
   }.property('badPassword', 'password_reset.succeeded'),

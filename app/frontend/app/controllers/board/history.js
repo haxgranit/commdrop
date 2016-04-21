@@ -23,7 +23,6 @@ export default Ember.Controller.extend({
       });
     });
     res = Utils.uniq(res, function(b) { return b.id; });
-    console.log(res);
     return res;
   }.property('versions')
 });

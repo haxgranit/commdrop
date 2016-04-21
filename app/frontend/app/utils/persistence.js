@@ -1389,7 +1389,6 @@ persistence.DSExtend = {
             ref_id = 'self';
           }
           return persistence.store_eventually(type.modelName, record, ref_id).then(function() {
-            console.log(record);
             return Ember.RSVP.resolve(record);
           }, function() {
             return Ember.RSVP.reject({error: "failed to delayed-persist to local db"});

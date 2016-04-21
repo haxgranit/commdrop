@@ -3,7 +3,7 @@ import CoughDrop from '../app';
 // import i18n from './i18n';
 // import modal from './modal';
 
-// NOTE: there is an assumption that each stashed value is independent and 
+// NOTE: there is an assumption that each stashed value is independent and
 // non-critical, so for example if one attribute got renamed it would not
 // break anything, or affect any other value.
 var memory_stash = {};
@@ -128,7 +128,7 @@ var stashes = Ember.Object.extend({
   },
   persist_object: function(key, obj, include_prefix) {
     var _this = this;
-    // Why aren't we using client-side encryption? 
+    // Why aren't we using client-side encryption?
     // http://matasano.com/articles/javascript-cryptography/
     // Since the encryption key would have to be stored in either localStorage
     // or IndexedDB, anyone who has access to the datastores also has
@@ -255,7 +255,7 @@ var stashes = Ember.Object.extend({
         };
       }
       if(log_event) {
-        console.log(log_event);
+//        console.log(log_event);
         stashes.persist('last_event', log_event);
         usage_log.push(log_event);
       }
@@ -298,7 +298,7 @@ var stashes = Ember.Object.extend({
     var diff = (usage_log && usage_log[0] && usage_log[0].timestamp) ? (timestamp - usage_log[0].timestamp) : -1;
     // TODO: add listener on persistence.online and trigger this log save stuff when reconnected
     if(CoughDrop.session && CoughDrop.session.get('user_name') && stashes.get('online') && usage_log.length > 0) {
-      // If there's more than 10 events, or it's been more than 1 hour 
+      // If there's more than 10 events, or it's been more than 1 hour
       // since the last recorded event.
       if(usage_log.length > 10 || diff == -1 || diff > (60 * 60 * 1000) || !only_if_convenient) {
         var history = [].concat(usage_log);

@@ -2,7 +2,7 @@ import Ember from 'ember';
 import CoughDrop from '../../app';
 import i18n from '../../utils/i18n';
 
-export default Ember.Component.extend({ 
+export default Ember.Component.extend({
   didInsertElement: function() {
     this.draw();
   },
@@ -10,7 +10,7 @@ export default Ember.Component.extend({
     var stats = this.get('usage_stats');
     var ref_stats = this.get('ref_stats');
     var elem = this.get('element').getElementsByClassName('daily_stats')[0];
-    
+
     CoughDrop.Visualizations.wait('word-graph', function() {
       if(elem && stats && stats.get('days')) {
         var raw_data = [[i18n.t('day', "Day"), i18n.t('total_words', "Total Words"), i18n.t('unique_words', "Unique Words")]];
@@ -44,13 +44,12 @@ export default Ember.Component.extend({
           colors: ['#428bca', '#444444' ],
           pointSize: 3
         };
-        
+
         var chart = new window.google.visualization.LineChart(elem);
         window.google.visualization.events.addListener(chart, 'select', function() {
           var selection = chart.getSelection()[0];
           var row = raw_data[selection.row + 1];
           console.log("selected date!");
-          console.log(row);
         });
         chart.draw(data, options);
       }

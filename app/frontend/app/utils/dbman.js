@@ -31,7 +31,7 @@ var dbman = {
     return false;
   },
   success: function(record) {
-    console.log(record);
+//    console.log(record);
   },
   error: function(err) {
     console.error(err);

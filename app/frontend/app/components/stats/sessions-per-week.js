@@ -11,7 +11,6 @@ export default Ember.Component.extend({
     var stats = this.get('weekly_stats');
 
     CoughDrop.Visualizations.wait('bar', function() {
-      console.log(stats);
       if(elem && stats) {
 
         var data = new window.google.visualization.DataTable();
@@ -23,7 +22,6 @@ export default Ember.Component.extend({
           var m = window.moment(new Date(s.timestamp * 1000));
           rows.push([{v: m._d, f: m.format('MMM DD, YYYY')}, s.sessions]);
         });
-        console.log(rows);
         data.addRows(rows);
 
         var options = {

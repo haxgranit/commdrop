@@ -61,7 +61,6 @@ var scanner = Ember.Object.extend({
           label: $option.text()
         });
       });
-      console.log(menu);
       row.children.push(menu);
 
       // TODO: figure out sidebar, when teaser is visible and also when the

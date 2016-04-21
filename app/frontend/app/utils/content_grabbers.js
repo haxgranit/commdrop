@@ -340,7 +340,6 @@ var pictureGrabber = Ember.Object.extend({
       contentGrabbers.avatar_result(true, 'loading');
     }
     var sizer = reader.then(function(data) {
-      console.log(data.target.result);
       window.result = data.target.result;
       return pictureGrabber.size_image(data.target.result);
     });
@@ -1226,7 +1225,6 @@ var linkGrabber = Ember.Object.extend({
     }
     this.controller.set('model.apps.' + os, app);
     this.controller.set('foundApps', null);
-    console.log(this.controller.get('model.apps'));
   },
   set_custom: function() {
     var os = this.controller.get('app_find_mode') || 'ios';

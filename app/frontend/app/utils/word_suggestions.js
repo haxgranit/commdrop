@@ -48,7 +48,6 @@ var word_suggestions = Ember.Object.extend({
               type: "GET",
               dataType: data_type
             }).then(function(res) {
-              console.log(res);
               if(data_type == 'text') {
                 res = JSON.parse(res.text);
               }
@@ -152,21 +151,21 @@ var word_suggestions = Ember.Object.extend({
     // Compute the edit distance between the two given strings
     if(a.length === 0) { return b.length; }
     if(b.length === 0) { return a.length; }
- 
+
     var matrix = [];
- 
+
     // increment along the first column of each row
     var i;
     for(i = 0; i <= b.length; i++){
       matrix[i] = [i];
     }
- 
+
     // increment each column in the first row
     var j;
     for(j = 0; j <= a.length; j++){
       matrix[0][j] = j;
     }
- 
+
     // Fill in the rest of the matrix
     for(i = 1; i <= b.length; i++){
       for(j = 1; j <= a.length; j++){
@@ -179,7 +178,7 @@ var word_suggestions = Ember.Object.extend({
         }
       }
     }
- 
+
     return matrix[b.length][a.length];
   }
 }).create({pieces: 10, max_results: 5});
