@@ -1,4 +1,5 @@
 import CoughDrop from '../app';
+import extras from '../utils/extras';
 
 export default {
   name: 'defer_readiness',
@@ -7,5 +8,6 @@ export default {
       CoughDrop.app = app;
       app.deferReadiness();
     }
+    extras.advance('init');
   }
 };

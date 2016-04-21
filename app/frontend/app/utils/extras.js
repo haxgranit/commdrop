@@ -12,6 +12,30 @@ import capabilities from './capabilities';
     }
   };
 
+  var ready = function(type) {
+    ready.types = ready.types || {};
+    ready.types[type] = true;
+    if(ready.type_callbacks[type]) {
+      ready.type_callbacks[type].forEach(function(cb) {
+        cb();
+      });
+      ready.type_callbacks[type] = null;
+    }
+    if(ready.types.init && ready.types.extras && ready.types.device) {
+      CoughDrop.app.advanceReadiness();
+    }
+  };
+  ready.watch = function(type, callback) {
+    ready.types = ready.types || {};
+    ready.type_callbacks = ready.type_callbacks || {};
+    if(ready.types[type]) {
+      callback();
+    } else {
+      ready.type_callbacks[type] = ready.type_callbacks[type] || [];
+      ready.type_callbacks[type].push(callback);
+    }
+  };
+
   var extras = Ember.Object.extend({
     setup: function(container, application) {
       application.register('cough_drop:extras', extras, { instantiate: false, singleton: true });
@@ -19,6 +43,7 @@ import capabilities from './capabilities';
         application.inject(component, 'extras', 'cough_drop:extras');
       });
     },
+    advance: ready,
     enable: function() {
       if(this.get('ready')) { return; }
 
@@ -30,11 +55,7 @@ import capabilities from './capabilities';
       if(window.speechSynthesis) {
         console_debug("COUGHDROP: tts enabled");
       }
-      if(!CoughDrop || !CoughDrop.app) {
-        window.cough_drop_readiness = true;
-      } else {
-        CoughDrop.app.advanceReadiness();
-      }
+      extras.advance('extras');
     },
     storage: {
       find: function(store, key) {
@@ -261,9 +282,11 @@ import capabilities from './capabilities';
   extras.meta_push = Ember.$.ajax.meta_push;
 
   window.coughDropExtras = extras;
-  capabilities.invoke({type: 'coughDropExtras', method: 'init'}).then(function(res) {
-    extras.enable();
-  }, function(err) {
+  extras.advance.watch('device', function() {
+    capabilities.invoke({type: 'coughDropExtras', method: 'init'}).then(function(res) {
+      extras.enable();
+    }, function(err) {
+    });
   });
 })();
 

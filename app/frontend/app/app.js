@@ -75,6 +75,14 @@ CoughDrop.embedded = !!location.href.match(/embed=1/);
 CoughDrop.ad_referrer = (location.href.match(/\?ref=([^\#]+)/) || [])[1];
 CoughDrop.referrer = document.referrer;
 
+if(capabilities.wait_for_deviceready) {
+  document.addEventListener('deviceready', function() {
+    coughDropExtras.advance('device');
+  });
+} else {
+  coughDropExtras.advance('device');
+}
+
 
 loadInitializers(CoughDrop, config.modulePrefix);
 

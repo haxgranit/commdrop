@@ -11,6 +11,7 @@ export default {
   name: 'session',
   initialize: function(container, app) {
     CoughDrop.app = app;
+    CoughDrop.container = container;
     session.setup(container, app);
     session.restore();
     persistence.setup(container, app);

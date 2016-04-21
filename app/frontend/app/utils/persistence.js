@@ -34,17 +34,19 @@ var persistence = Ember.Object.extend({
         persistence.sync('self');
       }, 2000);
     }
-    if(!CoughDrop.ignore_filesystem) {
-      capabilities.storage.status().then(function(res) {
-        if(res.available && !res.requires_confirmation) {
-          res.allowed = true;
-        }
-        persistence.set('local_system', res);
-      });
-      Ember.run.later(function() {
-        persistence.prime_caches().then(null, function() { });
-      }, 1000);
-    }
+    coughDropExtras.advance.watch('device', function() {
+      if(!CoughDrop.ignore_filesystem) {
+        capabilities.storage.status().then(function(res) {
+          if(res.available && !res.requires_confirmation) {
+            res.allowed = true;
+          }
+          persistence.set('local_system', res);
+        });
+        Ember.run.later(function() {
+          persistence.prime_caches().then(null, function() { });
+        }, 1000);
+      }
+    });
   },
   test: function(method, args) {
     method.apply(this, args).then(function(res) {
