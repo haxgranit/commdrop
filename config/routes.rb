@@ -110,6 +110,7 @@ Coughdrop::Application.routes.draw do
   scope 'api/v1', module: 'api' do
     post 'forgot_password' => 'users#forgot_password'
     post 'messages' => 'messages#create'
+    post 'callback' => 'callbacks#callback'
     
     resources :boards, :constraints => {:id => board_id_regex} do
       get 'stats' => 'boards#stats'
@@ -122,6 +123,7 @@ Coughdrop::Application.routes.draw do
       post 'share_response' => 'boards#share_response'
       get 'copies' => 'boards#copies'
     end
+    
     
     resources :users do
       get 'stats/daily' => 'users#daily_stats'

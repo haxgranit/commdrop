@@ -21,6 +21,7 @@ gem 'uglifier', '>= 1.3.0'
 gem 'typhoeus'
 gem 'coffee-rails'
 gem 'aws-ses'
+gem 'aws-sdk'
 gem 'resque'
 gem 'rails_12factor', group: :production
 gem 'heroku-deflater', :group => :production

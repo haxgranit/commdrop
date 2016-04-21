@@ -13,15 +13,23 @@ module Uploadable
   
   def full_filename
     return self.settings['full_filename'] if self.settings['full_filename']
-    digits = self.id.to_s.split(//)
     extension = ""
     type = MIME::Types[self.content_type]
     type = type && type[0]
     extension = ("." + type.extensions.first) if type && type.extensions && type.extensions.length > 0
-    sha = Security.sha512(self.global_id, self.created_at.iso8601)
-    self.settings['full_filename'] = self.file_type + "/" + digits.join("/") + "/" + self.global_id + "-" + sha + extension
+    self.settings['full_filename'] = self.file_path + self.file_prefix + extension
     self.save
     self.settings['full_filename']
+  end
+  
+  def file_prefix
+    sha = Security.sha512(self.global_id, self.created_at.iso8601)
+    self.global_id + "-" + sha
+  end
+  
+  def file_path
+    digits = self.id.to_s.split(//)
+    self.file_type + "/" + digits.join("/") + "/"
   end
   
   def content_type

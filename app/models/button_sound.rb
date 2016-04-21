@@ -2,6 +2,7 @@ class ButtonSound < ActiveRecord::Base
   include Processable
   include Permissions
   include Uploadable
+  include MediaObject
   include Async
   include GlobalId
   include SecureSerialize
@@ -10,6 +11,7 @@ class ButtonSound < ActiveRecord::Base
   has_many :board_button_sounds
   belongs_to :user
   before_save :generate_defaults
+  after_save :schedule_transcoding_once
   replicated_model  
 
   has_paper_trail :only => [:settings, :board_id, :user_id, :public, :path, :url, :data]
