@@ -365,6 +365,7 @@ var dbman = {
       capabilities.idb.deleteDatabase(db_name);
       promise.resolve(db_name);
     } else if(dbman.db_type == 'sqlite_plugin') {
+      // https://github.com/litehelpers/Cordova-sqlite-storage
       if(window.sqlitePlugin) {
         dbman.sqlite.deleteDatabase({name: db_name, location: 'default'}, function() {
           promise.resolve(db_name);
