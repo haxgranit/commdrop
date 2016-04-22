@@ -1,6 +1,8 @@
 import Ember from 'ember';
 import speecher from '../utils/speecher';
 import modal from '../utils/modal';
+import stashes from '../utils/_stashes';
+import capabilities from '../utils/capabilities';
 import i18n from '../utils/i18n';
 import contentGrabbers from '../utils/content_grabbers';
 
@@ -11,7 +13,9 @@ export default Ember.Controller.extend({
     {key: 'speech_synthesis', name: i18n.t('speech_synthesis', "Speech Synthesis"), description: i18n.t('speech_synthesis_info', "Most modern web browsers implement a Speech Synthesis engine that can be used to turn text into speech."), tests: ['1', '2', '3']},
     {key: 'speech_synthesis_voices', name: i18n.t('speech_synthesis_voices', "Speech Synthesis Voices"), description: i18n.t('speech_synthesis_info', "If your device supports Speech Synthesis, it should have one or more voices installed by default. Sometimes voices can get \"lost\" and stop appearing on the device.")},
     {key: 'file_uploads', name: i18n.t('file_uploads', "File Uploads"), description: i18n.t('file_uploads_info', "Not all browsers support the modern file uploading features that CoughDrop uses. If your device doesn't, most modern desktop browsers should upload just fine.")},
-    {key: 'indexed_db', name: i18n.t('indexed_db', "IndexedDB"), description: i18n.t('indexed_db_info', "IndexedDB is a storage tool used to download boards and board contents so that CoughDrop can still work even without an Internet connection.")},
+    {key: 'file_storage', name: i18n.t('file_storage', "File Storage"), description: i18n.t('file_storage_info', "Devices and some browsers allow you to store files for offline use. If this feature is not available, some files can be stored in the database but you may run into storage errors.")},
+    {key: 'indexed_db', name: i18n.t('indexed_db', "IndexedDB"), description: i18n.t('indexed_db_info', "IndexedDB is a storage tool used to download boards and board contents so that CoughDrop can still work even without an Internet connection. If the device's memory gets full sometimes these databases will be automatically (and unexpectedly) deleted.")},
+    {key: 'sqlite', name: i18n.t('sqlite', "SQLite"), description: i18n.t('sqlite_info', "SQLite is another storage tool used to download boards and board contents so that CoughDrop can still work even without an Internet connection. SQLite databases aren't available on as many devices, but won't get deleted without permission.")},
     {key: 'media_recording', name: i18n.t('media_recording', "Media Recording"), description: i18n.t('media_recording_info', "Media Recording allows you to take pictures and record audio using your device's webcam. Some mobile devices use their own built-in media recording tools instead of CoughDrop's recorders.")},
     {key: 'xhr_cors', name: i18n.t('xhr_cors', "XHR/CORS"), description: i18n.t('xhr_cors_info', "In order to work offline, CoughDrop needs to download images from multiple web sites. XHR/CORS is not required for this to work, but it makes the download process more efficient.")},
     {key: 'canvas', name: i18n.t('canvas', "HTML5 Canvas"), description: i18n.t('canvas_info', "CoughDrop lets you crop and colorize images to better match your board requirements, and it uses something called the Canvas element to make that happen.")},
@@ -72,7 +76,7 @@ export default Ember.Controller.extend({
       } else {
           Ember.set(test, 'results', {passed: false, reason: "setItem failed"});
       }
-    } catch(e) { 
+    } catch(e) {
       Ember.set(test, 'results', {passed: false, reason: e.toString()});
     }
   },
@@ -80,6 +84,13 @@ export default Ember.Controller.extend({
     if(window.indexedDB && window.indexedDB == window.shimIndexedDB) {
       Ember.set(test, 'results', {partially_passed: true, reason: "IndexedDB Shim used to add support"});
     } else if(window.indexedDB) {
+      Ember.set(test, 'results', {passed: true});
+    } else {
+      Ember.set(test, 'results', {passed: false});
+    }
+  },
+  run_sqlite_test: function(test) {
+    if(capabilities.dbman.sqlite) {
       Ember.set(test, 'results', {passed: true});
     } else {
       Ember.set(test, 'results', {passed: false});
@@ -98,9 +109,9 @@ export default Ember.Controller.extend({
     var _this = this;
     var url = "https://s3.amazonaws.com/opensymbols/libraries/arasaac/parrot.png?xhcr=1";
     var xhr = new XMLHttpRequest();
-    xhr.addEventListener('load', function(r) { 
-      if(xhr.status == 200) { 
-        contentGrabbers.read_file(xhr.response).then(function(s) { 
+    xhr.addEventListener('load', function(r) {
+      if(xhr.status == 200) {
+        contentGrabbers.read_file(xhr.response).then(function(s) {
           Ember.set(test, 'results', {passed: true});
         }, function() {
           Ember.set(test, 'results', {passed: false, reason: "file reading failed"});
@@ -109,10 +120,10 @@ export default Ember.Controller.extend({
         Ember.set(test, 'results', {passed: false, reason: "CORS request failed"});
       }
     });
-    xhr.addEventListener('error', function() { 
+    xhr.addEventListener('error', function() {
       Ember.set(test, 'results', {passed: false, reason: "URL lookup failed"});
     });
-    xhr.addEventListener('abort', function() { 
+    xhr.addEventListener('abort', function() {
       Ember.set(test, 'results', {passed: false, reason: "URL lookup aborted"});
     });
     // Adding the query parameter because I suspect that if a URL has already
@@ -124,6 +135,21 @@ export default Ember.Controller.extend({
   },
   run_file_uploads_test: function(test) {
     Ember.set(test, 'results', {passed: !!(window.Blob && window.Uint8Array) });
+  },
+  run_file_storage_test: function(test) {
+    capabilities.storage.status().then(function(res) {
+      if(res.available) {
+        if(res.requires_confirmation) {
+          Ember.set(test, 'results', {partially_passed: true, reason: "Requires user permission"});
+        } else {
+          Ember.set(test, 'results', {passed: true})
+        }
+      } else {
+        Ember.set(test, 'results', {passed: false})
+      }
+    }, function(err) {
+      Ember.set(test, 'results', {passed: false})
+    });
   },
   run_canvas_test: function(test) {
     var red_dot = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
@@ -138,7 +164,7 @@ export default Ember.Controller.extend({
       red_image.src = red_dot;
       var svg_image = new Image();
       svg_image.src = svg;
-      
+
       Ember.run.later(function() {
         if(red_image.complete) {
           if(svg_image.complete) {
@@ -174,7 +200,7 @@ export default Ember.Controller.extend({
           Ember.set(test, 'results', {passed: false, reason: "Data-URIs not supported"});
         }
       }, 100);
-      
+
     } else {
       Ember.set(test, 'results', {passed: false, reason: "Canvas element not enabled"});
     }
@@ -182,7 +208,7 @@ export default Ember.Controller.extend({
   },
   run_audio_playback_test: function(test) {
     var dones = [];
-    
+
     var audio = document.createElement('audio');
     audio.style.display = "none";
     audio.src = "https://opensymbols.s3.amazonaws.com/blank.mp3";
@@ -259,7 +285,7 @@ export default Ember.Controller.extend({
     }
   },
   run_fullscreen_test: function(test) {
-    if(window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) {
+    if(capabilities.fullscreen_capable()) {
       Ember.set(test, 'results', {passed: true});
     } else {
       Ember.set(test, 'results', {passed: false});
@@ -279,12 +305,65 @@ export default Ember.Controller.extend({
       Ember.set(test, 'results', {passed: false});
     }
   },
+  check_persistence_data: function() {
+    var _this = this;
+    _this.set('storage', {pending: true});
+    capabilities.storage.all_files().then(function(res) {
+      _this.set('storage', {size: Math.round(res.size * 10 / 1024 / 1024) / 10});
+    }, function(err) {
+      _this.set('storage', {size: 'unknown'});
+    });
+
+    _this.set('local_storage', false);
+    try {
+      localStorage.setItem('cough_drop_test2', 'nah');
+      if(localStorage['cough_drop_test2'] == 'nah') {
+        localStorage.removeItem('cough_drop_test2');
+        _this.set('local_storage', true);
+      }
+    } catch(e) { }
+
+    _this.set('db', null);
+    if(capabilities.db) {
+      if(capabilities.dbman.sqlite) {
+        _this.set('db', {type: 'SQLite'});
+      } else if(capabilities.idb) {
+        _this.set('db', {type: 'IndexedDB'});
+      }
+    }
+  },
   actions: {
+    reload: function() {
+      location.reload();
+    },
+    clear_file_storage: function() {
+      var _this = this;
+      _this.set('should_reload', true);
+      capabilities.storage.clear().then(function() {
+        _this.check_persistence_data();
+      }, function() {
+        _this.check_persistence_data();
+      });
+    },
+    clear_databases: function() {
+      var _this = this;
+      _this.set('should_reload', true);
+      capabilities.delete_database().then(function() {
+        _this.check_persistence_data();
+      }, function() {
+        _this.check_persistence_data();
+      });
+    },
+    clear_local_storage: function() {
+      var _this = this;
+      _this.set('should_reload', true);
+      stashes.flush();
+    },
     run_default_tests: function() {
       this.set('testing', true);
       var _this = this;
       this.tests.forEach(function(test) {
-        Ember.run.later(function() { 
+        Ember.run.later(function() {
           _this['run_' + test.key + '_test'](test);
           Ember.run.later(function() {
             if(!Ember.get(test, 'results')) {
@@ -293,6 +372,7 @@ export default Ember.Controller.extend({
           }, 5000);
         });
       });
+      this.check_persistence_data();
     },
     test_feature: function(feature, num) {
       if(feature == 'speech_synthesis') {

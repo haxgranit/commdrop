@@ -76,16 +76,73 @@
       </table>
 
       <h4 style="margin-top: 50px;">{{t "App Details" key='app_details'}}</h4>
-      <p>
-        <span class="text-muted" style="margin-left: 20px; font-size: 12px;">
-          {{t "app version:" key='version'}} {{app_state.version}}
-        </span>
-      </p>
-      <p>
-        <span class="text-muted" style="margin-left: 20px; font-size: 12px;">
-          {{t "recognized device:" key='version'}} {{app_state.device_name}}
-        </span>
-      </p>
+      <table class='table table-striped table-hover' style='max-width: 400px'>
+        <tbody>
+          {{#if should_reload}}
+            <tr>
+              <td colspan='3' class='text-danger'>
+                {{t "After clearing, you should really reload" key='should_reload'}}<br/>
+                <button class='btn btn-primary' {{action 'reload'}}>{{t "Reload Now" key='reload_now'}}</button>
+              </td>
+            </tr>
+          {{/if}}
+          {{#if storage}}
+            <tr>
+              <td style='vertical-align: middle;'>{{t "File Storage" key='file_storage'}}</td>
+              <td style='vertical-align: middle;'>
+                {{#if storage.pending}}
+                  {{t "Checking..." key='checking'}}
+                {{else}}
+                  {{t "%{size}Mb" size=storage.size key='megabytes'}}
+                {{/if}}
+              </td>
+              <td style='vertical-align: middle;'>
+                <button class='btn btn-default' {{action 'clear_file_storage'}}>{{t "Clear" key='clear'}}</button>
+              </td>
+            </tr>
+          {{/if}}
+          <tr>
+            <td style='vertical-align: middle;'>{{t "Databases" key='databases'}}</td>
+            <td style='vertical-align: middle;'>
+              {{#if db.pending}}
+                {{t "Checking..." key='checking'}}
+              {{else if db}}
+                {{db.type}}
+              {{else}}
+                {{t "none" key='none'}}
+              {{/if}}
+            </td>
+            <td style='vertical-align: middle;'>
+              {{#if db}}
+                <button class='btn btn-default' {{action 'clear_databases'}}>{{t "Clear" key='clear'}}</button>
+              {{/if}}
+            </td>
+          </tr>
+          <tr>
+            <td style='vertical-align: middle;'>{{t "Local Storage" key='local_storage'}}</td>
+            <td style='vertical-align: middle;'>
+              {{#if local_storage}}
+                {{t "available" key='available'}}
+              {{else}}
+                {{t "not available" key='not_available'}}
+              {{/if}}
+            </td>
+            <td style='vertical-align: middle;'>
+              {{#if local_storage}}
+                <button class='btn btn-default' {{action 'clear_local_storage'}}>{{t "Clear" key='clear'}}</button>
+              {{/if}}
+            </td>
+          </tr>
+          <tr class='text-muted'>
+            <td>{{t "App Version" key='version'}}</td>
+            <td colspan='2'>{{app_state.version}}</td>
+          </tr>
+          <tr class='text-muted'>
+            <td>{{t "Recognized Device" key='version'}}</td>
+            <td colspan='2'>{{app_state.device_name}}</td>
+          </tr>
+        </tbody>
+      </table>
     {{/unless}}
   </div>
 </div>

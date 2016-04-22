@@ -363,11 +363,19 @@ var dbman = {
 
     if(dbman.db_type == 'indexeddb') {
       capabilities.idb.deleteDatabase(db_name);
+      if(capabilities.db_name == db_name) {
+        capabilities.db = false;
+        capabilities.db_name = null;
+      }
       promise.resolve(db_name);
     } else if(dbman.db_type == 'sqlite_plugin') {
       // https://github.com/litehelpers/Cordova-sqlite-storage
-      if(window.sqlitePlugin) {
+      if(dbman.sqlite && dbman.sqlite) {
         dbman.sqlite.deleteDatabase({name: db_name, location: 'default'}, function() {
+          if(capabilities.db_name == db_name) {
+            capabilities.db = false;
+            capabilities.db_name = null;
+          }
           promise.resolve(db_name);
         }, function(err) {
           promise.reject(err);

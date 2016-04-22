@@ -23,7 +23,7 @@ class ContactMessage < ActiveRecord::Base
     ['name', 'email', 'subject', 'message', 'recipient'].each do |key|
       self.settings[key] = params[key] if params[key]
     end
-    ['ip_address', 'user_agent'].each do |key|
+    ['ip_address', 'user_agent', 'version'].each do |key|
       self.settings[key] = non_user_params[key] if non_user_params[key]
     end
     if non_user_params['api_user']
@@ -47,8 +47,9 @@ class ContactMessage < ActiveRecord::Base
     if user
       body += (user.user_name) + '<br/>'
     end
-    body += (self.settings['ip_address'] || 'no IP address found') + '<br/>'
-    body += (self.settings['user_agent'] || 'no user agent found') + "</span>"
+    body += (self.settings['ip_address'] ? "ip address: #{self.settings['ip_address']}" : 'no IP address found') + '<br/>'
+    body += (self.settings['version'] ? "app version: #{self.settings['version']}" : 'no app version found') + '<br/>'
+    body += (self.settings['user_agent'] ? "browser: #{self.settings['user_agend']}" : 'no user agent found') + "</span>"
     basic_auth = "#{ENV['ZENDESK_USER']}/token:#{ENV['ZENDESK_TOKEN']}"
     endpoint = "https://#{ENV['ZENDESK_DOMAIN']}/api/v2/tickets.json"
     json = {

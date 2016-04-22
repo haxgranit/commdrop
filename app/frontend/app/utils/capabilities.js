@@ -341,6 +341,66 @@ var capabilities;
           }
           return promise;
         },
+        clear: function() {
+          var promise = capabilities.mini_promise();
+          capabilities.storage.all_files().then(function(list) {
+            var cleared = 0;
+            list.forEach(function(file) {
+              capabilities.storage.remove_file(file.dir, file.name).then(function() {
+                cleared++;
+                if(cleared == list.length) {
+                  promise.resolve(list.length);
+                }
+              }, function(err) {
+                cleared++;
+                promise.reject(err);
+              });
+            });
+          }, function(err) {
+            promise.reject(err);
+          });
+          return promise;
+        },
+        all_files: function() {
+          var promise = capabilities.mini_promise();
+          var all_files = [];
+          var size = 0;
+          capabilities.storage.root_entry().then(function(root) {
+            var dirs = [];
+            var reader = root.createReader();
+            reader.readEntries(function(list) {
+              list.forEach(function(e) {
+                if(e.isDirectory) {
+                  dirs.push(e.name);
+                }
+              });
+              var done_dirs = 0;
+              dirs.forEach(function(dir) {
+                capabilities.storage.list_files(dir).then(function(list) {
+                  done_dirs++;
+                  list.forEach(function(file) {
+                    all_files.push({
+                      name: file,
+                      dir: dir
+                    });
+                  });
+                  size = size + (list.size || 0);
+                  if(done_dirs == dirs.length) {
+                    all_files.size = size;
+                    promise.resolve(all_files);
+                  }
+                }, function(err) {
+                  promise.reject(err);
+                });
+              });
+            }, function(err) {
+              promise.reject(err);
+            });
+          }, function(err) {
+            promise.reject(err);
+          });
+          return promise;
+        },
         assert_directory: function(key, filename) {
           var promise = capabilities.mini_promise();
           var sub_key = filename ? filename.substring(0, 4) : null;
@@ -373,6 +433,7 @@ var capabilities;
           var promise = capabilities.mini_promise();
           capabilities.storage.assert_directory(dirname).then(function(dir) {
             var res = [];
+            res.size = 0;
             var dirs = [dir];
             var next_dir = function(go_deeper) {
               var dir = dirs.shift();
@@ -381,6 +442,10 @@ var capabilities;
                 reader.readEntries(function(list) {
                   list.forEach(function(e) {
                     if(e.isFile) {
+                      // TODO: this is a race condition, I'm bad but I'm ignoring it
+                      e.getMetadata(function(metadata) {
+                        res.size = res.size + metadata.size;
+                      }, function() { });
                       res.push(e.name);
                     } else if(e.isDirectory && go_deeper) {
                       dirs.push(e);
@@ -870,7 +935,7 @@ var capabilities;
     return promise;
   };
   capabilities.delete_database = function() {
-    capabilities.dbman.delete_database(capabilities.db_name);
+    return capabilities.dbman.delete_database(capabilities.db_name);
   };
   capabilities.idb = indexedDBSafe;
 
