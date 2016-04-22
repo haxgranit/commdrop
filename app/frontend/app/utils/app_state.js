@@ -96,34 +96,45 @@ var app_state = Ember.Object.extend({
     CoughDrop.session = route.get('session');
     modal.close();
     if(session.get('access_token')) {
-      var find = CoughDrop.store.findRecord('user', 'self');
+      var find_user = function(last_try) {
+        var find = CoughDrop.store.findRecord('user', 'self');
 
-      find.then(function(user) {
-        console.log("user initialization working..");
-        if(!user.get('fresh') && stashes.get('online')) {
-          user.reload().then(function(user) {
-            app_state.set('sessionUser', user);
-          }, function() { });
-        }
-        app_state.set('sessionUser', user);
+        find.then(function(user) {
+          console.log("user initialization working..");
+          if(!user.get('fresh') && stashes.get('online')) {
+            user.reload().then(function(user) {
+              app_state.set('sessionUser', user);
+            }, function() { });
+          }
+          app_state.set('sessionUser', user);
 
-        if(stashes.get('speak_mode_user_id')) {
-          CoughDrop.store.findRecord('user', stashes.get('speak_mode_user_id')).then(function(user) {
-            app_state.set('speakModeUser', user);
-          }, function() {
-            console.error('failed trying to speak as ' + stashes.get('speak_mode_user_id'));
-          });
-        }
-      }, function(err) {
-        if(stashes.get('current_mode') == 'edit') {
-          controller.toggleMode('edit');
-        }
-        console.log(err);
-        console.error("user initialization failed");
-        if(err.status == 400 && (err.error == 'Not authorized' || err.error == "Invalid token")) {
-          session.invalidate(true);
-        }
-      });
+          if(stashes.get('speak_mode_user_id')) {
+            CoughDrop.store.findRecord('user', stashes.get('speak_mode_user_id')).then(function(user) {
+              app_state.set('speakModeUser', user);
+            }, function() {
+              console.error('failed trying to speak as ' + stashes.get('speak_mode_user_id'));
+            });
+          }
+        }, function(err) {
+          if(stashes.get('current_mode') == 'edit') {
+            controller.toggleMode('edit');
+          }
+          console.log(err);
+          console.log(err.status);
+          console.log(err.error);
+          var do_logout = err.status == 400 && (err.error == 'Not authorized' || err.error == "Invalid token");
+          console.log("will log out: " + (do_logout || last_try));
+          console.error("user initialization failed");
+          if(do_logout || last_try) {
+            session.invalidate(true);
+          } else {
+            Ember.run.later(function() {
+              find_user(true);
+            }, 250);
+          }
+        });
+      };
+      find_user();
     }
     session.addObserver('access_token', function() {
       Ember.run.later(function() {
