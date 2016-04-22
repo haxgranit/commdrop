@@ -2,18 +2,19 @@ require 'aws-sdk'
 
 module Transcoder
   def self.handle_event(args)
-    job = config.read_job({id: args['jobId']})
+    res = config.read_job({id: args['jobId']})
+    job = res && res.job
     return false if !job || !job.user_metadata
     progress = Progress.find_by_global_id(job.user_metadata['progress_id'])
     record = nil
     new_record = {}
     if job.user_metadata['conversion_type'] == 'audio'
-      record = ButtonSound.find_by_global_id(job.user_metadata['audio_id']
+      record = ButtonSound.find_by_global_id(job.user_metadata['audio_id'])
       new_record['filename'] = job.outputs[0].key
       new_record['duration'] = job.outputs[0].duration
       new_record['content_type'] = 'audio/mp3'
     elsif job.user_metadata['conversion_type'] == 'video'
-      record = ButtonSound.find_by_global_id(job.user_metadata['video_id']
+      record = ButtonSound.find_by_global_id(job.user_metadata['video_id'])
       new_record['filename'] = job.outputs[0].key
       new_record['duration'] = job.outputs[0].duration
       new_record['content_type'] = 'video/mp4'

@@ -7,9 +7,10 @@ class Api::CallbacksController < ApplicationController
       valid_arns = (ENV['SNS_ARNS'] || '').split(/,/)
       if valid_arns.include?(topic_arn)
         token = params['Token']
-        cred = Aws::Credentials.new(ENV['AWS_KEY'), ENV['AWS_SECRET'])
-        Aws::SNS::Client.new(region: ENV['SNS_REGION'], credentials: cred)
-        cred.confirm_subscription({topic_arn: topic_arn, token: token, authenticate_on_unsubscribe: 'true'})
+        cred = Aws::Credentials.new(ENV['AWS_KEY'], ENV['AWS_SECRET'])
+        client = Aws::SNS::Client.new(region: ENV['SNS_REGION'], credentials: cred)
+        client.confirm_subscription({topic_arn: topic_arn, token: token, authenticate_on_unsubscribe: 'true'})
+        render json: {confirmed: true}
       else
         api_error 400, {error: 'invalid arn'}
       end

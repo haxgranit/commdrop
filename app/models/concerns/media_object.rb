@@ -15,7 +15,7 @@ module MediaObject
   end
   
   def media_object_error(opts)
-    self.settings['media_object_errors'] || = []
+    self.settings['media_object_errors'] ||= []
     self.settings['media_object_errors'] << opts
     self.save
   end
@@ -23,9 +23,8 @@ module MediaObject
   def schedule_transcoding
     return true if self.settings['transcoding_attempted']
     if self.settings['full_filename']
-      self.schedule(:transcode)
       method = self.is_a?(ButtonSound) ? :convert_audio : :convert_video
-      prefix = self.file_prefix + "-" + Time.now.to_i
+      prefix = self.file_prefix + "-" + Time.now.to_i.to_s
       Worker.schedule(Transcoder, method, self.global_id, prefix)
       self.settings['transcoding_attempted'] = true
       self.save
