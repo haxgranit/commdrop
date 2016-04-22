@@ -6,13 +6,17 @@ export default modal.ModalController.extend({
   actions: {
     confirm: function() {
       var user = app_state.get('currentUser');
-      user.set('terms_agree', true);
       var _this = this;
-      user.save().then(function() {
+      if(user) {
+        user.set('terms_agree', true);
+        user.save().then(function() {
+          _this.send('close');
+        }, function() {
+          _this.set('agree_error', true);
+        });
+      } else {
         _this.send('close');
-      }, function() {
-        _this.set('agree_error', true);
-      });
+      }
     }
   }
 });
