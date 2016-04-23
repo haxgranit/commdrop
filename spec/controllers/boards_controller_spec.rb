@@ -24,11 +24,20 @@ describe BoardsController, :type => :controller do
   end
   
   describe "board" do
-    it "should set a meta attribute" do
+    it "should set a meta attribute if public" do
+      u = User.create
+      b = Board.create(:user => u, :public => true)
+      meta = b.meta_record
+      expect_any_instance_of(Board).to receive(:meta_record).and_return(meta)
+      get :board, :id => b.key
+      expect(response).to be_success
+    end
+
+    it "should not set a meta attribute if private" do
       u = User.create
       b = Board.create(:user => u)
       meta = b.meta_record
-      expect_any_instance_of(Board).to receive(:meta_record).and_return(meta)
+      expect_any_instance_of(Board).to_not receive(:meta_record)
       get :board, :id => b.key
       expect(response).to be_success
     end
