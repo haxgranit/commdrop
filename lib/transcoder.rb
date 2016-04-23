@@ -14,7 +14,7 @@ module Transcoder
       new_record['duration'] = job.outputs[0].duration
       new_record['content_type'] = 'audio/mp3'
     elsif job.user_metadata['conversion_type'] == 'video'
-      record = ButtonSound.find_by_global_id(job.user_metadata['video_id'])
+#      record = ButtonSound.find_by_global_id(job.user_metadata['video_id'])
       new_record['filename'] = job.outputs[0].key
       new_record['duration'] = job.outputs[0].duration
       new_record['content_type'] = 'video/mp4'
@@ -39,7 +39,7 @@ module Transcoder
     return false unless button_sound
     config = self.config
     res = config.create_job({
-      pipeline_id: '',
+      pipeline_id: ENV['TRANSCODER_AUDIO_PIPELINE'],
       input: {
         key: button_sound.full_filename
       },

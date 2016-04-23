@@ -5,9 +5,9 @@ module MediaObject
     if self.settings['full_filename'] != opts['filename']
       Uploader.remote_remove(self.settings['full_filename'])
       self.settings['full_filename'] = opts['filename']
-      self.settings['content_type'] = opts['content_type']
-      self.settings['duration'] = opts['duration']
-      self.settings['thumbnail_filename'] = opts['thumbnail_filename']
+      self.settings['content_type'] = opts['content_type'] if opts['content_type']
+      self.settings['duration'] = opts['duration'].to_i if opts['duration']
+      self.settings['thumbnail_filename'] = opts['thumbnail_filename'] if opts['thumbnail_filename']
       self.save
     else
       false
@@ -21,14 +21,15 @@ module MediaObject
   end
   
   def schedule_transcoding
-    return true if self.settings['transcoding_attempted']
-    if self.settings['full_filename']
+    return true if self.settings && self.settings['transcoding_attempted']
+    if self.settings && self.settings['full_filename']
       method = self.is_a?(ButtonSound) ? :convert_audio : :convert_video
-      prefix = self.file_prefix + "-" + Time.now.to_i.to_s
+      prefix = self.file_path + self.file_prefix + "v" + Time.now.to_i.to_s
       Worker.schedule(Transcoder, method, self.global_id, prefix)
       self.settings['transcoding_attempted'] = true
       self.save
     end
+    true
   end
 
   included do

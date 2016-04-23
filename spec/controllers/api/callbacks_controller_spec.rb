@@ -88,9 +88,9 @@ describe Api::CallbacksController, :type => :controller do
     
     it "should handle transcoding" do
       bs = ButtonSound.create(:settings => {
-        'full_filename' => 'a/4/3/0.wav'
+        'full_filename' => 'sounds/4/3/0-something.wav'
       })
-      prefix = bs.file_prefix + "-" + Time.now.to_i.to_s
+      prefix = bs.file_path + bs.file_prefix + "v" + Time.now.to_i.to_s
       expect(Worker.scheduled?(Transcoder, :convert_audio, bs.global_id, prefix)).to eq(true)
       config = OpenStruct.new
       expect(bs.settings['transcoding_attempted']).to eq(true)
@@ -113,7 +113,8 @@ describe Api::CallbacksController, :type => :controller do
       }.and_return(resp)
       
       expect(config).to receive(:read_job).with({id: 'onetwo'}).and_return(resp)
-      expect(Transcoder).to receive(:config).and_return(config)
+      expect(Uploader).to receive(:remote_remove).with('sounds/4/3/0-something.wav')
+      expect(Transcoder).to receive(:config).and_return(config).at_least(1).times
 
       Worker.process_queues
 
@@ -123,136 +124,13 @@ describe Api::CallbacksController, :type => :controller do
         'jobId' => 'onetwo',
         'state' => 'COMPLETED'
       }
-#      expect(response).to be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'handled' => true})
       bs.reload
-      expect(bs.settings['full_filename']).to eq('')
+      expect(bs.settings['full_filename']).to eq(prefix + '.mp3')
       expect(bs.settings['content_type']).to eq('audio/mp3')
       expect(bs.settings['duration']).to eq(111)
     end
   end
 end
-#       self.settings['full_filename'] = opts['filename']
-#       self.settings['content_type'] = opts['content_type']
-#       self.settings['duration'] = opts['duration']
-#       self.settings['thumbnail_filename'] = opts['thumbnail_filename']
-
-
-# require 'aws-sdk'
-# 
-# module Transcoder
-#   def self.handle_event(args)
-#     job = config.read_job({id: args['jobId']})
-#     return false if !job || !job.user_metadata
-#     progress = Progress.find_by_global_id(job.user_metadata['progress_id'])
-#     record = nil
-#     new_record = {}
-#     if job.user_metadata['conversion_type'] == 'audio'
-#       record = ButtonSound.find_by_global_id(job.user_metadata['audio_id'])
-#       new_record['filename'] = job.outputs[0].key
-#       new_record['duration'] = job.outputs[0].duration
-#       new_record['content_type'] = 'audio/mp3'
-#     elsif job.user_metadata['conversion_type'] == 'video'
-#       record = ButtonSound.find_by_global_id(job.user_metadata['video_id'])
-#       new_record['filename'] = job.outputs[0].key
-#       new_record['duration'] = job.outputs[0].duration
-#       new_record['content_type'] = 'video/mp4'
-#       new_record['thumbnail_filename'] = job.outputs[0].key + '.0000.png'
-#     else
-#       return false
-#     end
-#     if args['state'] == 'COMPLETED'
-#       record.update_media_object(new_record) if record
-#     elsif args['state'] == 'ERROR'
-#       # record the error on the record
-#       record.media_object_error({code: args['errorCode'], job: args['jobId']})
-#     end
-#     return true
-#   end
-#   
-#   AUDIO_PRESET = '1351620000001-300040' # MP3 - 128k
-#   VIDEO_PRESET = '1351620000001-000030' # MP4 480p 4:3
-#   
-#   def self.convert_audio(button_sound_id, prefix)
-#     button_sound = ButtonSound.find_by_global_id(button_sound_id)
-#     return false unless button_sound
-#     config = self.config
-#     res = config.create_job({
-#       pipeline_id: '',
-#       input: {
-#         key: button_sound.full_filename
-#       },
-#       output: {
-#         key: "#{prefix}.mp3",
-#         preset_id: AUDIO_PRESET 
-#       },
-#       user_metadata: {
-#         audio_id: button_sound.global_id,
-#         conversion_type: 'audio'
-#       }
-#     })
-#     {job_id: res.job.id}
-#   end
-#   
-#   def self.convert_video(video_id, prefix)
-#     video = nil
-#     return false unless video
-#     config = self.config
-#     res = config.create_job({
-#       pipeline_id: '',
-#       input: {
-#         key: video.full_filename
-#       },
-#       output: {
-#         key: "#{prefix}.mp4",
-#         preset_id: VIDEO_PRESET,
-#         thumbnail_pattern: "#{prefix}.mp4.{count}"
-#       },
-#       user_metadata: {
-#         audio_id: video.global_id,
-#         conversion_type: 'video'
-#       }
-#     })
-#     {job_id: res.job.id}
-#   end
-#   
-#   def self.config
-#     cred = Aws::Credentials.new((ENV['TRANSCODER_KEY'] || ENV['AWS_KEY']), (ENV['TRANSCODER_SECRET'] || ENV['AWS_SECRET']))
-#     Aws::ElasticTranscoder::Client.new(region: ENV['TRANSCODER_REGION'], credentials: cred)
-#   end
-# end
-
-# us-east-1
-
-# require 'aws-sdk'
-# 
-# class Api::CallbacksController < ApplicationController
-#   def callback
-#     topic_arn = request.headers['x-amz-sns-topic-arn']
-#     if request.headers['x-amz-sns-message-type'] == 'SubscriptionConfirmation'
-#       valid_arns = (ENV['SNS_ARNS'] || '').split(/,/)
-#       if valid_arns.include?(topic_arn)
-#         token = params['Token']
-#         cred = Aws::Credentials.new(ENV['AWS_KEY'), ENV['AWS_SECRET'])
-#         Aws::SNS::Client.new(region: ENV['SNS_REGION'], credentials: cred)
-#         cred.confirm_subscription({topic_arn: topic_arn, token: token, authenticate_on_unsubscribe: 'true'})
-#       else
-#         api_error 400, {error: 'invalid arn'}
-#       end
-#     elsif request.headers['x-amz-sns-message-type'] == 'Notification'
-#       if !topic_arn
-#         api_error 400, {error: 'missing topic arn'}
-#       elsif topic_arn.match(/audio_conversion_events/) || topic_arn.match(/video_conversion_events/)
-#         res = Transcoder.handle_event(params)
-#         if res
-#           render json: {handled: true}
-#         else
-#           api_error 400, {error: 'event not handled'}
-#         end
-#       end
-#     else
-#       api_error 400, {error: 'unrecognized callback'}
-#     end
-#   end
-# end
