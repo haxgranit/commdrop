@@ -562,7 +562,9 @@
   {{partial 'footer'}}
 {{/if}}
 {{#unless app_state.testing}}
-  <iframe style="visibility: hidden; height: 0;" src="/cache"></iframe>
+  {{#unless app_state.installed_app}}
+    <iframe style="visibility: hidden; height: 0;" src="/cache"></iframe>
+  {{/unless}}
 {{/unless}}
 </div>
 {{button-tracker}}
