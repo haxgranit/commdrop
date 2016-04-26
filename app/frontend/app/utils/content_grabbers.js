@@ -741,6 +741,194 @@ var pictureGrabber = Ember.Object.extend({
   }
 }).create();
 
+var videoGrabber = Ember.Object.extend({
+  setup: function(controller) {
+    this.controller = controller;
+    _this.controller.addObserver('video_preview', _this, _this.default_video_preview_license);
+  },
+  clear: function() {
+    var stream = this.controller.get('video_recording.stream');
+    if(stream && stream.stop) {
+      stream.stop();
+    }
+    this.toggle_recording_video('stop');
+  },
+  clear_video_work: function() {
+    this.controller.set('video_preview', null);
+    this.clear();
+    this.controller.set('video_recording', null);
+    Ember.$('#video_upload').val('');
+  },
+  default_video_preview_license: function() {
+    var user = app_state.get('currentUser');
+    if(user && this.controller.get('video_preview')) {
+      if(!this.controller.get('video_preview.license')) {
+       this.controller.set('video_preview.license', {type: 'private'});
+      }
+      if(!this.controller.get('video_preview.license.author_name') && this.controller.get('video_preview.license')) {
+        this.controller.set('video_preview.license.author_name', user.get('user_name'));
+      }
+      if(!this.controller.get('sound_preview.license.author_url') && this.controller.get('video_preview.license')) {
+        this.controller.set('video_preview.license.author_url', user.get('profile_url'));
+      }
+    }
+  },
+  file_selected: function(file) {
+    var _this = this;
+    var reader = contentGrabbers.read_file(file);
+    reader.then(function(data) {
+      _this.controller.set('video_preview', {
+        url: data.target.result,
+        name: file.name
+      });
+    });
+  },
+  recorder_available: function() {
+    return !!(navigator.getUserMedia || (navigator.device && navigator.device.capture && navigator.device.capture.captureVideo));
+  },
+  record_video: function() {
+    var _this = this;
+    this.controller.set('video_recording', {
+      stream: this.controller.get('video_recording.stream'),
+      ready: true
+    });
+    this.controller.set('video_preview', null);
+
+    if(navigator.device && navigator.device.capture && navigator.device.capture.captureVideo) {
+      navigator.device.capture.captureVideo(function(files) {
+        var media_file = files[0];
+        var file = new window.File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
+        _this.file_selected(file);
+      }, function() { }, {limit: 1});
+    } else if(navigator.getUserMedia) {
+      if(this.controller.get('video_recording.stream')) {
+        stream_ready(this.controller.get('video_recording.stream'));
+        return;
+      }
+
+      var last_stream_id = stashes.get('last_stream_id');
+      var constraints = {video: true, audio: true};
+      if(last_stream_id) {
+        constraints.video = {
+          optional: [{
+            sourceId: last_stream_id
+          }]
+        };
+      }
+      navigator.getUserMedia(constraints, function(stream) {
+        _this.user_media_ready(stream, last_stream_id);
+      }, function() {
+        console.log("permission not granted");
+      });
+    }
+  },
+  user_media_ready: function(stream, stream_id) {
+    var video = this.controller.get('video_elem');
+    var _this = this;
+    if(video) {
+      video.src = window.URL.createObjectURL(stream);
+    }
+    if(stream_id) {
+      stashes.persist('last_stream_id', stream_id);
+    }
+    _this.clear_video_work();
+    _this.controller.set('video_recording.stream', stream);
+    _this.controller.set('video_recording.stream_id', stream_id);
+    if(window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+      window.MediaStreamTrack.getSources(function(sources) {
+        var video_streams = [];
+        var source = null;
+        for(var idx = 0; idx < sources.length; idx++) {
+          source = sources[idx];
+          if(source && source.kind == 'video') {
+            video_streams.push({
+              id: source.id,
+              label: source.label || ('camera ' + (video_streams.length + 1))
+            });
+          }
+        }
+        // If there's nothing to swap out, don't bother telling anyone
+        if(video_streams.length <= 1) {
+          video_streams = [];
+        }
+        if(_this.controller.get('video_recording')) {
+          _this.controller.set('video_recording.video_streams', video_streams);
+        }
+      });
+    }
+  },
+  toggle_recording_video: function(action) {
+    if(!action) {
+      action = this.controller.get('video_recording.recording') ? 'stop' : 'start';
+    }
+    var mr = this.controller.get('video_recording.media_recorder');
+    if(action == 'start' && mr && mr.state == 'inactive') {
+      this.controller.set('video_recording.blob', null);
+      this.controller.set('video_recording.recording', true);
+      mr.start(10000);
+    } else if(action == 'stop' && mr && mr.state == 'recording') {
+      this.controller.set('video_recording.recording', false);
+      mr.stop();
+    }
+  },
+  select_video_preview: function() {
+    var preview = this.controller && this.controller.get('video_preview');
+    if(!preview || !preview.url) { return; }
+    var _this = this;
+
+    if(preview.url.match(/^data:/)) {
+      preview.content_type = preview.content_type || preview.url.split(/;/)[0].split(/:/)[1];
+    }
+    if(!preview.license || !preview.license.copyright_notice_url) {
+      preview.license = preview.license || {};
+      var license_url = null;
+      var licenses = CoughDrop.licenseOptions;
+      for(var idx = 0; idx < licenses.length; idx++) {
+        if(licenses[idx].id == preview.license.type) {
+          license_url = licenses[idx].url;
+        }
+      }
+      preview.license.copyright_notice_url = license_url;
+    }
+
+    var video_load = new Ember.RSVP.Promise(function(resolve, reject) {
+      var a = new window.Video();
+      a.ondurationchange = function() {
+        resolve({
+          duration: a.duration
+        });
+      };
+      a.onerror = function() {
+        reject({error: "video calculation failed"});
+      };
+      a.src = preview.url;
+    });
+
+    var save_video = video_load.then(function(data) {
+      var video = CoughDrop.store.createRecord('video', {
+        content_type: preview.content_type || '',
+        url: preview.url,
+        duration: data.duration,
+        license: preview.license
+      });
+
+      return contentGrabbers.save_record(video);
+    });
+
+    save_video.then(function(video) {
+      _this.controller.set('model.video', video);
+      _this.clear_video_work();
+      _this.controller.set('model.pending_video', false);
+    }, function(err) {
+      err = err || {};
+      err.error = err.error || "unexpected error";
+      coughDropExtras.track_error("upload failed: " + err.error);
+      alert(i18n.t('upload_failed', "upload failed: " + err.error));
+      _this.controller.set('model.pending_video', false);
+    });
+  }
+});
+
 var soundGrabber = Ember.Object.extend({
   setup: function(button, controller) {
     this.controller = controller;
@@ -1264,5 +1452,6 @@ contentGrabbers.boardGrabber = boardGrabber;
 contentGrabbers.soundGrabber = soundGrabber;
 contentGrabbers.linkGrabber = linkGrabber;
 contentGrabbers.pictureGrabber = pictureGrabber;
+contentGrabbers.videoGrabber = videoGrabber;
 window.cg = contentGrabbers;
 export default contentGrabbers;
