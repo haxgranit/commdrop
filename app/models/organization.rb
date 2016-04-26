@@ -74,6 +74,14 @@ class Organization < ActiveRecord::Base
     user.settings['supervisor_for'][self.global_id] = {'pending' => pending, 'added' => Time.now.iso8601}
     self.attach_user(user, 'supervisor')
     user.save
+    if user.grace_period?
+      user.update_subscription({
+        'subscribe' => true,
+        'subscription_id' => 'free_auto_adjusted',
+        'token_summary' => "Automatically-set Supporter Account",
+        'plan_id' => 'slp_monthly_free'
+      })
+    end
     self.touch
     true
   end
