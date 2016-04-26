@@ -467,6 +467,21 @@ var capabilities;
           });
           return promise;
         },
+        fix_url: function(url) {
+          if(!window.resolveLocalFileSystemURL) {
+            return url;
+          }
+          var prefix = window.cordova.file.dataDirectory;
+          if(url.match("^" + prefix)) {
+            return url;
+          }
+          var re = /Application\/[^\/]+/
+          var prefix_sub = prefix.match(re);
+          if(url.match(re) && prefix_sub) {
+            url = url.replace(re, prefix_sub[0]);
+          }
+          return url;
+        },
         get_file_url: function(dirname, filename) {
           var promise = capabilities.mini_promise();
           capabilities.storage.root_entry().then(function() {
