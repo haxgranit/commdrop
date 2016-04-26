@@ -55,6 +55,48 @@ var persistence = Ember.Object.extend({
       console.error(arguments);
     });
   },
+  push_records: function(store, keys) {
+    var hash = {};
+    var res = {};
+    keys.forEach(function(key) { hash[key] = true; });
+    CoughDrop.store.peekAll(store).content.forEach(function(item) {
+      var record = item.record;
+      if(record && hash[record.get('id')]) {
+        hash[record.get('id')] = false;
+        res[record.get('id')] = record;
+      }
+    });
+    var any_missing = false;
+    keys.forEach(function(key) { if(hash[key] == true) { any_missing = true; } });
+    if(any_missing) {
+      return new Ember.RSVP.Promise(function(resolve, reject) {
+        return coughDropExtras.storage.find_all(store, keys).then(function(list) {
+          list.forEach(function(item) {
+            if(item.data && item.data.id && hash[item.data.id]) {
+              if(CoughDrop.store) {
+                res[item.data.id] = CoughDrop.store.push(store, item.data.raw);
+              }
+            }
+          });
+          resolve(res);
+        }, function(err) {
+          reject(err);
+        });
+      });
+    } else {
+      return Ember.RSVP.resolve(res);
+    }
+  },
+  get_important_ids: function() {
+    if(persistence.important_ids) {
+      return Ember.RSVP.resolve(persistence.important_ids);
+    } else {
+      return coughDropExtras.storage.find('settings', 'importantIds').then(function(res) {
+        persistence.important_ids = res.raw.ids || [];
+        return persistence.important_ids;
+      });
+    }
+  },
   find: function(store, key, wrapped, already_waited) {
     if(!window.coughDropExtras || !window.coughDropExtras.ready) {
       if(already_waited) {
@@ -81,8 +123,8 @@ var persistence = Ember.Object.extend({
       }
       var lookup = id.then(function(id) {
         return coughDropExtras.storage.find(store, id).then(function(record) {
-          return coughDropExtras.storage.find('settings', 'importantIds').then(function(res) {
-            return Ember.RSVP.resolve({record: record, importantIds: (res.raw.ids || [])});
+          return persistence.get_important_ids().then(function(ids) {
+            return Ember.RSVP.resolve({record: record, importantIds: ids});
           }, function(err) {
             // if we've never synced then this will be empty, and that's ok
             if(err && err.error && err.error.match(/no record found/)) {
@@ -265,7 +307,7 @@ var persistence = Ember.Object.extend({
     persistence.eventual_store = persistence.eventual_store || [];
     persistence.eventual_store.push([store, obj, key, true]);
     if(!persistence.eventual_store_timer) {
-      persistence.eventual_store_timer = Ember.run.later(persistence, persistence.next_eventual_store, 10);
+      persistence.eventual_store_timer = Ember.run.later(persistence, persistence.next_eventual_store, 100);
     }
     return Ember.RSVP.resolve(obj);
   },
@@ -295,7 +337,7 @@ var persistence = Ember.Object.extend({
         CoughDrop.Board.refresh_data_urls();
       }
     }
-    persistence.eventual_store_timer = Ember.run.later(persistence, persistence.next_eventual_store, 10);
+    persistence.eventual_store_timer = Ember.run.later(persistence, persistence.next_eventual_store, 100);
   },
   store: function(store, obj, key, eventually) {
 //    console.log("store:"); console.log(obj);
@@ -369,25 +411,34 @@ var persistence = Ember.Object.extend({
         if(data.local_url) {
           if(data.local_filename) {
             if(type == 'image' && _this.image_filename_cache && _this.image_filename_cache[data.local_filename]) {
-              return data.local_url;
+              return capabilities.storage.fix_url(data.local_url);
             } else if(type == 'sound' && _this.sound_filename_cache && _this.sound_filename_cache[data.local_filename]) {
-              return data.local_url;
+              return capabilities.storage.fix_url(data.local_url);
             } else {
               // confirm that the file is where it's supposed to be before returning
               return new Ember.RSVP.Promise(function(file_url_resolve, file_url_reject) {
-                capabilities.storage.get_file_url(type, data.local_filename).then(function(local_url) {
+                // apparently file system calls are really slow on ios
+                if(data.local_url) {
+                  var local_url = capabilities.storage.fix_url(data.local_url);
                   _this.url_cache[url] = local_url;
                   file_url_resolve(local_url);
-                }, function() {
-                  if(data.data_uri) {
-                    file_url_resolve(data.data_uri);
-                  } else {
-                    file_url_reject({error: "missing local file"});
-                  }
-                });
+                } else {
+                  capabilities.storage.get_file_url(type, data.local_filename).then(function(local_url) {
+                    local_url = capabilities.storage.fix_url(local_url);
+                    _this.url_cache[url] = local_url;
+                    file_url_resolve(local_url);
+                  }, function() {
+                    if(data.data_uri) {
+                      file_url_resolve(data.data_uri);
+                    } else {
+                      file_url_reject({error: "missing local file"});
+                    }
+                  });
+                }
               });
             }
           }
+          data.local_url = capabilities.storage.fix_url(data.local_url)
           _this.url_cache[url] = data.local_url;
           return data.local_url || data.data_uri;
         } else if(data.data_uri) {
@@ -412,20 +463,24 @@ var persistence = Ember.Object.extend({
     }
 
     prime_promises.push(new Ember.RSVP.Promise(function(res, rej) {
-      capabilities.storage.list_files('image').then(function(images) {
-        images.forEach(function(image) {
-          _this.image_filename_cache[image] = true;
-        });
-        res(images);
-      }, function(err) { rej(err); });
+      // apparently file system calls are really slow on ios
+      res([]);
+//       capabilities.storage.list_files('image').then(function(images) {
+//         images.forEach(function(image) {
+//           _this.image_filename_cache[image] = true;
+//         });
+//         res(images);
+//       }, function(err) { rej(err); });
     }));
     prime_promises.push(new Ember.RSVP.Promise(function(res, rej) {
-      capabilities.storage.list_files('sound').then(function(sounds) {
-        sounds.forEach(function(sound) {
-          _this.sound_filename_cache[sound] = true;
-        });
-        res(sounds);
-      }, function(err) { rej(err); });
+      // apparently file system calls are really slow on ios
+      res([]);
+//       capabilities.storage.list_files('sound').then(function(sounds) {
+//         sounds.forEach(function(sound) {
+//           _this.sound_filename_cache[sound] = true;
+//         });
+//         res(sounds);
+//       }, function(err) { rej(err); });
     }));
     return Ember.RSVP.all_wait(prime_promises).then(function() {
       return coughDropExtras.storage.find_all('dataCache').then(function(list) {
@@ -433,16 +488,19 @@ var persistence = Ember.Object.extend({
         list.forEach(function(item) {
           if(item.data && item.data.raw && item.data.raw.url && item.data.raw.type && item.data.raw.local_filename) {
             if(item.data.raw.type == 'image' && item.data.raw.local_url && _this.image_filename_cache && _this.image_filename_cache[item.data.raw.local_filename]) {
-              _this.url_cache[item.data.raw.url] = item.data.raw.local_url;
+              _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
             } else if(item.data.raw.type == 'sound' && item.data.raw.local_url && _this.sound_filename_cache && _this.sound_filename_cache[item.data.raw.local_filename]) {
-              _this.url_cache[item.data.raw.url] = item.data.raw.local_url;
+              _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
             } else {
-              promises.push(new Ember.RSVP.Promise(function(res, rej) {
-                capabilities.storage.get_file_url(item.data.raw.type, item.data.raw.local_filename).then(function(local_url) {
-                  _this.url_cache[item.data.raw.url] = local_url;
-                  res(local_url);
-                }, function(err) { rej(err); });
-              }));
+              // apparently file system calls are really slow on ios
+              _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
+//               promises.push(new Ember.RSVP.Promise(function(res, rej) {
+//                 capabilities.storage.get_file_url(item.data.raw.type, item.data.raw.local_filename).then(function(local_url) {
+//                   local_url = capabilities.storage.fix_url(local_url);
+//                   _this.url_cache[item.data.raw.url] = local_url;
+//                   res(local_url);
+//                 }, function(err) { rej(err); });
+//               }));
             }
           }
         });
@@ -750,7 +808,8 @@ var persistence = Ember.Object.extend({
           // store the list ids to settings.importantIds so they don't get expired
           // even after being offline for a long time. Also store lastSync somewhere
           // that's easy to get to (localStorage much?) for use in the interface.
-          persistence.store('settings', {ids: importantIds.uniq()}, 'importantIds').then(function(r) {
+          persistence.important_ids = importantIds.uniq()
+          persistence.store('settings', {ids: persistence.important_ids}, 'importantIds').then(function(r) {
             persistence.refresh_after_eventual_stores();
             sync_resolve(sync_log);
           }, function() {

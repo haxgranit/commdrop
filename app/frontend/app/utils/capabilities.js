@@ -376,7 +376,7 @@ var capabilities;
               });
               var done_dirs = 0;
               dirs.forEach(function(dir) {
-                capabilities.storage.list_files(dir).then(function(list) {
+                capabilities.storage.list_files(dir, true).then(function(list) {
                   done_dirs++;
                   list.forEach(function(file) {
                     all_files.push({
@@ -429,7 +429,7 @@ var capabilities;
           }
           return promise;
         },
-        list_files: function(dirname) {
+        list_files: function(dirname, include_size) {
           var promise = capabilities.mini_promise();
           capabilities.storage.assert_directory(dirname).then(function(dir) {
             var res = [];
@@ -442,10 +442,12 @@ var capabilities;
                 reader.readEntries(function(list) {
                   list.forEach(function(e) {
                     if(e.isFile) {
-                      // TODO: this is a race condition, I'm bad but I'm ignoring it
-                      e.getMetadata(function(metadata) {
-                        res.size = res.size + metadata.size;
-                      }, function() { });
+                      if(include_size) {
+                        // TODO: this is a race condition, it's bad that I'm ignoring it
+                        e.getMetadata(function(metadata) {
+                          res.size = res.size + metadata.size;
+                        }, function() { });
+                      }
                       res.push(e.name);
                     } else if(e.isDirectory && go_deeper) {
                       dirs.push(e);
@@ -837,7 +839,12 @@ var capabilities;
         var res = capabilities.mini_promise();
         if(capabilities.dbman.not_ready(capabilities.storage_find_all, options, res)) { return res; }
 
-        capabilities.dbman.find_all(options.store, null, null, function(list) {
+        var index = null, keys = null;
+        if(options.ids) {
+          index = 'id';
+          keys = options.ids;
+        }
+        capabilities.dbman.find_all(options.store, index, keys, function(list) {
           res.resolve(list);
         }, function(error) {
           res.reject(error);

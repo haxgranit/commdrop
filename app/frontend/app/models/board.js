@@ -11,6 +11,9 @@ CoughDrop.Board = DS.Model.extend({
     this.check_for_copy();
     this.clean_license();
   },
+  didUpdate: function() {
+    this.set('fetched', false);
+  },
   name: DS.attr('string'),
   key: DS.attr('string'),
   description: DS.attr('string'),
@@ -128,20 +131,58 @@ CoughDrop.Board = DS.Model.extend({
     callback();
     this.set('no_lookups', false);
   },
+  find_content_locally: function() {
+    var _this = this;
+    var fetch_promise = this.get('fetch_promise');
+    if(this.get('fetched')) { return Ember.RSVP.resolve(); }
+    if(fetch_promise) { return fetch_promise; }
+
+
+    var promises = [];
+    var image_ids = [];
+    var sound_ids = [];
+    (this.get('buttons') || []).forEach(function(btn) {
+      if(btn.image_id) {
+        image_ids.push(btn.image_id);
+      }
+      if(btn.sound_id) {
+        sound_ids.push(btn.sound_id);
+      }
+    });
+    promises.push(persistence.push_records('image', image_ids));
+    promises.push(persistence.push_records('sound', sound_ids));
+    fetch_promise = Ember.RSVP.all_wait(promises).then(function() {
+      _this.set('fetched', true);
+      fetch_promise = null;
+      _this.set('fetch_promise', null);
+      return true;
+    }, function() {
+      fetch_promise = null;
+      _this.set('fetch_promise', null);
+    });
+    _this.set('fetch_promise', fetch_promise);
+    return fetch_promise;
+  },
   set_all_ready: function() {
     var allReady = true;
     if(!this.get('pending_buttons')) { return; }
     this.get('pending_buttons').forEach(function(b) {
-      if(b.get('content_status') != 'ready') { allReady = false; }
+      if(b.get('content_status') != 'ready' && b.get('content_status') != 'errored') { allReady = false; }
     });
     this.set('all_ready', allReady);
   }.observes('pending_buttons', 'pending_buttons.[]', 'pending_buttons.@each.content_status'),
   prefetch_linked_boards: function() {
     var boards = this.get('linked_boards');
     Ember.run.later(function() {
-      boards.forEach(function(b) {
-        CoughDrop.store.findRecord('board', b.key).then(null, function() { });
-      });
+      var board_ids = [];
+      boards.forEach(function(b) { if(b.id) { board_ids.push(b.id); } });
+      persistence.push_records('board', board_ids).then(function() {
+        boards.forEach(function(b) {
+          CoughDrop.store.findRecord('board', b.id).then(function(brd) {
+//            brd.find_content_locally();
+          }, function() { });
+        });
+      }, function() { });
     });
   },
   clean_license: function() {

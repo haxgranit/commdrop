@@ -465,70 +465,88 @@ var editManager = Ember.Object.extend({
     var result = [];
     var pending_buttons = [];
     var used_button_ids = {};
+
+    // new workflow:
+    // - get all the associated image and sound ids
+    // - if the board was loaded remotely, they should all be peekable
+    // - if they're not peekable, do a batch lookup in the local db
+    //   NOTE: I don't think it should be necessary to push them into the
+    //   ember-data cache, but maybe do that as a background job or something?
+    // - if any *still* aren't reachable, mark them as broken
+    // - do NOT make remote requests for the individual records???
+
     // build the ordered grid
     // TODO: work without ordered grid (i.e. scene displays)
-    for(var idx = 0; idx < grid.rows; idx++) {
-      var row = [];
-      for(var jdx = 0; jdx < grid.columns; jdx++) {
-        var button = null;
-        var id = (grid.order[idx] || [])[jdx];
-        for(var kdx = 0; kdx < buttons.length; kdx++) {
-          if(id !== null && id !== undefined && buttons[kdx].id == id && !used_button_ids[id]) {
-            // only allow each button id to be used once, even if referenced more than once in the grid
-            // TODO: if a button is references more than once in the grid, probably clone
-            // it for the second reference or something rather than just ignoring it. Multiply-referenced
-            // buttons do weird things when in edit mode.
-            used_button_ids[id] = true;
-            var more_args = {board: board};
-            if(board.get('no_lookups')) {
-              more_args.no_lookups = true;
+    var prefetch = board.find_content_locally().then(null, function(err) {
+      return Ember.RSVP.resolve();
+    });
+
+    prefetch.then(function() {
+      for(var idx = 0; idx < grid.rows; idx++) {
+        var row = [];
+        for(var jdx = 0; jdx < grid.columns; jdx++) {
+          var button = null;
+          var id = (grid.order[idx] || [])[jdx];
+          for(var kdx = 0; kdx < buttons.length; kdx++) {
+            if(id !== null && id !== undefined && buttons[kdx].id == id && !used_button_ids[id]) {
+              // only allow each button id to be used once, even if referenced more than once in the grid
+              // TODO: if a button is references more than once in the grid, probably clone
+              // it for the second reference or something rather than just ignoring it. Multiply-referenced
+              // buttons do weird things when in edit mode.
+              used_button_ids[id] = true;
+              var more_args = {board: board};
+              if(board.get('no_lookups')) {
+                more_args.no_lookups = true;
+              }
+              button = editManager.Button.create(buttons[kdx], more_args);
             }
-            button = editManager.Button.create(buttons[kdx], more_args);
+          }
+          button = button || _this.fake_button();
+          if(!button.everything_local()) {
+            allButtonsReady = false;
+            pending_buttons.push(button);
+          }
+          row.push(button);
+        }
+        result.push(row);
+      }
+      if(!allButtonsReady) {
+        board.set('pending_buttons', pending_buttons);
+        board.addObserver('all_ready', function() {
+          if(!controller.get('ordered_buttons')) {
+            board.set('pending_buttons', null);
+            controller.set('ordered_buttons',result);
+            controller.redraw();
+            Ember.run.later(function() {
+              app_state.controller.send('highlight_button');
+            });
+            app_state.controller.send('check_scanning');
+          }
+        });
+        controller.set('ordered_buttons', null);
+      } else {
+        controller.set('ordered_buttons', result);
+        controller.redraw();
+        for(var idx = 0; idx < result.length; idx++) {
+          for(var jdx = 0; jdx < result[idx].length; jdx++) {
+            var button = result[idx][jdx];
+            if(button.get('suggest_symbol')) {
+              _this.lucky_symbol(button.id);
+            }
           }
         }
-        button = button || this.fake_button();
-        if(!button.everything_local()) {
-          allButtonsReady = false;
-          pending_buttons.push(button);
-        }
-        row.push(button);
-      }
-      result.push(row);
-    }
-    if(!allButtonsReady) {
-      board.set('pending_buttons', pending_buttons);
-      board.addObserver('all_ready', function() {
-        if(!controller.get('ordered_buttons')) {
-          board.set('pending_buttons', null);
-          controller.set('ordered_buttons',result);
-          controller.redraw();
-          Ember.run.later(function() {
+        Ember.run.later(function() {
+          if(app_state.controller) {
             app_state.controller.send('highlight_button');
-          });
+          }
+        });
+        if(app_state.controller) {
           app_state.controller.send('check_scanning');
         }
-      });
-      controller.set('ordered_buttons', null);
-    } else {
-      controller.set('ordered_buttons', result);
-      controller.redraw();
-      for(var idx = 0; idx < result.length; idx++) {
-        for(var jdx = 0; jdx < result[idx].length; jdx++) {
-          var button = result[idx][jdx];
-          if(button.get('suggest_symbol')) {
-            _this.lucky_symbol(button.id);
-          }
-        }
       }
-      Ember.run.later(function() {
-        if(app_state.controller) {
-          app_state.controller.send('highlight_button');
-        }
-      });
-      if(app_state.controller) {
-        app_state.controller.send('check_scanning');
-      }
-    }
+    }, function(err) {
+      console.log(err);
+    });
   },
   process_for_saving: function() {
     var orderedButtons = this.controller.get('ordered_buttons');

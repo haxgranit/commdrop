@@ -61,11 +61,22 @@ var dbman = {
     }
     return capabilities.dbman.find_one(store, key, success, error);
   },
+
   uniqify_key: function(key, store, index) {
-    if(index == 'id' || index == 'storageId') {
-      key = store + "::" + key;
+    var keys = [key];
+    if(key && key.forEach) { keys = key; }
+    var res = [];
+    keys.forEach(function(k) {
+      if(index == 'id' || index == 'storageId') {
+        k = store + "::" + k;
+      }
+      res.push(k);
+    });
+    if(key && key.forEach) {
+      return res;
+    } else {
+      return res[0];
     }
-    return key;
   },
   normalize_record: function(record, store) {
     if(record.raw) {
@@ -206,6 +217,12 @@ var dbman = {
     }
   },
   find_all_internal: function(store, index, key, success, error) {
+    var keys = {};
+    if(key && key.forEach) {
+      key.forEach(function(k) { keys[k] = true; })
+    } else if(key) {
+      keys[key] = true;
+    }
     if(dbman.db_type == 'indexeddb') {
       var transaction = capabilities.db.transaction([store], 'readonly');
       var list = [];
@@ -215,7 +232,7 @@ var dbman = {
       res.onsuccess = function(event) {
         var cursor = event.target.result;
         if(cursor) {
-          if(!index || cursor.value[index] == key) {
+          if(!index || keys[cursor.value[index]]) {
             var data = cursor.value;
             list.push({
               store: store,
@@ -234,7 +251,20 @@ var dbman = {
       dbman.db.transaction(function(tx) {
         var store_name = null;
         if(stores[store]) { store_name = store; }
-        tx.executeSql('SELECT * FROM ' + store_name, [], function(tx, result_set) {
+        var query = 'SELECT * FROM ' + store_name;
+        var args = [];
+        if(index == 'id' && key && key.forEach) {
+          query = query + ' WHERE ref_id IN (';
+          key.forEach(function(k, idx) {
+            query = query + '?';
+            args.push(k);
+            if(idx < key.length - 1) {
+              query = query + ',';
+            }
+          });
+          query = query + ')';
+        }
+        tx.executeSql(query, args, function(tx, result_set) {
           var list = [];
           if(result_set.rows && result_set.rows.length) {
             for(var idx = 0; idx < result_set.rows.length; idx++) {
@@ -244,7 +274,7 @@ var dbman = {
                 data = JSON.parse(row.data);
               } catch(e) { }
               if(data) {
-                if(!index || data[index] == key) {
+                if(!index || keys[data[index]]) {
                   list.push({
                     store: store,
                     data: data
@@ -610,6 +640,9 @@ var dbman = {
         error = error || (event.target && event.target.__versionTransaction && event.target.__versionTransaction.error && event.target.__versionTransaction.error.message);
         error = error || "unknown error";
         console.log(event.target.error);
+        if(event.target.error) {
+          console.log(event.target.error.constructor && event.target.error.constructor.name);
+        }
         console.log(event.target);
         console.error("Database error: " + error);
         promise.reject(error);

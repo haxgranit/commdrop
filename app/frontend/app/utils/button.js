@@ -215,7 +215,7 @@ var Button = Ember.Object.extend({
   },
   findContentLocally: function() {
     var _this = this;
-    if(this.get('image') && this.get('sound')) {
+    if(this.get('image.url') && this.get('sound.url')) {
       return Ember.RSVP.resolve(true);
     }
     this.set('content_status', 'pending');
@@ -223,19 +223,21 @@ var Button = Ember.Object.extend({
       var promises = [];
       if(_this.image_id) {
         var image = CoughDrop.store.peekRecord('image', _this.image_id);
-        if(image && !image.get('isLoaded')) { image = null; }
+        if(image && (!image.get('isLoaded') || !image.get('best_url'))) { image = null; }
         _this.set('image', image);
         if(!image) {
           if(_this.get('no_lookups')) {
             promises.push(Ember.RSVP.reject('no image lookups'));
           } else {
             promises.push(CoughDrop.store.findRecord('image', _this.image_id).then(function(image) {
-              _this.set('image', image);
-              return image.checkForDataURL().then(function() {
-                return Ember.RSVP.resolve(image);
-              }, function() {
-                return Ember.RSVP.resolve(image);
-              });
+              Ember.run.later(function() {
+                _this.set('image', image);
+                return image.checkForDataURL().then(function() {
+                  return Ember.RSVP.resolve(image);
+                }, function() {
+                  return Ember.RSVP.resolve(image);
+                });
+              }, 100);
             }));
           }
         } else {
@@ -244,7 +246,7 @@ var Button = Ember.Object.extend({
       }
       if(_this.sound_id) {
         var sound = CoughDrop.store.peekRecord('sound', _this.sound_id);
-        if(sound && !sound.get('isLoaded')) { sound = null; }
+        if(sound && (!sound.get('isLoaded') || !sound.get('best_url'))) { sound = null; }
         _this.set('sound', sound);
         if(!sound) {
           if(_this.get('no_lookups')) {
@@ -264,12 +266,15 @@ var Button = Ember.Object.extend({
         }
       }
 
-
       Ember.RSVP.all(promises).then(function() {
         _this.set('content_status', 'ready');
         resolve(true);
       }, function(err) {
-        _this.set('content_status', 'missing');
+        if(_this.get('no_lookups')) {
+          _this.set('content_status', 'missing');
+        } else {
+          _this.set('content_status', 'errored');
+        }
         resolve(false);
         return Ember.RSVP.resolve();
       });

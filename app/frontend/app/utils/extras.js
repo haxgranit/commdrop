@@ -67,9 +67,9 @@ import capabilities from './capabilities';
         });
         return defer.promise;
       },
-      find_all: function(store) {
+      find_all: function(store, ids) {
         var defer = Ember.RSVP.defer();
-        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find_all', options: {store: store}}).then(function(res) {
+        capabilities.invoke({type: 'coughDropExtras', method: 'storage_find_all', options: {store: store, ids: ids}}).then(function(res) {
           defer.resolve(res);
         }, function(err) {
           defer.reject(err);
