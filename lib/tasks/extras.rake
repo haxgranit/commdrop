@@ -50,6 +50,7 @@ task "extras:mobile" => :environment do
   end
   puts "copying static assets"
   puts `cp ./public/images/* ../#{folder}/www/images`
+  puts `cp ./public/images/logos/* ../#{folder}/www/images/logos`
   puts `cp ./public/fonts/* ../#{folder}/www/fonts`
   puts `cp ./public/icons/* ../#{folder}/www/assets/icons`
   puts "replacing cordova files"
