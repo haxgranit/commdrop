@@ -134,7 +134,7 @@ export default Ember.Controller.extend({
     });
   }.observes('app_state.speak_mode', 'app_state.edit_mode', 'model.description', 'app_state.sidebar_pinned'),
   board_style: function() {
-    return new Ember.Handlebars.SafeString("position: relative; height: " + (this.get('height') - 15) + "px");
+    return new Ember.Handlebars.SafeString("position: relative; height: " + (this.get('height') + 6) + "px");
   }.property('height'),
   redraw: function(klass, change, redraw_button_id) {
 //    console.log(arguments);
