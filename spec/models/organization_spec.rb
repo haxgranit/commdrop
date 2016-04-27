@@ -188,6 +188,29 @@ describe Organization, :type => :model do
       expect(u2.allows?(u, 'manage_supervision')).to eq(false)
       expect(u2.allows?(u, 'view_detailed')).to eq(false)
     end
+    
+    it "should mark the user as a free supporter if they're still on the free trial" do
+      o = Organization.create
+      u = User.create
+      expect(u.grace_period?).to eq(true)
+      o.add_supervisor(u.user_name)
+      u.reload
+      expect(u.grace_period?).to eq(false)
+      expect(u.settings['subscription']['plan_id']).to eq('slp_monthly_free')
+      expect(u.settings['subscription']['free_premium']).to eq(true)
+      expect(u.settings['subscription']['subscription_id']).to eq('free_auto_adjusted')
+    end
+    
+    it "should not mark the user as a free supporter if they're not on the free trial" do
+      o = Organization.create
+      u = User.create
+      u.subscription_override('never_expires')
+      expect(u.grace_period?).to eq(false)
+      o.add_supervisor(u.user_name)
+      u.reload
+      expect(u.grace_period?).to eq(false)
+      expect(u.settings['subscription']).to eq({'never_expires' => true})
+    end
   end
   
   describe "user types" do
