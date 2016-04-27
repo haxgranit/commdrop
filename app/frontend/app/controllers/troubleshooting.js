@@ -142,13 +142,13 @@ export default Ember.Controller.extend({
         if(res.requires_confirmation) {
           Ember.set(test, 'results', {partially_passed: true, reason: "Requires user permission"});
         } else {
-          Ember.set(test, 'results', {passed: true})
+          Ember.set(test, 'results', {passed: true});
         }
       } else {
-        Ember.set(test, 'results', {passed: false})
+        Ember.set(test, 'results', {passed: false});
       }
     }, function(err) {
-      Ember.set(test, 'results', {passed: false})
+      Ember.set(test, 'results', {passed: false});
     });
   },
   run_canvas_test: function(test) {

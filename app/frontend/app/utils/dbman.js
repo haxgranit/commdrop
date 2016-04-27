@@ -219,7 +219,7 @@ var dbman = {
   find_all_internal: function(store, index, key, success, error) {
     var keys = {};
     if(key && key.forEach) {
-      key.forEach(function(k) { keys[k] = true; })
+      key.forEach(function(k) { keys[k] = true; });
     } else if(key) {
       keys[key] = true;
     }

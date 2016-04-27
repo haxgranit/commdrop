@@ -743,6 +743,7 @@ var pictureGrabber = Ember.Object.extend({
 
 var videoGrabber = Ember.Object.extend({
   setup: function(controller) {
+    var _this = this;
     this.controller = controller;
     _this.controller.addObserver('video_preview', _this, _this.default_video_preview_license);
   },
@@ -802,7 +803,7 @@ var videoGrabber = Ember.Object.extend({
       }, function() { }, {limit: 1});
     } else if(navigator.getUserMedia) {
       if(this.controller.get('video_recording.stream')) {
-        stream_ready(this.controller.get('video_recording.stream'));
+//         stream_ready(this.controller.get('video_recording.stream'));
         return;
       }
 

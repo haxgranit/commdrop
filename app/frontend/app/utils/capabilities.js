@@ -475,7 +475,7 @@ var capabilities;
           if(url.match("^" + prefix)) {
             return url;
           }
-          var re = /Application\/[^\/]+/
+          var re = /Application\/[^\/]+/;
           var prefix_sub = prefix.match(re);
           if(url.match(re) && prefix_sub) {
             url = url.replace(re, prefix_sub[0]);
