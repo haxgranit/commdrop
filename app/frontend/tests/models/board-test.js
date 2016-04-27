@@ -44,7 +44,7 @@ describe('Board', function() {
       expect(board.get('key_placeholder')).toEqual("-_-bacon-and-eggs____");
     });
   });
-  
+
   describe("create_copy", function() {
     it("should make a copy", function() {
       var board = CoughDrop.store.createRecord('board', {
@@ -77,7 +77,7 @@ describe('Board', function() {
       var board = CoughDrop.store.createRecord('board', {});
       expect(board.get('labels')).toEqual("");
     });
-  
+
     it("should return list of labels on specified buttons", function() {
       var board = CoughDrop.store.createRecord('board', {
         buttons: [
@@ -87,12 +87,12 @@ describe('Board', function() {
         grid: {
           rows: 2,
           columns: 2,
-          order: [[1,2],[2,2]] 
+          order: [[1,2],[2,2]]
         }
       });
       expect(board.get('labels')).toEqual("hat, car, car, car");
     });
-  
+
     it("should skip empty buttons", function() {
       var board = CoughDrop.store.createRecord('board', {
         buttons: [
@@ -103,7 +103,7 @@ describe('Board', function() {
         grid: {
           rows: 2,
           columns: 2,
-          order: [[1,2],[null,3]] 
+          order: [[1,2],[null,3]]
         }
       });
       expect(board.get('labels')).toEqual("hat, car");
@@ -130,7 +130,7 @@ describe('Board', function() {
         expect(board.get('stars')).toEqual(4);
       });
     });
-  
+
     it("should make the appropriate call to unstar a board", function() {
       var called = false;
       stub(persistence, 'ajax', function(url, opts) {
@@ -196,13 +196,13 @@ describe('Board', function() {
       board.add_button(Button.create({id: 123}));
       expect(board.get('buttons').length).toEqual(1);
       expect(board.get('buttons')[0].id).toEqual(123);
-    
+
       board.add_button(Button.create({id: 1234}));
       expect(board.get('buttons').length).toEqual(2);
       expect(board.get('buttons')[0].id).toEqual(123);
       expect(board.get('buttons')[1].id).toEqual(1234);
     });
-  
+
     it("should generate a new, unique id if an existing button has that id", function() {
       var board = CoughDrop.store.createRecord('board');
       board.set('buttons', [{
@@ -214,7 +214,7 @@ describe('Board', function() {
       expect(board.get('buttons')[0].label).toEqual('hat');
       expect(board.get('buttons')[1].id).toEqual(124);
       expect(board.get('buttons')[1].label).toEqual('cat');
-    
+
       board.add_button(Button.create({id: 123, label: 'rat'}));
       expect(board.get('buttons').length).toEqual(3);
       expect(board.get('buttons')[0].id).toEqual(123);
@@ -224,7 +224,7 @@ describe('Board', function() {
       expect(board.get('buttons')[2].id).toEqual(125);
       expect(board.get('buttons')[2].label).toEqual('rat');
     });
-  
+
     it("should return the id of the button as the result", function() {
       var board = CoughDrop.store.createRecord('board');
       board.set('buttons', [{
@@ -233,7 +233,7 @@ describe('Board', function() {
       expect(board.add_button(Button.create({id: 123, label: 'cat'}))).toEqual(124);
       expect(board.add_button(Button.create({id: 129, label: 'cat'}))).toEqual(129);
     });
-  
+
     it("should add to the first empty spot it finds in the grid", function() {
       var board = CoughDrop.store.createRecord('board');
       board.set('buttons', [{
@@ -248,7 +248,7 @@ describe('Board', function() {
       expect(board.get('grid').order).toEqual([[1,2,124],[2,129,null]]);
     });
   });
-  
+
   describe("multiple_copies", function() {
     it("should return the correct value", function() {
       var board = CoughDrop.store.createRecord('board');
@@ -278,7 +278,7 @@ describe('Board', function() {
       expect(board.button_visible(7)).toEqual(true);
       expect(board.button_visible(8)).toEqual(true);
     });
-  
+
     it("should return false if the id is not in the grid order", function() {
       var board = CoughDrop.store.createRecord('board');
       board.set('grid', {
@@ -290,7 +290,7 @@ describe('Board', function() {
       expect(board.button_visible('a')).toEqual(false);
       expect(board.button_visible(null)).toEqual(false);
     });
-  
+
     it("should not error on malformed grid", function() {
       var board = CoughDrop.store.createRecord('board');
       board.set('grid', {
@@ -301,6 +301,109 @@ describe('Board', function() {
         order: null
       });
       expect(board.button_visible(5)).toEqual(false);
+    });
+  });
+
+  describe('find_content_locally', function() {
+    it('should not run more than once', function() {
+      var board = CoughDrop.store.createRecord('board');
+      board.set('fetched', true);
+      var called = false;
+      stub(persistence, 'push_records', function() { called = true; });
+      var resolved = false;
+      board.find_content_locally().then(function() {
+        resolved = true;
+      });
+      waitsFor(function() { return resolved; });
+      runs(function() {
+        expect(called).toEqual(false);
+      });
+    });
+
+    it('should return the existing pending promise if there is one', function() {
+      var board = CoughDrop.store.createRecord('board');
+      board.set('fetch_promise', 'asdf');
+      var called = false;
+      var res = board.find_content_locally();
+      expect(res).toEqual('asdf');
+    });
+
+    it('should push records into the data store when found', function() {
+      var board = CoughDrop.store.createRecord('board');
+      board.set('buttons', [
+        {id: 1, image_id: 'a', sound_id: 'c'},
+        {id: 2},
+        {id: 3, sound_id: 'b'},
+        {id: 4}
+      ]);
+      var call_args = [];
+      stub(persistence, 'push_records', function(type, ids) {
+        call_args.push([type, ids]);
+        return Ember.RSVP.resolve();
+      });
+
+      var resolved = false;
+      board.find_content_locally().then(function() {
+        resolved = true;
+      });
+      waitsFor(function() { return resolved; });
+      runs(function() {
+        expect(board.get('fetch_promise')).not.toEqual(undefined);
+        expect(call_args).toEqual([
+          ['image', ['a']],
+          ['sound', ['c', 'b']]
+        ]);
+      });
+    });
+
+    it('should enable skipping individual findRecord calls because of batch push to save time', function() {
+      var board = CoughDrop.store.createRecord('board');
+      board.set('buttons', [
+        {id: 1, image_id: 'a', sound_id: 'c'},
+        {id: 2},
+        {id: 3, sound_id: 'b'},
+        {id: 4}
+      ]);
+      var call_args = [];
+      stub(persistence, 'push_records', function(type, ids) {
+        if(type == 'image') {
+          CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/pic.png'});
+        } else if(type == 'sound') {
+          CoughDrop.store.push('sound', {id: 'b', url: 'http://www.example.com/sound.mp3'});
+          CoughDrop.store.push('sound', {id: 'c', url: 'http://www.example.com/sound2.mp3'});
+        }
+        call_args.push([type, ids]);
+        return Ember.RSVP.resolve();
+      });
+
+      var resolved = false;
+      board.find_content_locally().then(function() {
+        resolved = true;
+      });
+      var find_called = false;
+      stub(CoughDrop.store, 'findRecord', function(a1, a2, a3) {
+        find_called = true;
+        return Ember.RSVP.reject();
+      });
+
+      waitsFor(function() { return resolved; });
+      runs(function() {
+        expect(board.get('fetch_promise')).not.toEqual(undefined);
+        expect(call_args).toEqual([
+          ['image', ['a']],
+          ['sound', ['c', 'b']]
+        ]);
+
+        var buttons = [];
+        board.get('buttons').forEach(function(b) {
+          buttons.push(Button.create(b));
+        });
+        board.set('pending_buttons', buttons);
+      });
+      waitsFor(function() { return board.get('pending_buttons') && board.get('all_ready'); });
+      runs(function() {
+        expect(find_called).toEqual(false);
+      });
     });
   });
 });

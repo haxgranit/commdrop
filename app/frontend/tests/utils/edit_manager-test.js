@@ -23,6 +23,10 @@ describe('editManager', function() {
         });
         this.set('all_ready', allReady);
       }.observes('pending_buttons', 'pending_buttons.@each', 'pending_buttons.@each.content_status'),
+      find_content_locally: function() {
+        this.set('found_content_locally', true);
+        return Ember.RSVP.resolve();
+      }
     }).create();
     stub(app_state, 'controller', Ember.Object.create({
       'current_mode': 'edit',
@@ -1763,12 +1767,15 @@ describe('editManager', function() {
       board.set('no_lookups', true);
       editManager.process_for_displaying();
 
-      expect(board.get('ordered_buttons')).toEqual(null);
-      expect(board.get('model.pending_buttons')).not.toEqual(null);
-      var button = board.get('model.pending_buttons')[0];
-      expect(button.get('content_status')).toEqual('pending');
+      var button = null;
+      waitsFor(function() { return board.get('model.pending_buttons'); });
+      runs(function() {
+        expect(board.get('ordered_buttons')).toEqual(null);
+        expect(board.get('model.pending_buttons')).not.toEqual(null);
+        button = board.get('model.pending_buttons')[0];
+      });
       waitsFor(function() {
-        return button.get('content_status') == 'missing';
+        return button && button.get('content_status') == 'errored';
       });
       runs();
     });
@@ -1787,9 +1794,13 @@ describe('editManager', function() {
       });
       editManager.setup(board);
       editManager.process_for_displaying();
-      expect(board.get('ordered_buttons')).not.toEqual(null);
-      var button = board.get('ordered_buttons')[0][0];
-      waitsFor(function() { return button.get('content_status') == 'ready'; });
+      var button = null;
+      waitsFor(function() { return board.get('ordered_buttons'); });
+      runs(function() {
+        expect(board.get('ordered_buttons')).not.toEqual(null);
+        button = board.get('ordered_buttons')[0][0];
+      });
+      waitsFor(function() { return button && button.get('content_status') == 'ready'; });
       runs();
     });
     it("should fail when remove image and sound records aren't found", function() {
@@ -1815,13 +1826,17 @@ describe('editManager', function() {
         response: defer2.promise
       });
       editManager.process_for_displaying();
-      expect(board.get('ordered_buttons')).toEqual(null);
-      expect(board.get('model.pending_buttons')).not.toEqual(null);
-      var button = board.get('model.pending_buttons')[0];
-      expect(button.get('content_status')).toEqual('pending');
-      defer1.reject();
-      defer2.reject();
-      waitsFor(function() { return button.get('content_status') == 'missing'; });
+      waitsFor(function() { return board.get('model.pending_buttons'); });
+      var button = null;
+      runs(function() {
+        expect(board.get('ordered_buttons')).toEqual(null);
+        expect(board.get('model.pending_buttons')).not.toEqual(null);
+        button = board.get('model.pending_buttons')[0];
+        expect(button.get('content_status')).toEqual('pending');
+        defer1.reject();
+        defer2.reject();
+      });
+      waitsFor(function() { return button && button.get('content_status') == 'errored'; });
       runs(function() {
         expect(board.get('ordered_buttons')).toEqual(null);
       });
@@ -1849,13 +1864,17 @@ describe('editManager', function() {
         response: defer2.promise
       });
       editManager.process_for_displaying();
-      expect(board.get('ordered_buttons')).toEqual(null);
-      expect(board.get('model.pending_buttons')).not.toEqual(null);
-      var button = board.get('model.pending_buttons')[0];
-      expect(button.get('content_status')).toEqual('pending');
-      defer1.resolve({image: {id: '126', url: 'http://www.example.com/pic.png'}});
-      defer2.resolve({sound: {id: '126', url: 'http://www.example.com/sound.mp3'}});
-      waitsFor(function() { return button.get('content_status') == 'ready'; });
+      var button = null;
+      waitsFor(function() { return board.get('model.pending_buttons'); });
+      runs(function() {
+        expect(board.get('ordered_buttons')).toEqual(null);
+        expect(board.get('model.pending_buttons')).not.toEqual(null);
+        button = board.get('model.pending_buttons')[0];
+        expect(button.get('content_status')).toEqual('pending');
+        defer1.resolve({image: {id: '126', url: 'http://www.example.com/pic.png'}});
+        defer2.resolve({sound: {id: '126', url: 'http://www.example.com/sound.mp3'}});
+      });
+      waitsFor(function() { return button && button.get('content_status') == 'ready'; });
       runs(function() {
         expect(board.get('ordered_buttons')).not.toEqual(null);
         expect(board.get('model.pending_buttons')).toEqual(null);
@@ -1876,7 +1895,10 @@ describe('editManager', function() {
         expect(id).toEqual(1);
       });
       editManager.process_for_displaying();
-      expect(called).toEqual(true);
+      waitsFor(function() { return called; });
+      runs(function() {
+        expect(board.get('model.found_content_locally')).toEqual(true);
+      });
     });
     it("should do nothing if grid is not defined", function() {
       editManager.setup(board);

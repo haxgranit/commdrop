@@ -71,6 +71,7 @@ describe("persistence", function() {
     });
     it("should default last_sync to zero", function() {
       db_wait(function() {
+        persistence.set('last_sync_at', 12345);
         persistence.remove('settings', {storageId: 'lastSync'}, 'lastSync').then(function() {
           setTimeout(function() {
             persistence.setup({}, app);
@@ -82,10 +83,11 @@ describe("persistence", function() {
     });
     it("should check for last_sync if set", function() {
       db_wait(function() {
+        persistence.set('last_sync_at', 222);
         persistence.store('settings', {last_sync: 12345}, 'lastSync').then(function() {
           setTimeout(function() {
             persistence.setup({}, app);
-          }, 50);
+          }, 100);
         });
         waitsFor(function() { return persistence.get('last_sync_at') === 12345; });
         runs();
@@ -1727,6 +1729,124 @@ describe("persistence", function() {
       });
     });
   });
+  describe('push_records', function() {
+    it('should not call find if all ids already pushed', function() {
+      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
+      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var records = null;
+      var called = false;
+      stub(coughDropExtras.storage, 'find_all', function() {
+        called = true;
+        return Ember.RSVP.reject();
+      });
+      persistence.push_records('image', ['a', 'b']).then(function(res) {
+        records = res;
+      });
+      waitsFor(function() { return records; });
+      runs(function() {
+        expect(records).toEqual({
+          a: a,
+          b: b
+        });
+      });
 
+    });
+
+    it('should return combination of already-pushed and newly-retrieved records in the result', function() {
+      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
+      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var records = null;
+      var called = false;
+      stub(coughDropExtras.storage, 'find_all', function() {
+        called = true;
+        return Ember.RSVP.resolve([
+          {data: {id: 'c', raw: {id: 'c', url: 'http://www.example.com/c.png'}}},
+          {data: {id: 'd', raw: {id: 'd', url: 'http://www.example.com/d.png'}}}
+        ]);
+      });
+      persistence.push_records('image', ['a', 'b', 'c', 'e']).then(function(res) {
+        records = res;
+      });
+      waitsFor(function() { return records; });
+      runs(function() {
+        expect(records.a).toEqual(a);
+        expect(records.b).toEqual(b);
+        expect(records.c).not.toEqual(undefined);
+        expect(records.c.get('url')).toEqual('http://www.example.com/c.png');
+        expect(records.e).toEqual(undefined);
+      });
+    });
+
+    it('should do a bulk lookup with the provided ids', function() {
+      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
+      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var records = null;
+      var called = false;
+      var called_keys = null;
+      stub(coughDropExtras.storage, 'find_all', function(store, keys) {
+        called = true;
+        called_keys = keys;
+        return Ember.RSVP.resolve([
+          {data: {id: 'c', raw: {id: 'c', url: 'http://www.example.com/c.png'}}},
+          {data: {id: 'd', raw: {id: 'd', url: 'http://www.example.com/d.png'}}}
+        ]);
+      });
+      persistence.push_records('image', ['a', 'b', 'c', 'e']).then(function(res) {
+        records = res;
+      });
+      waitsFor(function() { return records; });
+      runs(function() {
+        expect(records.a).toEqual(a);
+        expect(records.b).toEqual(b);
+        expect(records.c).not.toEqual(undefined);
+        expect(records.c.get('url')).toEqual('http://www.example.com/c.png');
+        expect(records.e).toEqual(undefined);
+        expect(called_keys).toEqual(['a', 'b', 'c', 'e']);
+      });
+    });
+
+    it('should reject on find error', function() {
+      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
+      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var called_keys = null;
+      stub(coughDropExtras.storage, 'find_all', function(store, keys) {
+        called_keys = keys;
+        return Ember.RSVP.reject();
+      });
+      var errored = false;
+      persistence.push_records('image', ['a', 'b', 'c', 'e']).then(null, function(err) {
+        errored = true;
+      });
+      waitsFor(function() { return errored; });
+      runs(function() {
+        expect(called_keys).toEqual(['a', 'b', 'c', 'e']);
+      });
+    });
+
+    it('should not include extra records returned via find_all', function() {
+      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
+      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var records = null;
+      var called = false;
+      stub(coughDropExtras.storage, 'find_all', function() {
+        called = true;
+        return Ember.RSVP.resolve([
+          {data: {id: 'c', raw: {id: 'c', url: 'http://www.example.com/c.png'}}},
+          {data: {id: 'd', raw: {id: 'd', url: 'http://www.example.com/d.png'}}}
+        ]);
+      });
+      persistence.push_records('image', ['a', 'b', 'c', 'e']).then(function(res) {
+        records = res;
+      });
+      waitsFor(function() { return records; });
+      runs(function() {
+        expect(records.a).toEqual(a);
+        expect(records.b).toEqual(b);
+        expect(records.c).not.toEqual(undefined);
+        expect(records.c.get('url')).toEqual('http://www.example.com/c.png');
+        expect(records.e).toEqual(undefined);
+        expect(records.d).toEqual(undefined);
+      });
+    });
+  });
 });
-

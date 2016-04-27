@@ -230,14 +230,14 @@ var Button = Ember.Object.extend({
             promises.push(Ember.RSVP.reject('no image lookups'));
           } else {
             promises.push(CoughDrop.store.findRecord('image', _this.image_id).then(function(image) {
-              Ember.run.later(function() {
-                _this.set('image', image);
-                return image.checkForDataURL().then(function() {
-                  return Ember.RSVP.resolve(image);
-                }, function() {
-                  return Ember.RSVP.resolve(image);
-                });
-              }, 100);
+              // There was a Ember.run.later of 100ms here, I have no idea why but
+              // it seemed like a bad idea so I removed it.
+              _this.set('image', image);
+              return image.checkForDataURL().then(function() {
+                return Ember.RSVP.resolve(image);
+              }, function() {
+                return Ember.RSVP.resolve(image);
+              });
             }));
           }
         } else {

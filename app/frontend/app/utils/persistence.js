@@ -28,10 +28,10 @@ var persistence = Ember.Object.extend({
         persistence.set('last_sync_at', 0);
       });
     });
-    if(stashes.get_object('just_logged_in', false) && stashes.get('auth_settings')) {
+    if(stashes.get_object('just_logged_in', false) && stashes.get('auth_settings') && !Ember.testing) {
       stashes.persist_object('just_logged_in', null, false);
       Ember.run.later(function() {
-        persistence.sync('self');
+        persistence.sync('self').then(null, function() { });
       }, 2000);
     }
     coughDropExtras.advance.watch('device', function() {
@@ -44,7 +44,12 @@ var persistence = Ember.Object.extend({
         });
         Ember.run.later(function() {
           persistence.prime_caches().then(null, function() { });
-        }, 1000);
+        }, 100);
+        Ember.run.later(function() {
+          if(persistence.get('local_system.allowed')) {
+            persistence.prime_caches(true).then(null, function() { });
+          }
+        }, 5000);
       }
     });
   },
@@ -67,7 +72,7 @@ var persistence = Ember.Object.extend({
       }
     });
     var any_missing = false;
-    keys.forEach(function(key) { if(hash[key] == true) { any_missing = true; } });
+    keys.forEach(function(key) { if(hash[key] === true) { any_missing = true; } });
     if(any_missing) {
       return new Ember.RSVP.Promise(function(resolve, reject) {
         return coughDropExtras.storage.find_all(store, keys).then(function(list) {
@@ -438,7 +443,7 @@ var persistence = Ember.Object.extend({
               });
             }
           }
-          data.local_url = capabilities.storage.fix_url(data.local_url)
+          data.local_url = capabilities.storage.fix_url(data.local_url);
           _this.url_cache[url] = data.local_url;
           return data.local_url || data.data_uri;
         } else if(data.data_uri) {
@@ -450,7 +455,7 @@ var persistence = Ember.Object.extend({
       });
     }
   },
-  prime_caches: function() {
+  prime_caches: function(check_file_system) {
     var _this = this;
     _this.url_cache = _this.url_cache || {};
     _this.image_filename_cache = _this.image_filename_cache || {};
@@ -464,43 +469,47 @@ var persistence = Ember.Object.extend({
 
     prime_promises.push(new Ember.RSVP.Promise(function(res, rej) {
       // apparently file system calls are really slow on ios
-      res([]);
-//       capabilities.storage.list_files('image').then(function(images) {
-//         images.forEach(function(image) {
-//           _this.image_filename_cache[image] = true;
-//         });
-//         res(images);
-//       }, function(err) { rej(err); });
+      if(!check_file_system) { return res([]); }
+      capabilities.storage.list_files('image').then(function(images) {
+        images.forEach(function(image) {
+          _this.image_filename_cache[image] = true;
+        });
+        res(images);
+      }, function(err) { rej(err); });
     }));
     prime_promises.push(new Ember.RSVP.Promise(function(res, rej) {
       // apparently file system calls are really slow on ios
-      res([]);
-//       capabilities.storage.list_files('sound').then(function(sounds) {
-//         sounds.forEach(function(sound) {
-//           _this.sound_filename_cache[sound] = true;
-//         });
-//         res(sounds);
-//       }, function(err) { rej(err); });
+      if(!check_file_system) { return res([]); }
+      capabilities.storage.list_files('sound').then(function(sounds) {
+        sounds.forEach(function(sound) {
+          _this.sound_filename_cache[sound] = true;
+        });
+        res(sounds);
+      }, function(err) { rej(err); });
     }));
     return Ember.RSVP.all_wait(prime_promises).then(function() {
       return coughDropExtras.storage.find_all('dataCache').then(function(list) {
         var promises = [];
         list.forEach(function(item) {
           if(item.data && item.data.raw && item.data.raw.url && item.data.raw.type && item.data.raw.local_filename) {
+            _this.url_cache[item.data.raw.url] = null;
             if(item.data.raw.type == 'image' && item.data.raw.local_url && _this.image_filename_cache && _this.image_filename_cache[item.data.raw.local_filename]) {
               _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
             } else if(item.data.raw.type == 'sound' && item.data.raw.local_url && _this.sound_filename_cache && _this.sound_filename_cache[item.data.raw.local_filename]) {
               _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
             } else {
               // apparently file system calls are really slow on ios
-              _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
-//               promises.push(new Ember.RSVP.Promise(function(res, rej) {
-//                 capabilities.storage.get_file_url(item.data.raw.type, item.data.raw.local_filename).then(function(local_url) {
-//                   local_url = capabilities.storage.fix_url(local_url);
-//                   _this.url_cache[item.data.raw.url] = local_url;
-//                   res(local_url);
-//                 }, function(err) { rej(err); });
-//               }));
+              if(!check_file_system) {
+                _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
+              } else {
+                promises.push(new Ember.RSVP.Promise(function(res, rej) {
+                  capabilities.storage.get_file_url(item.data.raw.type, item.data.raw.local_filename).then(function(local_url) {
+                    local_url = capabilities.storage.fix_url(local_url);
+                    _this.url_cache[item.data.raw.url] = local_url;
+                    res(local_url);
+                  }, function(err) { rej(err); });
+                }));
+              }
             }
           }
         });
@@ -725,10 +734,10 @@ var persistence = Ember.Object.extend({
     // go ahead and sync all the boards for all my linked users as well.
     return new Ember.RSVP.Promise(function(sync_resolve, sync_reject) {
       if(!user_id) {
-        sync_reject({error: "failed to retrieve user details"});
+        sync_reject({error: "failed to retrieve user, missing id"});
       }
 
-      var prime_caches = persistence.prime_caches().then(null, function() { return Ember.RSVP.resolve(); });
+      var prime_caches = persistence.prime_caches(true).then(null, function() { return Ember.RSVP.resolve(); });
 
       var find_user = prime_caches.then(function() {
         return CoughDrop.store.findRecord('user', user_id).then(null, function() {
@@ -808,7 +817,7 @@ var persistence = Ember.Object.extend({
           // store the list ids to settings.importantIds so they don't get expired
           // even after being offline for a long time. Also store lastSync somewhere
           // that's easy to get to (localStorage much?) for use in the interface.
-          persistence.important_ids = importantIds.uniq()
+          persistence.important_ids = importantIds.uniq();
           persistence.store('settings', {ids: persistence.important_ids}, 'importantIds').then(function(r) {
             persistence.refresh_after_eventual_stores();
             sync_resolve(sync_log);
@@ -1154,7 +1163,7 @@ var persistence = Ember.Object.extend({
       var find_user = user.reload().then(function(u) {
         return Ember.RSVP.resolve(u);
       }, function() {
-        reject({error: "failed to retrieve user details"});
+        reject({error: "failed to retrieve latest user details"});
       });
 
       // also download the latest avatar as a data uri
@@ -1381,8 +1390,8 @@ var persistence = Ember.Object.extend({
       var synced = _this.get('last_sync_at') || 1;
       var now = (new Date()).getTime() / 1000;
       // if we haven't synced in 12 hours and we're online, do a background sync
-      if((now - synced) > (12 * 60 * 60) && persistence.get('online')) {
-        persistence.sync('self');
+      if((now - synced) > (12 * 60 * 60) && persistence.get('online') && !Ember.testing) {
+        persistence.sync('self').then(null, function() { });
       }
     }
   }.observes('refresh_stamp')

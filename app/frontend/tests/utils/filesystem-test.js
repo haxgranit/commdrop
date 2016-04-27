@@ -449,6 +449,23 @@ describe("filesystem", function() {
       });
     });
 
+    describe('fix_url', function() {
+      it("should return the url if file plugin not installed", function() {
+        stub(window, 'resolveLocalFileSystemURL', null);
+        expect(capabilities.storage.fix_url("http://www.example.com/pic.png")).toEqual("http://www.example.com/pic.png");
+        stub(window, 'cordova', {file: {dataDirectory: "http://www.example.com/Application/qwerty/"}});
+        expect(capabilities.storage.fix_url("http://www.example.com/Application/abcdefg/pic.png")).toEqual("http://www.example.com/Application/abcdefg/pic.png");
+      });
+
+      it("should update the url if matches the directory structure", function() {
+        stub(window, 'resolveLocalFileSystemURL', true);
+        stub(window, 'cordova', {file: {dataDirectory: "http://www.example.com/Application/qwerty/"}});
+        expect(capabilities.storage.fix_url("http://www.example.com/pic.png")).toEqual("http://www.example.com/pic.png");
+        expect(capabilities.storage.fix_url("http://www.example.com/Application/abcdefg/pic.png")).toEqual("http://www.example.com/Application/qwerty/pic.png");
+        expect(capabilities.storage.fix_url("http://www.example.com/Application/qwerty/pic.png")).toEqual("http://www.example.com/Application/qwerty/pic.png");
+      });
+    });
+
     describe("get_file_url", function() {
       it("should reject when getFile fails", function() {
         CoughDrop.quota_settings.prevent_file_search = true;
@@ -967,7 +984,7 @@ describe("filesystem", function() {
       });
     });
 
-    it("should check caches", function() {
+    it("should check caches, ignoring the file system if specified", function() {
       persistence.set('local_system', {
         available: true,
         allowed: true
@@ -997,7 +1014,53 @@ describe("filesystem", function() {
       });
 
       var result = null;
-      persistence.prime_caches().then(function(res) {
+      persistence.prime_caches(false).then(function(res) {
+        result = res;
+      }, function(err) { });
+      waitsFor(function() { return result; });
+      runs(function() {
+        expect(persistence.image_filename_cache).toEqual({});
+        expect(persistence.sound_filename_cache).toEqual({});
+        expect(persistence.url_cache).toEqual({
+          "http://www.example.com/remote/a.png": 'http://www.example.com/local/a.png',
+          "http://www.example.com/remote/b.png": undefined,
+          "http://www.example.com/remote/c.mp3": 'http://www.example.com/local/c.mp3',
+          "http://www.example.com/remote/d.mp3": undefined,
+        });
+      });
+    });
+
+    it("should check caches, considering the file system if specified", function() {
+      persistence.set('local_system', {
+        available: true,
+        allowed: true
+      });
+      stashes.set('auth_settings', {});
+      var file1 = make_file('whatever.mp3');
+      var file2 = make_file('chicken.png');
+      var file3 = make_file('chicadee.gif');
+      var file4 = make_file('water.wav');
+      var sub2 = make_dir('what', [file1]);
+      var sub1 = make_dir('chic', [file2, file3]);
+      var sounds = make_dir('sound', [sub2, file4]);
+      var images = make_dir('image', [sub1]);
+      var root = make_dir('root', [images, sounds]);
+      CoughDrop.quota_settings.root_dir = root;
+      stub(coughDropExtras.storage, 'find_all', function(key) {
+        if(key == 'dataCache') {
+          return Ember.RSVP.resolve([
+            {data: {raw: {url: "http://www.example.com/remote/a.png", type: 'image', local_filename: 'chicken.png', local_url: 'http://www.example.com/local/a.png'}}},
+            {data: {raw: {url: "http://www.example.com/remote/b.png", type: 'image', local_filename: 'chicadee.gif'}}},
+            {data: {raw: {url: "http://www.example.com/remote/c.mp3", type: 'sound', local_filename: 'water.wav', local_url: 'http://www.example.com/local/c.mp3'}}},
+            {data: {raw: {url: "http://www.example.com/remote/d.mp3", type: 'sound', local_filename: 'whatever.mp3'}}}
+          ]);
+        } else {
+          return Ember.RSVP.reject();
+        }
+      });
+
+      var result = null;
+      persistence.prime_caches(true).then(function(res) {
         result = res;
       }, function(err) { });
       waitsFor(function() { return result; });
@@ -1105,8 +1168,8 @@ describe("filesystem", function() {
       }, function(err) { });
       waitsFor(function() { return result1 && result2; });
       runs(function() {
-        expect(result1).toEqual('http://www.example.com/picture.png');
-        expect(result2).toEqual('http://www.example.com/water.mp3');
+        expect(result1).toEqual('http://www.example.com/local/picture.png'); //example.com/picture.png');
+        expect(result2).toEqual('http://www.example.com/local/water.mp3'); //example.com/water.mp3');
       });
     });
 
@@ -1121,7 +1184,7 @@ describe("filesystem", function() {
       stub(persistence, 'find', function(key, id) {
         if(key == 'dataCache' && id == 'http://www.example.com/remote/picture.png') {
           return Ember.RSVP.resolve({
-            local_url: 'http://www.example.com/local/picture.png',
+//            local_url: 'http://www.example.com/local/picture.png',
             local_filename: 'picture.png',
             data_uri: 'abcdefg'
           });
@@ -1144,7 +1207,7 @@ describe("filesystem", function() {
       waitsFor(function() { return result1 && result2; });
       runs(function() {
         expect(result1).toEqual('abcdefg');
-        expect(result2).toEqual('http://www.example.com/water.mp3');
+        expect(result2).toEqual('http://www.example.com/local/water.mp3'); //example.com/water.mp3');
       });
     });
   });
@@ -1176,7 +1239,7 @@ describe("filesystem", function() {
       });
       var timeout = null;
       stub(Ember.run, 'later', function(callback, t) {
-        if(t == 1000) {
+        if(t == 100) {
           callback();
           timeout = t;
         }
@@ -1186,7 +1249,7 @@ describe("filesystem", function() {
         available: true,
         requires_confirmation: true
       });
-      expect(timeout).toEqual(1000);
+      expect(timeout).toEqual(100);
       expect(primed).toEqual(true);
     });
 
@@ -1216,7 +1279,7 @@ describe("filesystem", function() {
       });
       var timeout = null;
       stub(Ember.run, 'later', function(callback, t) {
-        if(t == 1000) {
+        if(t == 100) {
           callback();
           timeout = t;
         }
@@ -1227,7 +1290,7 @@ describe("filesystem", function() {
         allowed: true,
         requires_confirmation: false
       });
-      expect(timeout).toEqual(1000);
+      expect(timeout).toEqual(100);
       expect(primed).toEqual(true);
     });
   });
