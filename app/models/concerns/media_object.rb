@@ -3,11 +3,16 @@ module MediaObject
   
   def update_media_object(opts)
     if self.settings['full_filename'] != opts['filename']
-      Uploader.remote_remove(self.settings['full_filename'])
+      # don't remove the old record for a long time, in case someone is still using it
+      # Uploader.remote_remove(self.settings['full_filename'])
       self.settings['full_filename'] = opts['filename']
       self.settings['content_type'] = opts['content_type'] if opts['content_type']
       self.settings['duration'] = opts['duration'].to_i if opts['duration']
       self.settings['thumbnail_filename'] = opts['thumbnail_filename'] if opts['thumbnail_filename']
+      params = self.remote_upload_params
+      self.url = params[:upload_url] + self.full_filename
+      self.settings['pending'] = false
+      self.settings['pending_url'] = nil
       self.save
     else
       false

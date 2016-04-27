@@ -79,7 +79,7 @@ module Transcoder
   
   def self.config
     cred = Aws::Credentials.new((ENV['TRANSCODER_KEY'] || ENV['AWS_KEY']), (ENV['TRANSCODER_SECRET'] || ENV['AWS_SECRET']))
-    Aws::ElasticTranscoder::Client.new(region: ENV['TRANSCODER_REGION'], credentials: cred)
+    Aws::ElasticTranscoder::Client.new(region: (ENV['TRANSCODER_REGION'] || ENV['AWS_REGION']), credentials: cred)
   end
 end
 
