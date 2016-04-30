@@ -668,6 +668,12 @@ var capabilities;
           return false;
         }
       },
+      orientation: function() {
+        return capabilities.last_orientation;
+      },
+      ambient_light: function() {
+        return capabilities.last_lux;
+      },
       volume_check: function() {
         var res = capabilities.mini_promise();
         if(window.plugin && window.plugin.volume && window.plugin.volume.getVolume) {
@@ -928,6 +934,22 @@ var capabilities;
     }
 
   })();
+
+  if(window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', function(event) {
+      if(event.alpha !== null && event.alpha !== undefined) {
+        capabilities.last_orientation = {
+          alpha: event.alpha,
+          beta: event.beta,
+          gamma: event.gamma,
+          timestamp: Math.round((new Date()).getTime() / 1000)
+        };
+      }
+    });
+  }
+  window.addEventListener('devicelight', function(event) {
+    capabilities.last_lux = event.lux;
+  });
 
   capabilities.setup_database = function() {
     delete capabilities['db'];
