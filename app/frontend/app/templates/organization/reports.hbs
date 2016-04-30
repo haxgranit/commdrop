@@ -70,6 +70,9 @@
               </a>
             {{/each}}
           </div>
+          {{#if user_report}}
+            <a href="#" {{action 'download_list'}}>{{t "Download list as a csv" key='download_as_csv'}}</a>
+          {{/if}}
         </div>
       </div>
     {{else}}

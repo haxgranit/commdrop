@@ -99,5 +99,33 @@ export default Ember.Controller.extend({
     } else {
       this.set('results', null);
     }
-  }.observes('current_report', 'model.id')
+  }.observes('current_report', 'model.id'),
+  user_report: function() {
+    return true;
+  }.property(),
+  actions: {
+    download_list: function() {
+      var element = document.createElement('a');
+      var rows = [];
+      this.get('results.list').forEach(function(user) {
+        var columns = [];
+        columns.push(user.name);
+        columns.push(user.user_name);
+        columns.push(user.email);
+        columns.push(user.registration_type);
+        columns.push(user.referrer);
+        columns.push(user.ad_referrer);
+        rows.push(columns.join(','));
+      });
+      element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join("\n")));
+      element.setAttribute('download', 'users.csv');
+
+      element.style.display = 'none';
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+    }
+  }
 });

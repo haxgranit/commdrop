@@ -171,7 +171,16 @@ class Api::OrganizationsController < ApplicationController
       return api_error 400, {:error => "unrecognized report: #{params['report']}"}
     end
     res = {}
-    res[:user] = users.sort_by(&:user_name).map{|u| r = JsonApi::User.as_json(u, limited_identity: true); r['email'] = u.settings['email']; r } if users
+    res[:user] = users.sort_by(&:user_name).map{|u| 
+      r = JsonApi::User.as_json(u, limited_identity: true); 
+      r['email'] = u.settings['email'];
+      if org.admin?
+        r['referrer'] = u.settings['referrer']
+        r['ad_referrer'] = u.settings['ad_referrer']
+        r['registration_type'] = u.registration_type
+      end
+      r 
+    } if users
     res[:stats] = stats if stats
     render json: res.to_json
   end
