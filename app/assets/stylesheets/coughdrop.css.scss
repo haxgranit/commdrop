@@ -1027,6 +1027,14 @@ body.pretty_loader #loading_box {
     opacity: 1.0;
   }
 }
+.video_buttons {
+  padding-right: 0;
+  .btn {
+    width: 100%;
+    font-size: 25px;
+    margin-bottom: 5px;
+  }
+}
 .main_columns .col {
   .wrapper {
     padding: 10px 5px;

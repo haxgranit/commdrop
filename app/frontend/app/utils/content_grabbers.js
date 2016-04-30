@@ -132,12 +132,14 @@ var contentGrabbers = Ember.Object.extend({
     }
   },
   file_selected: function(type, files) {
-    var image = null, sound = null, board = null;
+    var image = null, sound = null, board = null, video = null;
     for(var idx = 0; idx < files.length; idx++) {
       if(!image && files[idx].type.match(/^image/)) {
         image = files[idx];
       } else if(!sound && files[idx].type.match(/^audio/)) {
         sound = files[idx];
+      } else if(!video && files[idx].type.match(/^video/)) {
+        video = files[idx];
       } else {
         if(!board && files[idx].name.match(/\.(obf|obz)$/)) {
           board = files[idx];
@@ -155,6 +157,12 @@ var contentGrabbers = Ember.Object.extend({
         soundGrabber.file_selected(sound);
       } else {
         alert(i18n.t('no_valid_sound_found', "No valid sound found"));
+      }
+    } else if(type == 'video') {
+      if(video) {
+        videoGrabber.file_selected(video);
+      } else {
+        alert(i18n.t('no_valid_video_found', "No valid video found"));
       }
     } else if(type == 'board') {
       boardGrabber.file_selected(board);
@@ -385,9 +393,11 @@ var pictureGrabber = Ember.Object.extend({
     var stream = this.controller.get('webcam.stream');
     if(stream && stream.stop) {
       stream.stop();
-    } else if(stream && stream.getVideoTracks) {
-      stream.getVideoTracks().forEach(function(track) {
-        track.stop();
+    } else if(stream && stream.getTracks) {
+      stream.getTracks().forEach(function(track) {
+        if(track.stop) {
+          track.stop();
+        }
       });
     }
     this.controller.set('webcam', null);
@@ -630,7 +640,26 @@ var pictureGrabber = Ember.Object.extend({
       showing: true,
       stream_id: stream_id
     });
-    if(window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+    if(window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices) {
+      window.navigator.mediaDevices.enumerateDevices().then(function(list) {
+        var video_streams = [];
+        list.forEach(function(device) {
+          if(device.kind == 'videoinput') {
+            video_streams.push({
+              id: device.id,
+              label: device.label || ('camera ' + (video_streams.length + 1))
+            });
+          }
+        });
+        // If there's nothing to swap out, don't bother telling anyone
+        if(video_streams.length <= 1) {
+          video_streams = [];
+        }
+        if(_this.controller.get('video_recording')) {
+          _this.controller.set('video_recording.video_streams', video_streams);
+        }
+      });
+    } else if(window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
       window.MediaStreamTrack.getSources(function(sources) {
         var video_streams = [];
         var source = null;
@@ -662,7 +691,8 @@ var pictureGrabber = Ember.Object.extend({
       if(last_stream_id) {
         constraints.video = {
           optional: [{
-            sourceId: last_stream_id
+            sourceId: last_stream_id,
+            deviceId: last_stream_id
           }]
         };
       }
@@ -700,16 +730,19 @@ var pictureGrabber = Ember.Object.extend({
         var stream = _this.controller.get('webcam.stream');
         if(stream && stream.stop) {
           stream.stop();
-        } else if(stream && stream.getVideoTracks) {
-          stream.getVideoTracks().forEach(function(track) {
-            track.stop();
+        } else if(stream && stream.getTracks) {
+          stream.getTracks().forEach(function(track) {
+            if(track.stop) {
+              track.stop();
+            }
           });
         }
         if(video) { video.src = null; }
         navigator.getUserMedia({
           video: {
             optional: [{
-              sourceId: stream_id
+              sourceId: stream_id,
+              deviceId: stream_id
             }]
           }
         }, function(stream) {
@@ -751,14 +784,20 @@ var videoGrabber = Ember.Object.extend({
     var stream = this.controller.get('video_recording.stream');
     if(stream && stream.stop) {
       stream.stop();
+    } else if(stream && stream.getTracks) {
+      stream.getTracks().forEach(function(track) {
+        if(track && track.stop) {
+          track.stop();
+        }
+      });
     }
     this.toggle_recording_video('stop');
   },
   clear_video_work: function() {
+    Ember.$('#video_upload').val('');
     this.controller.set('video_preview', null);
     this.clear();
     this.controller.set('video_recording', null);
-    Ember.$('#video_upload').val('');
   },
   default_video_preview_license: function() {
     var user = app_state.get('currentUser');
@@ -803,7 +842,7 @@ var videoGrabber = Ember.Object.extend({
       }, function() { }, {limit: 1});
     } else if(navigator.getUserMedia) {
       if(this.controller.get('video_recording.stream')) {
-//         stream_ready(this.controller.get('video_recording.stream'));
+        _this.user_media_ready(this.controller.get('video_recording.stream'));
         return;
       }
 
@@ -812,7 +851,8 @@ var videoGrabber = Ember.Object.extend({
       if(last_stream_id) {
         constraints.video = {
           optional: [{
-            sourceId: last_stream_id
+            sourceId: last_stream_id,
+            deviceId: last_stream_id
           }]
         };
       }
@@ -823,19 +863,137 @@ var videoGrabber = Ember.Object.extend({
       });
     }
   },
-  user_media_ready: function(stream, stream_id) {
-    var video = this.controller.get('video_elem');
-    var _this = this;
-    if(video) {
-      video.src = window.URL.createObjectURL(stream);
+  swap_streams: function() {
+    var current_stream_id = this.controller.get('video_recording.stream_id');
+    var streams = this.controller.get('video_recording.video_streams');
+    var index = 0;
+    for(var idx = 0; idx < streams.length; idx++) {
+      if(current_stream_id && streams[idx].id == current_stream_id) {
+        index = idx;
+      }
     }
+    var _this = this;
+    if(streams && streams.length > 1) {
+      index++;
+      if(index > streams.length - 1) {
+        index = 0;
+      }
+      var stream_id = streams[index] && streams[index].id;
+      if(stream_id) {
+        var stream = _this.controller.get('video_recording.stream');
+        if(stream && stream.stop) {
+          stream.stop();
+        } else if(stream && stream.getTracks) {
+          stream.getTracks().forEach(function(track) {
+            if(track.stop) {
+              track.stop();
+            }
+          });
+        }
+        if(video) { video.src = null; }
+        navigator.getUserMedia({
+          video: {
+            optional: [{
+              sourceId: stream_id,
+              deviceId: stream_id
+            }]
+          }
+        }, function(stream) {
+          _this.user_media_ready(stream, stream_id);
+        }, function() {
+          console.log("permission not granted");
+        });
+      }
+    }
+  },
+  user_media_ready: function(stream, stream_id) {
+    var options = {mimeType: 'video/webm', bitsPerSecond: 100000};
+    var _this = this;
+    videoGrabber.recorded_blobs = [];
+    var mediaRecorder = null;
+    _this.controller.set('video_recording.error', false);
+    try {
+      mediaRecorder = new MediaRecorder(stream, options);
+    } catch (e0) {
+      console.log('Unable to create MediaRecorder with options Object: ', e0);
+      try {
+        options = {mimeType: 'video/webm,codecs=vp9', bitsPerSecond: 100000};
+        mediaRecorder = new MediaRecorder(stream, options);
+      } catch (e1) {
+        console.log('Unable to create MediaRecorder with options Object: ', e1);
+        try {
+          options = 'video/vp8'; // Chrome 47
+          mediaRecorder = new MediaRecorder(stream, options);
+        } catch (e2) {
+          _this.controller.set('video_recording.error', true);
+          console.error('Exception while creating MediaRecorder:', e2);
+          return;
+        }
+      }
+    }
+
+    mediaRecorder.addEventListener('dataavailable', function(event) {
+      console.log(event.data);
+      videoGrabber.recorded_blobs.push(event.data);
+    });
+    mediaRecorder.stopped = function() {
+      var started = _this.controller.get('video_recording.started');
+      var now = (new Date()).getTime();
+      var blob = new Blob(videoGrabber.recorded_blobs, {type: 'video/webm'})
+      videoGrabber.recorded_blobs = [];
+      var reader = contentGrabbers.read_file(blob);
+      reader.then(function(data) {
+        _this.controller.set('video_preview', {
+          from_recording: true,
+          url: data.target.result,
+          duration: Math.round((now - started) / 1000),
+          name: i18n.t('recorded_video', "Recorded video")
+        });
+        if(_this.controller.get('video_recording')) {
+          _this.controller.set('video_recording.ready', false);
+        }
+      });
+    };
+    mediaRecorder.addEventListener('stop', function() {
+      mediaRecorder.stopped();
+    });
+    mediaRecorder.addEventListener('recordingdone', function() {
+      mediaRecorder.stopped();
+    });
+
+    if(mediaRecorder.stream != stream) {
+      _this.clear_video_work();
+    }
+    var video_url = window.URL.createObjectURL(stream);
     if(stream_id) {
       stashes.persist('last_stream_id', stream_id);
     }
-    _this.clear_video_work();
-    _this.controller.set('video_recording.stream', stream);
-    _this.controller.set('video_recording.stream_id', stream_id);
-    if(window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+    _this.controller.set('video_recording', {
+      media_recorder: mediaRecorder,
+      video_url: video_url,
+      stream: stream,
+      stream_id: stream_id
+    });
+    if(window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices) {
+      window.navigator.mediaDevices.enumerateDevices().then(function(list) {
+        var video_streams = [];
+        list.forEach(function(device) {
+          if(device.kind == 'videoinput') {
+            video_streams.push({
+              id: device.id,
+              label: device.label || ('camera ' + (video_streams.length + 1))
+            });
+          }
+        });
+        // If there's nothing to swap out, don't bother telling anyone
+        if(video_streams.length <= 1) {
+          video_streams = [];
+        }
+        if(_this.controller.get('video_recording')) {
+          _this.controller.set('video_recording.video_streams', video_streams);
+        }
+      });
+    } else if(window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
       window.MediaStreamTrack.getSources(function(sources) {
         var video_streams = [];
         var source = null;
@@ -864,11 +1022,14 @@ var videoGrabber = Ember.Object.extend({
     }
     var mr = this.controller.get('video_recording.media_recorder');
     if(action == 'start' && mr && mr.state == 'inactive') {
+      this.controller.set('video_recording.video_url', window.URL.createObjectURL(this.controller.get('video_recording.stream')));
       this.controller.set('video_recording.blob', null);
       this.controller.set('video_recording.recording', true);
-      mr.start(10000);
+      this.controller.set('video_recording.started', (new Date()).getTime());
+      mr.start(100);
     } else if(action == 'stop' && mr && mr.state == 'recording') {
       this.controller.set('video_recording.recording', false);
+      this.controller.set('video_recording.video_url', null);
       mr.stop();
     }
   },
@@ -928,7 +1089,7 @@ var videoGrabber = Ember.Object.extend({
       _this.controller.set('model.pending_video', false);
     });
   }
-});
+}).create();
 
 var soundGrabber = Ember.Object.extend({
   setup: function(button, controller) {
@@ -949,9 +1110,11 @@ var soundGrabber = Ember.Object.extend({
     var stream = this.controller.get('sound_recording.stream');
     if(stream && stream.stop) {
       stream.stop();
-    } else if(stream && stream.getAudioTracks) {
-      stream.getAudioTracks().forEach(function(track) {
-        track.stop();
+    } else if(stream && stream.getTracks) {
+      stream.getTracks().forEach(function(track) {
+        if(track && track.stop) {
+          track.stop();
+        }
       });
     }
     this.toggle_recording_sound('stop');
@@ -1007,7 +1170,7 @@ var soundGrabber = Ember.Object.extend({
         }
         _this.toggle_recording_sound('stop');
       });
-      mr.addEventListener('recordingdone', function() {
+      mr.stopped = function() {
         var blob = _this.controller.get('sound_recording.blob');
         var reader = contentGrabbers.read_file(blob);
         reader.then(function(data) {
@@ -1020,6 +1183,13 @@ var soundGrabber = Ember.Object.extend({
             _this.controller.set('sound_recording.ready', false);
           }
         });
+      };
+
+      mr.addEventListener('recordingdone', function() {
+        mr.stopped();
+      });
+      mr.addEventListener('stop', function() {
+        mr.stopped();
       });
 
       return mr;
@@ -1430,9 +1600,10 @@ var linkGrabber = Ember.Object.extend({
   }
 }).create();
 
-Ember.$(document).on('change', '#image_upload,#sound_upload,#board_upload,#avatar_upload', function(event) {
+Ember.$(document).on('change', '#image_upload,#sound_upload,#board_upload,#avatar_upload,#video_upload', function(event) {
   var type = 'image';
   if(event.target.id == 'sound_upload') { type = 'sound'; }
+  if(event.target.id == 'video_upload') { type = 'video'; }
   if(event.target.id == 'board_upload') { type = 'board'; }
   if(event.target.id == 'avatar_upload') { type = 'avatar'; }
   var files = event.target.files;

@@ -51,23 +51,48 @@
           </div>
         </div>
       {{else}}
-        <div class="col-sm-10 col-sm-offset-2">
-          {{#if video_allowed}}
-            {{t "Video notes are not yet implemented. We hope to have them soon!" key='video_notes'}}
-          {{else}}
-            <p>
-              {{t "CoughDrop is a powerful, flexible communication tool with lots of great features. Some features, including this one, are only available to users who have a paid premium subscription. Please " key='purchase_subscription_1'}}
-              {{#if app_state.currentUser}}
-                {{#link-to 'user.subscription' app_state.currentUser.user_name}}{{t "purchase a premium subscription" key='purchase_subscription_2'}}{{/link-to}}
+        <div class="form-group">
+          <label for="video" class="col-sm-2 control-label">{{t "Video" key='video'}}</label>
+          <div class="col-sm-10">
+            {{#if video_allowed}}
+              {{#if app_state.feature_flags.video_recording}}
+                {{video-recorder}}
               {{else}}
-                {{t "purchase a premium subscription" key='purchase_subscription_2'}}
+                {{t "Coming Soon!" key='coming_soon'}}
               {{/if}}
-              {{t "to support this good cause and to unlock this feature." key='purchase_subscription_3'}}
-            </p>
-          {{/if}}
+            {{else}}
+              <p>
+                {{t "CoughDrop is a powerful, flexible communication tool with lots of great features. Some features, including this one, are only available to users who have a paid premium subscription. Please " key='purchase_subscription_1'}}
+                {{#if app_state.currentUser}}
+                  {{#link-to 'user.subscription' app_state.currentUser.user_name}}{{t "purchase a premium subscription" key='purchase_subscription_2'}}{{/link-to}}
+                {{else}}
+                  {{t "purchase a premium subscription" key='purchase_subscription_2'}}
+                {{/if}}
+                {{t "to support this good cause and to unlock this feature." key='purchase_subscription_3'}}
+              </p>
+            {{/if}}
+          </div>
         </div>
-        <div class="col-sm-10 col-sm-offset-2">
-          <button class="btn btn-default" {{action "close"}}>{{t "Close" key='close'}}</button>
+        <div class="form-group">
+          <label for="note" class="col-sm-2 control-label">{{t "Note" key='note'}}</label>
+          <div class="col-sm-10">
+            {{textarea value=note class="form-control" id="note" rows="1"}}
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-10 col-sm-offset-2">
+            <div class="checkbox">
+              <label>
+                {{input checked=notify type="checkbox"}}
+                {{t "Notify others of this message" key='notify_others'}}
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-10 col-sm-offset-2">
+            <button class="btn btn-default" {{action "close"}}>{{t "Close" key='close'}}</button>
+          </div>
         </div>
       {{/if}}
     </form>

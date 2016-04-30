@@ -4,12 +4,12 @@ if(!window.MediaRecorder) {
 // ... or how about let's just use: https://github.com/streamproc/MediaStreamRecorder
 function polyfillMediaRecorder() {
   // http://www.w3.org/TR/mediastream-recording/
-  function MediaRecorder(stream) {
+  function MediaRecorder(stream, options) {
     this.stream = stream;
     if(!stream) { throw("stream required"); }
     if(stream.getAudioTracks().length == 0) { throw("only audio recording currently supported"); }
     // console.log(stream.getVideoTracks());
-    
+
     this.state = "inactive";
     this.imageWidth = 640;
     this.imageHeight = 480;
@@ -24,24 +24,24 @@ function polyfillMediaRecorder() {
     this.onphoto = null;
     this.onerror = null;
     this.onwarning = null;
-    
+
     var recorderRTC = RecordRTC(stream, {
       type: 'audio'
     });
-    
+
     var rec = this;
     var blobList = null;
     var lastBlob = null;
     var timeslice = null;
     var MAX_TIMESLICE = 30000, MIN_TIMESLICE = 1000;
-    
+
     var timesliceCallback = function() {
       if(rec.state == 'recording') {
         rec.requestData();
         setTimeout(timesliceCallback, timeslice);
       }
     };
-    
+
     var makeBlob = function() {
       lastBlob = new Blob(blobList, {type: rec.mimeType});
       return lastBlob;
@@ -51,7 +51,7 @@ function polyfillMediaRecorder() {
       // for each track, check if it's muted and if so fill with empty, otherwise use the input
     };
 
-    // NOT part of the spec    
+    // NOT part of the spec
     this.getLastBlob = function() {
       return lastBlob;
     };
@@ -75,7 +75,7 @@ function polyfillMediaRecorder() {
         rec.state = 'inactive';
         rec.trigger('dataavailable', makeBlob());
         blobList = [];
-        rec.trigger('recordingdone');
+        rec.trigger('stop');
       });
     };
     this.pause = function() {
@@ -139,7 +139,7 @@ function polyfillMediaRecorder() {
       rec.imageHeight = optionValues.imageHeight;
       // set options as specified
     };
-    
+
     var listeners = {};
     this.bind = function(event, callback) {
       listeners[event] = listeners[event] || [];
@@ -172,7 +172,7 @@ function polyfillMediaRecorder() {
       }
     }
   }
-  
+
   window.MediaRecorder = MediaRecorder;
 }
 
