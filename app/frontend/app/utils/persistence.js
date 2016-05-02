@@ -18,9 +18,7 @@ var persistence = Ember.Object.extend({
     });
     persistence.find('settings', 'lastSync').then(function(res) {
       persistence.set('last_sync_at', res.last_sync);
-    }, function() {
-      persistence.set('last_sync_at', 0);
-    });
+    }, function() { });
     coughDropExtras.addObserver('ready', function() {
       persistence.find('settings', 'lastSync').then(function(res) {
         persistence.set('last_sync_at', res.last_sync);
