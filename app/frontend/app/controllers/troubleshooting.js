@@ -49,7 +49,11 @@ export default Ember.Controller.extend({
       if(speecher.scope.speechSynthesis.getVoices) {
         var voices = speecher.scope.speechSynthesis.getVoices();
         if(voices.length > 0) {
-          var voice_string = voices.map(function(v) { return (v.name || v.voiceURI || "unnamed voice") + " (" + v.lang + ")"; }).join("\n");
+          var voice_names = [];
+          for(var idx = 0; idx < voices.length; idx++) {
+            voice_names.push((voices[idx].name || voices[idx].voiceURI || "unnamed voice") + "(" + voices[idx].lang + ")");
+          }
+          var voice_string = voice_names.join("\n");
           Ember.set(test, 'results', {passed: true, content: voice_string});
         } else {
           Ember.set(test, 'results', {passed: false, reason: "No voices found"});
