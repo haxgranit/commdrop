@@ -349,6 +349,7 @@ var capabilities;
               capabilities.storage.remove_file(file.dir, file.name).then(function() {
                 cleared++;
                 if(cleared == list.length) {
+                  capabilities.cached_dirs = {};
                   promise.resolve(list.length);
                 }
               }, function(err) {
@@ -409,28 +410,36 @@ var capabilities;
           if(capabilities.cached_dirs[path]) {
             promise.resolve(capabilities.cached_dirs[path]);
           } else {
-            capabilities.storage.root_entry().then(function(root) {
-              root.getDirectory(key, {create: true}, function(dir) {
-                capabilities.cached_dirs[key] = dir;
-                if(filename) {
-                  dir.getDirectory(sub_key, {create: true}, function(sub_dir) {
-                    capabilities.cached_dirs[path] = sub_dir;
-                    promise.resolve(sub_dir);
-                  }, function(err) {
-                    promise.reject(err);
-                  });
-                } else {
-                  promise.resolve(dir);
-                }
-              }, function(err) {
-                promise.reject(err);
-              });
-            }, function(err) { promise.reject(err); });
+            var find_sub_dir = function(dir) {
+              if(filename) {
+                dir.getDirectory(sub_key, {create: true}, function(sub_dir) {
+                  capabilities.cached_dirs[path] = sub_dir;
+                  promise.resolve(sub_dir);
+                }, function(err) {
+                  promise.reject(err);
+                });
+              } else {
+                promise.resolve(dir);
+              }
+            };
+            if(capabilities.cached_dirs[key]) {
+              find_sub_dir(capabilities.cached_dirs[key]);
+            } else {
+              capabilities.storage.root_entry().then(function(root) {
+                root.getDirectory(key, {create: true}, function(dir) {
+                  capabilities.cached_dirs[key] = dir;
+                  find_sub_dir(dir);
+                }, function(err) {
+                  promise.reject(err);
+                });
+              }, function(err) { promise.reject(err); });
+            }
           }
           return promise;
         },
         list_files: function(dirname, include_size) {
           var promise = capabilities.mini_promise();
+          // TODO: native plugin that's faster at listing all files, and does so in a separate thread
           capabilities.storage.assert_directory(dirname).then(function(dir) {
             var res = [];
             res.size = 0;
@@ -484,9 +493,45 @@ var capabilities;
         },
         get_file_url: function(dirname, filename) {
           var promise = capabilities.mini_promise();
-          capabilities.storage.root_entry().then(function() {
-            capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
-              dir.getFile(filename, {create: false}, function(file) {
+          capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
+            dir.getFile(filename, {create: false}, function(file) {
+              promise.resolve(file.toURL());
+            }, function(err) {
+              promise.reject(err);
+            });
+          }, function(err) {
+            promise.reject(err);
+          });
+          return promise;
+        },
+        write_file: function(dirname, filename, blob) {
+          var promise = capabilities.mini_promise();
+          capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
+            dir.getFile(filename, {create: true}, function(file) {
+              file.createWriter(function(writer) {
+                writer.onwriteend = function() {
+                  promise.resolve(file.toURL());
+                };
+                writer.onerror = function(err) {
+                  promise.reject(err);
+                };
+                writer.write(blob);
+              }, function(err) {
+                promise.reject(err);
+              });
+            }, function(err) {
+              promise.reject(err);
+            });
+          }, function(err) {
+            promise.reject(err);
+          });
+          return promise;
+        },
+        remove_file: function(dirname, filename) {
+          var promise = capabilities.mini_promise();
+          capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
+            dir.getFile(filename, {}, function(file) {
+              file.remove(function() {
                 promise.resolve(file.toURL());
               }, function(err) {
                 promise.reject(err);
@@ -494,51 +539,9 @@ var capabilities;
             }, function(err) {
               promise.reject(err);
             });
-          }, function(err) { promise.reject(err); });
-          return promise;
-        },
-        write_file: function(dirname, filename, blob) {
-          var promise = capabilities.mini_promise();
-          capabilities.storage.root_entry().then(function() {
-            capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
-              dir.getFile(filename, {create: true}, function(file) {
-                file.createWriter(function(writer) {
-                  writer.onwriteend = function() {
-                    promise.resolve(file.toURL());
-                  };
-                  writer.onerror = function(err) {
-                    promise.reject(err);
-                  };
-                  writer.write(blob);
-                }, function(err) {
-                  promise.reject(err);
-                });
-              }, function(err) {
-                promise.reject(err);
-              });
-            }, function(err) {
-              promise.reject(err);
-            });
-          }, function(err) { promise.reject(err); });
-          return promise;
-        },
-        remove_file: function(dirname, filename) {
-          var promise = capabilities.mini_promise();
-          capabilities.storage.root_entry().then(function() {
-            capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
-              dir.getFile(filename, {}, function(file) {
-                file.remove(function() {
-                  promise.resolve(file.toURL());
-                }, function(err) {
-                  promise.reject(err);
-                });
-              }, function(err) {
-                promise.reject(err);
-              });
-            }, function(err) {
-              promise.reject(err);
-            });
-          }, function(err) { promise.reject(err); });
+          }, function(err) {
+            promise.reject(err);
+          });
           return promise;
         },
         root_entry: function(size) {
