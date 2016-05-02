@@ -668,10 +668,43 @@ var capabilities;
           return false;
         }
       },
+      update_brightness: function() {
+        if(window.cordova && window.cordova.plugins && window.cordova.plugins.brightness) {
+          // https://www.npmjs.com/package/cordova-plugin-brightness
+          window.cordova.plugins.brightness.getBrightness(function(val) {
+            capabilities.last_brightness = val;
+            stashes.screen_brightness = capabilities.last_brightness;
+            console.log(val);
+          });
+        } else if(capabilities.check_brightness) {
+          // https://www.npmjs.com/package/brightness
+          capabilities.check_brightness(function(val) {
+            capabilities.last_brightness = val;
+            stashes.screen_brightness = capabilities.last_brightness;
+            console.log(val);
+          });
+        }
+      },
+      brightness: function() {
+        return capabilities.last_brightness;
+      },
       orientation: function() {
+        // alpha - 0=north, 180=south
+        // beta - 0=flat, 90=vertical-facing-left, 270=vertical-facing-right
+        // gamma - 0=flat, 90=vertical-upright, 270=vertical-upside-down
+        // layout - portrait-primary, portrait-secondary, landscape-primary, landscape-secondary
         return capabilities.last_orientation;
       },
       ambient_light: function() {
+        // 0 - evil darkness
+        // 1 - full moon
+        // 50 - lighted living room/bathroom
+        // 100 - overcast day
+        // 300 - office lighting
+        // 400 - sunset
+        // 1000 - overcast day
+        // 15000 - full daylight
+        // 30000 - direct sun
         return capabilities.last_lux;
       },
       volume_check: function() {
@@ -681,7 +714,7 @@ var capabilities;
             res.resolve(vol);
           });
         } else {
-          res.reject();
+          res.reject({error: 'volume not available'});
         }
         return res;
       },
@@ -938,17 +971,26 @@ var capabilities;
   if(window.DeviceOrientationEvent) {
     window.addEventListener('deviceorientation', function(event) {
       if(event.alpha !== null && event.alpha !== undefined) {
+        var layout = 'unknown';
+        if(window.screen && window.screen.orientation && window.screen.orientation.type) {
+          var layout = window.screen.orientation.type;
+        }
         capabilities.last_orientation = {
           alpha: event.alpha,
           beta: event.beta,
           gamma: event.gamma,
+          layout: layout,
           timestamp: Math.round((new Date()).getTime() / 1000)
         };
+        stashes.orientation = capabilities.last_orientation;
+        console.log(stashes.orientation);
       }
     });
   }
+  setInterval(capabilities.update_brightness, 2000);
   window.addEventListener('devicelight', function(event) {
-    capabilities.last_lux = event.lux;
+    capabilities.last_lux = event.lux || event.value;
+    stashes.ambient_light = capabilities.last_lux;
   });
 
   capabilities.setup_database = function() {

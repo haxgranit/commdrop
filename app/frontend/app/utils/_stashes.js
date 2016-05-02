@@ -254,6 +254,13 @@ var stashes = Ember.Object.extend({
           action: obj
         };
       }
+      if(stashes.orientation) {
+        log_event.orientation = stashes.orientation;
+      }
+      if(stashes.ambient_light !== null && stashes.ambient_light != undefined) {
+        log_event.ambient_light = stashes.ambient_light;
+      }
+
       if(log_event) {
 //        console.log(log_event);
         stashes.persist('last_event', log_event);
