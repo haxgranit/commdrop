@@ -411,6 +411,7 @@ var persistence = Ember.Object.extend({
       var find = this.find('dataCache', url);
       return find.then(function(data) {
         _this.url_cache = _this.url_cache || {};
+        var file_missing = _this.url_cache[url] === false;
         if(data.local_url) {
           if(data.local_filename) {
             if(type == 'image' && _this.image_filename_cache && _this.image_filename_cache[data.local_filename]) {
@@ -426,17 +427,23 @@ var persistence = Ember.Object.extend({
                   _this.url_cache[url] = local_url;
                   file_url_resolve(local_url);
                 } else {
-                  capabilities.storage.get_file_url(type, data.local_filename).then(function(local_url) {
-                    local_url = capabilities.storage.fix_url(local_url);
+                  if(file_missing) {
+                    capabilities.storage.get_file_url(type, data.local_filename).then(function(local_url) {
+                      var local_url = capabilities.storage.fix_url(local_url);
+                      _this.url_cache[url] = local_url;
+                      file_url_resolve(local_url);
+                    }, function() {
+                      if(data.data_uri) {
+                        file_url_resolve(data.data_uri);
+                      } else {
+                        file_url_reject({error: "missing local file"});
+                      }
+                    });
+                  } else {
+                    var local_url = capabilities.storage.fix_url(data.local_filename);
                     _this.url_cache[url] = local_url;
                     file_url_resolve(local_url);
-                  }, function() {
-                    if(data.data_uri) {
-                      file_url_resolve(data.data_uri);
-                    } else {
-                      file_url_reject({error: "missing local file"});
-                    }
-                  });
+                  }
                 }
               });
             }
@@ -496,7 +503,7 @@ var persistence = Ember.Object.extend({
             } else if(item.data.raw.type == 'sound' && item.data.raw.local_url && _this.sound_filename_cache && _this.sound_filename_cache[item.data.raw.local_filename]) {
               _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
             } else {
-              // apparently file system calls are really slow on ios
+              // apparently file system calls are really slow on ios (and android)
               if(!check_file_system) {
                 _this.url_cache[item.data.raw.url] = capabilities.storage.fix_url(item.data.raw.local_url);
               } else {
@@ -505,7 +512,10 @@ var persistence = Ember.Object.extend({
                     local_url = capabilities.storage.fix_url(local_url);
                     _this.url_cache[item.data.raw.url] = local_url;
                     res(local_url);
-                  }, function(err) { rej(err); });
+                  }, function(err) {
+                    _this.url_cache[item.data.raw.url] = false;
+                    rej(err);
+                  });
                 }));
               }
             }
