@@ -647,8 +647,10 @@ var persistence = Ember.Object.extend({
               for(var idx = 0; idx < url.length; idx++) { file_code = file_code + url.charCodeAt(idx); }
               var pieces = url.split(/\?/)[0].split(/\//);
               var extension = contentGrabbers.file_type_extensions[object.content_type];
-              if(object.content_type.match(/^image\//) || object.content_type.match(/^audio\//)) {
-                extension = "." + object.content_type.split(/\//)[1].split(/\+/)[0];
+              if(!extension) {
+                if(object.content_type.match(/^image\//) || object.content_type.match(/^audio\//)) {
+                  extension = "." + object.content_type.split(/\//)[1].split(/\+/)[0];
+                }
               }
               var url_extension = pieces[pieces.length - 1].split(/\./).pop();
               if(!extension && url_extension) {

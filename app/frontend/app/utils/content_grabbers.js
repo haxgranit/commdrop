@@ -236,14 +236,16 @@ var contentGrabbers = Ember.Object.extend({
   },
   file_type_extensions: {
     'image/png': '.png',
-    'image/svg+xml': '.xvg',
+    'image/svg+xml': '.svg',
     'image/gif': '.gif',
+    'image/icon': '.ico',
     'image/x-icon': '.ico',
     'image/jpeg': '.jpg',
     'image/jpg': '.jpg',
     'image/tiff': '.tif',
     'image/x-tiff': '.tif',
-    'audio/mpeg': '.mp2',
+    'audio/mpeg2': '.mp2',
+    'audio/mpeg': '.mp3',
     'audio/midi': '.mid',
     'audio/x-mid': '.mid',
     'audio/x-midi': '.mid',
@@ -254,8 +256,14 @@ var contentGrabbers = Ember.Object.extend({
     'audio/x-wav': '.wav',
     'audio/ogg': '.oga',
     'audio/flac': '.flac',
-    'audio/webm': '.webm'
-
+    'audio/webm': '.webm',
+    'video/webm': '.webm',
+    'video/quicktime': '.mov',
+    'video/mp4': '.mp4',
+    'video/mpeg4': '.mp4',
+    'video/3gpp': '.3gp',
+    'video/x-msvideo': '.avi',
+    'video/x-ms-wmv': '.wmv'
   }
 }).create();
 var pictureGrabber = Ember.Object.extend({
