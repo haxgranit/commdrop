@@ -1394,7 +1394,22 @@ var persistence = Ember.Object.extend({
         persistence.sync('self').then(null, function() { });
       }
     }
-  }.observes('refresh_stamp')
+  }.observes('refresh_stamp', 'last_sync_at'),
+  check_for_sync_reminder: function() {
+    var _this = this;
+    if(stashes.get('auth_settings')) {
+      var synced = _this.get('last_sync_at') || 1;
+      var now = (new Date()).getTime() / 1000;
+      // if we haven't synced in 14 days, remind to sync
+      if((now - synced) > (14 * 24 * 60 * 60) && !Ember.testing) {
+        persistence.set('sync_reminder', true);
+      } else {
+        persistence.set('sync_reminder', false);
+      }
+    } else {
+      persistence.set('sync_reminder', false);
+    }
+  }.observes('refresh_stamp', 'last_sync_at')
 }).create({online: (navigator.onLine)});
 stashes.set('online', navigator.onLine);
 
