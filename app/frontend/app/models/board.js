@@ -179,11 +179,11 @@ CoughDrop.Board = DS.Model.extend({
       persistence.push_records('board', board_ids).then(function() {
         boards.forEach(function(b) {
           CoughDrop.store.findRecord('board', b.id).then(function(brd) {
-//            brd.find_content_locally();
+            brd.find_content_locally();
           }, function() { });
         });
       }, function() { });
-    });
+    }, 500);
   },
   clean_license: function() {
     var _this = this;
