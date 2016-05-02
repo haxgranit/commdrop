@@ -205,7 +205,7 @@ var speecher = Ember.Object.extend({
     if(speecher.beep_url) {
       if(speecher.beep_url.match(/^data:/)) { return Ember.RSVP.resolve(true); }
       else if(!speecher.beep_url.match(/^http/)) { return Ember.RSVP.resolve(true); }
-      return persistence.find_url(speecher.beep_url, 'sound').then(function(data_uri) {
+      var find = persistence.find_url(speecher.beep_url, 'sound').then(function(data_uri) {
         if(data_uri) {
           speecher.beep_url = data_uri;
           return true;
@@ -220,6 +220,10 @@ var speecher = Ember.Object.extend({
           speecher.beep_url = data.local_url || data.data_uri;
           return true;
         });
+      });
+      return find.then(null, function(err) {
+        console.log(err);
+        return Ember.RSVP.reject(err);
       });
     } else {
       return Ember.RSVP.reject({error: "beep sound not saved"});

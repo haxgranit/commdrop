@@ -530,7 +530,8 @@ var persistence = Ember.Object.extend({
   url_cache: {},
   store_url: function(url, type, keep_big, force_reload) {
     if(!type) { return Ember.RSVP.reject('type required for storing'); }
-    if(!window.coughDropExtras || !window.coughDropExtras.ready || url.match(/^data:/)) {
+    if(!url) { console.error('url not provided'); return Ember.RSVP.reject('url required for storing'); }
+    if(!window.coughDropExtras || !window.coughDropExtras.ready || url.match(/^data:/) || url.match(/^file:/)) {
       return Ember.RSVP.resolve({
         url: url,
         type: type
