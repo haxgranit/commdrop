@@ -112,7 +112,8 @@ import capabilities from './capabilities';
   }).create();
   var device_id = stashes.get_raw('coughDropDeviceId');
   if(!device_id) {
-    device_id = ((new Date()).getTime() + Math.random()).toString();
+    // http://cordova.apache.org/docs/en/6.x/reference/cordova-plugin-device/index.html#deviceuuid
+    device_id = (window.device && window.device.uuid) || ((new Date()).getTime() + Math.random()).toString();
     var readable = capabilities.readable_device_name;
     device_id = device_id + " " + readable;
   }
