@@ -677,14 +677,12 @@ var capabilities;
           window.cordova.plugins.brightness.getBrightness(function(val) {
             capabilities.last_brightness = val;
             stashes.screen_brightness = capabilities.last_brightness;
-            console.log(val);
           });
         } else if(capabilities.check_brightness) {
           // https://www.npmjs.com/package/brightness
           capabilities.check_brightness(function(val) {
             capabilities.last_brightness = val;
             stashes.screen_brightness = capabilities.last_brightness;
-            console.log(val);
           });
         }
       },
@@ -975,8 +973,16 @@ var capabilities;
     window.addEventListener('deviceorientation', function(event) {
       if(event.alpha !== null && event.alpha !== undefined) {
         var layout = 'unknown';
+        // layout - portrait-primary, portrait-secondary, landscape-primary, landscape-secondary
         if(window.screen && window.screen.orientation && window.screen.orientation.type) {
-          var layout = window.screen.orientation.type;
+          layout = window.screen.orientation.type;
+        } else if(window.orientation !== null && window.orientation !== undefined) {
+          var landscape = window.innerWidth > window.innerHeight;
+          if(window.orientation == 0 || window.orientation == 90) {
+            layout = landscape ? 'landscape-primary' : 'portrait-primary';
+          } else if(window.orientation == 180 || window.orientation == -90) {
+            layout = landscape ? 'landscape-secondary' : 'portrait-secondary';
+          }
         }
         capabilities.last_orientation = {
           alpha: event.alpha,
@@ -986,15 +992,27 @@ var capabilities;
           timestamp: Math.round((new Date()).getTime() / 1000)
         };
         stashes.orientation = capabilities.last_orientation;
-        console.log(stashes.orientation);
       }
     });
   }
+  // TODO: https://github.com/brunovilar/cordova-plugins/tree/master/AmbientLight
   setInterval(capabilities.update_brightness, 2000);
-  window.addEventListener('devicelight', function(event) {
-    capabilities.last_lux = event.lux || event.value;
-    stashes.ambient_light = capabilities.last_lux;
-  });
+  if(window.AmbientLightSensor) {
+    // TODO: only track while in speak mode
+    var s = new AmbientLightSensor();
+    s.start();
+    s.onchange = function(event) {
+      capabilities.last_lux = event.reading && event.reading.illuminance;
+      stashes.ambient_light = capabilities.last_lux;
+    };
+  } else {
+    window.addEventListener('devicelight', function(event) {
+      capabilities.last_lux = event.lux || event.value;
+      stashes.ambient_light = capabilities.last_lux;
+    });
+  }
+
+  // TODO: ProximitySensor?
 
   capabilities.setup_database = function() {
     delete capabilities['db'];
