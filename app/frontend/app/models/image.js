@@ -76,13 +76,13 @@ CoughDrop.Image = DS.Model.extend({
   checkForDataURL: function() {
     this.set('checked_for_data_url', true);
     var _this = this;
-    // TODO: checking for persistence.online because otherwise it vomits a lot in chrome
-    // when TTS is also activated (no idea why). Also it's technically not necessary when
-    // online, though spotty connections and unauthenticated wifi connections would still
-    // benefit from offline, so we really should figure this problem out eventually.
     if(!this.get('data_url') && this.get('url') && this.get('url').match(/^http/)) {
       return persistence.find_url(this.get('url'), 'image').then(function(data_uri) {
         _this.set('data_url', data_uri);
+        if(data_uri && data_uri.match(/^file/)) {
+          var img = new Image();
+          img.src = data_uri;
+        }
         return _this;
       });
     } else if(this.get('url') && this.get('url').match(/^data/)) {
