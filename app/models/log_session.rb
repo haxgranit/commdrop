@@ -539,9 +539,20 @@ class LogSession < ActiveRecord::Base
     true
   end
   
+  def self.push_logs_remotely
+    remotes = LogSession.where(:needs_remote_push => true).where(['ended_at < ?', 2.hours.ago])
+    remotes.each do |session|
+      session.notify('new_session')
+    end
+  end
+  
   def default_listeners(notification_type)
-    return [] unless self.user
-    users = [self.user] + self.user.supervisors - [self.author]
-    users.map(&:record_code)
+    if notification_type == 'push_message'
+      return [] unless self.user
+      users = [self.user] + self.user.supervisors - [self.author]
+      users.map(&:record_code)
+    else
+      []
+    end
   end
 end

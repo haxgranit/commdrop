@@ -666,6 +666,12 @@ class User < ActiveRecord::Base
   ensure
     PaperTrail.whodunnit = prior
   end
+  
+  def self.generate_weekly_summaries
+    User.where(:id => false).each do |user|
+      user.notify('weekly_summary')
+    end
+  end
 
   def notify_on(attributes, notification_type)
     # TODO: ...
