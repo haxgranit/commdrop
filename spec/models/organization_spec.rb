@@ -863,7 +863,7 @@ describe Organization, :type => :model do
       o.add_subscription(u1.user_name)
       expect(o.reload.subscriptions).to eq([u1])
       o.add_subscription(u2.user_name)
-      expect(o.reload.subscriptions).to eq([u1, u2])
+      expect(o.reload.subscriptions.sort_by(&:id)).to eq([u1, u2])
     end
   end
   

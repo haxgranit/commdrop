@@ -99,7 +99,7 @@ describe Api::CallbacksController, :type => :controller do
       resp = OpenStruct.new
       resp.job = job
       expect(config).to receive(:create_job){|job_args|
-        expect(job_args[:pipeline_id]).to eq('')
+        expect(job_args[:pipeline_id]).to eq(ENV['TRANSCODER_AUDIO_PIPELINE'])
         expect(job_args[:user_metadata]).to_not eq(nil)
         expect(job_args[:input]).to_not eq(nil)
         expect(job_args[:output]).to_not eq(nil)
@@ -113,7 +113,7 @@ describe Api::CallbacksController, :type => :controller do
       }.and_return(resp)
       
       expect(config).to receive(:read_job).with({id: 'onetwo'}).and_return(resp)
-      expect(Uploader).to receive(:remote_remove).with('sounds/4/3/0-something.wav')
+      # expect(Uploader).to receive(:remote_remove).with('sounds/4/3/0-something.wav')
       expect(Transcoder).to receive(:config).and_return(config).at_least(1).times
 
       Worker.process_queues
