@@ -79,6 +79,9 @@ module JsonApi::Log
         entry['type'] = 'button'
         entry['spoken'] = !!event['button']['spoken']
         entry['summary'] = event['button']['label']
+        if entry['summary'] == ':complete' && event['button']['completion']
+          entry['summary'] += " (#{event['button']['completion']})"
+        end
         entry['parts_of_speech'] = event['parts_of_speech']
         if event['button']['percent_x'] && event['button']['percent_y'] && event['button']['board']
           entry['touch_percent_x'] = event['button']['percent_x']
