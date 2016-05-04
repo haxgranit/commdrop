@@ -3,10 +3,12 @@ require 'aws-sdk'
 class Api::CallbacksController < ApplicationController
   def callback
     topic_arn = request.headers['x-amz-sns-topic-arn']
+    json_body = JSON.parse(request.body.read.force_encoding("UTF-8")) rescue nil
     if request.headers['x-amz-sns-message-type'] == 'SubscriptionConfirmation'
       valid_arns = (ENV['SNS_ARNS'] || '').split(/,/)
       if valid_arns.include?(topic_arn)
-        token = params['Token']
+        token = json_body['Token'] || json_body['token']
+        Rails.logger.warn(json_body.to_json)
         cred = Aws::Credentials.new(ENV['AWS_KEY'], ENV['AWS_SECRET'])
         client = Aws::SNS::Client.new(region: ENV['SNS_REGION'], credentials: cred)
         client.confirm_subscription({topic_arn: topic_arn, token: token, authenticate_on_unsubscribe: 'true'})
@@ -18,7 +20,8 @@ class Api::CallbacksController < ApplicationController
       if !topic_arn
         api_error 400, {error: 'missing topic arn'}
       elsif topic_arn.match(/audio_conversion_events/) || topic_arn.match(/video_conversion_events/)
-        res = Transcoder.handle_event(params)
+        Rails.logger.warn(json_body.to_json)
+        res = Transcoder.handle_event(json_body)
         if res
           render json: {handled: true}
         else
