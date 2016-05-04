@@ -90,7 +90,11 @@ module UpstreamDownstream
     end
     
     # step 4: update any authors whose list of visible/editable private boards may have changed
-    self.schedule_update_available_boards('downstream')
+    if !@skip_update_available_boards
+      self.schedule_update_available_boards('downstream')
+    end
+    @skip_update_available_boards = false
+    
     true
   end
   

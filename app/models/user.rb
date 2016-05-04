@@ -236,6 +236,10 @@ class User < ActiveRecord::Base
   # frd == "For Reals, Dude" obviously. It's a thing, I guess you just didn't know about it.
   # TODO: add "frd" to urban dictionary
   def track_boards(frd=false)
+    if @skip_track_boards
+      @skip_track_boards = false
+      return true
+    end
     if !frd
       self.schedule(:track_boards, true)
       return true
@@ -249,6 +253,7 @@ class User < ActiveRecord::Base
         orphan_board_ids -= [board.id]
         # TODO: this doesn't shard, and probably other places don't as well
         UserBoardConnection.find_or_create_by(:board_id => board.id, :user_id => self.id, :home => true)
+        board.instance_variable_set('@skip_update_available_boards', true)
         board.track_downstream_boards!
         board.settings['downstream_board_ids'].each do |global_id|
           downstream_board = Board.find_by_path(global_id)
