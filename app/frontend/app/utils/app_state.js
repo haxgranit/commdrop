@@ -371,7 +371,7 @@ var app_state = Ember.Object.extend({
     if(mode == 'speak') {
       var board_state = app_state.get('currentBoardState');
       if(opts && opts.override_state) {
-        if(opts.temporary_home && board_state.id != opts.override_state.id) {
+        if(opts.temporary_home && board_state && board_state.id != opts.override_state.id) {
           temporary_root_state = board_state;
         }
         board_state = opts.override_state;
