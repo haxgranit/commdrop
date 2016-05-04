@@ -2,6 +2,7 @@ require 'aws-sdk'
 
 module Transcoder
   def self.handle_event(args)
+    args = JSON.parse(args['Message'])
     res = config.read_job({id: args['jobId']})
     job = res && res.job
     return false if !job || !job.user_metadata
