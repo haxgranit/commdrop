@@ -92,7 +92,9 @@ var stashes = Ember.Object.extend({
       stashes.flush_db_id();
     }
     if(stash_capabilities) {
-      stash_capabilities.storage_store({store: 'settings', id: 'stash', record: {}});
+      var stash = {};
+      stash.storageId = 'stash';
+      stash_capabilities.storage_store({store: 'settings', id: 'stash', record: stash});
     }
     for(var idx = 0, l = localStorage.length; idx < l; idx++) {
       var key = localStorage.key(idx);
