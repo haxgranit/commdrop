@@ -178,6 +178,7 @@ class Api::OrganizationsController < ApplicationController
         r['referrer'] = u.settings['referrer']
         r['ad_referrer'] = u.settings['ad_referrer']
         r['registration_type'] = u.registration_type
+        r['joined'] = u.created_at.iso8601
       end
       r 
     } if users

@@ -112,6 +112,7 @@ export default Ember.Controller.extend({
         columns.push(user.name);
         columns.push(user.user_name);
         columns.push(user.email);
+        columns.push(user.joined);
         columns.push(user.registration_type);
         columns.push(user.referrer);
         columns.push(user.ad_referrer);
