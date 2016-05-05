@@ -91,6 +91,9 @@ var stashes = Ember.Object.extend({
     if((!prefix || prefix == 'auth_') && ignore_prefix != 'auth_') {
       stashes.flush_db_id();
     }
+    if(stash_capabilities) {
+      stash_capabilities.storage_store({store: 'settings', id: 'stash', record: {}});
+    }
     for(var idx = 0, l = localStorage.length; idx < l; idx++) {
       var key = localStorage.key(idx);
       if(key && key.indexOf(full_prefix) === 0) {
@@ -257,7 +260,7 @@ var stashes = Ember.Object.extend({
       if(stashes.orientation) {
         log_event.orientation = stashes.orientation;
       }
-      if(stashes.ambient_light !== null && stashes.ambient_light != undefined) {
+      if(stashes.ambient_light !== null && stashes.ambient_light !== undefined) {
         log_event.ambient_light = stashes.ambient_light;
       }
 

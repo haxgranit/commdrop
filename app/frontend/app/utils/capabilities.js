@@ -978,9 +978,9 @@ var capabilities;
           layout = window.screen.orientation.type;
         } else if(window.orientation !== null && window.orientation !== undefined) {
           var landscape = window.innerWidth > window.innerHeight;
-          if(window.orientation == 0 || window.orientation == 90) {
+          if(window.orientation === 0 || window.orientation === 90) {
             layout = landscape ? 'landscape-primary' : 'portrait-primary';
-          } else if(window.orientation == 180 || window.orientation == -90) {
+          } else if(window.orientation === 180 || window.orientation === -90) {
             layout = landscape ? 'landscape-secondary' : 'portrait-secondary';
           }
         }
@@ -999,7 +999,7 @@ var capabilities;
   setInterval(capabilities.update_brightness, 2000);
   if(window.AmbientLightSensor) {
     // TODO: only track while in speak mode
-    var s = new AmbientLightSensor();
+    var s = new window.AmbientLightSensor();
     s.start();
     s.onchange = function(event) {
       capabilities.last_lux = event.reading && event.reading.illuminance;

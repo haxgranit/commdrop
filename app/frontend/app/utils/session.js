@@ -128,7 +128,7 @@ var session = Ember.Object.extend({
     }
   },
   invalidate: function() {
-    var full_invalidate = !!(app_state.get('currentUser') || stashes.get('auth_settings'));
+    var full_invalidate = !!(app_state.get('currentUser') || stashes.get_object('auth_settings', true));
     stashes.flush();
     stashes.setup();
     if(full_invalidate) {
