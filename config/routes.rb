@@ -155,6 +155,10 @@ Coughdrop::Application.routes.draw do
     resources :sounds do
       get 'upload_success'
     end
+
+    resources :videos do
+      get 'upload_success'
+    end
     
     resources :organizations do
       get 'managers'

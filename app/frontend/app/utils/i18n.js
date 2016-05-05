@@ -71,6 +71,7 @@ Ember.templateHelpers.is_equal = function(lhs, rhs) {
 
 Ember.templateHelpers.duration = function(duration) {
   if(duration && duration > 0) {
+    duration = Math.round(duration);
     var result = "";
     var seconds = duration % 60;
     var minutes = Math.floor(duration / 60) % 60;

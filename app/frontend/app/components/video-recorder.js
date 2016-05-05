@@ -5,6 +5,7 @@ import app_state from '../utils/app_state';
 export default Ember.Component.extend({
   tagName: 'div',
   willInsertElement: function() {
+    this.send('video_not_ready');
     contentGrabbers.videoGrabber.setup(this);
     this.set('app_state', app_state);
   },
@@ -37,6 +38,9 @@ export default Ember.Component.extend({
     },
     swap: function() {
       contentGrabbers.videoGrabber.swap_streams();
+    },
+    keep: function() {
+      contentGrabbers.videoGrabber.select_video_preview();
     }
   }
 });

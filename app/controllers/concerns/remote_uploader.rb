@@ -5,7 +5,8 @@ module RemoteUploader
     # check on S3 that the file uploaded successfully
     type = ButtonImage
     type = ButtonSound if params['controller'] == 'api/sounds'
-    record = type.find_by_global_id(params['image_id'] || params['sound_id'])
+    type = UserVideo if params['controller'] == 'api/videos'
+    record = type.find_by_global_id(params['image_id'] || params['sound_id'] || params['video_id'])
     if record && record.confirmation_key == params['confirmation']
       config = Uploader.remote_upload_config
       url = config[:upload_url] + record.full_filename

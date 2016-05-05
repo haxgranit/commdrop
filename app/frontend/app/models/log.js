@@ -27,6 +27,7 @@ export default DS.Model.extend({
   readable_ip_address: DS.attr('string'),
   ip_cluster_id: DS.attr('string'),
   geo_cluster_id: DS.attr('string'),
+  video_id: DS.attr('string'),
   nonce: DS.attr('string'),
   event_note_count: DS.attr('number'),
   minutes: function() {
@@ -65,7 +66,7 @@ export default DS.Model.extend({
         Ember.set(event, 'part_of_speech', ((event.parts_of_speech || {}).types || [])[0] || 'unknown');
       }
       Ember.set(event, 'show_notes', event.id && shown_ids.indexOf(event.id) >= 0);
-      
+
       Ember.set(event, 'note_count', (event.notes || []).length);
       last_ts = event.timestamp;
       Ember.set(event, 'type_class', "glyphicon " + Ember.get(event, 'type_icon'));

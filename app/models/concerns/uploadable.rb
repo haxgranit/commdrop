@@ -3,8 +3,16 @@ require 'mime/types'
 module Uploadable
   extend ActiveSupport::Concern
   
-  def file_type
-    self.is_a?(ButtonImage) ? 'images' : 'sounds'
+  def file_type 
+    if self.is_a?(ButtonImage)
+      'images'
+    elsif self.is_a?(ButtonSound)
+      'sounds'
+    elsif self.is_a?(UserVideo)
+      'videos'
+    else
+      'objects'
+    end
   end
   
   def confirmation_key
@@ -109,7 +117,9 @@ module Uploadable
       self.settings['source_url'] = url
       res = Typhoeus.get(URI.escape(url))
       # TODO: regex depending on self.file_type
-      re = file_type == "images" ? (/^image/) : (/^audio/)
+      re = /^audio/
+      re = /^image/ if file_type == 'images'
+      re = /^video/ if file_type == 'videos'
       if res.success? && res.headers['Content-Type'].match(re)
         self.settings['content_type'] = res.headers['Content-Type']
         file.write(res.body)

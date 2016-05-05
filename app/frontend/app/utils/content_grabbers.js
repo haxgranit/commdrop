@@ -898,7 +898,9 @@ var videoGrabber = Ember.Object.extend({
             }
           });
         }
-        if(video) { video.src = null; }
+        if(this.controller.get('video_recording')) {
+          this.controller.set('video_recording.video_url', null);
+        }
         navigator.getUserMedia({
           video: {
             optional: [{
@@ -921,17 +923,17 @@ var videoGrabber = Ember.Object.extend({
     var mediaRecorder = null;
     _this.controller.set('video_recording.error', false);
     try {
-      mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorder = new window.MediaRecorder(stream, options);
     } catch (e0) {
       console.log('Unable to create MediaRecorder with options Object: ', e0);
       try {
         options = {mimeType: 'video/webm,codecs=vp9', bitsPerSecond: 100000};
-        mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorder = new window.MediaRecorder(stream, options);
       } catch (e1) {
         console.log('Unable to create MediaRecorder with options Object: ', e1);
         try {
           options = 'video/vp8'; // Chrome 47
-          mediaRecorder = new MediaRecorder(stream, options);
+          mediaRecorder = new window.MediaRecorder(stream, options);
         } catch (e2) {
           _this.controller.set('video_recording.error', true);
           console.error('Exception while creating MediaRecorder:', e2);
@@ -941,20 +943,19 @@ var videoGrabber = Ember.Object.extend({
     }
 
     mediaRecorder.addEventListener('dataavailable', function(event) {
-      console.log(event.data);
       videoGrabber.recorded_blobs.push(event.data);
     });
     mediaRecorder.stopped = function() {
       var started = _this.controller.get('video_recording.started');
       var now = (new Date()).getTime();
-      var blob = new Blob(videoGrabber.recorded_blobs, {type: 'video/webm'})
+      var blob = new Blob(videoGrabber.recorded_blobs, {type: 'video/webm'});
       videoGrabber.recorded_blobs = [];
       var reader = contentGrabbers.read_file(blob);
       reader.then(function(data) {
         _this.controller.set('video_preview', {
           from_recording: true,
           url: data.target.result,
-          duration: Math.round((now - started) / 1000),
+          duration: (now - started) / 1000,
           name: i18n.t('recorded_video', "Recorded video")
         });
         if(_this.controller.get('video_recording')) {
@@ -1044,6 +1045,7 @@ var videoGrabber = Ember.Object.extend({
   select_video_preview: function() {
     var preview = this.controller && this.controller.get('video_preview');
     if(!preview || !preview.url) { return; }
+    this.controller.set('video_preview.saving', true);
     var _this = this;
 
     if(preview.url.match(/^data:/)) {
@@ -1062,10 +1064,15 @@ var videoGrabber = Ember.Object.extend({
     }
 
     var video_load = new Ember.RSVP.Promise(function(resolve, reject) {
-      var a = new window.Video();
+      var a = document.createElement('video');
+      a.preload = 'metadata';
       a.ondurationchange = function() {
+        var duration = preview.duration;
+        if(a.duration && isFinite(a.duration)) {
+          duration = a.duration;
+        }
         resolve({
-          duration: a.duration
+          duration: duration
         });
       };
       a.onerror = function() {
@@ -1086,17 +1093,35 @@ var videoGrabber = Ember.Object.extend({
     });
 
     save_video.then(function(video) {
-      _this.controller.set('model.video', video);
+      _this.controller.set('video', video);
       _this.clear_video_work();
-      _this.controller.set('model.pending_video', false);
+      _this.controller.sendAction('video_ready', video.get('id'));
     }, function(err) {
       err = err || {};
       err.error = err.error || "unexpected error";
       coughDropExtras.track_error("upload failed: " + err.error);
       alert(i18n.t('upload_failed', "upload failed: " + err.error));
-      _this.controller.set('model.pending_video', false);
+      _this.controller.set('video_preview.saving', false);
     });
-  }
+  },
+  save_pending: function() {
+    var _this = this;
+    if(this.controller.get('video_preview')) {
+      this.select_video_preview();
+    } else if(this.controller.get('video')) {
+      var license = this.controller.get('video.license');
+      var original = this.controller.get('original_video_license') || {};
+      if(license.type != original.type || license.author_name != original.author_name || license.author_url != original.author_url) {
+        this.controller.set('pending_video', true);
+        this.controller.get('video').save().then(function() {
+          _this.controller.set('pending_video', false);
+        }, function() {
+          alert(i18n.t('save_failed', "Saving settings failed!"));
+          _this.controller.set('pending_video', false);
+        });
+      }
+    }
+  },
 }).create();
 
 var soundGrabber = Ember.Object.extend({

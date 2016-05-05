@@ -2,7 +2,8 @@ module MediaObject
   extend ActiveSupport::Concern
   
   def update_media_object(opts)
-    if self.settings['full_filename'] != opts['filename']
+    self.settings['transcoding_keys'] ||= []
+    if self.settings['full_filename'] != opts['filename'] && self.settings['transcoding_keys'].include?(opts['transcoding_key'])
       # don't remove the old record for a long time, in case someone is still using it
       # Uploader.remote_remove(self.settings['full_filename'])
       self.settings['full_filename'] = opts['filename']
@@ -30,7 +31,10 @@ module MediaObject
     if self.settings && self.settings['full_filename']
       method = self.is_a?(ButtonSound) ? :convert_audio : :convert_video
       prefix = self.file_path + self.file_prefix + "v" + Time.now.to_i.to_s
-      Worker.schedule(Transcoder, method, self.global_id, prefix)
+      transcoding_key = Security.nonce('transcoding_key')
+      Worker.schedule(Transcoder, method, self.global_id, prefix, transcoding_key)
+      self.settings['transcoding_keys'] ||= []
+      self.settings['transcoding_keys'] << transcoding_key
       self.settings['transcoding_attempted'] = true
       self.save
     end

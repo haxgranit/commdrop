@@ -8,14 +8,16 @@ module Transcoder
     return false if !job || !job.user_metadata
     progress = Progress.find_by_global_id(job.user_metadata['progress_id'])
     record = nil
-    new_record = {}
+    new_record = {
+      'transcoding_key' => job.user_metadata['transcoding_key']
+    }
     if job.user_metadata['conversion_type'] == 'audio'
       record = ButtonSound.find_by_global_id(job.user_metadata['audio_id'])
       new_record['filename'] = job.outputs[0].key
       new_record['duration'] = job.outputs[0].duration
       new_record['content_type'] = 'audio/mp3'
     elsif job.user_metadata['conversion_type'] == 'video'
-#      record = ButtonSound.find_by_global_id(job.user_metadata['video_id'])
+      record = UserVideo.find_by_global_id(job.user_metadata['video_id'])
       new_record['filename'] = job.outputs[0].key
       new_record['duration'] = job.outputs[0].duration
       new_record['content_type'] = 'video/mp4'
@@ -35,7 +37,7 @@ module Transcoder
   AUDIO_PRESET = '1351620000001-300040' # MP3 - 128k
   VIDEO_PRESET = '1351620000001-000030' # MP4 480p 4:3
   
-  def self.convert_audio(button_sound_id, prefix)
+  def self.convert_audio(button_sound_id, prefix, transcoding_key)
     button_sound = ButtonSound.find_by_global_id(button_sound_id)
     return false unless button_sound
     config = self.config
@@ -50,18 +52,19 @@ module Transcoder
       },
       user_metadata: {
         audio_id: button_sound.global_id,
-        conversion_type: 'audio'
+        conversion_type: 'audio',
+        transcoding_key: transcoding_key
       }
     })
     {job_id: res.job.id}
   end
   
-  def self.convert_video(video_id, prefix)
+  def self.convert_video(video_id, prefix, transcoding_key)
     video = nil
     return false unless video
     config = self.config
     res = config.create_job({
-      pipeline_id: '',
+      pipeline_id: ENV['TRANSCODER_VIDEO_PIPELINE'],
       input: {
         key: video.full_filename
       },
@@ -72,7 +75,8 @@ module Transcoder
       },
       user_metadata: {
         audio_id: video.global_id,
-        conversion_type: 'video'
+        conversion_type: 'video',
+        transcoding_key: transcoding_key
       }
     })
     {job_id: res.job.id}

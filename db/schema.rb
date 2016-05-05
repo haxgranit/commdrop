@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160301010310) do
+ActiveRecord::Schema.define(version: 20160505173628) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -136,7 +136,7 @@ ActiveRecord::Schema.define(version: 20160301010310) do
     t.string   "cluster_hash", limit: 255
   end
 
-  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_cluster_hash", unique: true, using: :btree
+  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_hash", unique: true, using: :btree
 
   create_table "contact_messages", force: :cascade do |t|
     t.text     "settings"
@@ -233,6 +233,16 @@ ActiveRecord::Schema.define(version: 20160301010310) do
 
   add_index "old_keys", ["type", "key"], name: "index_old_keys_on_type_and_key", using: :btree
 
+  create_table "organization_users", force: :cascade do |t|
+    t.integer  "user_id"
+    t.integer  "organization_id"
+    t.string   "user_type"
+    t.datetime "created_at",      null: false
+    t.datetime "updated_at",      null: false
+  end
+
+  add_index "organization_users", ["organization_id", "user_type"], name: "index_organization_users_on_organization_id_and_user_type", using: :btree
+
   create_table "organizations", force: :cascade do |t|
     t.text     "settings"
     t.boolean  "admin"
@@ -281,6 +291,17 @@ ActiveRecord::Schema.define(version: 20160301010310) do
   end
 
   add_index "user_link_codes", ["code"], name: "index_user_link_codes_on_code", unique: true, using: :btree
+
+  create_table "user_videos", force: :cascade do |t|
+    t.integer  "user_id"
+    t.string   "url",        limit: 4096
+    t.text     "settings"
+    t.string   "file_hash"
+    t.boolean  "public"
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+    t.string   "nonce"
+  end
 
   create_table "users", force: :cascade do |t|
     t.string   "user_name",                limit: 255
