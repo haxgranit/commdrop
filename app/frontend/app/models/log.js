@@ -40,6 +40,9 @@ export default DS.Model.extend({
   note_type: function() {
     return this.get('type') == 'note';
   }.property('type'),
+  video_type: function() {
+    return this.get('type') == 'note' && this.get('note.video');
+  }.property('type', 'note'),
   assessment_type: function() {
     return this.get('type') == 'assessment';
   }.property('type'),

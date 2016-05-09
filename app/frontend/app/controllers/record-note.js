@@ -20,7 +20,7 @@ export default modal.ModalController.extend({
     return this.get('model.full_premium');
   }.property('model', 'note_type', 'model.full_premium'),
   no_video_ready: function() {
-    return !!this.get('video_id');
+    return !this.get('video_id');
   }.property('video_id'),
   text_class: function() {
     var res = "btn ";
@@ -45,14 +45,13 @@ export default modal.ModalController.extend({
       this.set('note_type', type);
     },
     video_ready: function(id) {
-      debugger
       this.set('video_id', id);
     },
     video_not_ready: function() {
       this.set('video_id', false);
     },
     saveNote: function(type) {
-      if(type == 'video' && !this.get('video_ready')) { return; }
+      if(type == 'video' && !this.get('video_id')) { return; }
       var note = {
         text: this.get('note')
       };

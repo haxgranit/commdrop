@@ -142,8 +142,13 @@ class LogSession < ActiveRecord::Base
       self.started_at ||= Time.now
       self.ended_at ||= self.started_at
       str = "Note by #{self.author.user_name}: "
-      if self.data['note']['recording']
-        str += "recording (#{self.data['note']['recording']['duration']} minutes)"
+      if self.data['note']['video']
+        time = "#{self.data['note']['video']['duration'].to_i}s"
+        if self.data['note']['video']['duration'] > 60
+          time = "#{(self.data['note']['video']['duration'] / 60).to_i}m"
+        end 
+        str += "recording (#{time})"
+        str += " - #{self.data['note']['text']}" if !self.data['note']['text'].blank?
       else
         str += self.data['note']['text']
       end
@@ -507,6 +512,15 @@ class LogSession < ActiveRecord::Base
         @push_message = true
       end
       self.data['note'] = params['note'] if params['note']
+      if params['video_id']
+        video = UserVideo.find_by_global_id(params['video_id'])
+        if video
+          self.data['note']['video'] = {
+            'id' => params['video_id'],
+            'duration' => video.settings['duration']
+          }
+        end
+      end
       self.data['assessment'] = params['assessment'] if params['assessment']
     end
     true

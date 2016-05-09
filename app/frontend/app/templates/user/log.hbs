@@ -51,6 +51,11 @@
 {{#if model.note_type}}
   <div class="panel" style="white-space: pre-line; margin-bottom: 50px;">
     {{model.note.text}}
+    {{#if model.video}}
+      <div style="margin-top: 10px;">
+        <video src={{model.video.url}} controls style='max-height: 400px; border: 1px solid #ccc;'></video>
+      </div>
+    {{/if}}
   </div>
 {{else if model.assessment_type}}
   <div class="row">
@@ -66,7 +71,7 @@
       <div class="panel panel-default summary smaller">
         <div class="panel-heading">{{t "Total Correct" key='total_correct'}}</div>
         <div class="panel-body">
-          {{model.assessment.stats.total_correct}} / 
+          {{model.assessment.stats.total_correct}} /
           {{model.assessment.stats.total_tallies}}
         </div>
       </div>
@@ -184,7 +189,7 @@
                   <div>
                     {{#link-to 'user' note.author.user_name}}
                       {{note.author.user_name}}
-                    {{/link-to}} - 
+                    {{/link-to}} -
                     {{note.note}}
                   </div>
                 {{/each}}
