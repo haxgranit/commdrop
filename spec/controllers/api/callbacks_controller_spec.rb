@@ -23,7 +23,7 @@ describe Api::CallbacksController, :type => :controller do
       expect(client).to receive(:confirm_subscription).with(topic_arn: 'fried', token: 'ahem', authenticate_on_unsubscribe: 'true')
       request.headers['x-amz-sns-message-type'] = 'SubscriptionConfirmation'
       request.headers['x-amz-sns-topic-arn'] = 'fried'
-      post 'callback', :Token => 'ahem'
+      post 'callback', {:Token => 'ahem'}.to_json
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => true})
@@ -40,7 +40,7 @@ describe Api::CallbacksController, :type => :controller do
       expect(client).to receive(:confirm_subscription).with(topic_arn: 'fried', token: 'ahem', authenticate_on_unsubscribe: 'true')
       request.headers['x-amz-sns-message-type'] = 'SubscriptionConfirmation'
       request.headers['x-amz-sns-topic-arn'] = 'fried'
-      post 'callback', :Token => 'ahem'
+      post 'callback', {:Token => 'ahem'}.to_json
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => true})
@@ -66,9 +66,9 @@ describe Api::CallbacksController, :type => :controller do
       request.headers['x-amz-sns-message-type'] = 'Notification'
       request.headers['x-amz-sns-topic-arn'] = 'fried:audio_conversion_events:chicken'
       expect(Transcoder).to receive(:handle_event){|params|
-        expect(params[:a]).to eq('1')
+        expect(params['a']).to eq('1')
       }.and_return(false)
-      post 'callback', {a: 1}
+      post 'callback', {a: '1'}.to_json
       expect(response).to_not be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'error' => 'event not handled', 'status' => 400})
@@ -78,20 +78,22 @@ describe Api::CallbacksController, :type => :controller do
       request.headers['x-amz-sns-message-type'] = 'Notification'
       request.headers['x-amz-sns-topic-arn'] = 'fried:audio_conversion_events:chicken'
       expect(Transcoder).to receive(:handle_event){|params|
-        expect(params[:a]).to eq('1')
+        expect(params['a']).to eq('1')
       }.and_return(true)
-      post 'callback', {a: 1}
+      post 'callback', {a: '1'}.to_json
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'handled' => true})
     end
     
     it "should handle transcoding" do
+      expect(Security).to receive(:nonce).with("security_nonce").and_return("abcdefg")
+      expect(Security).to receive(:nonce).with("transcoding_key").and_return("abcdefg")
       bs = ButtonSound.create(:settings => {
         'full_filename' => 'sounds/4/3/0-something.wav'
       })
       prefix = bs.file_path + bs.file_prefix + "v" + Time.now.to_i.to_s
-      expect(Worker.scheduled?(Transcoder, :convert_audio, bs.global_id, prefix)).to eq(true)
+      expect(Worker.scheduled?(Transcoder, :convert_audio, bs.global_id, prefix, "abcdefg")).to eq(true)
       config = OpenStruct.new
       expect(bs.settings['transcoding_attempted']).to eq(true)
       job = OpenStruct.new
@@ -120,10 +122,10 @@ describe Api::CallbacksController, :type => :controller do
 
       request.headers['x-amz-sns-message-type'] = 'Notification'
       request.headers['x-amz-sns-topic-arn'] = 'fried:audio_conversion_events:chicken'
-      post 'callback', {
+      post 'callback', {'Message' => {
         'jobId' => 'onetwo',
         'state' => 'COMPLETED'
-      }
+      }.to_json }.to_json
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'handled' => true})

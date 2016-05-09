@@ -6,7 +6,7 @@ describe Transcoder do
       config = OpenStruct.new
       expect(Transcoder).to receive(:config).and_return(config)
       expect(config).to receive(:read_job).with({id: 'jobby'}).and_return(nil)
-      expect(Transcoder.handle_event({'jobId' => 'jobby'})).to eq(false)
+      expect(Transcoder.handle_event({'Message' => {'jobId' => 'jobby'}.to_json})).to eq(false)
     end
     
     it "should return false if it doesn't have audio or video metadata" do
@@ -14,7 +14,7 @@ describe Transcoder do
       job = OpenStruct.new
       expect(Transcoder).to receive(:config).and_return(config)
       expect(config).to receive(:read_job).with({id: 'jobby'}).and_return(OpenStruct.new({job: job}))
-      expect(Transcoder.handle_event({'jobId' => 'jobby'})).to eq(false)
+      expect(Transcoder.handle_event({'Message' => {'jobId' => 'jobby'}.to_json})).to eq(false)
     end
     
     it "should update the sound for audio events" do
@@ -22,7 +22,8 @@ describe Transcoder do
       job = OpenStruct.new({
         user_metadata: {
           'audio_id' => 'sound_id',
-          'conversion_type' => 'audio'
+          'conversion_type' => 'audio',
+          'transcoding_key' => 'bacon'
         },
         outputs: [
           OpenStruct.new({
@@ -38,12 +39,13 @@ describe Transcoder do
       expect(bs).to receive(:update_media_object).with({
         'filename' => 'some/file.mp3',
         'duration' => 12,
-        'content_type' => 'audio/mp3'
+        'content_type' => 'audio/mp3',
+        'transcoding_key' => 'bacon'
       })
-      res = Transcoder.handle_event({
+      res = Transcoder.handle_event({'Message' => {
         'jobId' => 'jobby',
         'state' => 'COMPLETED'
-      })
+      }.to_json})
       expect(res).to eq(true)
     end
     
@@ -63,10 +65,10 @@ describe Transcoder do
       })
       expect(Transcoder).to receive(:config).and_return(config)
       expect(config).to receive(:read_job).with({id: 'jobby'}).and_return(OpenStruct.new({job: job}))
-      res = Transcoder.handle_event({
+      res = Transcoder.handle_event({'Message' => {
         'jobId' => 'jobby',
         'state' => 'COMPLETED'
-      })
+      }.to_json})
       expect(res).to eq(true)
     end
     
@@ -92,18 +94,18 @@ describe Transcoder do
         code: 'err',
         job: 'jobby'
       })
-      res = Transcoder.handle_event({
+      res = Transcoder.handle_event({'Message' => {
         'jobId' => 'jobby',
         'state' => 'ERROR',
         'errorCode' => 'err'
-      })
+      }.to_json})
       expect(res).to eq(true)
     end
   end
   
   describe "convert_audio" do
     it "should return false if the sound can't be found" do
-      res = Transcoder.convert_audio('asdf', 'something')
+      res = Transcoder.convert_audio('asdf', 'something', 'qwert')
       expect(Transcoder).to_not receive(:config)
       expect(res).to eq(false)
     end
@@ -126,17 +128,18 @@ describe Transcoder do
         },
         user_metadata: {
           audio_id: bs.global_id,
-          conversion_type: 'audio'
+          conversion_type: 'audio',
+          transcoding_key: 'qwert'
         }
       }).and_return(OpenStruct.new({job: job}))
-      res = Transcoder.convert_audio(bs.global_id, 'd/e/f')
+      res = Transcoder.convert_audio(bs.global_id, 'd/e/f', 'qwert')
       expect(res).to eq({job_id: 'asdf'})
     end
   end
 
   describe "convert_video" do
     it "should return false" do
-      expect(Transcoder.convert_video('a', 'b')).to eq(false)
+      expect(Transcoder.convert_video('a', 'b', 'asdf')).to eq(false)
     end
   end
 

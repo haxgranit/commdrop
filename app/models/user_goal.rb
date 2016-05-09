@@ -106,7 +106,7 @@ class UserGoal < ActiveRecord::Base
     if self.settings['goal_duration']
       Time.now + self.settings['goal_duration']
     elsif self.settings['goal_advances_at']
-      Time.parse(self.settings['goal_advances_at']
+      Time.parse(self.settings['goal_advances_at'])
     else
       nil
     end

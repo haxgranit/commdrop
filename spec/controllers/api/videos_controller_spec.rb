@@ -1,5 +1,7 @@
-require 'rails_helper'
+require 'spec_helper'
 
-RSpec.describe Api::VideosController, type: :controller do
-
+describe Api::VideosController, type: :controller do
+  it "should have specs" do
+    expect(1).to eq(2)
+  end
 end
