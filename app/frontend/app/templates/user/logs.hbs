@@ -46,7 +46,10 @@
             <tr>
               <td>
                 {{#link-to 'user.log' user.user_name log.id}}
-                  {{#if log.note_type}}
+                  {{#if log.video_type}}
+                    <span class="glyphicon glyphicon-film"></span>
+                    <span class="sr-only">{{t "video" key='video'}}</span>
+                  {{else if log.note_type}}
                     <span class="glyphicon glyphicon-envelope"></span>
                     <span class="sr-only">{{t "message" key='message'}}</span>
                   {{else if log.assessment_type}}

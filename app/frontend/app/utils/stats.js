@@ -85,10 +85,10 @@ CoughDrop.Stats = Ember.Object.extend({
       var weight = "weight_" + Math.ceil(word.count / max * 10);
       return {text: word.text, weight_class: "weighted_word " + weight};
     });
-    return res.sort(function(a, b) { 
+    return res.sort(function(a, b) {
       var a_text = (a.text || "").toLowerCase();
       var b_text = (b.text || "").toLowerCase();
-      if(a_text < b_text) { return -1; } else if(a_text > b_text) { return 1; } else { return 0; } 
+      if(a_text < b_text) { return -1; } else if(a_text > b_text) { return 1; } else { return 0; }
     });
   }.property('words_by_frequency'),
   label: function() {

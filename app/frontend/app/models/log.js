@@ -28,6 +28,7 @@ export default DS.Model.extend({
   ip_cluster_id: DS.attr('string'),
   geo_cluster_id: DS.attr('string'),
   video_id: DS.attr('string'),
+  video: DS.attr('raw'),
   nonce: DS.attr('string'),
   event_note_count: DS.attr('number'),
   minutes: function() {

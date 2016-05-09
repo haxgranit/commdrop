@@ -69,7 +69,7 @@ export default Ember.Controller.extend({
     var stats = this.get('usage_stats');
     var controller = this;
     if(!stats) { return; }
-    
+
     var draw_id = Math.random() * 9999999;
     Ember.run.later(function() {
       if(controller.get('usage_stats')) {
@@ -103,18 +103,18 @@ export default Ember.Controller.extend({
   load_right_charts: function() {
     this.load_charts('right');
   },
-  load_charts: function(side) { 
+  load_charts: function(side) {
     side = side || "left";
     // must have an active paid subscription to access reports for a user's account
     if(!this.get('model.preferences.logging') || !this.get('model.full_premium')) {
       return;
     }
-    
+
     if(this.already_loaded(side, side == 'left' ? this.get('usage_stats') : this.get('usage_stats2'))) {
       Ember.run.later(this, this.draw_charts);
       return;
     }
-    
+
     if(side == 'left') {
       this.set('last_start', this.get('start') || "_blank");
       this.set('last_end', this.get('end') || "_blank");
@@ -141,18 +141,20 @@ export default Ember.Controller.extend({
       args.start = dates.four_months_ago;
       args.end = dates.two_months_ago;
     }
-    
+
     var status = Ember.$.extend({}, args, {loading: true});
     var status_key = side == 'left' ? 'status' : 'status2';
     var stats_key = side == 'left' ? 'usage_stats' : 'usage_stats2';
     controller.set(status_key, status);
     persistence.ajax('/api/v1/users/' + controller.get('model.id') + '/stats/daily', {type: 'GET', data: args}).then(function(data) {
       var stats = Stats.create(data);
-      stats.set('raw', data);
-      stats.set('device_id', args.device_id);
-      stats.set('location_id', args.location_id);
-      stats.set('start', args.start);
-      stats.set('end', args.end);
+      stats.setProperties({
+        raw: data,
+        device_id: args.device_id,
+        location_id: args.location_id,
+        start: args.start || data.start_at.substring(0, 10),
+        end: args.end || data.end_at.substring(0, 10)
+      });
       controller.set(status_key, null);
       controller.set(stats_key, stats);
     }, function() {

@@ -52,7 +52,7 @@ class Api::LogsController < ApplicationController
     user = log && log.user
     return unless allowed?(user, 'supervise')
     
-    render json: JsonApi::Log.as_json(log, :wrapper => true).to_json
+    render json: JsonApi::Log.as_json(log, :wrapper => true, :permissions => @api_user).to_json
   end
 
   def create
