@@ -4,7 +4,7 @@
   {{#if subscription.user.subscription.never_expires}}
     <span class='glyphicon glyphicon-heart' style="float: left; font-size: 30px; margin-right: 10px;"></span>
     {{t "You are lucky! Somehow you get set up with a subscription plan that never expires! Like, never, ever! If you for some reason you want to change that you're welcome to." key='never_expires_explanation'}}
-  {{else if subscription.user.is_managed}}
+  {{else if subscription.user.is_sponsored}}
     {{#if subscription.user.pending_org}}
       <span class='glyphicon glyphicon-user' style="float: left; font-size: 30px; margin-right: 10px;"></span>
       {{t "<b>%{org}</b> wants to sponsor this user as part of their organization. This addition must be approved before it is complete." key='confirm_pending_org' org=model.pending_org.name}}
@@ -55,7 +55,7 @@
   </p>
 {{else}}
   {{#unless subscription.show_options}}
-    {{#unless subscription.user.is_managed}}
+    {{#unless subscription.user.is_sponsored}}
       <div style="margin-top: 20px;">
         <a class='btn btn-default' href="#" {{action 'show_options'}}>{{t "Change my Subscription" key='change_my_subscription'}}</a>
         {{#if subscription.user.subscription.started}}
