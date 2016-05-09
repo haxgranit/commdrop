@@ -40,11 +40,7 @@ module JsonApi::Log
       if log.data['note']['video'] && args[:permissions]
         video = UserVideo.find_by_global_id(log.data['note']['video']['id'])
         if video && video.url
-          json['video'] = {
-            'id' => video.global_id,
-            'duration' => video.settings['duration'],
-            'url' => video.url
-          }
+          json['video'] = video.summary_hash
         end
       end
     elsif log.data['assessment']

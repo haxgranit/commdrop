@@ -242,6 +242,8 @@
                       {{#link-to 'user.log' model.user_name log.id}}
                         {{#if log.assessment}}
                           {{t "assessment" key='assessment'}}
+                        {{else if log.note}}
+                          {{t "note" key='note'}}
                         {{else}}
                           {{t "button" count=log.button_count key='button_count'}}
                         {{/if}}

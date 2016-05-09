@@ -24,6 +24,14 @@ class UserVideo < ActiveRecord::Base
     true
   end
   
+  def summary_hash
+    {
+      'id' => self.global_id,
+      'duration' => (self.settings && self.settings['duration']),
+      'url' => self.url
+    }
+  end
+  
   def generate_defaults
     self.settings ||= {}
     self.settings['license'] ||= {
