@@ -172,8 +172,12 @@ export default Ember.Controller.extend({
     this.set('list_id', list_id);
     var model = this.get('model');
     if(!persistence.get('online')) { return; }
+    var default_key = null;
+    if(!_this.get('selected')) {
+      default_key = model.get('permissions.supervise') ? 'mine' : 'public';
+    }
     ['mine', 'public', 'private', 'starred', 'shared', 'prior_home'].forEach(function(key, idx) {
-      if(_this.get('selected') == key || (!_this.get('selected') && idx === 0)) {
+      if(_this.get('selected') == key || key == default_key) {
         _this.set(key + '_selected', true);
         if(key == 'mine') {
           _this.generate_or_append_to_list({user_id: model.get('id')}, 'model.my_boards', list_id);
@@ -182,7 +186,11 @@ export default Ember.Controller.extend({
         } else if(key == 'private') {
           _this.generate_or_append_to_list({user_id: model.get('id'), private: true}, 'model.private_boards', list_id);
         } else if(key == 'starred') {
-          _this.generate_or_append_to_list({user_id: model.get('id'), starred: true}, 'model.starred_boards', list_id);
+          if(model.get('permissions.supervise')) {
+            _this.generate_or_append_to_list({user_id: model.get('id'), starred: true}, 'model.starred_boards', list_id);
+          } else {
+            _this.generate_or_append_to_list({user_id: model.get('id'), public: true, starred: true}, 'model.starred_boards', list_id);
+          }
         } else if(key == 'shared') {
           _this.generate_or_append_to_list({user_id: model.get('id'), shared: true}, 'model.shared_boards', list_id);
         }
