@@ -222,6 +222,8 @@ module Subscription
         'token_summary' => "Manually-set Eval Account",
         'plan_id' => 'eval_monthly_free'
       })
+    elsif type == 'add_voice'
+      self.allow_additional_premium_voice!
     elsif type == 'add_1'
       if self.expires_at
         self.expires_at = [self.expires_at, Time.now].max + 1.month

@@ -92,6 +92,15 @@ class User < ActiveRecord::Base
     }
   end
   
+  def allow_additional_premium_voice!
+    self.settings ||= {}
+    self.settings['premium_voices'] ||= {}
+    self.settings['premium_voices']['claimed'] ||= []
+    self.settings['premium_voices']['allowed'] ||= 0
+    self.settings['premium_voices']['allowed'] += 1
+    self.save
+  end
+  
   def add_premium_voice(voice_id)
     # Limit the number of premium_voices users can download
     # TODO: don't let users set their voice to a premium voice that they have downloaded for a different user

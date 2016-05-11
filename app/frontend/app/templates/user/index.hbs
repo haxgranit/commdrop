@@ -509,13 +509,18 @@
         {{/if}}
         {{#if model.permissions.admin_support_actions}}
           <h5 style="margin-top: 20px;">{{t "Subscription:" key='subscription_colon'}}</h5>
-          <div class="well" style="max-width: 400px;">
+          <div class="well" style="max-width: 500px;">
             <span class="glyphicon glyphicon-usd" style="font-size: 50px; float: left;"></span>
             <div style="margin-bottom: 5px; margin-top: -5px;">
             {{subscription.subscription_plan_description}}
             {{#if model.subscription.expires}}
               {{t " -- expires" key='dash_expires'}}
-              {{date model.subscription.expires}}
+              {{date model.subscription.expires 'day'}}
+            {{/if}}
+            {{#if model.premium_voices}}
+              <div>
+                {{t "premium voice" count=model.premium_voices.allowed key='premium_voices_count'}}{{t ", %{cnt} used" key='comma_premium_voices_used' cnt=model.premium_voices.claimed.length}}
+              </div>
             {{/if}}
             </div>
             {{#if subscription_settings.type}}
@@ -540,6 +545,7 @@
                   <li><a href="#" {{action 'set_subscription' 'never_expires'}}>{{t "Set as Free Forever" key='set_as_free_forever'}}</a></li>
                   <li><a href="#" {{action 'set_subscription' 'manual_supporter'}}>{{t "Set as Free Supporter" key='set_as_free_supporter'}}</a></li>
                   <li><a href="#" {{action 'set_subscription' 'add_1'}}>{{t "Add 1 Month" key='add_one_month'}}</a></li>
+                  <li><a href="#" {{action 'set_subscription' 'add_voice'}}>{{t "Add Premium Voice" key='add_premium_voice'}}</a></li>
                 </ul>
               </div>
             {{/if}}

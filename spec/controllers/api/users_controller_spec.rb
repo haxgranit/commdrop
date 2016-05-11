@@ -848,6 +848,31 @@ describe Api::UsersController, :type => :controller do
       post :subscribe, {:user_id => @user.global_id, :type => 'eval'}
       assert_unauthorized
     end
+    
+    it "should let admins add a premium voice" do
+      token_user
+      u = User.create
+      o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
+      o.add_manager(@user.user_name, true)
+      
+      post :subscribe, {:user_id => u.global_id, :type => 'add_voice'}
+      expect(response).to be_success
+      
+      json = JSON.parse(response.body)
+      expect(json['progress']).not_to eq(nil)
+      Worker.process_queues
+      expect(u.reload.settings['premium_voices']).to eq({'claimed' => [], 'allowed' => 1})
+    end
+    
+    it "should not let non-admins add a premium voice" do
+      token_user
+      u = User.create
+      
+      post :subscribe, {:user_id => u.global_id, :type => 'add_voice'}
+      assert_unauthorized
+      
+      expect(u.reload.settings['premium_voices']).to eq(nil)
+    end
   end
   
   describe "unsubscribe" do
