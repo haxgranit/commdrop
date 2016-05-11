@@ -65,6 +65,7 @@ Router.map(function() {
     this.route('subscription');
     this.route('stats');
     this.route('goals');
+    this.route('goal', { path: '/goals/:goal_id' });
     this.route('logs');
     this.route('log', { path: '/logs/:log_id' });
     this.route('device');

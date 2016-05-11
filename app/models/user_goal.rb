@@ -8,12 +8,13 @@ class UserGoal < ActiveRecord::Base
   belongs_to :user
   before_save :generate_defaults
   after_save :check_set_as_primary
+  after_destroy :remove_if_primary
   replicated_model  
 
   secure_serialize :settings
 
-  add_permissions('view') {|user| self.user && self.user.allows?('supervise') }
-  add_permissions('view', 'edit') {|user| self.user && self.user.allows?('edit') }
+  add_permissions('view', 'comment') {|user| self.user && self.user.allows?(user, 'supervise') }
+  add_permissions('view', 'comment', 'edit') {|user| self.user && self.user.allows?(user, 'edit') }
   
   def generate_defaults
     self.settings ||= {}
@@ -30,9 +31,19 @@ class UserGoal < ActiveRecord::Base
     self.settings['summary']
   end
   
+  def remove_if_primary
+    if self.user && self.user.settings && self.user.settings['primary_goal'] && self.user.settings['primary_goal']['id'] == self.global_id
+      self.user.settings['primary_goal'] = nil
+      self.user.save
+    end
+    true
+  end
+  
   def check_set_as_primary
     if @set_as_primary
       if self.user && self.user.settings
+        UserGoal.where(:user_id => self.user_id).update_all(:primary => false)
+        UserGoal.where(:id => self.id).update_all(:primary => true)
         self.user.settings['primary_goal'] = {
           'id' => self.global_id,
           'summary' => self.summary

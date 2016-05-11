@@ -1,23 +1,36 @@
 {{#modal-dialog action="close" opening='opening' closing='closing'}}
+  <div class="modal-header">
+    <button type="button" class="close" {{action 'close'}}>&times;</button>
+    <h3>
+      {{t "New Note for %{user_name}" key='new_note' user_name=model.user_name}}
+    </h3>
+  </div>
   <div class="modal-body">
     <form class="form-horizontal">
-      <div class="form-group">
-        <label for="note" class="col-sm-2 control-label">{{t "For" key='for'}}</label>
-        <div class="col-sm-10">
-          <p class="form-control-static">
-            <img src={{model.avatar_url_with_fallback}} style="max-height: 30px;"/>
-            {{model.user_name}}
-          </p>
+      {{#if goal_options}}
+        <div class="form-group">
+          <label for="goal_options" class="col-sm-2 control-label">{{t "Goal" key='goal'}}</label>
+          <div class="col-sm-10">
+            {{bound-select select_class="form-control" select_id="goal_options" content=goal_options selection=goal_id action=(action (mut goal_id)) }}
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label for="note" class="col-sm-2 control-label">{{t "Date" key='date'}}</label>
-        <div class="col-sm-10">
-          <p class="form-control-static">
-            {{date}}
-          </p>
-        </div>
-      </div>
+        {{#if goal_id}}
+          <div class="form-group">
+            <label for="goal_options" class="col-sm-2 control-label">&nbsp;</label>
+            <div class="col-sm-10">
+              {{#each goal_statuses as |status|}}
+              <div style='width: 25%; float: left; padding: 5px;'>
+                <button class={{status.button_display_class}} {{action 'set_status' status.id}}>
+                  <span class={{status.display_class}}></span>
+                  {{status.text}}
+                </button>
+              </div>
+              {{/each}}
+              <div style='clear: left;'></div>
+            </div>
+          </div>
+        {{/if}}
+      {{/if}}
       <div class="form-group">
         <label id="note_type" class="col-sm-2 control-label">{{t "Type" key='type'}}</label>
         <div class="col-sm-10">
@@ -54,23 +67,7 @@
         <div class="form-group">
           <label for="video" class="col-sm-2 control-label">{{t "Video" key='video'}}</label>
           <div class="col-sm-10">
-            {{#if video_allowed}}
-              {{#if app_state.feature_flags.video_recording}}
-                {{video-recorder video_ready='video_ready' video_not_ready='video_not_ready'}}
-              {{else}}
-                {{t "Coming Soon!" key='coming_soon'}}
-              {{/if}}
-            {{else}}
-              <p>
-                {{t "CoughDrop is a powerful, flexible communication tool with lots of great features. Some features, including this one, are only available to users who have a paid premium subscription. Please " key='purchase_subscription_1'}}
-                {{#if app_state.currentUser}}
-                  {{#link-to 'user.subscription' app_state.currentUser.user_name}}{{t "purchase a premium subscription" key='purchase_subscription_2'}}{{/link-to}}
-                {{else}}
-                  {{t "purchase a premium subscription" key='purchase_subscription_2'}}
-                {{/if}}
-                {{t "to support this good cause and to unlock this feature." key='purchase_subscription_3'}}
-              </p>
-            {{/if}}
+            {{video-recorder user=model video_ready='video_ready' video_pending='video_pending' video_not_ready='video_not_ready'}}
           </div>
         </div>
         <div class="form-group">
@@ -91,10 +88,8 @@
         </div>
         <div class="form-group">
           <div class="col-sm-10 col-sm-offset-2">
-            {{#if video_allowed}}
-              {{#if app_state.feature_flags.video_recording}}
-                <button class="btn btn-primary" disabled={{no_video_ready}} {{action "saveNote" 'video'}}>{{t "Save Note" key='save_note'}}</button>
-              {{/if}}
+            {{#if app_state.feature_flags.video_recording}}
+              <button class="btn btn-primary" disabled={{no_video_ready}} {{action "saveNote" 'video'}}>{{t "Save Note" key='save_note'}}</button>
             {{/if}}
             <button class="btn btn-default" {{action "close"}}>{{t "Cancel" key='cancel'}}</button>
           </div>

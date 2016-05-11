@@ -1,6 +1,8 @@
+import Ember from 'ember';
 import modal from '../utils/modal';
 import persistence from '../utils/persistence';
 import stashes from '../utils/_stashes';
+import i18n from '../utils/i18n';
 
 export default modal.ModalController.extend({
   text_note: function() {
@@ -11,14 +13,54 @@ export default modal.ModalController.extend({
   }.property('note_type'),
   opening: function() {
     var type = this.get('model.type');
+    if(this.get('model.user')) {
+      this.get('model.user').load_active_goals();
+    }
+    this.set('goal', this.get('model.goal'));
+    this.set('goal_id', this.get('model.goal.id'));
     this.set('model', this.get('model.user'));
     if(this.get('note_type') === undefined) { this.set('note_type', 'text'); }
     if(this.get('notify') === undefined) { this.set('notify', true); }
   },
-  video_allowed: function() {
-    // must have an active paid subscription to access video logs on your account
-    return this.get('model.full_premium');
-  }.property('model', 'note_type', 'model.full_premium'),
+  goal_options: function() {
+    var res = [];
+    if((this.get('model.active_goals') || []).length > 0) {
+      res.push({id: '', name: i18n.t('select_goal', "[ Select to Link this Note to a Goal ]")});
+      this.get('model.active_goals').forEach(function(goal) {
+        res.push({id: goal.get('id'), name: goal.get('summary')});
+      });
+      res.push({id: '', name: i18n.t('no_goal', "Don't Link this Note to a Goal")});
+    }
+    return res;
+  }.property('model.active_goals'),
+  goal_statuses: function() {
+    var res = [];
+    res.push({
+      id: '1',
+      text: new Ember.Handlebars.SafeString(i18n.t('we_didnt_do_it', "We didn't<br/>do it")),
+      display_class: 'face sad',
+      button_display_class: 'btn btn-default face_button'
+    });
+    res.push({
+      id: '2',
+      text: new Ember.Handlebars.SafeString(i18n.t('we_did_it', "We barely<br/>did it")),
+      display_class: 'face neutral',
+      button_display_class: 'btn btn-default face_button'
+    });
+    res.push({
+      id: '3',
+      text: new Ember.Handlebars.SafeString(i18n.t('we_did_good', "We did<br/>good!")),
+      display_class: 'face hapy',
+      button_display_class: 'btn btn-default face_button'
+    });
+    res.push({
+      id: '4',
+      text: new Ember.Handlebars.SafeString(i18n.t('we_did_awesome', "We did<br/>awesome!")),
+      display_class: 'face laugh',
+      button_display_class: 'btn btn-default face_button'
+    });
+    return res;
+  }.property(),
   no_video_ready: function() {
     return !this.get('video_id');
   }.property('video_id'),
@@ -50,6 +92,20 @@ export default modal.ModalController.extend({
     video_not_ready: function() {
       this.set('video_id', false);
     },
+    video_pending: function() {
+      this.set('video_id', false);
+    },
+    set_status: function(id) {
+      if(this.get('goal_status') == id) { id = null; }
+      this.set('goal_status', id);
+      this.get('goal_statuses').forEach(function(status) {
+        if(status.id == id) {
+          Ember.set(status, 'button_display_class', 'btn btn-primary face_button');
+        } else {
+          Ember.set(status, 'button_display_class', 'btn btn-default face_button');
+        }
+      });
+    },
     saveNote: function(type) {
       if(type == 'video' && !this.get('video_id')) { return; }
       var note = {
@@ -60,7 +116,9 @@ export default modal.ModalController.extend({
           user_id: this.get('model.id'),
           note: note,
           timestamp: Date.now() / 1000,
-          notify: this.get('notify')
+          notify: this.get('notify'),
+          goal_id: this.get('goal_id'),
+          goal_status: this.get('goal_status')
         });
         if(type == 'video') {
           log.set('video_id', this.get('video_id'));

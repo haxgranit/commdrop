@@ -32,6 +32,8 @@ module JsonApi::User
       json['feature_flags'] = FeatureFlags.frontend_flags_for(user)
       json['prior_avatar_urls'] = user.prior_avatar_urls
       
+      json['goal'] = user.settings['primary_goal']
+      
       json['preferences']['sidebar_boards'] = user.settings['preferences']['sidebar_boards'] || []
       json['preferences']['sidebar_boards'] = User.default_sidebar_boards if json['preferences']['sidebar_boards'].length == 0
       
@@ -105,6 +107,7 @@ module JsonApi::User
       if args[:supervisor]
         json['edit_permission'] = args[:supervisor].edit_permission_for?(user)
         json['premium'] = user.premium?
+        json['goal'] = user.settings['primary_goal']
       elsif args[:supervisee]
         json['edit_permission'] = user.edit_permission_for?(args[:supervisee])
       end

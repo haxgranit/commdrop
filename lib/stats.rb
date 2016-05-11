@@ -205,7 +205,8 @@ module Stats
       :buttons_by_frequency => [],
       :words_per_minute => 0.0,
       :buttons_per_minute => 0.0,
-      :utterances_per_minute => 0.0
+      :utterances_per_minute => 0.0,
+      :goals => []
     }
     
     total_utterance_words = 0
@@ -218,6 +219,7 @@ module Stats
     all_word_counts = {}
     all_devices = nil
     all_locations = nil
+    goals = {}
 
     stats_list.each do |stats|
       stats = stats.with_indifferent_access
@@ -305,6 +307,23 @@ module Stats
           end
         end
       end
+      if stats[:goals]
+        stats[:goals].each do |id, goal|
+          goals[id] ||= {
+            'id' => goal['id'],
+            'summary' => goal['summary'],
+            'positives' => 0,
+            'negatives' => 0,
+            'statuses' => []
+          }
+          goals[id]['positives'] += goal['positives']
+          goals[id]['negatives'] += goal['negatives']
+          goals[id]['statuses'] += goal['statuses']
+        end
+      end
+    end
+    goals.each do |id, goal|
+      res[:goals] << goal
     end
     if all_devices
       res[:devices] = all_devices.map(&:last)
@@ -349,6 +368,20 @@ module Stats
           stats[:all_word_counts][word] ||= 0
           stats[:all_word_counts][word] += cnt
         end
+        if session.data['goal']
+          goal = session.data['goal']
+          stats[:goals] ||= {}
+          stats[:goals][goal['id']] ||= {
+            'id' => goal['id'],
+            'summary' => goal['summary'],
+            'positives' => 0,
+            'negatives' => 0,
+            'statuses' => []
+          }
+          stats[:goals][goal['id']]['positives'] += goal['positives'] if goal['positives']
+          stats[:goals][goal['id']]['negatives'] += goal['negatives'] if goal['negatives']
+          stats[:goals][goal['id']]['statuses'] << goal['status'] if goal['status']
+        end
       end
     end
     starts = sessions.map(&:started_at).compact.sort
@@ -372,6 +405,19 @@ module Stats
         stats[:all_word_counts].each do |word, cnt|
           total_stats[:all_word_counts][word] ||= 0
           total_stats[:all_word_counts][word] += cnt
+        end
+        (stats[:goals] || {}).each do |id, goal|
+          total_stats[:goals] ||= {}
+          total_stats[:goals][id] ||= {
+            'id' => goal['id'],
+            'summary' => goal['summary'],
+            'positives' => 0,
+            'negatives' => 0,
+            'statuses' => []
+          }
+          total_stats[:goals][id]['positives'] += goal['positives']
+          total_stats[:goals][id]['negatives'] += goal['negatives']
+          total_stats[:goals][id]['statuses'] += goal['statuses']
         end
         total_stats[:started_at] = [total_stats[:started_at], stats[:started_at]].compact.sort.first
         total_stats[:ended_at] = [total_stats[:ended_at], stats[:ended_at]].compact.sort.last

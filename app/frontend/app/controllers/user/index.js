@@ -212,7 +212,7 @@ export default Ember.Controller.extend({
     quick_assessment: function() {
       var _this = this;
       app_state.check_for_full_premium(_this.get('model', 'quick_assessment')).then(function() {
-        modal.open('quick-assessment', _this.get('model')).then(function() {
+        modal.open('quick-assessment', {user: _this.get('model')}).then(function() {
           _this.reload_logs();
         });
       }, function() { });
@@ -321,7 +321,9 @@ export default Ember.Controller.extend({
       } else if(action == 'manual_supporter') {
         this.set('subscription_settings', {action: action, type: i18n.t('manual_supporter', "Manually Set as Supporter")});
       } else if(action == 'add_1') {
-        this.set('subscription_settings', {action: action, type: i18n.t('never_expires', "Add 1 Month to Expiration")});
+        this.set('subscription_settings', {action: action, type: i18n.t('add_one_month', "Add 1 Month to Expiration")});
+      } else if(action == 'add_voice') {
+        this.set('subscription_settings', {action: action, type: i18n.t('add_premium_voice', "Add 1 Premium Voice")});
       }
     },
     reset_password: function(confirm) {

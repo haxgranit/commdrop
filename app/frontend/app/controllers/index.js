@@ -246,7 +246,7 @@ export default Ember.Controller.extend({
     quick_assessment: function(user) {
       if(user.premium) {
         var _this = this;
-        modal.open('quick-assessment', user);
+        modal.open('quick-assessment', {user: user});
       } else {
         modal.open('premium-required', {user_name: user.user_name, action: 'quick_assessment'});
       }

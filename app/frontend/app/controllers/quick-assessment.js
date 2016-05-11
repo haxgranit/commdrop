@@ -1,10 +1,16 @@
 import modal from '../utils/modal';
 import persistence from '../utils/persistence';
 import stashes from '../utils/_stashes';
+import i18n from '../utils/i18n';
 
 export default modal.ModalController.extend({
   opening: function() {
+    if(this.get('model.user')) {
+      this.get('model.user').load_active_goals();
+    }
     this.reset();
+    this.set('goal_id', this.get('model.goal.id'));
+    this.set('description', this.get('model.goal.summary'));
   },
   reset: function() {
     this.set('description', '');
@@ -14,6 +20,16 @@ export default modal.ModalController.extend({
       incorrect: 0
     });
   },
+  goal_options: function() {
+    var res = [];
+    if((this.get('model.user.active_goals') || []).length > 0) {
+      this.get('model.user.active_goals').forEach(function(goal) {
+        res.push({id: goal.get('id'), name: goal.get('summary')});
+      });
+      res.push({id: '', name: i18n.t('clear_assessment_type', "Clear Assessment Type")});
+    }
+    return res;
+  }.property('model.user.active_goals'),
   add_tally(correct) {
     var timestamp = Date.now() / 1000;
     var tallies = this.get('tallies');
@@ -45,6 +61,21 @@ export default modal.ModalController.extend({
     incorrect: function() {
       this.add_tally(false);
     },
+    goal_action: function(id) {
+      if(id === '') {
+        this.set('goal_id', null);
+        this.set('description', '');
+      } else {
+        var goal = (this.get('model.user.active_goals') || []).find(function(g) { return g.get('id') == id; });
+        if(goal) {
+          this.set('goal_id', goal.get('id'));
+          this.set('description', goal.get('summary'));
+        } else {
+          this.set('goal_id', null);
+          this.set('description', '');
+        }
+      }
+    },
     record_assessment: function() {
       var description = this.get('description') || (window.moment().format('MMMM Do YYYY, h:mm a'));
       var assessment = {
@@ -56,7 +87,8 @@ export default modal.ModalController.extend({
       };
       if(persistence.get('online')) {
         var log = this.store.createRecord('log', {
-          user_id: this.get('model.id'),
+          user_id: this.get('model.user.id'),
+          goal_id: this.get('goal_id'),
           assessment: assessment
         });
         var _this = this;
@@ -64,7 +96,7 @@ export default modal.ModalController.extend({
           modal.close(true);
         }, function() { });
       } else {
-        stashes.log_event({assessment: assessment}, this.get('model.id'));
+        stashes.log_event({assessment: assessment}, this.get('model.user.id'));
         modal.close();
       }
     }

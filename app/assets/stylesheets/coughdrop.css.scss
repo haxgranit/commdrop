@@ -598,6 +598,22 @@ footer .wide_links {
     font-family: "ArchitectsDaughter", Arial, sans-serif;
   }
 }
+.goal {
+  .summary {
+    font-weight: bold;
+  }
+  .details {
+    font-size: 12px;
+  }
+  .description {
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    max-width: 200px;
+    max-width: calc(100% - 200px);
+    font-size: 12px;
+  }
+}
 .text_sample {
   &.upper {
     text-transform: uppercase;
@@ -657,6 +673,29 @@ footer .wide_links {
 }
 .board_drop.drop_target * {
   cursor: copy;
+}
+.face_button {
+  font-size: 12px;
+  line-height: 12px;
+  width: 100%; 
+  white-space: normal;
+  .face {
+    display: block;
+    margin: 0 auto 5px;
+    width: 50px;
+    height: 50px;
+    background-image: url(../images/faces.png);
+    background-size: auto 50px;
+    &.happy {
+      background-position-x: -50px;
+    }
+    &.neutral {
+      background-position-x: -99px;
+    }
+    &.sad {
+      background-position-x: -148px;
+    }
+  }
 }
 #content.with_sidebar .board {
   width: -webkit-calc(100% - 60px);

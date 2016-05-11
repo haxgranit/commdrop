@@ -43,7 +43,7 @@ export default Ember.Controller.extend({
     quick_assessment: function() {
       var _this = this;
       app_state.check_for_full_premium(_this.get('model'), 'quick_assessment').then(function() {
-        modal.open('quick-assessment', _this.get('model')).then(function() {
+        modal.open('quick-assessment', {user: _this.get('model')}).then(function() {
           _this.send('refresh');
         });
       }, function() { });

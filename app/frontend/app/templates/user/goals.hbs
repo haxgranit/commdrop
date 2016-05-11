@@ -1,36 +1,62 @@
-<h2>{{t "Communication Goals" key='communication_goals'}}</h2>
+{{#if model.full_premium}}
+  <h2>{{t "Communication Goals" key='communication_goals'}}</h2>
 
-{{#if model.goal}}
-{{else}}
-  set a goal! what's a goal? well let me tell you something..
-  - average number of sessions
-  - average session length
-  - average number of buttons
-  - requesting
-  - longer phrases
-  - get it out more often
-  - use describing words
-  - use pronouns
-  - words of the week/month
-  - http://praacticalaac.org/praactical/praactically-may-resources-for-a-year-of-core-vocabulary-words/
-  - use in different locations
-{{/if}}
-add comments on a goal (log notes, associated with a goal?)
-notification when goal is changed/added
+  {{#if goals.loading}}
+    {{t "Loading goals..." key='loading_goals'}}
+  {{else if goals.error}}
+    {{t "Goals failed to load" key='goals_failed_to_load'}}
+  {{else}}
+    {{#if primary_goal}}
+      {{#with primary_goal as |goal|}}
+        {{partial "goal"}}
+      {{/with}}
+    {{else}}
+      set a goal! what's a goal? well let me tell you something..
+      - average number of sessions
+      - average session length
+      - average number of buttons
+      - requesting
+      - longer phrases
+      - get it out more often
+      - use describing words
+      - use pronouns
+      - words of the week/month
+      - http://praacticalaac.org/praactical/praactically-may-resources-for-a-year-of-core-vocabulary-words/
+      - use in different locations
 
-{{#if goals.loading}}
-  {{t "Loading goals..." key='loading_goals'}}
-{{else if goals.error}}
-  {{t "Goals failed to load" key='goals_failed_to_load'}}
+      - add comments on a goal (log notes, associated with a goal?)
+      - notification when goal is changed/added
+    {{/if}}
+    {{#if model.permissions.edit}}
+      <button {{action 'add_goal'}} class='btn btn-default'>{{t "Set a New Goal" key='set_a_new_goal'}}</button>
+    {{/if}}
+
+    <h3>{{t "Secondary Goals" key='secondary_goals'}}</h3>
+    {{#if secondary_goals}}
+      {{#each secondary_goals as |goal|}}
+        {{partial "goal"}}
+      {{/each}}
+    {{else}}
+      {{t "None set" key='none_set'}}
+    {{/if}}
+    <h3>{{t "Past Goals" key='past_goals'}}</h3>
+    {{#if past_goals}}
+      {{#each past_goals as |goal|}}
+        {{partial "goal"}}
+      {{/each}}
+    {{else}}
+      {{t "No past goals" key='no_past_goals'}}
+    {{/if}}
+  {{/if}}
 {{else}}
-  <h3>{{t "Secondary Goals" key='secondary_goals'}}</h3>
-  {{#if goals.secondary}}
-  {{else}}
-    {{t "None set" key='none_set'}}
-  {{/if}}
-  <h3>{{t "Past Goals" key='past_goals'}}</h3>
-  {{#if goals.prior}}
-  {{else}}
-    {{t "No past goals" key='no_past_goals'}}
-  {{/if}}
+  <h2>{{t "Premium Membership Required" key='premium_required'}}</h2>
+  <p>
+    {{t "CoughDrop is a powerful, flexible communication tool with lots of great features. Some features, including this one, are only available to users who have purchased a premium subscription. Please " key='purchase_subscription_1'}}
+    {{#if app_state.feature_flags.subscriptions}}
+      {{#link-to 'user.subscription' model.user_name}}{{t "purchase a premium subscription" key='purchase_subscription_2'}}{{/link-to}}
+    {{else}}
+      {{t "purchase a premium subscription" key='purchase_subscription_2'}}
+    {{/if}}
+    {{t "to support this good cause and to unlock this feature." key='purchase_subscription_3'}}
+  </p>
 {{/if}}

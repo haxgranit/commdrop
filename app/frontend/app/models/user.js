@@ -250,6 +250,20 @@ CoughDrop.User = DS.Model.extend({
       this.set('preferences.speak_mode_pin', new_pin);
     }
   }.observes('preferences.speak_mode_pin'),
+  load_active_goals: function() {
+    var _this = this;
+    this.store.query('goal', {active: true, user_id: this.get('id')}).then(function(list) {
+      _this.set('active_goals', list.content.mapBy('record').sort(function(a, b) {
+        if(a.get('primary')) {
+          return -1;
+        } else if(b.get('primary')) {
+          return 1;
+        } else {
+          return a.get('id') - b.get('id');
+        }
+      }));
+    }, function() { });
+  },
   check_user_name: function() {
     if(this.get('watch_user_name')) {
       var user_name = this.get('user_name');

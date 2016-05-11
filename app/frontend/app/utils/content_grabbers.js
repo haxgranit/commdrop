@@ -1048,6 +1048,8 @@ var videoGrabber = Ember.Object.extend({
     this.controller.set('video_preview.saving', true);
     var _this = this;
 
+    _this.controller.sendAction('video_pending');
+
     if(preview.url.match(/^data:/)) {
       preview.content_type = preview.content_type || preview.url.split(/;/)[0].split(/:/)[1];
     }
@@ -1102,6 +1104,7 @@ var videoGrabber = Ember.Object.extend({
       coughDropExtras.track_error("upload failed: " + err.error);
       alert(i18n.t('upload_failed', "upload failed: " + err.error));
       _this.controller.set('video_preview.saving', false);
+      _this.controller.sendAction('video_not_ready');
     });
   },
   save_pending: function() {

@@ -51,7 +51,7 @@
                         {{#if supervisee.goal}}
                           <div style='padding-left: 33px; margin-top: -5px;'>
                             {{supervisee.user_name}}
-                            <div class='text-muted' style='font-size: 12px; margin-top: -2px; margin-bottom: -4px;'></div>
+                            <div class='text-muted' style='font-size: 12px; margin-top: -2px; margin-bottom: -4px;'>{{supervisee.goal.summary}}</div>
                           </div>
                         {{else}}
                           <div style='padding-left: 33px; margin-top: 3px;'>
@@ -428,6 +428,7 @@
                 {{t "None found" key='none_found'}}
               </div>
             {{/if}}
+            <div class='col-sm-12' style='padding-left: 5px;'><button class='btn btn-default' {{action 'newBoard'}}>{{t "Create a New Board" key='create_a_new_board'}}</button></div>
           </div>
         {{else if personal_selected}}
           <div class="row">
@@ -450,12 +451,14 @@
               <div class='col-xs-12'>
                 {{#link-to 'user' app_state.currentUser.user_name}}
                   {{t "see all my boards" key='see_all_my_boards'}}
-                {{/link-to}}
+                {{/link-to}} |
+                <a href="#" {{action 'newBoard'}}>{{t "create a new board" key='create_new_board'}}</a>
               </div>
             {{else}}
               <div class="col-sm-4">
                 {{t "None found" key='none_found'}}
               </div>
+              <div class='col-sm-12' style='padding-left: 5px;'><button class='btn btn-default' {{action 'newBoard'}}>{{t "Create a New Board" key='create_a_new_board'}}</button></div>
             {{/if}}
           </div>
         {{else if suggested_selected}}
@@ -491,6 +494,7 @@
                 {{t "None found" key='none_found'}}
               </div>
             {{/if}}
+            <div class='col-sm-12' style='padding-left: 5px;'><button class='btn btn-default' {{action 'newBoard'}}>{{t "Create a New Board" key='create_a_new_board'}}</button></div>
           </div>
         {{else if recent_selected}}
           <div class="row">

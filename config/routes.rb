@@ -160,6 +160,8 @@ Coughdrop::Application.routes.draw do
       get 'upload_success'
     end
     
+    resources :goals
+    
     resources :organizations do
       get 'managers'
       get 'users'

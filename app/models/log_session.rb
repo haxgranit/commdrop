@@ -182,6 +182,15 @@ class LogSession < ActiveRecord::Base
       self.started_at ||= Time.now
       self.ended_at ||= self.started_at
     end
+    if self.data['goal']
+      if self.data['assessment']
+        self.data['goal']['positives'] = self.data['assessment']['totals']['correct']
+        self.data['goal']['negatives'] = self.data['assessment']['totals']['incorrect']
+      elsif self.data['goal']['status']
+        self.data['goal']['positives'] = self.data['goal']['status'] > 1 ? 1 : 0
+        self.data['goal']['negatives'] = self.data['goal']['status'] <= 1 ? 1 : 0
+      end
+    end
     self.data['event_summary'] = str
     self.data['nonce'] ||= Security.nonce('log_nonce')
     
@@ -519,6 +528,19 @@ class LogSession < ActiveRecord::Base
             'id' => params['video_id'],
             'duration' => video.settings['duration']
           }
+        end
+      end
+      if params['goal_id']
+        goal = UserGoal.find_by_global_id(params['goal_id'])
+        if goal.user_id == self.user_id
+          self.goal = goal
+          self.data['goal'] = {
+            'id' => goal.global_id,
+            'summary' => goal.summary
+          }
+          if params['goal_status'] && params['goal_status'].to_i > 0
+            self.data['goal']['status'] = params['goal_status'].to_i
+          end
         end
       end
       self.data['assessment'] = params['assessment'] if params['assessment']
