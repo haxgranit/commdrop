@@ -2,21 +2,21 @@ import Ember from 'ember';
 import CoughDrop from '../../app';
 import i18n from '../../utils/i18n';
 
-export default Ember.Component.extend({ 
+export default Ember.Component.extend({
   didInsertElement: function() {
     this.draw();
   },
   draw: function() {
     var stats = this.get('usage_stats');
     var elem = this.get('element').getElementsByClassName('geo_map')[0];
-    
+
     CoughDrop.Visualizations.wait('geo', function() {
       if(elem && stats && stats.get('geo_locations')) {
         var current_info = null;
         if(elem) {
           var map = new window.google.maps.Map(elem, {
             scrollwheel: false,
-            maxZoom: 18
+            maxZoom: 16
           });
           var markers = [];
           stats.get('geo_locations').forEach(function(location) {
@@ -30,12 +30,12 @@ export default Ember.Component.extend({
             // TODO: popup information for each location
             marker.setMap(map);
             markers.push(marker);
-          
+
             var dater = Ember.templateHelpers.date;
-            var html = title + "<br/>" + dater(location.started_at, null) + 
-                        " to <br/>" + dater(location.ended_at, null) + "<br/>" + 
+            var html = title + "<br/>" + dater(location.started_at, null) +
+                        " to <br/>" + dater(location.ended_at, null) + "<br/>" +
                         "<a href='#' class='ember_link' data-location_id='" + location.id + "'>filter by this location</a>";
-          
+
             var info = new window.google.maps.InfoWindow({
               content: html
             });
