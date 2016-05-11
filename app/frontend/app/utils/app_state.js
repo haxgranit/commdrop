@@ -108,11 +108,15 @@ var app_state = Ember.Object.extend({
           }
           app_state.set('sessionUser', user);
 
-          if(stashes.get('speak_mode_user_id')) {
-            CoughDrop.store.findRecord('user', stashes.get('speak_mode_user_id')).then(function(user) {
-              app_state.set('speakModeUser', user);
+          if(stashes.get('speak_mode_user_id') || stashes.get('referenced_speak_mode_user_id')) {
+            var ref_id = stashes.get('speak_mode_user_id') || stashes.get('referenced_speak_mode_user_id');
+            CoughDrop.store.findRecord('user', ref_id).then(function(user) {
+              if(stashes.get('speak_mode_user_id')) {
+                app_state.set('speakModeUser', user);
+              }
+              app_state.set('referenced_speak_mode_user', user);
             }, function() {
-              console.error('failed trying to speak as ' + stashes.get('speak_mode_user_id'));
+              console.error('failed trying to speak as ' + ref_id);
             });
           }
         }, function(err) {
@@ -491,7 +495,9 @@ var app_state = Ember.Object.extend({
     var session_user_id = this.get('sessionUser.id');
     if(board_user_id == 'self' || (session_user_id && board_user_id == session_user_id)) {
       app_state.set('speakModeUser', null);
+      app_state.set('referenced_speak_mode_user', null);
       stashes.persist('speak_mode_user_id', null);
+      stashes.persist('references_speak_mode_user_id', null);
       if(!app_state.get('speak_mode')) {
         this.toggle_speak_mode();
       } else {
@@ -510,10 +516,13 @@ var app_state = Ember.Object.extend({
         data.then(function(u) {
           if(keep_as_self) {
             app_state.set('speakModeUser', null);
+            stashes.persist('speak_mode_user_id', null);
           } else {
             app_state.set('speakModeUser', u);
+            stashes.persist('speak_mode_user_id', (u && u.get('id')));
           }
-          stashes.persist('speak_mode_user_id', (u && u.get('id')));
+          app_state.set('referenced_speak_mode_user', u);
+          stashes.persist('referenced_speak_mode_user_id', (u && u.get('id')));
           if(jump_home) {
             _this.home_in_speak_mode({
               user: u,
@@ -651,32 +660,49 @@ var app_state = Ember.Object.extend({
           capabilities.wakelock('speak', true);
         }
         this.set_history([]);
+        var noticed = false;
         if(stashes.get('logging_enabled')) {
+          noticed = true;
           modal.notice(i18n.t('logging_enabled', "Logging is enabled"), true);
         }
         if(!capabilities.installed_app && !capabilities.mobile && this.get('currentUser.preferences.device.fullscreen')) {
           capabilities.fullscreen(true).then(null, function() {
-            modal.warning(i18n.t('fullscreen_failed', "Full Screen Mode failed to load"), true);
+            if(!noticed) {
+              modal.warning(i18n.t('fullscreen_failed', "Full Screen Mode failed to load"), true);
+            }
           });
         }
         capabilities.volume_check().then(function(level) {
           console.log("volume is " + level);
           if(level === 0) {
+            noticed = true;
             modal.warning(i18n.t('volume_is_off', "Volume is muted, you will not be able to hear speech"), true);
           } else if(level < 0.2) {
+            noticed = true;
             modal.warning(i18n.t('volume_is_low', "Volume is low, you may not be able to hear speech"), true);
           }
         });
+        var ref_user = this.get('referenced_speak_mode_user') || this.get('currentUser');
+        if(ref_user && ref_user.get('goal.summary')) {
+          Ember.run.later(function() {
+            noticed = true;
+            var str = i18n.t('user_apostrophe', "%{user_name}'s ", {user_name: ref_user.get('user_name')})
+            str = str + i18n.t('current_goal', "Current Goal: %{summary}", {summary: ref_user.get('goal.summary')})
+            modal.notice(str, true);
+          }, 100);
+        }
       }
       this.set('embedded', !!(CoughDrop.embedded));
       this.set('full_screen_capable', capabilities.fullscreen_capable());
     } else if(!this.get('speak_mode') && this.get('last_speak_mode') !== undefined) {
       capabilities.wakelock('speak', false);
-      stashes.persist('temporary_root_board_state', null);
-      stashes.persist('sticky_board', false);
-      stashes.persist('speak_mode_user_id', null);
-      stashes.persist('all_buttons_enabled', null);
       capabilities.fullscreen(false);
+      if(this.get('last_speak_mode') !== false) {
+        stashes.persist('temporary_root_board_state', null);
+        stashes.persist('sticky_board', false);
+        stashes.persist('speak_mode_user_id', null);
+        stashes.persist('all_buttons_enabled', null);
+      }
     }
     this.set('last_speak_mode', !!this.get('speak_mode'));
   }.observes('speak_mode', 'currentUser.id', 'currentUser.preferences.logging'),

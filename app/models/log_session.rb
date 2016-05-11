@@ -530,6 +530,12 @@ class LogSession < ActiveRecord::Base
           }
         end
       end
+      if self.user == self.author && params['referenced_user_id']
+        ref_user = User.find_by_path(params['referenced_user_id'])
+        if ref_user.allows?(self.author, 'supervise')
+          self.data['referenced_user_id'] = ref_user.global_id
+        end
+      end
       if params['goal_id']
         goal = UserGoal.find_by_global_id(params['goal_id'])
         if goal.user_id == self.user_id

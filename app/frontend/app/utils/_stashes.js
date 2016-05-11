@@ -265,6 +265,9 @@ var stashes = Ember.Object.extend({
       if(stashes.ambient_light !== null && stashes.ambient_light !== undefined) {
         log_event.ambient_light = stashes.ambient_light;
       }
+      if(stashes.get('referenced_user_id')) {
+        log_event.referenced_user_id = stashes.get('referenced_user_id');
+      }
 
       if(log_event) {
 //        console.log(log_event);

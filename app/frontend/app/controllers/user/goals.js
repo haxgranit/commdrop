@@ -17,8 +17,9 @@ export default Ember.Controller.extend({
     return (this.get('goals.list') || []).find(function(g) { return g.get('active') && g.get('primary'); })
   }.property('goals.list'),
   secondary_goals: function() {
-    return (this.get('goals.list') || []).filter(function(g) { return g.get('active') && !g.get('primary'); });
-  }.property('goals.list'),
+    var pg_id = this.get('primary_goal.id');
+    return (this.get('goals.list') || []).filter(function(g) { return g.get('active') && g.get('id') != pg_id; });
+  }.property('primary_goal.id', 'goals.list'),
   past_goals: function() {
     return (this.get('goals.list') || []).filter(function(g) { return !g.get('active'); });
   }.property('goals.list'),

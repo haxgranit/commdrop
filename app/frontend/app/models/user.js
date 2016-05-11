@@ -51,6 +51,7 @@ CoughDrop.User = DS.Model.extend({
   supervisors: DS.attr('raw'),
   supervisee_code: DS.attr('string'),
   supervisees: DS.attr('raw'),
+  goal: DS.attr('raw'),
   pending_board_shares: DS.attr('raw'),
   edit_permission: DS.attr('boolean'),
   has_management_responsibility: function() {
