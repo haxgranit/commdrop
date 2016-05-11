@@ -38,7 +38,8 @@ describe Stats do
         :start_at => start_at.iso8601,
         :end_at => ((end_at.to_date + 1).to_time + offset - 1).utc.iso8601,
         :started_at => nil,
-        :ended_at => nil
+        :ended_at => nil,
+        :goals => []
       })
       expect(days).not_to eq(nil)
       expect(days.keys.length).to eq(3)
