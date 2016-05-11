@@ -14,6 +14,9 @@
 #within_ember {
   position: relative;
 }
+#within_ember {
+  background: #fff;
+}
 #within_ember.color_black {
   background: #000;
   header {
@@ -28,9 +31,6 @@
   .board_status {
     color: #ccc;
   }
-}
-#within_ember.color_white {
-  background: #fff;
 }
 #meta_header {
   margin: 20px 50px;
