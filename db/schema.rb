@@ -136,7 +136,7 @@ ActiveRecord::Schema.define(version: 20160510203359) do
     t.string   "cluster_hash", limit: 255
   end
 
-  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_hash", unique: true, using: :btree
+  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_cluster_hash", unique: true, using: :btree
 
   create_table "contact_messages", force: :cascade do |t|
     t.text     "settings"
