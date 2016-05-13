@@ -688,11 +688,23 @@ var capabilities;
         }
       },
       update_brightness: function() {
+        if(window.cordova && window.cordova.exec) {
+          window.cordova.exec(function(res) {
+            var lux = parseFloat(res);
+            if(lux && lux >= 0) {
+              capabilities.last_lux = lux;
+              stashes.ambient_light = capabilities.last_lux;
+            }
+          }, function(err) { }, 'CoughDropMisc', 'lux', []);
+        }
         if(window.cordova && window.cordova.plugins && window.cordova.plugins.brightness) {
           // https://www.npmjs.com/package/cordova-plugin-brightness
           window.cordova.plugins.brightness.getBrightness(function(val) {
-            capabilities.last_brightness = val;
-            stashes.screen_brightness = capabilities.last_brightness;
+            var brightness = parseFloat(val);
+            if(brightness && brightness >= 0) {
+              capabilities.last_brightness = brightness;
+              stashes.screen_brightness = capabilities.last_brightness;
+            }
           });
         } else if(capabilities.check_brightness) {
           // https://www.npmjs.com/package/brightness
