@@ -1,0 +1,252 @@
+<h2>{{t "Goal Details" key='goal_details'}}</h2>
+{{model.id}}
+{{model.summary}}
+<div class="row">
+  <div class="col-sm-4">
+    <div class="panel panel-default summary smaller">
+      <div class="panel-heading">{{t "Date" key='date'}}</div>
+      <div class="panel-body">
+        {{date model.started_at}}
+      </div>
+    </div>
+  </div>
+  {{#unless model.note_type}}
+    <div class="col-sm-4">
+      <div class="panel panel-default summary smaller">
+        <div class="panel-heading">{{t "Duration" key='duration'}}</div>
+        <div class="panel-body">
+          {{t "minute" key='minute' count=model.minutes}}
+        </div>
+      </div>
+    </div>
+  {{/unless}}
+  <div class="col-sm-4">
+    <div class="panel panel-default summary smaller">
+      {{#if model.note_type}}
+        <div class="panel-heading">{{t "Author" key='author'}}</div>
+        <div class="panel-body">
+          {{#link-to 'user' model.author.user_name}}{{model.author.user_name}}{{/link-to}}
+        </div>
+      {{else if model.assessment_type}}
+        <div class="panel-heading">{{t "Assessor" key='assessor'}}</div>
+        <div class="panel-body">
+          {{#link-to 'user' model.author.user_name}}{{model.author.user_name}}{{/link-to}}
+        </div>
+      {{else}}
+        <div class="panel-heading">{{t "Device" key='device'}}</div>
+        <div class="panel-body">
+          {{#link-to 'user.stats' user.user_name (query-params start=null end=null location_id=null device_id=model.device.id split=null start2=null end2=null device_id2=null location_id2=null)}}
+            {{model.device.name}}
+          {{/link-to}}
+        </div>
+      {{/if}}
+    </div>
+  </div>
+</div>
+{{#if model.note_type}}
+  <div class="panel" style="white-space: pre-line; margin-bottom: 50px;">
+    {{model.note.text}}
+    {{#if model.video}}
+      <div style="margin-top: 10px;">
+        <video src={{model.video.url}} controls style='max-height: 400px; border: 1px solid #ccc;'></video>
+      </div>
+    {{/if}}
+  </div>
+{{else if model.assessment_type}}
+  <div class="row">
+    <div class="col-sm-4">
+      <div class="panel panel-default summary smaller">
+        <div class="panel-heading">{{t "Percent Correct" key='percent_correct'}}</div>
+        <div class="panel-body">
+          {{model.assessment.stats.percent_correct}}%
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="panel panel-default summary smaller">
+        <div class="panel-heading">{{t "Total Correct" key='total_correct'}}</div>
+        <div class="panel-body">
+          {{model.assessment.stats.total_correct}} /
+          {{model.assessment.stats.total_tallies}}
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="panel panel-default summary smaller">
+          <div class="panel-heading">{{t "Longest Streak" key='longest_correct_streak'}}</div>
+          <div class="panel-body">
+            {{model.assessment.stats.longest_correct_streak}}
+          </div>
+      </div>
+    </div>
+  </div>
+  <div class="table-reponsive">
+    <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <td>{{t "Event Type" key='event_type'}}</td>
+          <td>{{t "Delay" key='delay'}}</td>
+          <td>{{t "Running Total" key='running_total'}}</td>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each model.processed_tallies as |tally|}}
+          <tr>
+            <td>
+              {{#if tally.correct}}
+                <span class="glyphicon glyphicon-stop text-success"></span>
+                {{t "Correct" key='correct'}}
+              {{else}}
+                <span class="glyphicon glyphicon-stop text-danger"></span>
+                {{t "Incorrect" key='incorrect'}}
+              {{/if}}
+            </td>
+            <td>
+              {{seconds_ago tally.delay}}
+            </td>
+            <td>
+              {{#if tally.running_correct_total}}
+                {{tally.running_correct_total}} / {{tally.running_total}}
+                {{t "correct" key='correct'}}
+              {{/if}}
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+{{else}}
+  <div class="table-responsive">
+    <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th style="width: 10px;">{{t "Type" key='type'}}</th>
+          <th>{{t "Summary" key='summary'}}</th>
+          <th>{{t "Delay" key='delay'}}</th>
+          <th>{{t "Board" key='board'}}</th>
+          <th style="width: 80px;">{{t "Notes" key='notes'}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each model.processed_events as |event|}}
+          <tr class={{if event.long_delay 'long_delay'}}>
+            <td>
+              <span class={{event.type_class}} title={{event.type}}>
+                <span class="sr-only">{{event.type}}</span>
+              </span>
+              {{#if event.spoken}}
+                <span class="glyphicon glyphicon-volume-up">
+                  <span class="sr-only">{{t "spoken" key='spoken'}}</span>
+                </span>
+              {{/if}}
+            </td>
+            <td>
+              <span class={{event.part_of_speech_class}} title={{event.part_of_speech}}>
+                <span class="sr-only">{{event.part_of_speech}}</span>
+              </span>
+              <span class={{if event.button_type '' 'text-muted'}}>
+                {{event.summary}}
+              </span>
+            </td>
+            <td>
+              <span class={{if event.long_delay 'text-muted'}}>
+                {{seconds_ago event.delay}}
+              </span>
+            </td>
+            <td>
+              {{#if event.new_board}}
+                {{#link-to 'board' event.new_board.key}}
+                  {{event.new_board.key}}
+                {{/link-to}}
+              {{else}}
+                {{#if event.board}}
+                  {{#link-to 'board' event.board.key class='text-muted'}}
+                    {{event.board.key}}
+                  {{/link-to}}
+                {{/if}}
+              {{/if}}
+            </td>
+            <td style="text-align: right;">
+              {{#if event.note_count}}
+                <a href="#" {{action 'toggle_notes' event.id}}><span class="label label-primary">{{event.note_count}}</span></a>
+              {{/if}}
+              <button {{action 'toggle_notes' event.id 'add'}} class='btn btn-default btn-sm' style="margin: -8px 0 -6px 5px;">
+                <span class='glyphicon glyphicon-plus'></span>
+                <span class='sr-only'>{{t "add comment" key='add_comment'}}</span>
+              </button>
+            </td>
+          </tr>
+          {{#if event.show_notes}}
+            <tr>
+              <td colspan="5" style="padding-left: 50px;">
+                Notes:<br/>
+                {{#each event.notes as |note|}}
+                  <div>
+                    {{#link-to 'user' note.author.user_name}}
+                      {{note.author.user_name}}
+                    {{/link-to}} -
+                    {{note.note}}
+                  </div>
+                {{/each}}
+                <form class="form-inline" style="margin-top: 15px;" {{action 'add_note' event.id}}>
+                  <div class="form-group">
+                    <input type="text" class="form-control input-sm" data-event_id={{event.id}} placeholder="note text"/>
+                  </div>
+                  <div class="form-group">
+                    <button type="submit" class='btn btn-default btn-sm'>{{t "Save" key='save'}}</button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          {{/if}}
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+{{/if}}
+
+<div class="row" style="margin-bottom: 20px;">
+  {{#if model.geo}}
+    <div class="col-sm-8">
+      {{map-with-markers action="marker_link_select"}}
+    </div>
+  {{/if}}
+  <div class="col-sm-4">
+    <dl>
+      <dt>{{t "Location" key='location'}}</dt>
+        <dd>
+        {{#if model.geo}}
+          {{t "See map" key='see_map'}}
+        {{else}}
+          {{t "Not available" key='not_available'}}
+        {{/if}}
+        {{#if model.geo_cluster_id}}
+          <br/>
+          {{#link-to 'user.logs' model.user.user_name (query-params start='' end='' location_id=model.geo_cluster_id device_id='' type='session') class='btn btn-default'}}
+            {{t "more entries" key='see_more'}}
+          {{/link-to}}
+
+          {{#link-to 'user.stats' model.user.user_name (query-params start=null end=null location_id=model.geo_cluster_id device_id=null split=null start2=null end2=null device_id2=null location_id2=null type='session') class='btn btn-default'}}
+            {{t "filtered report" key='see_stats'}}
+          {{/link-to}}
+        {{/if}}
+        </dd>
+      <dt style="margin-top: 15px;">{{t "IP Address" key='ip_address'}}</dt>
+        <dd>
+          {{#if model.readable_ip_address}}
+            {{model.readable_ip_address}}
+          {{/if}}
+          {{#if model.ip_cluster_id}}
+            <br/>
+            {{#link-to 'user.logs' model.user.user_name (query-params start='' end='' location_id=model.ip_cluster_id device_id='' type='session') class='btn btn-default'}}
+              {{t "more entries" key='see_more'}}
+            {{/link-to}}
+
+            {{#link-to 'user.stats' model.user.user_name (query-params start=null end=null location_id=model.ip_cluster_id device_id=null split=null start2=null end2=null device_id2=null location_id2=null type='session') class='btn btn-default'}}
+              {{t "filtered report" key='see_stats'}}
+            {{/link-to}}
+          {{/if}}
+        </dd>
+    </dl>
+  </div>
+</div>
