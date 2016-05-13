@@ -391,7 +391,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.ignoreUp = false;
     } else if(editManager.finding_target()) {
       // if looking for a target and one is found, hit it
-      if((elem_wrap.dom.className || "").match(/button/)) {
+      if(((elem_wrap && elem_wrap.drom && elem_wrap.dom.className) || "").match(/button/)) {
         buttonTracker.button_release(elem_wrap, event);
       }
       // TODO: clear finding_target when selecting anywhere else, leaving edit mode, etc.
@@ -470,7 +470,7 @@ var buttonTracker = Ember.Object.extend({
         }
       }
     } else if(app_state.get('edit_mode') && !editManager.paint_mode) {
-      if((elem_wrap.dom.className || "").match(/button/)) {
+      if(((elem_wrap && elem_wrap.dom && elem_wrap.dom.className) || "").match(/button/)) {
         buttonTracker.button_release(elem_wrap, event);
       }
     }
