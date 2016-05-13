@@ -57,7 +57,9 @@ export default Ember.Route.extend({
       }
 
       reload.then(function() {
-        controller.processButtons();
+        if(!controller.get('ordered_buttons')) {
+          controller.processButtons();
+        }
       }, function(error) {
         _this.send('error', error);
       });

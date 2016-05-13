@@ -632,6 +632,9 @@ var dbman = {
   use_database: function(db, promise) {
     if(dbman.db_type == 'indexeddb') {
       console_debug("COUGHDROP: using indexedDB for offline sync"); // - " + capabilities.db_name);
+      if(capabilities.mobile && capabilities.installed_app) {
+        console.error("should be using sqlite but using indexeddb instead");
+      }
       db.onerror = function(event) {
         // Generic error handler for all errors targeted at this database's
         // requests!

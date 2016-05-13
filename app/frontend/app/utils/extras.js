@@ -21,7 +21,9 @@ import capabilities from './capabilities';
       });
       ready.type_callbacks[type] = null;
     }
-    if(ready.types.init && ready.types.extras && ready.types.device) {
+    if(ready.types.init && ready.types.extras && ready.types.device && !ready.done) {
+      ready.done = true;
+      ready('all');
       CoughDrop.app.advanceReadiness();
     }
   };

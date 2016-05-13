@@ -29,7 +29,9 @@ var persistence = Ember.Object.extend({
     if(stashes.get_object('just_logged_in', false) && stashes.get('auth_settings') && !Ember.testing) {
       stashes.persist_object('just_logged_in', null, false);
       Ember.run.later(function() {
-        persistence.sync('self').then(null, function() { });
+        if(!persistence.get('syncing')) {
+          persistence.sync('self').then(null, function() { });
+        }
       }, 2000);
     }
     coughDropExtras.advance.watch('device', function() {
@@ -47,7 +49,7 @@ var persistence = Ember.Object.extend({
           if(persistence.get('local_system.allowed')) {
             persistence.prime_caches(true).then(null, function() { });
           }
-        }, 5000);
+        }, 2000);
       }
     });
   },
@@ -106,9 +108,9 @@ var persistence = Ember.Object.extend({
         return Ember.RSVP.reject({error: "extras not ready"});
       } else {
         return new Ember.RSVP.Promise(function(resolve, reject) {
-          Ember.run.later(function() {
+          coughDropExtras.advance.wait('all', function() {
             resolve(persistence.find(store, key, wrapped, true));
-          }, 100);
+          });
         });
       }
     }
@@ -452,7 +454,7 @@ var persistence = Ember.Object.extend({
           _this.url_cache[url] = data.local_url;
           return data.local_url || data.data_uri;
         } else if(data.data_uri) {
-          // methinks caching data URIs would fill up memory mighty quick
+          // methinks caching data URIs would fill up memory mighty quick, so let's not cache
           return data.data_uri;
         } else {
           return Ember.RSVP.reject({error: "no data URI or filename found for cached URL"});
@@ -645,9 +647,6 @@ var persistence = Ember.Object.extend({
       });
 
       size_image.then(function(object) {
-        // TODO: if mobile app, use files api instead?? have to make sure that
-        // the is-everything-synced check is looking for missing files, as well as
-        // the is-this-board-safely-cached-already check.
         if(persistence.get('local_system.available') && persistence.get('local_system.allowed') && stashes.get('auth_settings')) {
           if(object.data_uri) {
             var local_system_filename = object.local_filename;
@@ -727,15 +726,18 @@ var persistence = Ember.Object.extend({
   },
   sync: function(user_id, force, ignore_supervisees) {
     if(!window.coughDropExtras || !window.coughDropExtras.ready) {
-      Ember.run.later(function() {
-        persistence.sync(user_id, force, ignore_supervisees).then(null, function() { });
-      }, 100);
+      return new Ember.RSVP.Promise(function(wait_resolve, wait_reject) {
+        coughDropExtras.advance.watch('all', function() {
+          wait_resolve(persistence.sync(user_id, force, ignore_supervisees));
+        });
+      });
     }
 
     console.log('syncing for ' + user_id);
     if(this.get('online')) {
       stashes.push_log();
     }
+
     this.set('sync_status', 'syncing');
     var synced_boards = [];
     // TODO: this could move to bg.js, that way it can run in the background
@@ -743,7 +745,8 @@ var persistence = Ember.Object.extend({
 
     // TODO: there should be a user preference to say, when I sync as 'self'
     // go ahead and sync all the boards for all my linked users as well.
-    return new Ember.RSVP.Promise(function(sync_resolve, sync_reject) {
+
+    var sync_promise = new Ember.RSVP.Promise(function(sync_resolve, sync_reject) {
       if(!user_id) {
         sync_reject({error: "failed to retrieve user, missing id"});
       }
@@ -882,6 +885,8 @@ var persistence = Ember.Object.extend({
       }
       return Ember.RSVP.reject(err);
     });
+    this.set('sync_promise', sync_promise);
+    return sync_promise;
   },
   sync_buttons: function(synced_boards) {
     return Ember.RSVP.resolve();
@@ -1401,7 +1406,7 @@ var persistence = Ember.Object.extend({
       var synced = _this.get('last_sync_at') || 1;
       var now = (new Date()).getTime() / 1000;
       // if we haven't synced in 12 hours and we're online, do a background sync
-      if((now - synced) > (12 * 60 * 60) && persistence.get('online') && !Ember.testing) {
+      if((now - synced) > (12 * 60 * 60) && persistence.get('online') && !Ember.testing && !persistence.get('syncing')) {
         persistence.sync('self').then(null, function() { });
       }
     }

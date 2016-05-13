@@ -324,7 +324,7 @@ var editManager = Ember.Object.extend({
     buttonb.set('for_swap', false);
     this.swapId = null;
     this.controller.set('ordered_buttons', ob);
-    this.controller.redraw();
+//     this.controller.redraw();
   },
   move_button: function(a, b, decision) {
     var button = this.find_button(a);
@@ -516,7 +516,7 @@ var editManager = Ember.Object.extend({
           if(!controller.get('ordered_buttons')) {
             board.set('pending_buttons', null);
             controller.set('ordered_buttons',result);
-            controller.redraw();
+//             controller.redraw();
             Ember.run.later(function() {
               app_state.controller.send('highlight_button');
             });
@@ -526,7 +526,7 @@ var editManager = Ember.Object.extend({
         controller.set('ordered_buttons', null);
       } else {
         controller.set('ordered_buttons', result);
-        controller.redraw();
+//         controller.redraw();
         for(var idx = 0; idx < result.length; idx++) {
           for(var jdx = 0; jdx < result[idx].length; jdx++) {
             var button = result[idx][jdx];
