@@ -71,10 +71,10 @@ task "extras:mobile" => :environment do
   File.write("../#{folder}/www/index.html", content)
   puts "updating phonegap version"
   
-  str = File.read("../#{folder}/www/manifest.json")
-  date_version = Date.today.strftime('%Y.%m.%d')
-  str = str.sub(/\"version\"\s*:\s*\"[^\"]+\"/, "\"version\": \"#{date_version}\"")
-  File.write("../#{folder}/www/manifest.json", str)
+  # str = File.read("../#{folder}/www/manifest.json")
+  # date_version = Date.today.strftime('%Y.%m.%d')
+  # str = str.sub(/\"version\"\s*:\s*\"[^\"]+\"/, "\"version\": \"#{date_version}\"")
+  # File.write("../#{folder}/www/manifest.json", str)
   
   str = File.read("../#{folder}/config.xml")
   date_version = Date.today.strftime('%Y.%m.%d')
