@@ -65,7 +65,7 @@ export default Ember.Controller.extend({
   refresh_stats: function() {
     var _this = this;
     persistence.ajax('/api/v1/organizations/' + this.get('model.id') + '/stats', {type: 'GET'}).then(function(stats) {
-      _this.set('weekly_stats', stats);
+      _this.set('weekly_stats', stats.weeks);
     }, function() {
       _this.set('weekly_stats', {error: true});
     });
