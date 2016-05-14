@@ -32,7 +32,7 @@ var persistence = Ember.Object.extend({
         if(!persistence.get('syncing')) {
           persistence.sync('self').then(null, function() { });
         }
-      }, 2000);
+      }, 10000);
     }
     coughDropExtras.advance.watch('device', function() {
       if(!CoughDrop.ignore_filesystem) {

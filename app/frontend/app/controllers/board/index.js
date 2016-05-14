@@ -11,6 +11,7 @@ import modal from '../../utils/modal';
 import Button from '../../utils/button';
 
 var cached_images = {};
+var last_redraw = (new Date()).getTime();
 
 export default Ember.Controller.extend({
   title: function() {
@@ -136,8 +137,13 @@ export default Ember.Controller.extend({
   board_style: function() {
     return new Ember.Handlebars.SafeString("position: relative; height: " + (this.get('height') + 6) + "px");
   }.property('height'),
+  redraw_if_needed: function() {
+    var now = (new Date()).getTime();
+    if(now - last_redraw > 100) {
+      this.redraw()
+    }
+  },
   redraw: function(klass, change, redraw_button_id) {
-//    console.log(arguments);
     var foundy = Math.round(10 * Math.random());
     var draw_id = redraw_button_id ? this.get('last_draw_id') : Math.random();
     this.set('last_draw_id', draw_id);
@@ -145,6 +151,7 @@ export default Ember.Controller.extend({
     if(!grid) {
       return;
     }
+    last_redraw = (new Date()).getTime();
 
     var starting_height = Math.floor((this.get('height') / (grid.rows || 2)) * 100) / 100;
     var starting_width = Math.floor((this.get('width') / (grid.columns || 2)) * 100) / 100;
