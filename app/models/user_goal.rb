@@ -27,6 +27,39 @@ class UserGoal < ActiveRecord::Base
     end
   end
   
+  def generate_stats
+    stats = {}
+    # TODO: sharding
+    sessions = LogSession.where(:goal_id => self.id).select{|s| s.started_at }
+    suggested_level = 'monthly'
+    # daily for the past 2 weeks
+    stats['daily'] = {}
+    daily_sessions = sessions.select{|s| s.started_at && s.started_at > 2.weeks.ago }
+    suggested_level = 'daily' if daily_sessions.length == weekly_sessions.length
+    # weekly for the past 12 weeks
+    stats['weekly'] = {}
+    weekly_sessions = sessions.select{|s| s.started_at && s.started_at > 12.weeks.ago }
+    suggested_level = 'weekly' if weekly_sessions.length == sessions.length
+    # monthly for all time
+    stats['monthly'] = {}
+    [[daily_sessions, 'daily'], [weekly_sessions, 'weekly'], [sessions, 'monthly']].each do |sessions, level|
+      sessions.each do |session|
+        key = session.started_at.utc.iso8601[0, 10]
+        key = "#{session.stared_at.utc.to_date.cwyear}-#{session.started_at.utc.to_date.cweek}" if level == 'weekly'
+        key = session.started_at.utc.iso8601[0, 7] if level == 'monthly'
+        stats[level][key] ||= {}
+        stats[level][key]['positives'] ||= 0
+        stats[level][key]['positives'] += session.data['goal']['positives'] if session.data['goal'] && session.data['positives']
+        stats[level][key]['negatives'] ||= 0
+        stats[level][key]['negatives'] += session.data['goal']['negatives'] if session.data['goal'] && session.data['negatives']
+        stats[level][key]['statuses'] ||= []
+        stats[level][key]['statuses'] << session.data['goal']['status'] if session.data['goal'] && session.data['status']
+      end
+    end
+    stats['suggested_level'] = suggested_level
+    self.settings['stats'] = stats
+  end
+  
   def summary
     self.settings['summary']
   end
@@ -139,6 +172,15 @@ class UserGoal < ActiveRecord::Base
     res = UserGoal.find_by_global_id(self.settings['next_template_id'])
     res = nil unless res.template
     res
+  end
+  
+  def self.add_log_session(log_id)
+    session = LogSession.find_by_global_id(log_id)
+    goal = session.goal
+    if goal && goal.user_id == session.user_id
+      goal.generate_stats
+      goal.save
+    end
   end
   
   def advance!

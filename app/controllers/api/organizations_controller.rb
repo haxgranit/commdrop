@@ -24,7 +24,8 @@ class Api::OrganizationsController < ApplicationController
       users = users.order('user_name')
     end
     prefix = "/organizations/#{@org.global_id}/users"
-    render json: JsonApi::User.paginate(params, users, {:limited_identity => true, :organization => @org, :prefix => prefix})
+    org_manager = @org.allows?(@api_user, 'manage')
+    render json: JsonApi::User.paginate(params, users, {:limited_identity => true, :organization => @org, :prefix => prefix, :organization_manager => org_manager})
   end
   
   def supervisors
@@ -49,10 +50,12 @@ class Api::OrganizationsController < ApplicationController
       # TODO: sharding
       sessions = sessions.where(:user_id => org.approved_users(false).map(&:id))
     end
-    res = []
+    res = {
+      'weeks' => []
+    }
     sessions.group("date_trunc('week', started_at)").count.sort_by{|d, c| d }.each do |date, count|
       if date && date < Time.now
-        res << {
+        res['weeks'] << {
           'timestamp' => date.to_time.to_i,
           'sessions' => count
         }
@@ -64,7 +67,7 @@ class Api::OrganizationsController < ApplicationController
   def admin_reports
     org = Organization.find_by_path(params['organization_id'])
     return unless allowed?(org, 'edit')
-    if !['logged_2', 'unused_3', 'unused_6'].include?(params['report'])
+    if !['logged_2', 'not_logged_2', 'unused_3', 'unused_6'].include?(params['report'])
       if !org.admin?
         return unless allowed?(org, 'impossible')
       end
@@ -127,6 +130,16 @@ class Api::OrganizationsController < ApplicationController
       end
       user_ids = sessions.group('id, user_id').count('user_id').map(&:first)
       users = User.where(:id => user_ids)
+    elsif params['report'].match(/not_logged_/)
+      # logins that have generated logs in the last 2 weeks
+      x = params['report'].split(/_/)[1].to_i
+      sessions = LogSession.where(['created_at > ?', x.weeks.ago])
+      approved_user_ids = org.approved_users(false).map(&:id)
+      # TODO: sharding
+      sessions = sessions.where(:user_id => org.approved_users(false).map(&:id))
+      session_user_ids = sessions.group('id, user_id').count('user_id').map(&:first)
+      missing_user_ids = approved_user_ids - session_user_ids
+      users = User.where(:id => missing_user_ids)
     elsif params['report'] == 'missing_words'
       stats = RedisInit.default ? RedisInit.default.hgetall('missing_words') : {}
     elsif params['report'] == 'missing_symbols'

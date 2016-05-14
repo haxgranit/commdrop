@@ -115,6 +115,9 @@ module JsonApi::User
         json['subscription'] = user.subscription_hash
       end
       if args[:organization]
+        if args[:organization_manager]
+          json['goal'] = user.settings['primary_goal']
+        end
         if Organization.manager?(user)
           json['org_manager'] = args[:organization].manager?(user)
           json['org_assistant'] = args[:organization].assistant?(user)

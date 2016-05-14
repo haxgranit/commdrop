@@ -17,6 +17,14 @@ class Api::LogsController < ApplicationController
     if params['type'] != 'all'
       logs = logs.where(:log_type => params['type'])
     end
+    if params['goal_id']
+      goal = UserGoal.find_by_global_id(param['goal_id'])
+      if goal && goal.user == user
+        logs = logs.where(:goal_id => goal.id)
+      else
+        logs = logs.where(:id => 0)
+      end
+    end
     if params['location_id']
       location = ClusterLocation.find_by_global_id(params['location_id'])
       if location

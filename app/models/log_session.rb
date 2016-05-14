@@ -9,6 +9,7 @@ class LogSession < ActiveRecord::Base
   belongs_to :ip_cluster, :class_name => ClusterLocation
   belongs_to :geo_cluster, :class_name => ClusterLocation
   belongs_to :device
+  belongs_to :goal
   before_save :generate_defaults
   before_save :generate_stats
   after_save :split_out_later_sessions
@@ -304,6 +305,10 @@ class LogSession < ActiveRecord::Base
       ClusterLocation.schedule(:add_to_cluster, self.global_id)
       @clustering_scheduled = false
     end
+    if @goal_clustering_scheduled
+      UserGoal.schedule(:add_log_session, self.global_id)
+      @goal_clustering_scheduled = false
+    end
     true
   end
   
@@ -502,6 +507,9 @@ class LogSession < ActiveRecord::Base
           end
         end
       end
+      if self.goal_id
+        @goal_clustering_scheduled = true
+      end
     else
       ids = (self.data['events'] || []).map{|e| e['id'] }.max || 0
       ip_address = non_user_params[:ip_address]
@@ -536,13 +544,14 @@ class LogSession < ActiveRecord::Base
           self.data['referenced_user_id'] = ref_user.global_id
         end
       end
-      if params['goal_id']
-        goal = UserGoal.find_by_global_id(params['goal_id'])
-        if goal.user_id == self.user_id
-          self.goal = goal
+      if params['goal_id'] || self.goal_id
+        log_goal = self.goal || UserGoal.find_by_global_id(params['goal_id'])
+        if log_goal.user_id == self.user_id
+          @goal_clustering_scheduled = true
+          self.goal = log_goal
           self.data['goal'] = {
-            'id' => goal.global_id,
-            'summary' => goal.summary
+            'id' => log_goal.global_id,
+            'summary' => log_goal.summary
           }
           if params['goal_status'] && params['goal_status'].to_i > 0
             self.data['goal']['status'] = params['goal_status'].to_i
