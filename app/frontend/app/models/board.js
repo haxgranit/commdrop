@@ -176,12 +176,12 @@ CoughDrop.Board = DS.Model.extend({
     Ember.run.later(function() {
       var board_ids = [];
       boards.forEach(function(b) { if(b.id) { board_ids.push(b.id); } });
-      persistence.push_records('board', board_ids).then(function() {
-        boards.forEach(function(b) {
-          CoughDrop.store.findRecord('board', b.id).then(function(brd) {
-//            brd.find_content_locally();
-          }, function() { });
-        });
+      persistence.push_records('board', board_ids).then(function(boards_hash) {
+        for(var idx in boards_hash) {
+          if(idx && boards_hash[idx]) {
+//            boards_hash[idx].find_content_locally();
+          }
+        }
       }, function() { });
     }, 500);
   },
