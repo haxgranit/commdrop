@@ -293,4 +293,9 @@ import capabilities from './capabilities';
   });
 })();
 
+window.time_log = function(str) {
+  var stamp = Math.round((((new Date()).getTime() / 1000) % 100) * 100) / 100;
+  console.log(str + "  :" + stamp);
+};
+
 export default window.coughDropExtras;

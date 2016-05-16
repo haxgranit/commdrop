@@ -76,6 +76,13 @@ task "extras:mobile" => :environment do
   # str = str.sub(/\"version\"\s*:\s*\"[^\"]+\"/, "\"version\": \"#{date_version}\"")
   # File.write("../#{folder}/www/manifest.json", str)
   
+  str = File.read('./app/assets/javascripts/application-preload.js')
+  match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+)(\w*)\";/)
+  str = File.read("./#{folder}/www/init.js")
+  full_version = (match && match[0]) || Date.today.strftime('%Y.%m.%d')
+  str = str.sub(/window\.app_version\s*=\s*\"[^\"]+\"/, "window.app_version = \"#{full_version}\"");
+  File.write("../#{folder}/www/init.js", str)
+  
   str = File.read("../#{folder}/config.xml")
   date_version = Date.today.strftime('%Y.%m.%d')
   str = str.sub(/version\s*=s*\"[^\"]+\"/, "version=\"#{date_version}\"")
