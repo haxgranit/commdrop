@@ -315,7 +315,7 @@ var stashes = Ember.Object.extend({
     // Remove from local store and persist occasionally
     var diff = (usage_log && usage_log[0] && usage_log[0].timestamp) ? (timestamp - usage_log[0].timestamp) : -1;
     // TODO: add listener on persistence.online and trigger this log save stuff when reconnected
-    if(CoughDrop.session && CoughDrop.session.get('user_name') && stashes.get('online') && usage_log.length > 0) {
+    if(CoughDrop.session && CoughDrop.session.get('isAuthenticated') && stashes.get('online') && usage_log.length > 0) {
       // If there's more than 10 events, or it's been more than 1 hour
       // since the last recorded event.
       if(usage_log.length > 10 || diff == -1 || diff > (60 * 60 * 1000) || !only_if_convenient) {
