@@ -77,11 +77,13 @@ task "extras:mobile" => :environment do
   # File.write("../#{folder}/www/manifest.json", str)
   
   str = File.read('./app/assets/javascripts/application-preload.js')
-  match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+)(\w*)\";/)
-  str = File.read("./#{folder}/www/init.js")
-  full_version = (match && match[0]) || Date.today.strftime('%Y.%m.%d')
+  match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+\w*)\";/)
+  str = File.read("../#{folder}/www/init.js")
+  full_version = (match && match[1]) || Date.today.strftime('%Y.%m.%d')
   str = str.sub(/window\.app_version\s*=\s*\"[^\"]+\"/, "window.app_version = \"#{full_version}\"");
+  puts str
   File.write("../#{folder}/www/init.js", str)
+  puts "updating mobile version"
   
   str = File.read("../#{folder}/config.xml")
   date_version = Date.today.strftime('%Y.%m.%d')
@@ -90,6 +92,6 @@ task "extras:mobile" => :environment do
 
   puts "installing on android phone"
   Dir.chdir("../#{folder}"){
-    puts `cordova run android --device`
+#    puts `cordova run android --device`
   }
 end
