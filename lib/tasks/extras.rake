@@ -89,8 +89,9 @@ task "extras:mobile" => :environment do
   str = str.sub(/version\s*=s*\"[^\"]+\"/, "version=\"#{date_version}\"")
   File.write("../#{folder}/config.xml", str)
 
-  puts "installing on android phone"
+  puts "building for android"
   Dir.chdir("../#{folder}"){
-#    puts `cordova run android --device`
+    puts `cordova prepare`
+    puts `cordova build android`
   }
 end

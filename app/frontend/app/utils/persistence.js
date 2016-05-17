@@ -563,7 +563,14 @@ var persistence = Ember.Object.extend({
         }
       };
     }
-    if(persistence.storing_url_watchers < 2) {
+    var max_watchers = 3;
+    if(capabilities.mobile) {
+      max_watchers = 2;
+      if(capabilities.system == 'Android') {
+        max_watchers = 1;
+      }
+    }
+    if(persistence.storing_url_watchers < max_watchers) {
       persistence.storing_url_watchers++;
       persistence.storing_urls();
     }
