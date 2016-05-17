@@ -14,8 +14,11 @@ module General
     end
   
     def deliver_message(method_name, *args)
-      method = self.send(method_name, *args)
-      method.respond_to?(:deliver_now) ? method.deliver_now : method.deliver
+      begin
+        method = self.send(method_name, *args)
+        method.respond_to?(:deliver_now) ? method.deliver_now : method.deliver
+      rescue AWS::SES::ResponseError => e
+      end
     end
   end
 end
