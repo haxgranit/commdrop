@@ -81,7 +81,6 @@ task "extras:mobile" => :environment do
   str = File.read("../#{folder}/www/init.js")
   full_version = (match && match[1]) || Date.today.strftime('%Y.%m.%d')
   str = str.sub(/window\.app_version\s*=\s*\"[^\"]+\"/, "window.app_version = \"#{full_version}\"");
-  puts str
   File.write("../#{folder}/www/init.js", str)
   puts "updating mobile version"
   

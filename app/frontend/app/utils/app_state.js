@@ -34,17 +34,7 @@ var app_state = Ember.Object.extend({
     this.set('licenseOptions', CoughDrop.licenseOptions);
     this.set('device_name', capabilities.readable_device_name);
     var _this = this;
-    if(capabilities.installed_app) {
-      Ember.$.ajax({
-        url: 'manifest.json',
-        type: 'GET',
-        dataType: 'json'
-      }).then(function(data) {
-        _this.set('version', data.version || window.app_version || 'unknown');
-      });
-    } else {
-      this.set('version', window.app_version || 'unknown');
-    }
+    this.set('version', window.app_version || 'unknown');
     var _this = this;
     capabilities.battery.listen(function(battery) {
       battery.level = Math.round(battery.level * 100);
