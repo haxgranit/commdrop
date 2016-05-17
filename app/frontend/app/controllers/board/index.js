@@ -91,7 +91,10 @@ export default Ember.Controller.extend({
     boundClasses.setup(true);
     this.processButtons();
     var board = this.get('model');
-    board.save().then(null, function() { });
+    board.save().then(null, function(err) {
+      console.error(err);
+      modal.error(i18n.t('board_save_failed', "Failed to save board"));
+    });
 
     // TODO: on commit, only send attributes that have changed
     // to prevent stepping on other edits if all you're doing is
