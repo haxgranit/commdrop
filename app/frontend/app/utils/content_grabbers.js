@@ -664,7 +664,7 @@ var pictureGrabber = Ember.Object.extend({
         list.forEach(function(device) {
           if(device.kind == 'videoinput' || device.kind == 'video') {
             video_streams.push({
-              id: device.id,
+              id: device.deviceId || device.id,
               label: device.label || ('camera ' + (video_streams.length + 1))
             });
           }
@@ -988,7 +988,7 @@ var videoGrabber = Ember.Object.extend({
         list.forEach(function(device) {
           if(device.kind == 'videoinput' || device.kind == 'video') {
             video_streams.push({
-              id: device.id,
+              id: device.deviceId || device.id,
               label: device.label || ('camera ' + (video_streams.length + 1))
             });
           }
