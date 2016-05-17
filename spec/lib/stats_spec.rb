@@ -60,7 +60,8 @@ describe Stats do
         :started_at => nil,
         :ended_at => nil,
         :max_time_block => nil,
-        :time_offset_blocks => {}
+        :time_offset_blocks => {},
+        :goals => []
       })
     end
     

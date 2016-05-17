@@ -75,6 +75,8 @@ describe("persistence", function() {
         persistence.remove('settings', {storageId: 'lastSync'}, 'lastSync').then(function() {
           setTimeout(function() {
             persistence.setup({}, app);
+            coughDropExtras.set('ready', false);
+            coughDropExtras.set('ready', true);
           }, 10);
         });
         waitsFor(function() { return persistence.get('last_sync_at') === 0; });
@@ -100,6 +102,8 @@ describe("persistence", function() {
       var ready = coughDropExtras.get('ready');
       coughDropExtras.set('ready', false);
       var res = persistence.find('bob', 'ok');
+      coughDropExtras.advance('all');
+      coughDropExtras.set('ready', false);
       var error = null;
       res.then(function() { dbg(); }, function(err) {
         error = err;
@@ -191,6 +195,7 @@ describe("persistence", function() {
           raw: {ids: ['settings_hat']},
           storageId: 'importantIds'
         };
+        persistence.important_ids = null;
         coughDropExtras.storage.store('settings', obj, 'hat').then(function() {
           setTimeout(function() {
             coughDropExtras.storage.store('settings', ids, 'importantIds').then(function() {
@@ -775,18 +780,21 @@ describe("persistence", function() {
     it("should call sync when changing to online", function() {
       CoughDrop.sync_testing = true;
       var online = persistence.get('online');
+      stashes.set('auth_settings', {});
       var called = false;
       stub(persistence, 'sync', function() {
         called = true;
         return Ember.RSVP.resolve();
       });
       persistence.set('online', false);
+      persistence.set('last_sync_at', -1);
       expect(called).toEqual(false);
       persistence.set('online', true);
       waitsFor(function() { return called; });
-      runs();
-      persistence.set('online', online);
-      CoughDrop.sync_testing = false;
+      runs(function() {
+        persistence.set('online', online);
+        CoughDrop.sync_testing = false;
+      });
     });
 //     it("should set to offline on event", function() {
 //       var online = persistence.get('online');

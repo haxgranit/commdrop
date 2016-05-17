@@ -9,7 +9,7 @@ import Ember from 'ember';
 describe('soundGrabber', function() {
   var soundGrabber = contentGrabbers.soundGrabber;
   var navigator = window.navigator;
-  
+
   var controller = null;
   var button = null;
   var recorder = fakeRecorder();
@@ -39,7 +39,7 @@ describe('soundGrabber', function() {
       }
     }).create();
   });
-  
+
   describe('setup', function() {
     it('should set controller and button attributes', function() {
       var checked = false;
@@ -55,14 +55,14 @@ describe('soundGrabber', function() {
       });
     });
   });
-  
+
   describe('clearing', function() {
     it('should clear uploaded or recorded sounds properly', function() {
       soundGrabber.setup(button, controller);
       controller.set('sound_preview', {});
       soundGrabber.clear_sound_work();
       expect(controller.get('sound_preview')).toEqual(null);
-      
+
       var mr = fakeRecorder();
       mr.state = 'recording';
       controller.set('sound_recording', {media_recorder: mr});
@@ -71,7 +71,7 @@ describe('soundGrabber', function() {
       expect(controller.get('sound_recording').recording).toEqual(false);
     });
   });
-  
+
   describe('license tracking', function() {
     it('should return correctly license type when set, defaulting to private', function() {
       soundGrabber.setup(button, controller);
@@ -89,7 +89,7 @@ describe('soundGrabber', function() {
       expect(controller.get('sound_preview.license.author_url')).toMatch(/\/bob$/);
     });
   });
-  
+
   describe('file selection', function() {
     it('should set data from the provided file on the controller', function() {
       soundGrabber.setup(button, controller);
@@ -103,7 +103,7 @@ describe('soundGrabber', function() {
       });
     });
   });
-  
+
   describe('recording sound', function() {
     it('should initialize recording process', function() {
       soundGrabber.setup(button, controller);
@@ -119,7 +119,7 @@ describe('soundGrabber', function() {
       var mr = fakeRecorder();
       mr.state = 'recording';
       controller.set('sound_recording', {media_recorder: mr, recording: true});
-      
+
       soundGrabber.toggle_recording_sound('stop');
       expect(mr.stopped).toEqual(true);
       expect(mr.started).not.toEqual(true);
@@ -145,7 +145,7 @@ describe('soundGrabber', function() {
       var stash = window.MediaRecorder;
       window.MediaRecorder = MR2;
       soundGrabber.setup(button, controller);
-      
+
       var called = false;
       var stream = fakeRecorder();
       stub(navigator, 'getUserMedia', function(args, callback) {
@@ -153,23 +153,23 @@ describe('soundGrabber', function() {
         callback(stream);
       });
       soundGrabber.record_sound();
-      
+
       expect(called).toEqual(true);
       var mr = controller.get('sound_recording.media_recorder');
       expect(mr.stream).toEqual(stream);
       expect(controller.get('sound_recording.stream')).toEqual(stream);
-      
-      var blob = new window.Blob([0], {type: 'audio/wav'});
+
+      var blob = new window.Blob([0], {type: 'audio/webm'});
       mr.trigger('dataavailable', {data: blob});
       expect(controller.get('sound_recording.blob')).toEqual(blob);
-      
+
       mr.trigger('recordingdone');
       waitsFor(function() { return controller.get('sound_preview'); });
       runs(function() {
-        expect(controller.get('sound_preview.url')).toEqual("data:audio/wav;base64,MA==");
+        expect(controller.get('sound_preview.url')).toEqual("data:audio/webm;base64,MA==");
         expect(controller.get('sound_preview.name')).toEqual("Recorded sound");
       });
-      
+
       window.MediaRecorder = stash;
     });
   });
@@ -188,7 +188,7 @@ describe('soundGrabber', function() {
       soundGrabber.setup(button, controller);
       controller.set('sound_preview', {url: '/beep.mp3'});
       var button_set = false;
-      stub(editManager, 'change_button', function(id, args) { 
+      stub(editManager, 'change_button', function(id, args) {
         if(id == '456' && args.sound_id == '123') { button_set = true; }
       });
       queryLog.defineFixture({
@@ -206,7 +206,7 @@ describe('soundGrabber', function() {
         expect(controller.get('sound_preview')).toEqual(null);
       });
     });
-    
+
     it('should use license provided on preview if specified', function() {
       soundGrabber.setup(button, controller);
       controller.set('sound_preview', {url: '/beep.mp3', license: {type: 'Cool', author_name: 'Bob'}});
@@ -215,7 +215,7 @@ describe('soundGrabber', function() {
       queryLog.defineFixture({
         method: 'POST',
         type: 'sound',
-        compare: function(s) { 
+        compare: function(s) {
           correct_license = s.get('license.type') == 'Cool' && s.get('license.author_name') == "Bob";
           return s.get('url') == '/beep.mp3';
         },

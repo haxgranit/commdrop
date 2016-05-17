@@ -112,7 +112,7 @@ var persistence = Ember.Object.extend({
         return Ember.RSVP.reject({error: "extras not ready"});
       } else {
         return new Ember.RSVP.Promise(function(resolve, reject) {
-          coughDropExtras.advance.wait('all', function() {
+          coughDropExtras.advance.watch('all', function() {
             resolve(persistence.find(store, key, wrapped, true));
           });
         });

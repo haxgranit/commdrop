@@ -645,7 +645,7 @@ describe Api::OrganizationsController, :type => :controller do
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json).to eq([])
+      expect(json).to eq({'weeks' => []})
       
       LogSession.process_new({
         :events => [
@@ -663,13 +663,13 @@ describe Api::OrganizationsController, :type => :controller do
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json).to eq([])
+      expect(json).to eq({'weeks' => []})
       
       o.add_user(user.user_name, false, false)
       expect(o.reload.approved_users.length).to eq(1)
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
-      json = JSON.parse(response.body)
+      json = JSON.parse(response.body)['weeks']
       expect(json.length).to eq(2)
       expect(json[0]['sessions']).to eq(1)
       expect(json[0]['timestamp']).to be > 0

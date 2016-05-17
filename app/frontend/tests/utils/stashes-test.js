@@ -230,7 +230,7 @@ describe('stashes', function() {
           return object.get('events').length == 2;
         }
       });
-      CoughDrop.session = Ember.Object.create({'user_name': null});
+      CoughDrop.session = Ember.Object.create({'user_name': null, isAuthenticated: false});
       var logs = queryLog.length;
       stashes.log({action: 'jump'});
       expect(stashes.get('usage_log').length).toEqual(2);
@@ -251,8 +251,9 @@ describe('stashes', function() {
           return object.get('events').length == 2;
         }
       });
-      CoughDrop.session = Ember.Object.create({'user_name': 'bob'});
+      CoughDrop.session = Ember.Object.create({'user_name': 'bob', 'isAuthenticated': true});
       var logs = queryLog.length;
+      expect(stashes.get('usage_log').length).toEqual(1);
       stashes.log({action: 'jump'});
       expect(stashes.get('usage_log').length).toEqual(0);
 

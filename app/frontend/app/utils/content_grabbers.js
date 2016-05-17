@@ -648,11 +648,21 @@ var pictureGrabber = Ember.Object.extend({
       showing: true,
       stream_id: stream_id
     });
-    if(window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices) {
-      window.navigator.mediaDevices.enumerateDevices().then(function(list) {
+    var enumerator = window.enumerateMediaDevices || (window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices);
+    if(!enumerator && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+      enumerator = function() {
+        return new Ember.RSVP.Promise(function(resolve, reject) {
+          window.MediaStreamTrack.getSources(function(sources) {
+            resolve(sources);
+          });
+        });
+      };
+    }
+    if(enumerator) {
+      enumerator().then(function(list) {
         var video_streams = [];
         list.forEach(function(device) {
-          if(device.kind == 'videoinput') {
+          if(device.kind == 'videoinput' || device.kind == 'video') {
             video_streams.push({
               id: device.id,
               label: device.label || ('camera ' + (video_streams.length + 1))
@@ -663,31 +673,10 @@ var pictureGrabber = Ember.Object.extend({
         if(video_streams.length <= 1) {
           video_streams = [];
         }
-        if(_this.controller.get('video_recording')) {
-          _this.controller.set('video_recording.video_streams', video_streams);
-        }
-      });
-    } else if(window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
-      window.MediaStreamTrack.getSources(function(sources) {
-        var video_streams = [];
-        var source = null;
-        for(var idx = 0; idx < sources.length; idx++) {
-          source = sources[idx];
-          if(source && source.kind == 'video') {
-            video_streams.push({
-              id: source.id,
-              label: source.label || ('camera ' + (video_streams.length + 1))
-            });
-          }
-        }
-        // If there's nothing to swap out, don't bother telling anyone
-        if(video_streams.length <= 1) {
-          video_streams = [];
-        }
         if(_this.controller.get('webcam')) {
           _this.controller.set('webcam.video_streams', video_streams);
         }
-      });
+      }, function() { });
     }
   },
   start_webcam: function() {
@@ -983,38 +972,27 @@ var videoGrabber = Ember.Object.extend({
       stream: stream,
       stream_id: stream_id
     });
-    if(window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices) {
-      window.navigator.mediaDevices.enumerateDevices().then(function(list) {
+    var enumerator = window.enumerateMediaDevices || (window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices);
+    if(!enumerator && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+      enumerator = function() {
+        return new Ember.RSVP.Promise(function(resolve, reject) {
+          window.MediaStreamTrack.getSources(function(sources) {
+            resolve(sources);
+          });
+        });
+      };
+    }
+    if(enumerator) {
+      enumerator().then(function(list) {
         var video_streams = [];
         list.forEach(function(device) {
-          if(device.kind == 'videoinput') {
+          if(device.kind == 'videoinput' || device.kind == 'video') {
             video_streams.push({
               id: device.id,
               label: device.label || ('camera ' + (video_streams.length + 1))
             });
           }
         });
-        // If there's nothing to swap out, don't bother telling anyone
-        if(video_streams.length <= 1) {
-          video_streams = [];
-        }
-        if(_this.controller.get('video_recording')) {
-          _this.controller.set('video_recording.video_streams', video_streams);
-        }
-      });
-    } else if(window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
-      window.MediaStreamTrack.getSources(function(sources) {
-        var video_streams = [];
-        var source = null;
-        for(var idx = 0; idx < sources.length; idx++) {
-          source = sources[idx];
-          if(source && source.kind == 'video') {
-            video_streams.push({
-              id: source.id,
-              label: source.label || ('camera ' + (video_streams.length + 1))
-            });
-          }
-        }
         // If there's nothing to swap out, don't bother telling anyone
         if(video_streams.length <= 1) {
           video_streams = [];

@@ -1674,6 +1674,7 @@ describe('app_state', function() {
 
     it("should transition to the index page if no user or root_board_state defined and index_as_fallback is allowed", function() {
       stashes.set('root_board_state', null);
+      stashes.set('temporary_root_board_state', null);
       app_state.set('sessionUser', Ember.Object.create({
         preferences: {
           home_board: {}
