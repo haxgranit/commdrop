@@ -80,6 +80,9 @@ var session = Ember.Object.extend({
           if(data.authenticated !== true) {
             session.invalidate(true);
           }
+          if(data.user_name) {
+            session.set('user_name', data.user_name);
+          }
           if(data.sale !== undefined) {
             CoughDrop.sale = parseInt(data.sale, 10) || false;
           }
