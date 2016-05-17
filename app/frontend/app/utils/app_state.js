@@ -686,8 +686,8 @@ var app_state = Ember.Object.extend({
         if(ref_user && ref_user.get('goal.summary')) {
           Ember.run.later(function() {
             noticed = true;
-            var str = i18n.t('user_apostrophe', "%{user_name}'s ", {user_name: ref_user.get('user_name')})
-            str = str + i18n.t('current_goal', "Current Goal: %{summary}", {summary: ref_user.get('goal.summary')})
+            var str = i18n.t('user_apostrophe', "%{user_name}'s ", {user_name: ref_user.get('user_name')});
+            str = str + i18n.t('current_goal', "Current Goal: %{summary}", {summary: ref_user.get('goal.summary')});
             modal.notice(str, true);
           }, 100);
         }

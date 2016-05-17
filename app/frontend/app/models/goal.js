@@ -8,7 +8,6 @@ CoughDrop.Goal = DS.Model.extend({
   has_video: DS.attr('boolean'),
   primary: DS.attr('boolean'),
   active: DS.attr('boolean'),
-  primary: DS.attr('boolean'),
   template: DS.attr('boolean'),
   template_header: DS.attr('boolean'),
   summary: DS.attr('string'),

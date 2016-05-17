@@ -440,7 +440,7 @@ var capabilities;
         list_files: function(dirname, include_size) {
           var promise = capabilities.mini_promise();
             if(window.cordova && window.cordova.exec) {
-              var dir = cordova.file.dataDirectory.replace(/file:\/\//, '') + dirname + '/';
+              var dir = window.cordova.file.dataDirectory.replace(/file:\/\//, '') + dirname + '/';
               window.cordova.exec(function(list) {
                 var res = [];
                 list.files.forEach(function(file) {

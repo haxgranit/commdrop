@@ -10,11 +10,11 @@ export default Ember.Controller.extend({
     this.store.query('goal', {user_id: this.get('model.id')}).then(function(list) {
       controller.set('goals', {list: list.content.mapBy('record')});
     }, function() {
-      controller.set('goals', {error: true})
+      controller.set('goals', {error: true});
     });
   },
   primary_goal: function() {
-    return (this.get('goals.list') || []).find(function(g) { return g.get('active') && g.get('primary'); })
+    return (this.get('goals.list') || []).find(function(g) { return g.get('active') && g.get('primary'); });
   }.property('goals.list'),
   secondary_goals: function() {
     var pg_id = this.get('primary_goal.id');

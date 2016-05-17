@@ -37,7 +37,7 @@ export default modal.ModalController.extend({
       });
       if(supervisees.length > 0) {
         supervisees.unshift({
-          name: i18n.t('me', "me"), 
+          name: i18n.t('me', "me"),
           id: 'self',
           image: app_state.get('sessionUser.avatar_url_with_fallback')
         });
@@ -56,7 +56,7 @@ export default modal.ModalController.extend({
     });
   }.observes('model.label'),
   buttonActions: [
-    {name: i18n.t('talk', "Add button to the vocalization window"), id: "talk"}, 
+    {name: i18n.t('talk', "Add button to the vocalization window"), id: "talk"},
     {name: i18n.t('folder', "Open/Link to another board"), id: "folder"},
     {name: i18n.t('link', "Open a web site in a browser tab"), id: "link"},
     {name: i18n.t('app', "Launch an application"), id: "app"}
@@ -75,7 +75,7 @@ export default modal.ModalController.extend({
       res.push({name: i18n.t('their_starred_boards', "This User's Liked Boards"), id: 'current_user_starred'});
       res.push({name: i18n.t('my_public_boards', "My Public Boards"), id: 'personal_public'});
       res.push({name: i18n.t('my_public_boards', "My Liked Public Boards"), id: 'personal_public_starred'});
-      
+
     } else {
       res.push({name: i18n.t('my_boards', "My Boards (includes shared)"), id: 'personal'});
       res.push({name: i18n.t('public_boards', "Public Boards"), id: 'public'});
@@ -209,7 +209,7 @@ export default modal.ModalController.extend({
     },
     toggle_color: function(type) {
       var $elem = Ember.$("#" + type);
-      
+
       if(!$elem.hasClass('minicolors-input')) {
         $elem.minicolors();
       }

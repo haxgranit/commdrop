@@ -143,7 +143,7 @@ export default Ember.Controller.extend({
   redraw_if_needed: function() {
     var now = (new Date()).getTime();
     if(now - last_redraw > 100) {
-      this.redraw()
+      this.redraw();
     }
   },
   redraw: function(klass, change, redraw_button_id) {
@@ -572,7 +572,7 @@ export default Ember.Controller.extend({
   reload_on_connect: function() {
     if(persistence.get('online') && !this.get('model.id')) {
       var _this = this;
-      var obj = this.store.findRecord('board', this.get('model.key'));
+      var obj = this.store.findRecord('board', this.get('model.id') || this.get('model.key'));
       return obj.then(function(data) {
         _this.set('model', data);
       }, function() { });
@@ -590,7 +590,7 @@ export default Ember.Controller.extend({
           editManager.apply_to_target(id);
         } else {
           var button = editManager.find_button(id);
-          button.state = event;
+          button.state = 'general';
           modal.open('button-settings', {button: button, board: board});
         }
       } else {
