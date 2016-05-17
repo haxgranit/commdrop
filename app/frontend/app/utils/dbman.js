@@ -184,30 +184,24 @@ var dbman = {
         error({error: "error retrieving record from db"});
       };
     } else if(dbman.db_type == 'sqlite_plugin') {
-      dbman.db.transaction(function(tx) {
-        var store_name = null;
-        if(stores[store]) { store_name = store; }
-        tx.executeSql('SELECT * FROM ' + store + ' WHERE ref_id = ?', [key], function(tx, result_set) {
-          var row = null;
-          if(result_set.rows && result_set.rows.length > 0) {
-            row = result_set.rows.item(0);
-          }
-          var result = null;
-          if(row && row.data) {
-            try {
-              result = JSON.parse(row.data);
-            } catch(e) { }
-          }
-          if(result) {
-            success(result);
-          } else {
-            error({error: "no record found for " + store + ":" + key});
-          }
-        }, function(err) {
-          console.log(err);
-          error({error: err.message});
-        });
-        // insert into the db
+      var store_name = null;
+      if(stores[store]) { store_name = store; }
+      dbman.db.executeSql('SELECT * FROM ' + store + ' WHERE ref_id = ?', [key], function(result_set) {
+        var row = null;
+        if(result_set.rows && result_set.rows.length > 0) {
+          row = result_set.rows.item(0);
+        }
+        var result = null;
+        if(row && row.data) {
+          try {
+            result = JSON.parse(row.data);
+          } catch(e) { }
+        }
+        if(result) {
+          success(result);
+        } else {
+          error({error: "no record found for " + store + ":" + key});
+        }
       }, function(err) {
         console.log(err);
         error({error: err.message});
@@ -248,49 +242,50 @@ var dbman = {
         error({error: "error retrieving records from db for " + store});
       };
     } else if(dbman.db_type == 'sqlite_plugin') {
-      dbman.db.transaction(function(tx) {
-        var store_name = null;
-        if(stores[store]) { store_name = store; }
-        var query = 'SELECT * FROM ' + store_name;
-        var args = [];
-        if(index == 'id' && key && key.forEach) {
-          query = query + ' WHERE ref_id IN (';
-          key.forEach(function(k, idx) {
-            query = query + '?';
-            args.push(k);
-            if(idx < key.length - 1) {
-              query = query + ',';
-            }
-          });
-          query = query + ')';
-        }
-        tx.executeSql(query, args, function(tx, result_set) {
-          var list = [];
-          if(result_set.rows && result_set.rows.length) {
-            for(var idx = 0; idx < result_set.rows.length; idx++) {
-              var row = result_set.rows.item(idx);
-              var data = null;
-              try {
-                data = JSON.parse(row.data);
-              } catch(e) { }
-              if(data) {
-                if(!index || keys[data[index]]) {
-                  list.push({
-                    store: store,
-                    data: data
-                  });
-                }
-              }
+      var handle_rows = function(rows) {
+        var list = [];
+        rows.forEach(function(row) {
+          var data = null;
+          try {
+            data = JSON.parse(row.data);
+          } catch(e) { }
+          if(data) {
+            if(!index || keys[data[index]]) {
+              list.push({
+                store: store,
+                data: data
+              });
             }
           }
-          success(list);
-          // process and return the resulting list
-        }, function(err) {
-          error({error: err.message});
         });
-        // insert into the db
+        success(list);
+      };
+      var store_name = null;
+      if(stores[store]) { store_name = store; }
+      var query = 'SELECT * FROM ' + store_name;
+      var args = [];
+      if(index == 'id' && key && key.forEach) {
+        query = query + ' WHERE ref_id IN (';
+        key.forEach(function(k, idx) {
+          query = query + '?';
+          args.push(k);
+          if(idx < key.length - 1) {
+            query = query + ',';
+          }
+        });
+        query = query + ')';
+      }
+      dbman.db.executeSql(query, args, function(result_set) {
+        // process and return the resulting list
+        var list = [];
+        if(result_set.rows && result_set.rows.length) {
+          for(var idx = 0; idx < result_set.rows.length; idx++) {
+            var row = result_set.rows.item(idx);
+            list.push(row);
+          }
+        }
+        handle_rows(list);
       }, function(err) {
-        console.log(err);
         error({error: err.message});
       });
     } else {
@@ -310,24 +305,27 @@ var dbman = {
         };
       } catch(e) { debugger; }
     } else if(dbman.db_type == 'sqlite_plugin') {
-      dbman.db.transaction(function(tx) {
-        var store_name = null;
-        if(stores[store]) { store_name = store; }
-        var ref_id = record.storageId || record.id;
-        tx.executeSql('SELECT * FROM ' + store_name + ' WHERE ref_id=?', [ref_id], function(tx, result_set) {
-          if(result_set.rows && result_set.rows.length > 0) {
-            tx.executeSql('UPDATE ' + store_name + ' SET data = ? WHERE ref_id=?', [JSON.stringify(record), ref_id]);
-          } else {
-            tx.executeSql('INSERT INTO ' + store_name + ' (ref_id, data) VALUES (?, ?)', [ref_id, JSON.stringify(record)]);
-          }
-        }, function(err) {
-          error({error: err.message});
-        });
+      var store_name = null;
+      if(stores[store]) { store_name = store; }
+      var ref_id = record.storageId || record.id;
+      dbman.db.executeSql('SELECT * FROM ' + store_name + ' WHERE ref_id=?', [ref_id], function(result_set) {
+        if(result_set.rows && result_set.rows.length > 0) {
+          dbman.db.executeSql('UPDATE ' + store_name + ' SET data = ? WHERE ref_id=?', [JSON.stringify(record), ref_id], function() {
+            success(record);
+          }, function(err) {
+            console.log(err);
+            error({error: err.message});
+          });
+        } else {
+          dbman.db.executeSql('INSERT INTO ' + store_name + ' (ref_id, data) VALUES (?, ?)', [ref_id, JSON.stringify(record)], function() {
+            success(record);
+          }, function(err) {
+            console.log(err);
+            error({error: err.message});
+          });
+        }
       }, function(err) {
-        console.log(err);
         error({error: err.message});
-      }, function() {
-        success(record);
       });
     } else {
       error({error: "unrecognized db_type, " + dbman.db_type});
@@ -349,15 +347,13 @@ var dbman = {
         };
       } catch(e) { debugger; }
     } else if(dbman.db_type == 'sqlite_plugin') {
-      dbman.db.transaction(function(tx) {
-        var store_name = null;
-        if(stores[store]) { store_name = store; }
-        tx.executeSql('DELETE FROM ' + store_name + ' WHERE ref_id=?', [id]);
+      var store_name = null;
+      if(stores[store]) { store_name = store; }
+      dbman.db.executeSql('DELETE FROM ' + store_name + ' WHERE ref_id=?', [id], function() {
+        success({id: id});
       }, function(err) {
         error({error: err.message});
         console.log(err);
-      }, function() {
-        success({id: id});
       });
     } else {
       error({error: "unrecognized db_type, " + dbman.db_type});

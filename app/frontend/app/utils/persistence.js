@@ -67,8 +67,12 @@ var persistence = Ember.Object.extend({
     CoughDrop.store.peekAll(store).content.forEach(function(item) {
       var record = item.record;
       if(record && hash[record.get('id')]) {
-        hash[record.get('id')] = false;
-        res[record.get('id')] = record;
+        if(store == 'board' && record.get('permissions') === undefined) {
+          // locally-cached board found from a list request doesn't count
+        } else {
+          hash[record.get('id')] = false;
+          res[record.get('id')] = record;
+        }
       }
     });
     var any_missing = false;
@@ -417,9 +421,11 @@ var persistence = Ember.Object.extend({
         if(data.local_url) {
           if(data.local_filename) {
             if(type == 'image' && _this.image_filename_cache && _this.image_filename_cache[data.local_filename]) {
-              return capabilities.storage.fix_url(data.local_url);
+              _this.url_cache[url] = capabilities.storage.fix_url(data.local_url);
+              return _this.url_cache[url];
             } else if(type == 'sound' && _this.sound_filename_cache && _this.sound_filename_cache[data.local_filename]) {
-              return capabilities.storage.fix_url(data.local_url);
+              _this.url_cache[url] = capabilities.storage.fix_url(data.local_url);
+              return _this.url_cache[url];
             } else {
               // confirm that the file is where it's supposed to be before returning
               return new Ember.RSVP.Promise(function(file_url_resolve, file_url_reject) {
@@ -530,7 +536,40 @@ var persistence = Ember.Object.extend({
     });
   },
   url_cache: {},
-  store_url: function(url, type, keep_big, force_reload) {
+  store_url: function store_url(url, type, keep_big, force_reload) {
+    persistence.urls_to_store = persistence.urls_to_store || [];
+    var defer = Ember.RSVP.defer();
+    var opts = {
+      url: url,
+      type: type,
+      keep_big: keep_big,
+      force_reload: force_reload,
+      defer: defer
+    };
+    persistence.urls_to_store.push(opts);
+    if(!persistence.storing_urls) {
+      persistence.storing_url_watchers = 0;
+      persistence.storing_urls = function() {
+        if(persistence.urls_to_store && persistence.urls_to_store.length > 0) {
+          var opts = persistence.urls_to_store.shift();
+          persistence.store_url_now(opts.url, opts.type, opts.keep_big, opts.force_reload).then(function(res) {
+            opts.defer.resolve(res);
+            persistence.storing_urls();
+          }, function(err) {
+            opts.defer.reject(err);
+          });
+        } else {
+          persistence.storing_url_watchers--;
+        }
+      };
+    }
+    if(persistence.storing_url_watchers < 2) {
+      persistence.storing_url_watchers++;
+      persistence.storing_urls();
+    }
+    return defer.promise;
+  },
+  store_url_now: function(url, type, keep_big, force_reload) {
     if(!type) { return Ember.RSVP.reject('type required for storing'); }
     if(!url) { console.error('url not provided'); return Ember.RSVP.reject('url required for storing'); }
     if(!window.coughDropExtras || !window.coughDropExtras.ready || url.match(/^data:/) || url.match(/^file:/)) {

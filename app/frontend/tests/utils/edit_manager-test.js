@@ -36,6 +36,9 @@ describe('editManager', function() {
     }));
     board = Ember.Object.extend({
       model: model,
+      redraw_if_needed: function() {
+        this.redraw();
+      },
       redraw: function() {
       }
     }).create({sent_messages: []});

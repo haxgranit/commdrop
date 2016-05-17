@@ -387,6 +387,7 @@ beforeEach(function() {
   App = startApp();
   App.rootElement = '#ember-testing';
   persistence.set('online', true);
+  persistence.storing_urls = null;
   stashes.set('online', true);
   app_state.reset();
   CoughDrop.store = App.__container__.lookup('service:store');

@@ -3,13 +3,13 @@ import { queryLog } from 'frontend/tests/helpers/ember_helper';
 import stashes from '../../utils/_stashes';
 import Ember from 'ember';
 import CoughDrop from 'frontend/app';
- 
+
 var App;
 describe('stashes', function() {
   beforeEach(function() {
     window.localStorage.root_board_state = null;
   });
-  
+
   describe("setup", function() {
     it("should allow flushing", function() {
       expect(stashes.flush).not.toEqual(undefined);
@@ -47,7 +47,7 @@ describe('stashes', function() {
       expect(stashes.get('bacon')).toEqual(undefined);
     });
   });
-  
+
   describe("set", function() {
     it("should not error on empty set", function() {
       expect(function() { stashes.persist(null, null); }).not.toThrow();
@@ -68,7 +68,7 @@ describe('stashes', function() {
       expect(JSON.parse(window.localStorage[stashes.prefix + 'jerky'])).toEqual(obj);
     });
   });
-  
+
   describe("remember", function() {
     it("should do nothing when history is disabled", function() {
       stashes.set('history_enabled', false);
@@ -77,7 +77,7 @@ describe('stashes', function() {
       stashes.remember();
       expect(stashes.get('remembered_vocalizations').length).toEqual(count);
     });
-    
+
     it("should append to remembered vocalizations", function() {
       stashes.set('history_enabled', true);
       stashes.persist('remembered_vocalizations', []);
@@ -103,12 +103,12 @@ describe('stashes', function() {
       expect(stashes.get('remembered_vocalizations').length).toEqual(0);
     });
   });
-  
+
   describe("geo", function() {
     // TODO
     it("should properly start polling when enabled");
   });
-  
+
   describe("log", function() {
     it("should not error on empty argument", function() {
       expect(function() { stashes.log(); }).not.toThrow();
@@ -182,7 +182,7 @@ describe('stashes', function() {
       expect(event.type).toEqual('action');
       expect(event.geo).toEqual([1,2, 123]);
     });
-    
+
     it("should try to push logs to the server periodically", function() {
       stashes.set('logging_enabled', true);
       stashes.set('speaking_user_id', 999);
@@ -199,13 +199,13 @@ describe('stashes', function() {
           return object.get('events').length == 2;
         }
       });
-      CoughDrop.session = Ember.Object.create({'user_name': 'bob'});
+      CoughDrop.session = Ember.Object.create({'isAuthenticated': true});
       var logs = queryLog.length;
       expect(stashes.get('usage_log').length).toEqual(1);
-      
+
       stashes.log({action: 'jump'});
       expect(stashes.get('usage_log').length).toEqual(0);
-      
+
       waitsFor(function() { return queryLog.length > logs; });
       runs(function() {
         expect(stashes.get('usage_log').length).toEqual(0);
@@ -255,7 +255,7 @@ describe('stashes', function() {
       var logs = queryLog.length;
       stashes.log({action: 'jump'});
       expect(stashes.get('usage_log').length).toEqual(0);
-      
+
       waitsFor(function() { return queryLog.length > logs; });
       runs(function() {
         expect(stashes.get('usage_log').length).toEqual(2);
