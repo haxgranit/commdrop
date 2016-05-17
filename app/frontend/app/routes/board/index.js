@@ -20,6 +20,7 @@ export default Ember.Route.extend({
     app_state.set('currentBoardState', {
       id: model.get('id'),
       key: model.get('key'),
+      name: model.get('name'),
       parent_key: model.get('parent_board_key')
     });
     if(CoughDrop.embedded && !app_state.get('speak_mode')) {

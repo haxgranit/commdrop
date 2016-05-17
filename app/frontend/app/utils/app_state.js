@@ -726,7 +726,7 @@ var app_state = Ember.Object.extend({
   current_board_name: function() {
     var state = this.get('currentBoardState');
     if(state && state.key) {
-      return state.key.split(/\//)[1];
+      return state.name || state.key.split(/\//)[1];
     }
     return null;
   }.property('currentBoardState'),
