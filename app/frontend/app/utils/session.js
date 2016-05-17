@@ -40,7 +40,6 @@ var session = Ember.Object.extend({
           session.persist({
             access_token: response.access_token,
             user_name: response.user_name,
-
           });
           stashes.persist_object('just_logged_in', true, false);
           resolve(response);
@@ -63,6 +62,7 @@ var session = Ember.Object.extend({
     if(store_data.access_token && !session.get('isAuthenticated')) {
       session.set('isAuthenticated', true);
       session.set('access_token', store_data.access_token);
+      session.set('user_name', store_data.user_name);
       session.set('as_user_id', store_data.as_user_id);
     } else if(!store_data.access_token) {
       session.invalidate();
@@ -138,6 +138,7 @@ var session = Ember.Object.extend({
     Ember.run.later(function() {
       session.set('isAuthenticated', false);
       session.set('access_token', null);
+      session.set('user_name', null);
       session.set('as_user_id', null);
     });
   }
