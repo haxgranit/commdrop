@@ -262,6 +262,9 @@ var stashes = Ember.Object.extend({
       if(stashes.orientation) {
         log_event.orientation = stashes.orientation;
       }
+      if(stashes.volume !== null && stashes.volume !== undefined) {
+        log_event.volume = stashes.volume;
+      }
       if(stashes.ambient_light !== null && stashes.ambient_light !== undefined) {
         log_event.ambient_light = stashes.ambient_light;
       }

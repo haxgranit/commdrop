@@ -740,6 +740,8 @@ var capabilities;
         var res = capabilities.mini_promise();
         if(window.plugin && window.plugin.volume && window.plugin.volume.getVolume) {
           window.plugin.volume.getVolume(function(vol) {
+            capabilities.last_volume = vol;
+            stashes.volume = capabilities.last_volume;
             res.resolve(vol);
           });
         } else {
@@ -1021,6 +1023,12 @@ var capabilities;
         };
         stashes.orientation = capabilities.last_orientation;
       }
+    });
+  }
+  if(window.plugin && window.plugin.volume && window.plugin.volume.setVolumeChangeCallback) {
+    window.plugin.volume.setVolumeChangeCallback(function(vol) {
+      capabilities.last_volume = vol;
+      stashes.volume = capabilities.last_volume;
     });
   }
   // TODO: https://github.com/brunovilar/cordova-plugins/tree/master/AmbientLight
