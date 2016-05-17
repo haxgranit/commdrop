@@ -1198,7 +1198,8 @@ var soundGrabber = Ember.Object.extend({
 
     function stream_ready(stream) {
       _this.controller.set('sound_recording.stream', stream);
-      var mr = new window.MediaRecorder(stream);
+      // TODO: not all browsers support webm..
+      var mr = new window.MediaRecorder(stream, {mimeType: 'audio/webm'});
       _this.controller.set('sound_recording.media_recorder', mr);
       mr.addEventListener('dataavailable', function(event) {
         if(!_this.controller.get('sound_recording.blob') && _this.controller.get('sound_recording')) {
@@ -1207,7 +1208,8 @@ var soundGrabber = Ember.Object.extend({
         _this.toggle_recording_sound('stop');
       });
       mr.stopped = function() {
-        var blob = _this.controller.get('sound_recording.blob');
+        var temp_blob = _this.controller.get('sound_recording.blob');
+        var blob = new Blob([temp_blob], {type: 'audio/webm'});
         var reader = contentGrabbers.read_file(blob);
         reader.then(function(data) {
           _this.controller.set('sound_preview', {
