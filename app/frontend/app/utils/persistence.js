@@ -63,6 +63,8 @@ var persistence = Ember.Object.extend({
   push_records: function(store, keys) {
     var hash = {};
     var res = {};
+    persistence.known_missing = persistence.known_missing || {};
+    persistence.known_missing[store] = persistence.known_missing[store] || {};
     keys.forEach(function(key) { hash[key] = true; });
     CoughDrop.store.peekAll(store).content.forEach(function(item) {
       var record = item.record;
@@ -82,11 +84,18 @@ var persistence = Ember.Object.extend({
         return coughDropExtras.storage.find_all(store, keys).then(function(list) {
           list.forEach(function(item) {
             if(item.data && item.data.id && hash[item.data.id]) {
+              hash[item.data.id] = false;
               if(CoughDrop.store) {
                 res[item.data.id] = CoughDrop.store.push(store, item.data.raw);
               }
             }
           });
+          for(var idx in hash) {
+            if(hash[idx] === true) {
+              persistence.known_missing[store][idx] = true;
+            }
+          }
+          alert('anything in hash thats still true is known to be missing, though youll also have to update that known list when storing');
           resolve(res);
         }, function(err) {
           reject(err);
@@ -123,6 +132,10 @@ var persistence = Ember.Object.extend({
       if(valid_stores.indexOf(store) == -1) {
         reject({error: "invalid type: " + store});
         return;
+      }
+      if(persistence.known_missing && persistence.known_missing[store] && persistence.known_missing[store][key]) {
+        console.error('found a known missing!');
+        reject({error: 'record not found'});
       }
       var id = Ember.RSVP.resolve(key);
       if(store == 'user' && key == 'self') {
@@ -169,9 +182,11 @@ var persistence = Ember.Object.extend({
           }
           resolve(result);
         } else {
+          // TODO: add to known_missing
           reject({error: "record not found"});
         }
       }, function(err) {
+        // TODO: add to known_missing
         reject(err);
       });
     });
@@ -195,19 +210,31 @@ var persistence = Ember.Object.extend({
     return new Ember.RSVP.Promise(function(resolve, reject) {
       if(store == 'board') {
         var promises = [];
+        var board_ids = [];
         stashes.get('recent_boards').forEach(function(board) {
-          promises.push(coughDropExtras.storage.find('board', board.id).then(function(res) {
-            var json_api = { data: {
-              id: res.raw.id,
-              type: 'board',
-              attributes: res.raw
-            }};
-            var obj = CoughDrop.store.push(json_api);
-            return Ember.RSVP.resolve(obj);
-          }));
+          board_ids.push(board.id);
         });
-        Ember.RSVP.resolutions(promises).then(function(list) {
+
+        var find_local = coughDropExtras.storage.find_all(store, keys).then(function(list) {
+          var res = [];
+          list.forEach(function(item) {
+            if(item.data && item.data.id && hash[item.data.id]) {
+              if(CoughDrop.store) {
+                var json_api = { data: {
+                  id: item.data.raw.id,
+                  type: 'board',
+                  attributes: item.data.raw
+                }};
+                res.push(CoughDrop.store.push(json_api));
+              }
+            }
+          });
+          return Ember.RSVP.resolve(res);
+        });
+        find_local.then(function(list) {
           resolve(list);
+        }, function(err) {
+          reject({error: 'find_all failed for ' + store});
         });
       } else {
         reject({error: 'unsupported type: ' + store});
@@ -349,6 +376,9 @@ var persistence = Ember.Object.extend({
     persistence.eventual_store_timer = Ember.run.later(persistence, persistence.next_eventual_store, 100);
   },
   store: function(store, obj, key, eventually) {
+    // TODO: more nuanced clear of known_missing would be more efficient
+    persistence.known_missing = {};
+
 //    console.log("store:"); console.log(obj);
     var _this = this;
 
@@ -412,7 +442,7 @@ var persistence = Ember.Object.extend({
   find_url: function(url, type) {
     if(this.url_cache && this.url_cache[url]) {
       return Ember.RSVP.resolve(this.url_cache[url]);
-    } else {
+    } else if(this.url_uncache && this.url_uncache[url]) {
       var _this = this;
       var find = this.find('dataCache', url);
       return find.then(function(data) {
@@ -466,11 +496,14 @@ var persistence = Ember.Object.extend({
           return Ember.RSVP.reject({error: "no data URI or filename found for cached URL"});
         }
       });
+    } else {
+      return Ember.RSVP.reject({error: 'url not in storage'});
     }
   },
   prime_caches: function(check_file_system) {
     var _this = this;
     _this.url_cache = _this.url_cache || {};
+    _this.url_uncache = _this.url_uncache || {};
     _this.image_filename_cache = _this.image_filename_cache || {};
     _this.sound_filename_cache = _this.sound_filename_cache || {};
 
@@ -527,6 +560,8 @@ var persistence = Ember.Object.extend({
                 }));
               }
             }
+          } else if(item.data && item.data.raw && item.data.raw.url) {
+            _this.url_uncache[item.data.raw.url] = true;
           }
         });
         return Ember.RSVP.all_wait(promises).then(function() {
@@ -557,6 +592,7 @@ var persistence = Ember.Object.extend({
             persistence.storing_urls();
           }, function(err) {
             opts.defer.reject(err);
+            persistence.storing_urls();
           });
         } else {
           persistence.storing_url_watchers--;
