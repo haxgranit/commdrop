@@ -8,6 +8,9 @@ import i18n from '../utils/i18n';
 export default Ember.Component.extend({
   tagName: 'span',
   didInsertElement: function() {
+    if(this.get('utterance') && this.get('utterance').check_for_large_image_url) {
+      this.get('utterance').check_for_large_image_url();
+    }
     this.check_native_shares();
   },
   check_native_shares: function() {
@@ -20,7 +23,7 @@ export default Ember.Component.extend({
       if(list.indexOf('google_plus') != -1) { _this.set('native.google_plus', true); }
       if(list.indexOf('email') != -1) { _this.set('native.email', true); }
       if(list.indexOf('clipboard') != -1) { _this.set('native.clipboard', true); }
-      if(list.indexOf('generic') != -1) { _this.get('native.generic', true); }
+      if(list.indexOf('generic') != -1) { _this.set('native.generic', true); }
     });
   },
   facebook_enabled: function() {
@@ -36,8 +39,8 @@ export default Ember.Component.extend({
     return !!this.get('text');
   }.property('text'),
   instagram_enabled: function() {
-    return !!(this.get('url') && this.get('native.instagram'));
-  }.property('url', 'native.instagram'),
+    return !!(this.get('url') && this.get('native.instagram') && this.get('utterance.best_image_url'));
+  }.property('url', 'native.instagram', 'utterance.best_image_url'),
   clipboard_enabled: function() {
     if(document.queryCommandSupported && document.queryCommandSupported('copy')) {
       return true;

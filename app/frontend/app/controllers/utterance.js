@@ -14,18 +14,6 @@ export default Ember.Controller.extend({
       return "Someone said: \"" + sentence + "\"";
     }
   }.property('model.sentence', 'model.show_user', 'model.user'),
-  check_for_large_image_url: function() {
-    var attempt = this.get('attempt') || 1;
-    var _this = this;
-    if(_this.get('model.permissions.edit') && !_this.get('model.large_image_url') && attempt < 15) {
-      Ember.run.later(function() {
-        _this.set('attempt', attempt + 1);
-        _this.get('model').reload().then(function(u) {
-          _this.check_for_large_image_url();
-        });
-      }, attempt * 500);
-    }
-  },
   image_url: function() {
     var index = this.get('image_index');
     if(index === undefined) {
@@ -39,7 +27,7 @@ export default Ember.Controller.extend({
     }
   }.property('model.image_url', 'model.large_image_url', 'image_index'),
   show_share: function() {
-    this.check_for_large_image_url();
+    this.get('model').check_for_large_image_url();
     this.set('speakable', speecher.ready);
   }.observes('model.sentence'),
   user_showable: function() {
