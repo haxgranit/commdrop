@@ -95,7 +95,6 @@ var persistence = Ember.Object.extend({
               persistence.known_missing[store][idx] = true;
             }
           }
-          alert('anything in hash thats still true is known to be missing, though youll also have to update that known list when storing');
           resolve(res);
         }, function(err) {
           reject(err);
