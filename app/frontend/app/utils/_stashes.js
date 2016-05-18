@@ -111,6 +111,19 @@ var stashes = Ember.Object.extend({
       }
     }
   },
+  db_persist: function() {
+    if(stash_capabilities && stash_capabilities.dbman) {
+      var stringed_stash = {};
+      for(var idx in memory_stash) {
+        stringed_stash[idx] = JSON.stringify(memory_stash[idx]);
+      }
+      stringed_stash.storageId = 'stash';
+      // I intended for this to be a fallback in case localStorage data got lost
+      // somehow, which is why the db id is also being stored in the cookie
+      // as a fallback for the db id which is usually kept in localStorage.
+      stash_capabilities.storage_store({store: 'settings', id: 'stash', record: stringed_stash});
+    }
+  },
   persist: function(key, obj) {
     if(!key) { return; }
     this.persist_object(key, obj, true);
@@ -118,17 +131,7 @@ var stashes = Ember.Object.extend({
 
     if(memory_stash[key] != obj) {
       memory_stash[key] = obj;
-      if(stash_capabilities && stash_capabilities.dbman) {
-        var stringed_stash = {};
-        for(var idx in memory_stash) {
-          stringed_stash[idx] = JSON.stringify(memory_stash[idx]);
-        }
-        stringed_stash.storageId = 'stash';
-        // I intended for this to be a fallback in case localStorage data got lost
-        // somehow, which is why the db id is also being stored in the cookie
-        // as a fallback for the db id which is usually kept in localStorage.
-        stash_capabilities.storage_store({store: 'settings', id: 'stash', record: stringed_stash});
-      }
+      Ember.run.debounce(this, this.db_persist, 500);
     }
   },
   persist_object: function(key, obj, include_prefix) {
