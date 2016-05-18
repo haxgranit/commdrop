@@ -66,7 +66,7 @@ export default Ember.Component.extend({
     },
     share_via: function(medium) {
       if(this.get('native.' + medium)) {
-        capabilities.sharing.share(medium, this.get('text'), this.get('url'));
+        capabilities.sharing.share(medium, this.get('text'), this.get('url'), this.get('utterance.best_image_url'));
       } else if(medium == 'facebook') {
         window.open(this.get('facebook_url'));
       } else if(medium == 'twitter') {

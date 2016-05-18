@@ -288,9 +288,6 @@ var capabilities;
         share: function(type, message, url) {
           var promise = capabilities.mini_promise();
           var share_type = (capabilities.sharing.types()[type] || {})[capabilities.system] || type;
-          if(type == 'native') {
-            share_type = null;
-          }
           if(type == 'email') {
             if(window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.shareViaEmail) {
               window.plugins.socialsharing.shareViaEmail(message, message, null, null, null, [url], function(success) {
@@ -309,8 +306,14 @@ var capabilities;
             } else {
               promise.reject();
             }
-          } else if(window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.shareVia) {
-            window.plugins.socialsharing.shareVia(share_type, message, message, null, url, function(success) {
+          } else if(type == 'generic' && window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.share) {
+            window.plugins.socialsharing.share(message, message, image_url, url, function(success) {
+              promise.resolve();
+            }, function(err) {
+              promise.resolve();
+            });
+          } else if(type != 'generic' && window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.shareVia) {
+            window.plugins.socialsharing.shareVia(share_type, message, message, image_url, url, function(success) {
               promise.resolve();
             }, function(err) {
               promise.resolve();
