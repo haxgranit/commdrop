@@ -24,14 +24,14 @@ export default Ember.Component.extend({
     });
   },
   facebook_enabled: function() {
-    return !!this.get('url');
-  }.property('url'),
+    return !!(this.get('url') && (!this.get('native.generic') || this.get('native.facebook')));
+  }.property('url', 'native.generic', 'native.facebook'),
   twitter_enabled: function() {
-    return !!this.get('url');
-  }.property('url'),
+    return !!(this.get('url') && (!this.get('native.generic') || this.get('native.twitter')));
+  }.property('url', 'native.generic', 'native.twitter'),
   google_plus_enabled: function() {
-    return !!this.get('url');
-  }.property('url'),
+    return !!(this.get('url') && (!this.get('native.generic') || this.get('native.google_plus')));
+  }.property('url', 'native.generic', 'native.google_plus'),
   email_enabled: function() {
     return !!this.get('text');
   }.property('text'),
@@ -46,8 +46,8 @@ export default Ember.Component.extend({
     }
   }.property('native.clipboard'),
   generic_enabled: function() {
-    return !!this.get('native.generic');
-  }.property('native.generic'),
+    return !!(this.get('url') && this.get('native.generic'));
+  }.property('url', 'native.generic'),
   facebook_url: function() {
     return 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(this.get('url'));
   }.property('url'),

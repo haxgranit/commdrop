@@ -232,18 +232,24 @@ var capabilities;
         }
       },
       sharing: {
-        types: {
-          'facebook': {
-            'Android': 'com.facebook.katana',
-            'iOS': 'com.apple.social.facebook'
-          },
-          'twitter': {
-            'iOS': 'com.apple.social.twitter'
-          }
+        types: function() {
+          return {
+            'facebook': {
+              'Android': 'com.facebook.katana',
+              'iOS': 'com.apple.social.facebook'
+            },
+            'twitter': {
+              'iOS': 'com.apple.social.twitter'
+            },
+            'google_plus': {
+              'Android': 'com.google.android.apps.plus',
+              'iOS': 'com.google.android.apps.plus'
+            }
+          };
         },
         available: function() {
           var promise = capabilities.mini_promise();
-          // https://github.com/steevelefort/cordova3-ios-tts-plugin
+          // https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin
           if(window.plugins && window.plugins.socialsharing && window.plugins.socialsharing.canShareVia) {
             setTimeout(function() {
               if(!promise.resolved) {
@@ -256,13 +262,14 @@ var capabilities;
               valids.push('clipboard');
             }
             var all_done = function() {
+              dones++;
               if(dones >= checks.length) {
                 promise.resolve(valids);
               }
             };
             var check_one = function(type) {
-              var check_type = (capabilities.sharing.types[type] || {})[capabilities.system] || type;
-              window.plugins.socialsharing.canShareVia(check_type, 'message', 'message', null, 'https://www.mycoughdrop.com', null, function() {
+              var check_type = (capabilities.sharing.types()[type] || {})[capabilities.system] || type;
+              window.plugins.socialsharing.canShareVia(check_type, 'message', 'message', 'https://www.mycoughdrop.com/images/logo-big.png', 'https://www.mycoughdrop.com', function() {
                 valids.push(type);
                 all_done();
               }, function() {
@@ -280,7 +287,7 @@ var capabilities;
         },
         share: function(type, message, url) {
           var promise = capabilities.mini_promise();
-          var share_type = (capabilities.sharing.types[type] || {})[capabilities.system] || type;
+          var share_type = (capabilities.sharing.types()[type] || {})[capabilities.system] || type;
           if(type == 'native') {
             share_type = null;
           }
