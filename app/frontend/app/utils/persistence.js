@@ -182,11 +182,15 @@ var persistence = Ember.Object.extend({
           }
           resolve(result);
         } else {
-          // TODO: add to known_missing
+          persistence.known_missing = persistence.known_missing || {};
+          persistence.known_missing[store] = persistence.known_missing[store] || {};
+          persistence.known_missins[store][key] = true;
           reject({error: "record not found"});
         }
       }, function(err) {
-        // TODO: add to known_missing
+        persistence.known_missing = persistence.known_missing || {};
+        persistence.known_missing[store] = persistence.known_missing[store] || {};
+        persistence.known_missins[store][key] = true;
         reject(err);
       });
     });
@@ -376,10 +380,10 @@ var persistence = Ember.Object.extend({
     persistence.eventual_store_timer = Ember.run.later(persistence, persistence.next_eventual_store, 100);
   },
   store: function(store, obj, key, eventually) {
-    // TODO: more nuanced clear of known_missing would be more efficient
-    persistence.known_missing = {};
+    // TODO: more nuanced wipe of known_missing would be more efficient
+    persistence.known_missing = persistence.known_missing || {};
+    persistence.known_missing[store] = {};
 
-//    console.log("store:"); console.log(obj);
     var _this = this;
 
     return new Ember.RSVP.Promise(function(resolve, reject) {
