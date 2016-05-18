@@ -74,8 +74,8 @@ export default Ember.Controller.extend({
     {name: i18n.t('black', "Black"), id: "black"}
   ],
   dashboardViewList: [
-    {name: i18n.t('communicator', "Communicator"), id: 'communicator'},
-    {name: i18n.t('supporter', "Therapist/Parent/Supporter"), id: 'supporter'}
+    {name: i18n.t('communicator', "Communicator View"), id: 'communicator'},
+    {name: i18n.t('supporter', "Therapist/Parent/Supporter View"), id: 'supporter'}
   ],
   scanningModeList: [
     {name: i18n.t('row_based', "Row-Based Scanning"), id: "row"},

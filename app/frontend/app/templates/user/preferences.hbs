@@ -1,7 +1,7 @@
 <h2>{{t "General Preferences" key='general_preferences'}}</h2>
 <form class="form-horizontal" {{action "savePreferences" on="submit"}}>
 <div class="form-group">
-  <label for="role" class="col-sm-3 control-label">{{t "This User Is A" key='role'}}</label>
+  <label for="role" class="col-sm-3 control-label">{{t "Dashboard" key='role'}}</label>
   <div class="col-sm-5">
     {{bound-select select_class="form-control" select_id="role" content=dashboardViewList selection=model.preferences.role action=(action (mut model.preferences.role)) }}
   </div>
