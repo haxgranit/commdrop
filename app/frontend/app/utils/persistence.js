@@ -183,13 +183,13 @@ var persistence = Ember.Object.extend({
         } else {
           persistence.known_missing = persistence.known_missing || {};
           persistence.known_missing[store] = persistence.known_missing[store] || {};
-          persistence.known_missins[store][key] = true;
+          persistence.known_missing[store][key] = true;
           reject({error: "record not found"});
         }
       }, function(err) {
         persistence.known_missing = persistence.known_missing || {};
         persistence.known_missing[store] = persistence.known_missing[store] || {};
-        persistence.known_missins[store][key] = true;
+        persistence.known_missing[store][key] = true;
         reject(err);
       });
     });
