@@ -278,6 +278,10 @@ module Subscription
   def premium?
     !!(never_expires? || self.recurring_subscription? || self.org_sponsored? || (self.expires_at && self.expires_at > Time.now) || self.free_premium?)
   end
+
+  def full_premium?
+    !!(self.premium? && !self.free_premium? && !self.grace_period?)
+  end
   
   def org_sponsored?
     Organization.sponsored?(self)

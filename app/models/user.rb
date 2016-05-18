@@ -85,11 +85,22 @@ class User < ActiveRecord::Base
     self.save
   end
   
-  def self.default_premium_voices
-    {
-      'claimed' => [],
-      'allowed' => 2
-    }
+  def default_premium_voices
+    User.default_premium_voices(self.full_premium?)
+  end
+  
+  def self.default_premium_voices(communicator=true)
+    if communicator
+      {
+        'claimed' => [],
+        'allowed' => 2
+      }
+    else
+      {
+        'claimed' => [],
+        'allowed' => 0
+      }
+    end
   end
   
   def allow_additional_premium_voice!
@@ -105,8 +116,8 @@ class User < ActiveRecord::Base
     # Limit the number of premium_voices users can download
     # TODO: don't let users set their voice to a premium voice that they have downloaded for a different user
     voices = {}.merge(self.settings['premium_voices'] || {})
-    voices['claimed'] ||= self.class.default_premium_voices['claimed']
-    voices['allowed'] ||= self.class.default_premium_voices['allowed']
+    voices['claimed'] ||= self.default_premium_voices['claimed']
+    voices['allowed'] ||= self.default_premium_voices['allowed']
     new_voice = !voices['claimed'].include?(voice_id)
     voices['claimed'] = voices['claimed'] | [voice_id]
     if voices['claimed'].length > voices['allowed']
