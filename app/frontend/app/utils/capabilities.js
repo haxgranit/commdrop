@@ -285,7 +285,7 @@ var capabilities;
           }
           return promise;
         },
-        share: function(type, message, url) {
+        share: function(type, message, url, image_url) {
           var promise = capabilities.mini_promise();
           var share_type = (capabilities.sharing.types()[type] || {})[capabilities.system] || type;
           if(type == 'email') {
