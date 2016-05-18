@@ -63,8 +63,6 @@ var persistence = Ember.Object.extend({
   push_records: function(store, keys) {
     var hash = {};
     var res = {};
-    persistence.known_missing = persistence.known_missing || {};
-    persistence.known_missing[store] = persistence.known_missing[store] || {};
     keys.forEach(function(key) { hash[key] = true; });
     CoughDrop.store.peekAll(store).content.forEach(function(item) {
       var record = item.record;
@@ -92,6 +90,8 @@ var persistence = Ember.Object.extend({
           });
           for(var idx in hash) {
             if(hash[idx] === true) {
+              persistence.known_missing = persistence.known_missing || {};
+              persistence.known_missing[store] = persistence.known_missing[store] || {};
               persistence.known_missing[store][idx] = true;
             }
           }
