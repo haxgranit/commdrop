@@ -167,28 +167,28 @@ CoughDrop.Goal = DS.Model.extend({
       console.log(units.max);
       var statuses = unit_stats.statuses || [];
       var score = statuses.filter(function(s) { return s == 4; }).length;
-      var level = Math.ceil(score / units.max * 10)
+      var level = Math.ceil(score / units.max * 10);
       rows[0].time_blocks.push({
         score: score,
         tooltip: score ? (i18n.t('status_sessions', 'status', {count: score}) + ', ' + unit.label) : "",
         style_class: 'time_block level_' + level
       });
       score = statuses.filter(function(s) { return s == 3; }).length;
-      level = Math.ceil(score / statuses * 10)
+      level = Math.ceil(score / statuses * 10);
       rows[1].time_blocks.push({
         score: score,
         tooltip: score ? (i18n.t('status_sessions', 'status', {count: score}) + ', ' + unit.label) : "",
         style_class: 'time_block level_' + level
       });
       score = statuses.filter(function(s) { return s == 2; }).length;
-      level = Math.ceil(score / statuses * 10)
+      level = Math.ceil(score / statuses * 10);
       rows[2].time_blocks.push({
         score: score,
         tooltip: score ? (i18n.t('status_sessions', 'status', {count: score}) + ', ' + unit.label) : "",
         style_class: 'time_block level_' + level
       });
       score = statuses.filter(function(s) { return s == 1; }).length;
-      level = Math.ceil(score / statuses * 10)
+      level = Math.ceil(score / statuses * 10);
       rows[3].time_blocks.push({
         score: score,
         tooltip: score ? (i18n.t('status_sessions', 'status', {count: score}) + ', ' + unit.label) : "",

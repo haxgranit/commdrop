@@ -218,10 +218,10 @@ var persistence = Ember.Object.extend({
           board_ids.push(board.id);
         });
 
-        var find_local = coughDropExtras.storage.find_all(store, keys).then(function(list) {
+        var find_local = coughDropExtras.storage.find_all(store, board_ids).then(function(list) {
           var res = [];
           list.forEach(function(item) {
-            if(item.data && item.data.id && hash[item.data.id]) {
+            if(item.data && item.data.id) {
               if(CoughDrop.store) {
                 var json_api = { data: {
                   id: item.data.raw.id,
