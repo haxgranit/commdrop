@@ -23,6 +23,7 @@ module JsonApi::Goal
     if args[:permissions]
       json['permissions'] = goal.permissions_for(args[:permissions])
       if json['permissions']['view']
+        json['stats'] = goal.settings['stats']
         video_ids = []
         video_ids << goal.settings['video_id'] if goal.settings['video_id']
         

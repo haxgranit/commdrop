@@ -9,7 +9,7 @@ class LogSession < ActiveRecord::Base
   belongs_to :ip_cluster, :class_name => ClusterLocation
   belongs_to :geo_cluster, :class_name => ClusterLocation
   belongs_to :device
-  belongs_to :goal
+  belongs_to :goal, :class_name => UserGoal
   before_save :generate_defaults
   before_save :generate_stats
   after_save :split_out_later_sessions
@@ -151,7 +151,7 @@ class LogSession < ActiveRecord::Base
         str += "recording (#{time})"
         str += " - #{self.data['note']['text']}" if !self.data['note']['text'].blank?
       else
-        str += self.data['note']['text']
+        str += self.data['note']['text'] || ""
       end
     elsif self.data['assessment']
       self.log_type = 'assessment'

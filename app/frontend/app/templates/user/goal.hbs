@@ -13,48 +13,58 @@
         {{else}}
           {{t "Past Goal" key='past_goal'}}
         {{/if}}
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-3 col-xs-2">
-    <div class="panel panel-default summary smaller">
-      <div class="panel-heading">
-        {{#if model.active}}
-          {{t "Started" key='started'}}
-        {{else}}
-          {{t "Ended" key='ended'}}
-        {{/if}}
-      </div>
-      <div class="panel-body">
-        {{#if model.active}}
-          {{date model.started 'day'}}
-        {{else}}
-          {{date model.ended 'day'}}
-        {{/if}}
+
+        <br/>
+        <span class='text-muted'>
+          {{#if model.active}}
+            {{t "started" key='started'}}
+          {{else}}
+            {{t "ended" key='ended'}}
+          {{/if}}
+          {{#if model.active}}
+            {{date model.started 'day'}}
+          {{else}}
+            {{date model.ended 'day'}}
+          {{/if}}
+        </span>
       </div>
     </div>
   </div>
   <div class="col-sm-3 col-xs-2">
     <div class="panel panel-default summary smaller">
       <div class="panel-heading">{{t "Author" key='author'}}</div>
-      <div class="panel-body">
+      <div class="panel-body" style='line-height: 44px;'>
         {{#link-to 'user' model.author.user_name}}{{model.author.user_name}}{{/link-to}}
       </div>
     </div>
   </div>
   <div class="col-sm-3 col-xs-2">
     <div class="panel panel-default summary smaller">
-      <div class="panel-heading">{{t "Average Success" key='average_success'}}</div>
+      <div class="panel-heading">{{t "Average" key='average_success'}}</div>
       <div class="panel-body">
-        68.4% (100 events)
+        {{model.stats.weighted_percent_positive}}%
+        {{t "weighted" key='weighted'}}
+        <br/>
+        <span class='text-muted'>
+          {{model.stats.weighted_average_status}}
+          {{t "weighted status" key='weighted_status'}}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3 col-xs-2">
+    <div class="panel panel-default summary smaller">
+      <div class="panel-heading">{{t "Total Sessions" key='total_sessions'}}</div>
+      <div class="panel-body" style='line-height: 44px;'>
+        {{t "session" key='sessions' count=model.stats.sessions}}
       </div>
     </div>
   </div>
   <div class="col-sm-6">
-    happy/sad bars
+    {{stats/goal-statuses-over-time goal=model}}
   </div>
   <div class="col-sm-6">
-    succes graph
+    {{stats/goal-summary goal=model}}
   </div>
 </div>
 <p>{{model.description}}</p>

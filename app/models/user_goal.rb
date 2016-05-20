@@ -19,6 +19,7 @@ class UserGoal < ActiveRecord::Base
   def generate_defaults
     self.settings ||= {}
     self.settings['summary'] ||= "user goal"
+    self.generate_stats
     if self.active && !self.settings['started_at']
       self.settings['started_at'] = Time.now.iso8601
     end
@@ -30,32 +31,71 @@ class UserGoal < ActiveRecord::Base
   def generate_stats
     stats = {}
     # TODO: sharding
-    sessions = LogSession.where(:goal_id => self.id).select{|s| s.started_at }
+    sessions = []
+    # monthly for all time
+    sessions = LogSession.where(:goal_id => self.id).select{|s| s.started_at } if self.id
+    stats['monthly'] = {}
     suggested_level = 'monthly'
-    # daily for the past 2 weeks
-    stats['daily'] = {}
-    daily_sessions = sessions.select{|s| s.started_at && s.started_at > 2.weeks.ago }
-    suggested_level = 'daily' if daily_sessions.length == weekly_sessions.length
     # weekly for the past 12 weeks
     stats['weekly'] = {}
     weekly_sessions = sessions.select{|s| s.started_at && s.started_at > 12.weeks.ago }
     suggested_level = 'weekly' if weekly_sessions.length == sessions.length
-    # monthly for all time
-    stats['monthly'] = {}
+    # daily for the past 2 weeks
+    stats['daily'] = {}
+    daily_sessions = sessions.select{|s| s.started_at && s.started_at > 2.weeks.ago }
+    suggested_level = 'daily' if daily_sessions.length == weekly_sessions.length
     [[daily_sessions, 'daily'], [weekly_sessions, 'weekly'], [sessions, 'monthly']].each do |sessions, level|
       sessions.each do |session|
         key = session.started_at.utc.iso8601[0, 10]
-        key = "#{session.stared_at.utc.to_date.cwyear}-#{session.started_at.utc.to_date.cweek}" if level == 'weekly'
+        key = "#{session.started_at.utc.to_date.cwyear}-#{session.started_at.utc.to_date.cweek}" if level == 'weekly'
         key = session.started_at.utc.iso8601[0, 7] if level == 'monthly'
-        stats[level][key] ||= {}
-        stats[level][key]['positives'] ||= 0
-        stats[level][key]['positives'] += session.data['goal']['positives'] if session.data['goal'] && session.data['positives']
-        stats[level][key]['negatives'] ||= 0
-        stats[level][key]['negatives'] += session.data['goal']['negatives'] if session.data['goal'] && session.data['negatives']
-        stats[level][key]['statuses'] ||= []
-        stats[level][key]['statuses'] << session.data['goal']['status'] if session.data['goal'] && session.data['status']
+        [key, 'totals'].each do |k|
+          stats[level][k] ||= {}
+          stats[level][k]['sessions'] ||= 0
+          stats[level][k]['sessions'] += 1
+          stats[level][k]['positives'] ||= 0
+          stats[level][k]['positives'] += session.data['goal']['positives'] if session.data['goal'] && session.data['goal']['positives']
+          stats[level][k]['negatives'] ||= 0
+          stats[level][k]['negatives'] += session.data['goal']['negatives'] if session.data['goal'] && session.data['goal']['negatives']
+          stats[level][k]['statuses'] ||= []
+          stats[level][k]['statuses'] << session.data['goal']['status'] if session.data['goal'] && session.data['goal']['status']
+        end
       end
     end
+    all_statuses = stats['monthly']['totals']['statuses']
+    status_tally = 0.0
+    positive_tally = 0.0
+    status_total = 0.0
+    positive_total = 0.0
+    last_session = sessions.map(&:started_at).last
+    sessions.each do |session|
+      diff = last_session - session.started_at
+      positives = 
+      mult = 1.0
+      if diff < 1.week
+        mult = 5.0
+      elsif diff < 2.weeks
+        mult = 3.0
+      elsif diff < 1.month
+        mult = 2.0
+      elsif diff < 3.months
+        mult = 1.5
+      end
+      if session.data['goal']['positives']
+        status_total += mult
+        status_tally += session.data['goal']['status'] * mult
+      end
+      if session.data['goal']['positives']
+        positive_total += mult
+        positive_tally += session.data['goal']['positives'] * mult
+      end
+    end
+    stats['average_status'] = all_statuses.length > 0 ? all_statuses.sum.to_f / all_statuses.length.to_f : 0
+    total_tallies = stats['monthly']['totals']['positives'].to_f + stats['monthly']['totals']['negatives'].to_f
+    stats['percent_positive'] = total_tallies ? (stats['monthly']['totals']['positives'].to_f / total_tallies * 100.0) : 0
+    stats['weighted_percent_positive'] = positive_total > 0 ? (positive_tally.to_f / positive_total.to_f * 100.0) : 0
+    stats['weighted_average_status'] = status_total > 0 ? (status_tally.to_f / status_total.to_f) : 0
+    stats['sessions'] = sessions.length
     stats['suggested_level'] = suggested_level
     self.settings['stats'] = stats
   end

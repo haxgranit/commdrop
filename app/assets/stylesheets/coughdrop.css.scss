@@ -2043,6 +2043,52 @@ table tr.long_delay td {
       }
     }
   }
+  &.wider {
+    .time_block_row {
+      .face {
+        opacity: 0.5;
+      }
+      &:hover .face {
+        opacity: 1.0;
+      }
+    }
+    .time_block_left {
+      width: 16%;
+      line-height: 30px;
+      
+      .face {
+        display: block;
+        margin: 0 auto;
+        width: 35px;
+        height: 35px;
+        background-image: url(../images/faces.png);
+        background-size: auto 35px;
+        &.happy {
+          background-position-x: -35px;
+        }
+        &.neutral {
+          background-position-x: -69px;
+        }
+        &.sad {
+          background-position-x: -103px;
+        }
+      }
+    }
+    .time_block {
+      width: calc(6% + 1px);
+      border-left-color: #eee;
+      line-height: 35px;
+    }
+    .dates {
+      .time_block {
+        color: #aaa;
+        border: 0;
+        &:nth-child(2n+1) {
+          visibility: hidden;
+        }
+      }
+    }
+  }
 }
 .weighted_word {
   color: #aaa;
