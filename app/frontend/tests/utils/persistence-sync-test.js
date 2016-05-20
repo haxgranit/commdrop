@@ -758,6 +758,9 @@ describe("persistence-sync", function() {
       revisions[b3.id] = b3.full_set_revision;
       revisions[b4.id] = b4.full_set_revision;
 
+      persistence.url_uncache = {
+        'http://www.example.com/pic.png': true
+      };
       var store_promises = [];
       store_promises.push(persistence.store('board', b1, b1.id));
       store_promises.push(persistence.store('board', b2, b2.id));
@@ -821,7 +824,7 @@ describe("persistence-sync", function() {
     });
   });
 
- it("should not assume a board is cached locally if an image's dataCache is missing", function() {
+  it("should not assume a board is cached locally if an image's dataCache is missing", function() {
     db_wait(function() {
       var stores = [];
       stub(persistence, 'store_url', function(url, type) {
@@ -876,6 +879,10 @@ describe("persistence-sync", function() {
       revisions[b3.id] = b3.full_set_revision;
 
       var store_promises = [];
+      persistence.url_uncache = {
+        'http://www.example.com/pic1.png': true,
+        'http://www.example.com/pic2.png': true
+      };
       store_promises.push(persistence.store('board', b1, b1.id));
       store_promises.push(persistence.store('board', b2, b2.id));
       store_promises.push(persistence.store('board', b3, b3.id));
@@ -903,7 +910,6 @@ describe("persistence-sync", function() {
       runs(function() {
         CoughDrop.all_wait = true;
         queryLog.real_lookup = true;
-
 
         stub(persistence, 'find_changed', function() { return Ember.RSVP.resolve([]); });
         stub(Ember.$, 'realAjax', function(options) {
@@ -947,7 +953,7 @@ describe("persistence-sync", function() {
     });
   });
 
- it("should not assume a board is cached locally if an image's db entry missing", function() {
+  it("should not assume a board is cached locally if an image's db entry missing", function() {
     db_wait(function() {
       var stores = [];
       stub(persistence, 'store_url', function(url, type) {
@@ -1001,6 +1007,9 @@ describe("persistence-sync", function() {
       revisions[b2.id] = b2.full_set_revision;
       revisions[b3.id] = b3.full_set_revision;
 
+      persistence.url_uncache = {
+        'http://www.example.com/pic1.png': true
+      };
       var store_promises = [];
       store_promises.push(persistence.store('board', b1, b1.id));
       store_promises.push(persistence.store('board', b2, b2.id));
@@ -1126,6 +1135,9 @@ describe("persistence-sync", function() {
       revisions[b2.id] = b2.full_set_revision;
       revisions[b3.id] = b3.full_set_revision;
 
+      persistence.url_uncache = {
+        'http://www.example.com/pic1.png': true
+      };
       var store_promises = [];
       store_promises.push(persistence.store('board', b1, b1.id));
       store_promises.push(persistence.store('board', b3, b3.id));
@@ -2011,7 +2023,6 @@ describe("persistence-sync", function() {
       CoughDrop.all_wait = true;
       queryLog.real_lookup = true;
 
-
       stub(Ember.$, 'realAjax', function(options) {
         if(options.type == 'GET' && options.url == "/api/v1/users/1567") {
           return Ember.RSVP.resolve({ user: {
@@ -2179,6 +2190,7 @@ describe("persistence-sync", function() {
         });
         Ember.run.later(function() {
           // call sync
+          persistence.known_missing = null;
           persistence.sync(1567).then(function() {
             setTimeout(function() {
               // re-lookup

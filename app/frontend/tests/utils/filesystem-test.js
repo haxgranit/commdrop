@@ -1105,6 +1105,10 @@ describe("filesystem", function() {
       persistence.sound_filename_cache = {
         'water.mp3': true
       };
+      persistence.url_uncache = {
+        'http://www.example.com/remote/pic.png': true,
+        'http://www.example.com/remote/water.mp3': true
+      };
       stub(persistence, 'find', function(key, id) {
         if(key == 'dataCache' && id == 'http://www.example.com/remote/pic.png') {
           return Ember.RSVP.resolve({
@@ -1160,6 +1164,10 @@ describe("filesystem", function() {
         }
       });
       var result1 = null, result2 = null;
+      persistence.url_uncache = {
+        'http://www.example.com/remote/picture.png': true,
+        'http://www.example.com/remote/water.mp3': true
+      };
       persistence.find_url('http://www.example.com/remote/picture.png', 'image').then(function(res) {
         result1 = res;
       }, function(err) { });
@@ -1198,6 +1206,10 @@ describe("filesystem", function() {
         }
       });
       var result1 = null, result2 = null;
+      persistence.url_uncache = {
+        'http://www.example.com/remote/picture.png': true,
+        'http://www.example.com/remote/water.mp3': true
+      };
       persistence.find_url('http://www.example.com/remote/picture.png', 'image').then(function(res) {
         result1 = res;
       }, function(err) {});

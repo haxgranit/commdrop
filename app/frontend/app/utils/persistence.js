@@ -133,8 +133,8 @@ var persistence = Ember.Object.extend({
         return;
       }
       if(persistence.known_missing && persistence.known_missing[store] && persistence.known_missing[store][key]) {
-        console.error('found a known missing!');
-        reject({error: 'record not found'});
+//         console.error('found a known missing!');
+        reject({error: 'record known missing: ' + store + ' ' + key});
       }
       var id = Ember.RSVP.resolve(key);
       if(store == 'user' && key == 'self') {
@@ -184,7 +184,7 @@ var persistence = Ember.Object.extend({
           persistence.known_missing = persistence.known_missing || {};
           persistence.known_missing[store] = persistence.known_missing[store] || {};
           persistence.known_missing[store][key] = true;
-          reject({error: "record not found"});
+          reject({error: "record not found: " + store + ' ' + key});
         }
       }, function(err) {
         persistence.known_missing = persistence.known_missing || {};
@@ -429,6 +429,8 @@ var persistence = Ember.Object.extend({
           });
         }
         Ember.RSVP.all(promises).then(function() {
+          persistence.known_missing = persistence.known_missing || {};
+          persistence.known_missing[store] = {};
           persistence.stores.push({object: obj});
           persistence.log = persistence.log || [];
           persistence.log.push({message: "Successfully stored object", object: obj, store: store, key: key});
@@ -782,8 +784,18 @@ var persistence = Ember.Object.extend({
           }
         }
       }).then(function(object) {
+        persistence.url_cache = persistence.url_cache || {};
+        persistence.url_uncache = persistence.url_uncache || {};
+        if(object.local_url) {
+          persistence.url_cache[url] = capabilities.storage.fix_url(object.local_url);
+        } else {
+          persistence.url_uncache[url] = true;
+        }
+
         resolve(object);
       }, function() {
+        persistence.url_uncache = persistence.url_uncache || {};
+        persistence.url_uncache[url] = true;
         reject({error: "saving to data cache failed"});
       });
     });
