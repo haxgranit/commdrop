@@ -752,8 +752,17 @@ var persistence = Ember.Object.extend({
               extension = extension || ".png";
               local_system_filename = (file_code % 10000).toString() + "0000." + pieces.pop() + "." + file_code.toString() + extension;
             }
+            var svg = null;
+            if(object.data_uri.match(/svg/)) {
+              try {
+                svg = atob(object.data_uri.split(/,/)[1]);
+                if((svg.match(/<svg/) || []).length > 1) { console.error('data_uri had double-content'); }
+              } catch(e) { }
+            }
             return new Ember.RSVP.Promise(function(write_resolve, write_reject) {
-              capabilities.storage.write_file(type, local_system_filename, contentGrabbers.data_uri_to_blob(object.data_uri)).then(function(res) {
+              var blob = contentGrabbers.data_uri_to_blob(object.data_uri);
+              if(svg && blob.size > svg.length) { console.error('blob generation caused double-content'); }
+              capabilities.storage.write_file(type, local_system_filename, blob).then(function(res) {
                 object.data_uri = null;
                 object.local_filename = local_system_filename;
                 object.local_url = res;

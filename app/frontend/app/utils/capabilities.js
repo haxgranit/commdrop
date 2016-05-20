@@ -536,6 +536,14 @@ var capabilities;
             dir.getFile(filename, {create: true}, function(file) {
               file.createWriter(function(writer) {
                 writer.onwriteend = function() {
+                  if(filename.match(/svg/)) {
+                    file.getMetadata(function(metadata) {
+                      if(file.size > blob.size) {
+                        console.error('file writing resulted in double-content');
+                      }
+                    }, function() { });
+
+                  }
                   promise.resolve(file.toURL());
                 };
                 writer.onerror = function(err) {
