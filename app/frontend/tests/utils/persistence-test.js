@@ -370,9 +370,13 @@ describe("persistence", function() {
     it("should look up local copies of recent boards", function() {
       var found = [];
       var stored = [];
-      stub(coughDropExtras.storage, 'find', function(store, key) {
-        found.push(key);
-        return Ember.RSVP.resolve({raw: {id: key}});
+      stub(coughDropExtras.storage, 'find_all', function(store, keys) {
+        var res = [];
+        keys.forEach(function(key) {
+          found.push(key);
+          res.push({data: {id: key, raw: {id: key}}});
+        })
+        return Ember.RSVP.resolve(res);
       });
       stub(CoughDrop.store, 'push', function(obj) {
         stored.push(obj);
