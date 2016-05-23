@@ -34,6 +34,13 @@ module JsonApi::Log
         'user_name' => 'unknown'
       }
     end
+    if log.data && log.data['goal']
+      json['goal'] = {
+        'id' => log.data['goal']['id'],
+        'summary' => log.data['goal']['summary'],
+        'status' => log.data['goal']['status']
+      }
+    end
     
     if log.data['note']
       json['note'] = log.data['note']

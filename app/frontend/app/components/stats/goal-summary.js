@@ -19,7 +19,7 @@ export default Ember.Component.extend({
           var unit_data = goal.get('time_unit_measurements')[unit.key] || {positives: 0, negatives: 0};
           raw_data.push([unit.label, unit_data.positives, 0 - unit_data.negatives]);
           max_score = Math.max(max_score, unit_data.positives || 0);
-          min_score = Math.max(min_score, (0 - unit_data.negatives) || 0);
+          min_score = Math.min(min_score, (0 - unit_data.negatives) || 0);
         });
         var data = window.google.visualization.arrayToDataTable(raw_data);
 

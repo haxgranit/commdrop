@@ -18,7 +18,7 @@ class Api::LogsController < ApplicationController
       logs = logs.where(:log_type => params['type'])
     end
     if params['goal_id']
-      goal = UserGoal.find_by_global_id(param['goal_id'])
+      goal = UserGoal.find_by_global_id(params['goal_id'])
       if goal && goal.user == user
         logs = logs.where(:goal_id => goal.id)
       else

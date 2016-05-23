@@ -30,12 +30,12 @@ Ember.RSVP.resolutions = function(list) {
         result.push(item);
         if(count == list.length) {
           resolve(result);
-        } 
-      }, function() { 
+        }
+      }, function() {
         count++;
         if(count == list.length) {
           resolve(result);
-        } 
+        }
       });
     });
   });
@@ -55,6 +55,18 @@ Utils.uniq = function(list, compare) {
     }
   });
   return result;
+};
+Utils.mode = function(list) {
+  var counts = {};
+  list.forEach(function(item) {
+    counts[item] = counts[item] || 0;
+    counts[item]++;
+  });
+  var max = 0;
+  for(var idx in counts) {
+    max = Math.max(max, counts[idx]);
+  }
+  return max;
 };
 
 Ember.RSVP.all_wait = function(promises) {

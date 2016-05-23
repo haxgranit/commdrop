@@ -11,6 +11,8 @@ export default Ember.Route.extend({
     if(!model.get('permissions')) {
       model.reload();
     }
+    controller.set('user', this.modelFor('user'));
     controller.set('model', model);
+    controller.load_logs();
   }
 });

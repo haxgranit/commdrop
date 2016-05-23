@@ -82,81 +82,14 @@
       </tr>
     </thead>
     <tbody>
-      {{#each model.processed_events as |event|}}
-        <tr class={{if event.long_delay 'long_delay'}}>
-          <td>
-            <span class={{event.type_class}} title={{event.type}}>
-              <span class="sr-only">{{event.type}}</span>
-            </span>
-            {{#if event.spoken}}
-              <span class="glyphicon glyphicon-volume-up">
-                <span class="sr-only">{{t "spoken" key='spoken'}}</span>
-              </span>
-            {{/if}}
-          </td>
-          <td>
-            <span class={{event.part_of_speech_class}} title={{event.part_of_speech}}>
-              <span class="sr-only">{{event.part_of_speech}}</span>
-            </span>
-            <span class={{if event.button_type '' 'text-muted'}}>
-              {{event.summary}}
-            </span>
-          </td>
-          <td>
-            <span class={{if event.long_delay 'text-muted'}}>
-              {{seconds_ago event.delay}}
-            </span>
-          </td>
-          <td>
-            {{#if event.new_board}}
-              {{#link-to 'board' event.new_board.key}}
-                {{event.new_board.key}}
-              {{/link-to}}
-            {{else}}
-              {{#if event.board}}
-                {{#link-to 'board' event.board.key class='text-muted'}}
-                  {{event.board.key}}
-                {{/link-to}}
-              {{/if}}
-            {{/if}}
-          </td>
-          <td style="text-align: right;">
-            {{#if event.note_count}}
-              <a href="#" {{action 'toggle_notes' event.id}}><span class="label label-primary">{{event.note_count}}</span></a>
-            {{/if}}
-            <button {{action 'toggle_notes' event.id 'add'}} class='btn btn-default btn-sm' style="margin: -8px 0 -6px 5px;">
-              <span class='glyphicon glyphicon-plus'></span>
-              <span class='sr-only'>{{t "add comment" key='add_comment'}}</span>
-            </button>
-          </td>
-        </tr>
-        {{#if event.show_notes}}
-          <tr>
-            <td colspan="5" style="padding-left: 50px;">
-              Notes:<br/>
-              {{#each event.notes as |note|}}
-                <div>
-                  {{#link-to 'user' note.author.user_name}}
-                    {{note.author.user_name}}
-                  {{/link-to}} -
-                  {{note.note}}
-                </div>
-              {{/each}}
-              <form class="form-inline" style="margin-top: 15px;" {{action 'add_note' event.id}}>
-                <div class="form-group">
-                  <input type="text" class="form-control input-sm" data-event_id={{event.id}} placeholder="note text"/>
-                </div>
-                <div class="form-group">
-                  <button type="submit" class='btn btn-default btn-sm'>{{t "Save" key='save'}}</button>
-                </div>
-              </form>
-            </td>
-          </tr>
-        {{/if}}
+      {{#each logs as |log|}}
+        {{partial 'log'}}
       {{/each}}
     </tbody>
   </table>
 </div>
-<button class='btn btn-default'>{{t "More" key='more'}}</button>
-<button class='btn btn-default'>{{t "New Note" key='new_note'}}</button>
-<button class='btn btn-default'>{{t "Quick Assessment" key='quick_assessment'}}</button>
+{{#if more_available}}
+  <button class='btn btn-default' {{action 'more_results'}}>{{t "More" key='more'}}</button>
+{{/if}}
+<button class='btn btn-default' {{action 'new_note'}}>{{t "New Note" key='new_note'}}</button>
+<button class='btn btn-default' {{action 'quick_assessment'}}>{{t "Quick Assessment" key='quick_assessment'}}</button>

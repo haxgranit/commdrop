@@ -30,6 +30,7 @@ export default DS.Model.extend({
   video_id: DS.attr('string'),
   goal_id: DS.attr('string'),
   goal_status: DS.attr('string'),
+  goal: DS.attr('raw'),
   video: DS.attr('raw'),
   nonce: DS.attr('string'),
   event_note_count: DS.attr('number'),
@@ -48,6 +49,20 @@ export default DS.Model.extend({
   assessment_type: function() {
     return this.get('type') == 'assessment';
   }.property('type'),
+  goal_status_class: function() {
+    var status = this.get('goal.status');
+    if(status == 1) {
+      return 'face sad';
+    } else if(status == 2) {
+      return 'face neutral';
+    } else if(status == 3) {
+      return 'face happy';
+    } else if(status == 4) {
+      return 'face laugh';
+    } else {
+      return '';
+    }
+  }.property('goal.status'),
   processed_events: function() {
     var result = [];
     var last_ts = null;

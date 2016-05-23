@@ -2,6 +2,7 @@ import Ember from 'ember';
 import DS from 'ember-data';
 import CoughDrop from '../app';
 import i18n from '../utils/i18n';
+import Utils from '../utils/misc';
 
 CoughDrop.Goal = DS.Model.extend({
   user_id: DS.attr('string'),
@@ -79,7 +80,7 @@ CoughDrop.Goal = DS.Model.extend({
           key: key,
           label: day.toISOString().substring(0, 10),
           sessions: ((stats.daily[key] || {}).sessions || 0),
-          statuses: ((stats.daily[key] || {}).statuses || []).length
+          max_statuses: Utils.mode((stats.daily[key] || {}).statuses || [])
         });
         day = day.add(-1, 'days');
       }
@@ -93,7 +94,7 @@ CoughDrop.Goal = DS.Model.extend({
           key: key,
           label: week.weekday(0).toISOString().substring(0, 10),
           sessions: ((stats.weekly[key] || {}).sessions || 0),
-          statuses: ((stats.weekly[key] || {}).statuses || []).length
+          max_statuses: Utils.mode((stats.weekly[key] || {}).statuses || [])
         });
         week = week.add(-1, 'weeks');
       }
@@ -116,7 +117,7 @@ CoughDrop.Goal = DS.Model.extend({
           key: key,
           label: date.toISOString().substring(0, 10),
           sessions: ((stats.monthly[key] || {}).sessions || 0),
-          statuses: ((stats.monthly[key] || {}).statuses || []).length
+          max_statuses: Utils.mode((stats.monthly[key] || {}).statuses || [])
         });
         date = date.add(-1, 'month');
       }
@@ -130,7 +131,7 @@ CoughDrop.Goal = DS.Model.extend({
         reversed_units.push(unit);
       }
     });
-    var max = Math.max.apply(null, units.mapProperty('statuses'));
+    var max = Math.max.apply(null, units.mapProperty('max_statuses'));
     reversed_units.max = max;
     return reversed_units;
   }.property('stats', 'best_time_level'),
@@ -174,21 +175,21 @@ CoughDrop.Goal = DS.Model.extend({
         style_class: 'time_block level_' + level
       });
       score = statuses.filter(function(s) { return s == 3; }).length;
-      level = Math.ceil(score / statuses * 10);
+      level = Math.ceil(score / units.max * 10);
       rows[1].time_blocks.push({
         score: score,
         tooltip: score ? (i18n.t('status_sessions', 'status', {count: score}) + ', ' + unit.label) : "",
         style_class: 'time_block level_' + level
       });
       score = statuses.filter(function(s) { return s == 2; }).length;
-      level = Math.ceil(score / statuses * 10);
+      level = Math.ceil(score / units.max * 10);
       rows[2].time_blocks.push({
         score: score,
         tooltip: score ? (i18n.t('status_sessions', 'status', {count: score}) + ', ' + unit.label) : "",
         style_class: 'time_block level_' + level
       });
       score = statuses.filter(function(s) { return s == 1; }).length;
-      level = Math.ceil(score / statuses * 10);
+      level = Math.ceil(score / units.max * 10);
       rows[3].time_blocks.push({
         score: score,
         tooltip: score ? (i18n.t('status_sessions', 'status', {count: score}) + ', ' + unit.label) : "",
