@@ -145,4 +145,46 @@ describe Uploader do
       expect(Uploader.valid_remote_url?("https://images.com/cow.png")).to eq(false)
     end
   end  
+  
+  describe "remote_remove" do
+    it "should raise error on unexpected path" do
+      expect{ Uploader.remote_remove("https://www.google.com/bacon") }.to raise_error("scary delete, not a path I'm comfortable deleting...")
+      expect{ Uploader.remote_remove("https://s3.amazonaws.com/#{ENV['UPLOADS_S3_BUCKET']}/images/abcdefg/asdf/asdfasdf.asdf") }.to raise_error("scary delete, not a path I'm comfortable deleting...")
+    end
+    
+    it "should remove the object if found" do
+      object = OpenStruct.new
+      expect(object).to receive(:destroy).and_return(true)
+      objects = OpenStruct.new
+      expect(objects).to receive(:find).with('images/abcdefg/asdf-asdf.asdf').and_return(object)
+      bucket = OpenStruct.new({
+        objects: objects
+      })
+      buckets = OpenStruct.new
+      expect(buckets).to receive(:find).and_return(bucket)
+      service = OpenStruct.new({
+        buckets: buckets
+      })
+      expect(S3::Service).to receive(:new).and_return(service)
+      res = Uploader.remote_remove("https://s3.amazonaws.com/#{ENV['UPLOADS_S3_BUCKET']}/images/abcdefg/asdf-asdf.asdf")
+      expect(res).to eq(true)
+    end
+    
+    it "should not error if the object is not found" do
+      objects = OpenStruct.new
+      expect(objects).to receive(:find).with('images/abcdefg/asdf-asdf.asdf').and_raise("not found")
+      bucket = OpenStruct.new({
+        objects: objects
+      })
+      buckets = OpenStruct.new
+      expect(buckets).to receive(:find).and_return(bucket)
+      service = OpenStruct.new({
+        buckets: buckets
+      })
+      expect(S3::Service).to receive(:new).and_return(service)
+      res = Uploader.remote_remove("https://s3.amazonaws.com/#{ENV['UPLOADS_S3_BUCKET']}/images/abcdefg/asdf-asdf.asdf")
+      expect(res).to eq(nil)
+    end
+    
+  end
 end

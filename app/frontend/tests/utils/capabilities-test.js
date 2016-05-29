@@ -93,4 +93,232 @@ describe("capabilities", function() {
       });
     });
   });
+
+  describe("sharing", function() {
+    describe('available', function() {
+      it('should timeout if sharing types not returned', function() {
+        stub(window, 'plugins', {
+          socialsharing: {
+            canShareVia: function(type, str, header, img, url, success, error) {
+            }
+          }
+        });
+        var valids = null;
+        capabilities.sharing.available().then(function(list) {
+          valids = list;
+        });
+        waitsFor(function() { return valids; });
+        runs(function() {
+          expect(valids).toEqual([]);
+        });
+      });
+      it('should return valid sharing types only', function() {
+        stub(window, 'cordova', {
+          plugins: {
+            clipboard: {
+              copy: function() { }
+            }
+          }
+        });
+        stub(window, 'plugins', {
+          socialsharing: {
+            canShareVia: function(type, str, header, img, url, success, error) {
+              if(type == 'facebook' || type == 'instagram') {
+                success();
+              } else {
+                error();
+              }
+            }
+          }
+        });
+        var valids = null;
+        capabilities.sharing.available().then(function(list) {
+          valids = list;
+        });
+        waitsFor(function() { return valids; });
+        runs(function() {
+          expect(valids).toEqual(['email', 'generic', 'clipboard', 'facebook', 'instagram']);
+        });
+      });
+    });
+    describe('share', function() {
+      it('should call correct sharing options', function() {
+        var copied_message = null;
+        var errored = false;
+        var success = false;
+
+        capabilities.sharing.share('clipboard', 'hello', null, null).then(function() {
+          success = true;
+        }, function() {
+          errored = true;
+        });
+        expect(errored).toEqual(true);
+        errored = false; success = false;
+
+        capabilities.sharing.share('email', 'hello', 'http://www.example.com', 'http://www.example.com/image.png').then(function() {
+          success = true;
+        }, function() {
+          errored = true;
+        });
+        expect(errored).toEqual(true);
+        errored = false; success = false;
+
+        stub(window, 'cordova', {
+          plugins: { clipboard: { copy: function(str) {
+            copied_message = str;
+          } } }
+        });
+        stub(window, 'plugins', {
+          socialsharing: {
+            shareViaEmail: function(subject, message, a, b, c, url, success, error) {
+              success();
+            },
+            share: function(subject, message, image, url, success, error) {
+              error();
+            },
+            shareVia(app, subject, message, image, url, success, error) {
+              if(app == 'facebook') {
+                success();
+              } else {
+                error();
+              }
+            }
+          }
+        });
+
+        capabilities.sharing.share('clipboard', 'hello', null, null).then(function() {
+          success = true;
+        }, function() {
+          errored = true;
+        });
+        expect(success).toEqual(true);
+        errored = false; success = false;
+
+        capabilities.sharing.share('email', 'hello', 'http://www.example.com', 'http://www.example.com/image.png').then(function() {
+          success = true;
+        }, function() {
+          errored = true;
+        });
+        expect(success).toEqual(true);
+        errored = false; success = false;
+
+        capabilities.sharing.share('generic', 'hello', 'http://www.example.com', 'http://www.example.com/image.png').then(function() {
+          success = true;
+        }, function() {
+          errored = true;
+        });
+        expect(success).toEqual(true);
+        errored = false; success = false;
+
+        capabilities.sharing.share('facebook', 'hello', 'http://www.example.com', 'http://www.example.com/image.png').then(function() {
+          success = true;
+        }, function() {
+          errored = true;
+        });
+        expect(success).toEqual(true);
+        errored = false; success = false;
+
+        capabilities.sharing.share('instagram', 'hello', 'http://www.example.com', 'http://www.example.com/image.png').then(function() {
+          success = true;
+        }, function() {
+          errored = true;
+        });
+        expect(success).toEqual(true);
+        errored = false; success = false;
+      });
+    });
+  });
+
+  describe("sensors", function() {
+    it("should track orientation", function() {
+      capabilities.last_orientation = null;
+      if(!window.DeviceOrientationEvent) { window.DeviceOrientationEvent = {}; }
+      capabilities.sensor_listen();
+      var e = new window.CustomEvent('deviceorientation');
+      e.alpha = 1;
+      e.beta = 2;
+      e.gamma = 3;
+      window.dispatchEvent(e);
+      expect(capabilities.last_orientation.alpha).toEqual(1);
+      expect(capabilities.last_orientation.beta).toEqual(2);
+      expect(capabilities.last_orientation.gamma).toEqual(3);
+      expect(capabilities.last_orientation.layout).toNotEqual(null);
+    });
+
+    it('should track volume', function() {
+      var callback = null;
+      stub(window, 'plugin', {
+        volume: {
+          setVolumeChangeCallback: function(cb) {
+            callback = cb;
+          }
+        }
+      });
+      capabilities.last_volume = null;
+      capabilities.sensor_listen();
+      expect(callback).toNotEqual(null);
+      callback(75);
+      expect(capabilities.last_volume).toEqual(75);
+    });
+
+    it("should track ambient light", function() {
+      var callback = null;
+      stub(window, 'cordova', {
+        exec: function(cb, err, klass, method, args) {
+          if(klass == 'CoughDropMisc') {
+            callback = cb;
+          }
+        }
+      });
+      capabilities.last_lux = null;
+      capabilities.sensor_listen();
+      waitsFor(function() { return callback; });
+      runs(function() {
+        callback("1200");
+        expect(capabilities.last_lux).toEqual(1200);
+      });
+    });
+
+    it("should track brightness", function() {
+      var callback = null;
+      stub(window, 'cordova', {
+        plugins: {
+          brightness: {
+            getBrightness: function(cb) {
+              callback = cb;
+            }
+          }
+        }
+      });
+      capabilities.last_brightness = null;
+      capabilities.sensor_listen();
+      waitsFor(function() { return callback; });
+      runs(function() {
+        callback("75");
+        expect(capabilities.last_brightness).toEqual(75);
+      });
+    });
+
+    it("should track ambient light in the browser if possible", function() {
+      var sensor = null;
+      function LightSensor() {
+        this.start = function() { };
+        sensor = this;
+      }
+      stub(window, 'LightSensor', LightSensor);
+      capabilities.sensor_listen();
+      expect(sensor).toNotEqual(null);
+      capabilities.last_lux = null;
+      sensor.onchange({reading: {illuminance: 6200}});
+      expect(capabilities.last_lux).toEqual(6200);
+    });
+
+    it("should track ambient light in the browser if possible with window event", function() {
+      capabilities.last_lux = null;
+      var e = new window.CustomEvent('devicelight');
+      e.lux = 510;
+      window.dispatchEvent(e);
+      expect(capabilities.last_lux).toEqual(510);
+    });
+  });
 });

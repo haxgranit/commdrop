@@ -159,7 +159,7 @@ class Api::OrganizationsController < ApplicationController
       voices = AuditEvent.where(['created_at > ? AND event_type = ?', 6.months.ago, 'voice_added'])
       stats = {}
       voices.each do |event|
-        str = "#{event.created_at.strftime('%m-%Y')} #{event.data['voice_id']}"
+        str = "#{event.created_at.strftime('%m-%Y')} #{event.data['voice_id']} #{event.data['system'] || 'iOS'}"
         stats[str] ||= 0
         stats[str] += 1
       end

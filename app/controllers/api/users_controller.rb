@@ -92,7 +92,7 @@ class Api::UsersController < ApplicationController
     user = User.find_by_path(params['user_id'])
     return unless exists?(user)
     return unless allowed?(user, 'edit')
-    if user.add_premium_voice(params['voice_id'])
+    if user.add_premium_voice(params['voice_id'], params['system'])
       res = {voice_added: true, voice_id: params['voice_id']}
       if params['voice_url']
         res[:download_url] = Uploader.signed_download_url(params['voice_url'])

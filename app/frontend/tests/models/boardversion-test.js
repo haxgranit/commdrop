@@ -1,0 +1,21 @@
+import DS from 'ember-data';
+import Ember from 'ember';
+import { test, moduleForModel } from 'ember-qunit';
+import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } from 'frontend/tests/helpers/jasmine';
+import { queryLog } from 'frontend/tests/helpers/ember_helper';
+import CoughDrop from '../../app';
+import persistence from '../../utils/persistence';
+import modal from '../../utils/modal';
+import Button from '../../utils/button';
+
+describe('Boardversion', function() {
+  it("should check recent", function() {
+    var bv = CoughDrop.store.createRecord('boardversion');
+    var date = window.moment().add(-5, 'day').toDate();
+    bv.set('created', date);
+    expect(bv.get('recent')).toEqual(true);
+    date = window.moment().add(-10, 'day').toDate();
+    bv.set('created', date);
+    expect(bv.get('recent')).toEqual(false);
+  });
+});

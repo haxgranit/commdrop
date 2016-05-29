@@ -255,7 +255,7 @@ var capabilities;
               if(!promise.resolved) {
                 promise.resolve([]);
               }
-            }, 2000);
+            }, 500);
             var dones = 0;
             var valids = ['email', 'generic'];
             if(window.cordova && window.cordova.plugins && window.cordova.plugins.clipboard && window.cordova.plugins.clipboard.copy) {
@@ -1016,57 +1016,60 @@ var capabilities;
     }
 
   })();
-
-  if(window.DeviceOrientationEvent) {
-    window.addEventListener('deviceorientation', function(event) {
-      if(event.alpha !== null && event.alpha !== undefined) {
-        var layout = 'unknown';
-        // layout - portrait-primary, portrait-secondary, landscape-primary, landscape-secondary
-        if(window.screen && window.screen.orientation && window.screen.orientation.type) {
-          layout = window.screen.orientation.type;
-        } else if(window.orientation !== null && window.orientation !== undefined) {
-          var landscape = window.innerWidth > window.innerHeight;
-          if(window.orientation === 0 || window.orientation === 90) {
-            layout = landscape ? 'landscape-primary' : 'portrait-primary';
-          } else if(window.orientation === 180 || window.orientation === -90) {
-            layout = landscape ? 'landscape-secondary' : 'portrait-secondary';
+  capabilities.sensor_listen = function() {
+    if(window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', function(event) {
+        if(event.alpha !== null && event.alpha !== undefined) {
+          var layout = 'unknown';
+          // layout - portrait-primary, portrait-secondary, landscape-primary, landscape-secondary
+          if(window.screen && window.screen.orientation && window.screen.orientation.type) {
+            layout = window.screen.orientation.type;
+          } else if(window.orientation !== null && window.orientation !== undefined) {
+            var landscape = window.innerWidth > window.innerHeight;
+            if(window.orientation === 0 || window.orientation === 90) {
+              layout = landscape ? 'landscape-primary' : 'portrait-primary';
+            } else if(window.orientation === 180 || window.orientation === -90) {
+              layout = landscape ? 'landscape-secondary' : 'portrait-secondary';
+            }
           }
+          capabilities.last_orientation = {
+            alpha: event.alpha,
+            beta: event.beta,
+            gamma: event.gamma,
+            layout: layout,
+            timestamp: Math.round((new Date()).getTime() / 1000)
+          };
+          stashes.orientation = capabilities.last_orientation;
         }
-        capabilities.last_orientation = {
-          alpha: event.alpha,
-          beta: event.beta,
-          gamma: event.gamma,
-          layout: layout,
-          timestamp: Math.round((new Date()).getTime() / 1000)
-        };
-        stashes.orientation = capabilities.last_orientation;
-      }
-    });
-  }
-  if(window.plugin && window.plugin.volume && window.plugin.volume.setVolumeChangeCallback) {
-    window.plugin.volume.setVolumeChangeCallback(function(vol) {
-      capabilities.last_volume = vol;
-      stashes.volume = capabilities.last_volume;
-    });
-  }
-  // TODO: https://github.com/brunovilar/cordova-plugins/tree/master/AmbientLight
-  setInterval(capabilities.update_brightness, 2000);
-  if(window.AmbientLightSensor) {
-    // TODO: only track while in speak mode
-    var s = new window.AmbientLightSensor();
-    s.start();
-    s.onchange = function(event) {
-      capabilities.last_lux = event.reading && event.reading.illuminance;
-      stashes.ambient_light = capabilities.last_lux;
-    };
-  } else {
-    window.addEventListener('devicelight', function(event) {
-      capabilities.last_lux = event.lux || event.value;
-      stashes.ambient_light = capabilities.last_lux;
-    });
-  }
+      });
+    }
+    if(window.plugin && window.plugin.volume && window.plugin.volume.setVolumeChangeCallback) {
+      window.plugin.volume.setVolumeChangeCallback(function(vol) {
+        capabilities.last_volume = vol;
+        stashes.volume = capabilities.last_volume;
+      });
+    }
+    // TODO: https://github.com/brunovilar/cordova-plugins/tree/master/AmbientLight
+    setInterval(capabilities.update_brightness, 2000);
+    var LightSensor = window.LightSensor || window.AmbientLightSensor;
+    if(LightSensor) {
+      // TODO: only track while in speak mode
+      var s = new LightSensor();
+      s.start();
+      s.onchange = function(event) {
+        capabilities.last_lux = event.reading && event.reading.illuminance;
+        stashes.ambient_light = capabilities.last_lux;
+      };
+    } else {
+      window.addEventListener('devicelight', function(event) {
+        capabilities.last_lux = event.lux || event.value;
+        stashes.ambient_light = capabilities.last_lux;
+      });
+    }
 
-  // TODO: ProximitySensor?
+    // TODO: ProximitySensor?
+  };
+  capabilities.sensor_listen();
 
   capabilities.setup_database = function() {
     delete capabilities['db'];

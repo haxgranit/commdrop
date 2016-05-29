@@ -215,7 +215,7 @@ var stashes = Ember.Object.extend({
   log_event: function(obj, user_id) {
     var timestamp = stashes.current_timestamp();
     var geo = null;
-    if(stashes.geo.latest) { // TODO: timeout if it's been too long?
+    if(stashes.geo && stashes.geo.latest) { // TODO: timeout if it's been too long?
       geo = [stashes.geo.latest.coords.latitude, stashes.geo.latest.coords.longitude, stashes.geo.latest.coords.altitude];
     }
     var log_event = null;

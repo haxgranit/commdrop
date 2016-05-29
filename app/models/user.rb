@@ -112,7 +112,7 @@ class User < ActiveRecord::Base
     self.save
   end
   
-  def add_premium_voice(voice_id)
+  def add_premium_voice(voice_id, system_name)
     # Limit the number of premium_voices users can download
     # TODO: don't let users set their voice to a premium voice that they have downloaded for a different user
     voices = {}.merge(self.settings['premium_voices'] || {})
@@ -130,7 +130,8 @@ class User < ActiveRecord::Base
           :user_id => self.global_id,
           :user_name => self.user_name,
           :voice_id => voice_id,
-          :timestamp => Time.now.to_i
+          :timestamp => Time.now.to_i,
+          :system => system_name
         }
         AuditEvent.create!(:event_type => 'voice_added', :summary => "#{self.user_name} added #{voice_id}", :data => data)
       end

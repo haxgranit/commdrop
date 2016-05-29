@@ -518,9 +518,13 @@ var editManager = Ember.Object.extend({
             controller.set('ordered_buttons',result);
             controller.redraw_if_needed();
             Ember.run.later(function() {
-              app_state.controller.send('highlight_button');
+              if(app_state.controller) {
+                app_state.controller.send('highlight_button');
+              }
             });
-            app_state.controller.send('check_scanning');
+            if(app_state.controller) {
+              app_state.controller.send('check_scanning');
+            }
           }
         });
         controller.set('ordered_buttons', null);

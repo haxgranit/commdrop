@@ -157,7 +157,9 @@ class ClusterLocation < ActiveRecord::Base
     # iterate through user's ip clusters, add or create
     if session && session.user_id
       clusters = ClusterLocation.where(:user_id => session.user_id)
+      Rails.logger.info('adding to geo cluster')
       found_ip = add_to_geo_cluster(session, clusters)
+      Rails.logger.info('adding to ip cluster')
       found_geo = add_to_ip_cluster(session, clusters)
       if !found_ip || !found_geo
         self.schedule(:clusterize, session.user.global_id)
@@ -180,10 +182,14 @@ class ClusterLocation < ActiveRecord::Base
   def self.clusterize(user_id)
     user = User.find_by_global_id(user_id)
     return unless user
+    Rails.logger.info("clusterizing #{user_id}")
     non_geos = user.log_sessions.where(:geo_cluster_id => nil).select{|s| s.data['geo'] }
+    Rails.logger.info("geos to clusterize: #{non_geos.length}")
     # Time may have passed since this was scheduled, make sure there are no stragglers
     clusters = ClusterLocation.where(:user_id => user.id)
+    Rails.logger.info("checking for matches on existing clusters")
     non_geos = non_geos.select{|s| !add_to_geo_cluster(s, clusters) }
+    Rails.logger.info("grouping remaining sessions by geo")
     biggest_cluster = nil
     # QT clustering algorithm to find geo hotspots
     while !biggest_cluster || biggest_cluster >= self.frequency_tolerance

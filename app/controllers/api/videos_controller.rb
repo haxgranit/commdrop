@@ -13,15 +13,15 @@ class Api::VideosController < ApplicationController
   
   def show
     video = UserVideo.find_by_path(params['id'])
-    return unless exists?(video)
+    return unless exists?(video, params['id'])
     return unless allowed?(video, 'view')
     render json: JsonApi::Video.as_json(video, :wrapper => true, :permissions => @api_user).to_json
   end
   
   def update
     video = UserVideo.find_by_path(params['id'])
-    return unless exists?(video)
-    return unless allowed?(video, 'view')
+    return unless exists?(video, params['id'])
+    return unless allowed?(video, 'edit')
     if video.process(params['video'])
       render json: JsonApi::Video.as_json(video, :wrapper => true, :permissions => @api_user).to_json
     else

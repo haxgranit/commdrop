@@ -60,4 +60,70 @@ describe Worker do
       expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'hip_hop', 'arguments' => [17]})).to be_truthy
     end
   end
+  
+  describe "scheduled_actions" do
+    it "should have list actions" do
+      Worker.schedule(User, :something)
+      expect(Worker.scheduled_actions.length).to eq(1)
+      expect(Worker.scheduled_actions[-1]).to eq({
+        'class' => 'Worker', 'args' => ['User', 'something']
+      })
+      u = User.create
+      u.schedule(:do_something, 'cool')
+      expect(Worker.scheduled_actions.length).to be >= 2
+      expect(Worker.scheduled_actions[-1]).to eq({
+        'class' => 'Worker', 'args' => ['User', 'perform_action', {'id' => u.id, 'method' => 'do_something', 'arguments' => ['cool']}]
+      })
+    end
+  end
+
+  describe "stop_stuck_workers" do
+    it "should have unregister only stuck workers" do
+      worker1 = OpenStruct.new({
+        :processing => {
+          'run_at' => 6.weeks.ago
+        }
+      })
+      worker2 = OpenStruct.new({
+        :processing => {
+          'run_at' => 1.seconds.ago
+        }
+      })
+      worker3 = OpenStruct.new({
+        :processing => {
+        }
+      })
+      expect(Resque).to receive(:workers).and_return([worker1, worker2, worker3])
+      expect(worker1).to receive(:unregister_worker)
+      expect(worker2).to_not receive(:unregister_worker)
+      expect(worker3).to_not receive(:unregister_worker)
+      Worker.stop_stuck_workers
+    end
+  end
+
+  describe "prune_dead_workers" do
+    it "should prune dead workers" do
+      worker1 = OpenStruct.new
+      worker2 = OpenStruct.new
+      worker3 = OpenStruct.new
+      expect(Resque).to receive(:workers).and_return([worker1, worker2])
+      expect(worker1).to receive(:prune_dead_workers)
+      expect(worker2).to receive(:prune_dead_workers)
+      expect(worker3).to_not receive(:prune_dead_workers)
+      Worker.prune_dead_workers
+    end
+  end
+
+  describe "kill_all_workers" do
+    it "should kill all workers" do
+      worker1 = OpenStruct.new
+      worker2 = OpenStruct.new
+      worker3 = OpenStruct.new
+      expect(Resque).to receive(:workers).and_return([worker1, worker2])
+      expect(worker1).to receive(:unregister_worker)
+      expect(worker2).to receive(:unregister_worker)
+      expect(worker3).to_not receive(:unregister_worker)
+      Worker.kill_all_workers
+    end
+  end
 end

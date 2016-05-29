@@ -1,10 +1,19 @@
 require 'spec_helper'
 
 describe Uploadable, :type => :model do
+  class FakeUploadable
+    def self.before_save(*args); end
+    def self.after_save(*args); end
+    def self.after_destroy(*args); end
+    include Uploadable
+  end
+  
   describe "file_type" do
     it "should return the correct file type" do
       expect(ButtonImage.new.file_type).to eq('images')
       expect(ButtonSound.new.file_type).to eq('sounds')
+      expect(UserVideo.new.file_type).to eq('videos')
+      expect(FakeUploadable.new.file_type).to eq('objects')
     end
   end
   
@@ -218,6 +227,25 @@ describe Uploadable, :type => :model do
       expect(s.url).not_to eq(nil)
       expect(s.settings['pending']).to eq(false)
       expect(s.settings['content_type']).to eq('audio/mp3')
+    end
+    
+    it "should measure image height if not already set" do
+      s = ButtonImage.create(:settings => {})
+      res = OpenStruct.new(:success? => true, :headers => {'Content-Type' => 'image/png'}, :body => "abcdefg")
+      expect(Typhoeus).to receive(:get).and_return(res)
+      res = OpenStruct.new(:success? => true)
+      expect(Typhoeus).to receive(:post) { |url, args|
+        f = args[:body][:file]
+        expect(f.size).to eq(7)
+      }.and_return(res)
+      
+      expect(s).to receive(:'`').and_return("A\nB\nGeometry:  100x150")
+      s.upload_to_remote("http://pic.com/cow.png")
+      expect(s.url).not_to eq(nil)
+      expect(s.settings['pending']).to eq(false)
+      expect(s.settings['content_type']).to eq('image/png')
+      expect(s.settings['width']).to eq(100)
+      expect(s.settings['height']).to eq(150)
     end
   end
 end

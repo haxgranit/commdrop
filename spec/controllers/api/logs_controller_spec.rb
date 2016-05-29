@@ -140,6 +140,93 @@ describe Api::LogsController, :type => :controller do
       expect(json['meta']['next_url']).not_to match(/device_id=/)
       expect(json['meta']['next_url']).not_to match(/location_id=/)
     end
+    
+#     user = User.find_by_path(params['user_id'])
+#     return unless allowed?(user, 'supervise')
+#     user_ids = [user.id]
+#     user_ids = [] if params['supervisees']
+#     if params['supervisees']
+#       user_ids += user.supervisees.map(&:id)
+#     end
+#     user_ids = user_ids.uniq
+#     
+#     options = {:start => params['start'], :end => params['end']}
+#     Stats.sanitize_find_options!(options)
+#     logs = LogSession.where({:user_id => user_ids}).where.not({:started_at => nil})
+#     params['type'] ||= 'all'
+#     if params['type'] != 'all'
+#       logs = logs.where(:log_type => params['type'])
+#     end
+#     if params['goal_id']
+#       goal = UserGoal.find_by_global_id(params['goal_id'])
+#       if goal && goal.user == user
+#         logs = logs.where(:goal_id => goal.id)
+#       else
+#         logs = logs.where(:id => 0)
+#       end
+#     end
+    it "should filter by goal_id" do
+      token_user
+      g = UserGoal.create(:user => @user)
+      LogSession.process_new({
+        :goal_id => g.global_id,
+        :events => [
+          {'timestamp' => 4.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 3.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => @user, :device => @device, :author => @user})
+      LogSession.process_new({
+        :goal_id => g.global_id,
+        :events => [
+          {'timestamp' => 8.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 7.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => @user, :device => @device, :author => @user})
+      LogSession.process_new({
+        :goal_id => g.global_id,
+        :events => [
+          {'timestamp' => 18.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 17.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => @user, :device => @device, :author => @user})
+      get :index, :user_id => @user.global_id, :goal_id => g.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['log'].length).to eq(3)
+    end
+    
+    it "should return nothing for goal_id that doesn't match user" do
+      token_user
+      u = User.create
+      g = UserGoal.create(:user => u)
+      
+      LogSession.process_new({
+        :goal_id => g.global_id,
+        :events => [
+          {'timestamp' => 4.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 3.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => u, :device => @device, :author => @user})
+      LogSession.process_new({
+        :goal_id => g.global_id,
+        :events => [
+          {'timestamp' => 8.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 7.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => u, :device => @device, :author => @user})
+      LogSession.process_new({
+        :goal_id => g.global_id,
+        :events => [
+          {'timestamp' => 18.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 17.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => u, :device => @device, :author => @user})
+
+      get :index, :user_id => @user.global_id, :goal_id => g.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['log'].length).to eq(0)
+    end
   end
 
   

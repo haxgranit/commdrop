@@ -65,6 +65,7 @@ CoughDrop.Video = DS.Model.extend({
     this.checkForDataURL().then(null, function() { });
   }.observes('url')
 });
+
 CoughDrop.Video.reopenClass({
   mimic_server_processing: function(record, hash) {
     if(record.get('data_url')) {

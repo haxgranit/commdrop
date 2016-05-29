@@ -19,11 +19,11 @@ module JsonApi::Goal
     end
     json['started'] = goal.settings['started_at']
     json['ended'] = goal.settings['ended_at']
+    json['stats'] = goal.settings['stats']
 
     if args[:permissions]
       json['permissions'] = goal.permissions_for(args[:permissions])
       if json['permissions']['view']
-        json['stats'] = goal.settings['stats']
         video_ids = []
         video_ids << goal.settings['video_id'] if goal.settings['video_id']
         

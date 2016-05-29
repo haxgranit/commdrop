@@ -80,7 +80,7 @@ CoughDrop.Goal = DS.Model.extend({
           key: key,
           label: day.toISOString().substring(0, 10),
           sessions: ((stats.daily[key] || {}).sessions || 0),
-          max_statuses: Utils.mode((stats.daily[key] || {}).statuses || [])
+          max_statuses: Utils.max_appearance((stats.daily[key] || {}).statuses || [])
         });
         day = day.add(-1, 'days');
       }
@@ -89,12 +89,12 @@ CoughDrop.Goal = DS.Model.extend({
       var weeks = [];
       var week = window.moment();
       for(var idx = 0; idx < 12; idx++) {
-        var key = week.format('GGGG-WW');
+        var key = week.clone().weekday(1).format('GGGG-WW');
         weeks.push({
           key: key,
-          label: week.weekday(0).toISOString().substring(0, 10),
+          label: week.clone().weekday(0).toISOString().substring(0, 10),
           sessions: ((stats.weekly[key] || {}).sessions || 0),
-          max_statuses: Utils.mode((stats.weekly[key] || {}).statuses || [])
+          max_statuses: Utils.max_appearance((stats.weekly[key] || {}).statuses || [])
         });
         week = week.add(-1, 'weeks');
       }
@@ -117,7 +117,7 @@ CoughDrop.Goal = DS.Model.extend({
           key: key,
           label: date.toISOString().substring(0, 10),
           sessions: ((stats.monthly[key] || {}).sessions || 0),
-          max_statuses: Utils.mode((stats.monthly[key] || {}).statuses || [])
+          max_statuses: Utils.max_appearance((stats.monthly[key] || {}).statuses || [])
         });
         date = date.add(-1, 'month');
       }
@@ -165,7 +165,6 @@ CoughDrop.Goal = DS.Model.extend({
     for(var idx = 0; idx < 14 && idx < units.length; idx++) {
       var unit = units[idx];
       var unit_stats = (this.get('stats')[this.get('best_time_level')] || {})[unit.key] || {};
-      console.log(units.max);
       var statuses = unit_stats.statuses || [];
       var score = statuses.filter(function(s) { return s == 4; }).length;
       var level = Math.ceil(score / units.max * 10);
@@ -201,33 +200,3 @@ CoughDrop.Goal = DS.Model.extend({
 });
 
 export default CoughDrop.Goal;
-
-//
-// <div class='col-sm-6'>
-//   <div class="time_block_rows">
-//     {{#each goal.time_unit_status_rows as |row|}}
-//       <div class="time_block_left">
-//         {{row.status}}
-//       </div>
-//       <div class="time_block_row">
-//         {{#each row.time_blocks as |block|}}
-//           <div class={{block.style_class}} data-toggle="tooltip" data-placement="top" title={{block.tooltip}}>&nbsp;</div>
-//         {{/each}}
-//       </div>
-//     {{/each}}
-//     <div class="time_block_row dates">
-//       <div class="time_block_left">&nbsp;</div>
-//       {{each goal.time_units as |unit|}}
-//         <div class="">{{unit.day}}</div>
-//       {{/each}}
-//     </div>
-//   </div>
-// </div>
-//
-//
-//       if(elem && goal && goal.get('time_units')) {
-//         var raw_data = [[goal.get('unit_description'), i18n.t('positive_measurements', "Positive Measurements"), i18n.t('negative_measurements', "Negative Measurements")]];
-//         var max_score = 0;
-//         var min_score = 0;
-//         for(var unit in goal.get('time_units')) {
-//           var unit_data = gial.get('time_unit_measurements')[unit];

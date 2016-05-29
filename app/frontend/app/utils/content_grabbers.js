@@ -643,10 +643,12 @@ var pictureGrabber = Ember.Object.extend({
     }
     _this.clear_image_preview();
     _this.controller.set('image_search', null);
+    var streams = _this.controller.get('webcam.video_streams');
     _this.controller.set('webcam', {
       stream: stream,
       showing: true,
-      stream_id: stream_id
+      stream_id: stream_id,
+      video_streams: streams
     });
     var enumerator = window.enumerateMediaDevices || (window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices);
     if(!enumerator && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
@@ -658,7 +660,7 @@ var pictureGrabber = Ember.Object.extend({
         });
       };
     }
-    if(enumerator) {
+    if(enumerator && !streams) {
       enumerator().then(function(list) {
         var video_streams = [];
         list.forEach(function(device) {
@@ -711,9 +713,11 @@ var pictureGrabber = Ember.Object.extend({
     var current_stream_id = this.controller.get('webcam.stream_id');
     var streams = this.controller.get('webcam.video_streams');
     var index = 0;
-    for(var idx = 0; idx < streams.length; idx++) {
-      if(current_stream_id && streams[idx].id == current_stream_id) {
-        index = idx;
+    if(streams) {
+      for(var idx = 0; idx < streams.length; idx++) {
+        if(current_stream_id && streams[idx].id == current_stream_id) {
+          index = idx;
+        }
       }
     }
     var _this = this;
@@ -864,9 +868,11 @@ var videoGrabber = Ember.Object.extend({
     var current_stream_id = this.controller.get('video_recording.stream_id');
     var streams = this.controller.get('video_recording.video_streams');
     var index = 0;
-    for(var idx = 0; idx < streams.length; idx++) {
-      if(current_stream_id && streams[idx].id == current_stream_id) {
-        index = idx;
+    if(streams) {
+      for(var idx = 0; idx < streams.length; idx++) {
+        if(current_stream_id && streams[idx].id == current_stream_id) {
+          index = idx;
+        }
       }
     }
     var _this = this;
@@ -905,12 +911,9 @@ var videoGrabber = Ember.Object.extend({
       }
     }
   },
-  user_media_ready: function(stream, stream_id) {
-    var options = {mimeType: 'video/webm', bitsPerSecond: 100000};
-    var _this = this;
-    videoGrabber.recorded_blobs = [];
+  setup_media_recorder: function(stream, options) {
     var mediaRecorder = null;
-    _this.controller.set('video_recording.error', false);
+    var _this = this;
     try {
       mediaRecorder = new window.MediaRecorder(stream, options);
     } catch (e0) {
@@ -926,10 +929,19 @@ var videoGrabber = Ember.Object.extend({
         } catch (e2) {
           _this.controller.set('video_recording.error', true);
           console.error('Exception while creating MediaRecorder:', e2);
-          return;
+          return null;
         }
       }
     }
+    return mediaRecorder;
+  },
+  user_media_ready: function(stream, stream_id) {
+    var options = {mimeType: 'video/webm', bitsPerSecond: 100000};
+    var _this = this;
+    videoGrabber.recorded_blobs = [];
+    var mediaRecorder = _this.setup_media_recorder(stream, options);
+    if(!mediaRecorder) { return; }
+    _this.controller.set('video_recording.error', false);
 
     mediaRecorder.addEventListener('dataavailable', function(event) {
       videoGrabber.recorded_blobs.push(event.data);
@@ -966,11 +978,13 @@ var videoGrabber = Ember.Object.extend({
     if(stream_id) {
       stashes.persist('last_stream_id', stream_id);
     }
+    var streams = _this.controller.get('video_recording.video_streams');
     _this.controller.set('video_recording', {
       media_recorder: mediaRecorder,
       video_url: video_url,
       stream: stream,
-      stream_id: stream_id
+      stream_id: stream_id,
+      video_streams: streams
     });
     var enumerator = window.enumerateMediaDevices || (window.navigator && window.navigator.mediaDevices && window.navigator.mediaDevices.enumerateDevices);
     if(!enumerator && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
@@ -982,7 +996,7 @@ var videoGrabber = Ember.Object.extend({
         });
       };
     }
-    if(enumerator) {
+    if(enumerator && !streams) {
       enumerator().then(function(list) {
         var video_streams = [];
         list.forEach(function(device) {
@@ -1020,6 +1034,25 @@ var videoGrabber = Ember.Object.extend({
       mr.stop();
     }
   },
+  measure_duration: function(url, fallback_duration) {
+    return new Ember.RSVP.Promise(function(resolve, reject) {
+      var a = document.createElement('video');
+      a.preload = 'metadata';
+      a.ondurationchange = function() {
+        var duration = fallback_duration;
+        if(a.duration && isFinite(a.duration)) {
+          duration = a.duration;
+        }
+        resolve({
+          duration: duration
+        });
+      };
+      a.onerror = function() {
+        reject({error: "video calculation failed"});
+      };
+      a.src = url;
+    });
+  },
   select_video_preview: function() {
     var preview = this.controller && this.controller.get('video_preview');
     if(!preview || !preview.url) { return; }
@@ -1043,23 +1076,7 @@ var videoGrabber = Ember.Object.extend({
       preview.license.copyright_notice_url = license_url;
     }
 
-    var video_load = new Ember.RSVP.Promise(function(resolve, reject) {
-      var a = document.createElement('video');
-      a.preload = 'metadata';
-      a.ondurationchange = function() {
-        var duration = preview.duration;
-        if(a.duration && isFinite(a.duration)) {
-          duration = a.duration;
-        }
-        resolve({
-          duration: duration
-        });
-      };
-      a.onerror = function() {
-        reject({error: "video calculation failed"});
-      };
-      a.src = preview.url;
-    });
+    var video_load = _this.measure_duration(preview.url, preview.duration);
 
     var save_video = video_load.then(function(data) {
       var video = CoughDrop.store.createRecord('video', {

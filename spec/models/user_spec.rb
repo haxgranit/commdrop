@@ -604,14 +604,16 @@ describe User, :type => :model do
   describe "add_premium_voice" do
     it "should add the voice if not already claimed" do
       u = User.create
-      res = u.add_premium_voice('abcd')
+      u.subscription_override('never_expires')
+      res = u.add_premium_voice('abcd', 'iOS')
       expect(res).to eq(true)
       expect(u.settings['premium_voices']['claimed']).to eq(['abcd'])
     end
     
     it "should generate default values" do
       u = User.create
-      res = u.add_premium_voice('abcd')
+      u.subscription_override('never_expires')
+      res = u.add_premium_voice('abcd', 'Android')
       expect(res).to eq(true)
       expect(u.settings['premium_voices']['claimed']).to eq(['abcd'])
       expect(u.settings['premium_voices']['allowed']).to eq(2)
@@ -619,48 +621,53 @@ describe User, :type => :model do
     
     it "should error if too many voices have been claimed" do
       u = User.create
-      res = u.add_premium_voice('abcd')
+      u.subscription_override('never_expires')
+      res = u.add_premium_voice('abcd', 'iOS')
       expect(res).to eq(true)
-      res = u.add_premium_voice('abcdef')
+      res = u.add_premium_voice('abcdef', 'iOS')
       expect(res).to eq(true)
-      res = u.add_premium_voice('abcdefg')
+      res = u.add_premium_voice('abcdefg', 'iOS')
       expect(res).to eq(false)
-      res = u.add_premium_voice('abcd')
+      res = u.add_premium_voice('abcd', 'Android')
       expect(res).to eq(true)
       expect(u.settings['premium_voices']['claimed']).to eq(['abcd', 'abcdef'])
     end
     
     it "should honor a manual change the the allowed number of voices" do
       u = User.create
+      u.subscription_override('never_expires')
       u.settings['premium_voices'] = {'claimed' => [], 'allowed' => 3}
-      res = u.add_premium_voice('abcd')
+      res = u.add_premium_voice('abcd', 'iOS')
       expect(res).to eq(true)
-      res = u.add_premium_voice('abcdef')
+      res = u.add_premium_voice('abcdef', 'iOS')
       expect(res).to eq(true)
-      res = u.add_premium_voice('abcdefg')
+      res = u.add_premium_voice('abcdefg', 'Android')
       expect(res).to eq(true)
-      res = u.add_premium_voice('abcd')
+      res = u.add_premium_voice('abcd', 'Android')
       expect(res).to eq(true)
       expect(u.settings['premium_voices']['claimed']).to eq(['abcd', 'abcdef', 'abcdefg'])
     end
     
     it "should generate an AuditEvent record when a voice is added" do
       u = User.create
+      u.subscription_override('never_expires')
       u.settings['premium_voices'] = {'claimed' => [], 'allowed' => 3}
       expect(AuditEvent.count).to eq(0)
-      res = u.add_premium_voice('abcd')
+      res = u.add_premium_voice('abcd', 'Windows')
       expect(res).to eq(true)
       expect(AuditEvent.count).to eq(1)
       ae = AuditEvent.last
       expect(ae.event_type).to eq('voice_added')
       expect(ae.data['voice_id']).to eq('abcd')
+      expect(ae.data['system']).to eq('Windows')
     end
     
     it "should not generate an AuditEvent record for an already-claimed voice" do
       u = User.create
+      u.subscription_override('never_expires')
       u.settings['premium_voices'] = {'claimed' => ['abcd'], 'allowed' => 3}
       expect(AuditEvent.count).to eq(0)
-      res = u.add_premium_voice('abcd')
+      res = u.add_premium_voice('abcd', 'Windows')
       expect(res).to eq(true)
       expect(AuditEvent.count).to eq(0)
     end

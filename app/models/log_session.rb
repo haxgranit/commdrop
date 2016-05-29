@@ -143,10 +143,11 @@ class LogSession < ActiveRecord::Base
       self.started_at ||= Time.now
       self.ended_at ||= self.started_at
       str = "Note by #{self.author.user_name}: "
-      if self.data['note']['video']
-        time = "#{self.data['note']['video']['duration'].to_i}s"
-        if self.data['note']['video']['duration'] > 60
-          time = "#{(self.data['note']['video']['duration'] / 60).to_i}m"
+      if self.data['note']['video'] 
+        duration = self.data['note']['video']['duration'].to_i
+        time = "#{duration}s"
+        if duration > 60
+          time = "#{(duration / 60).to_i}m"
         end 
         str += "recording (#{time})"
         str += " - #{self.data['note']['text']}" if !self.data['note']['text'].blank?

@@ -1103,4 +1103,18 @@ describe Board, :type => :model do
       expect(b.settings['edit_description']).to eq(nil)
     end
   end
+  
+  describe "import" do
+    it "should convert boards" do
+      u = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      boards = [b, b2]
+      expect(Converters::Utils).to receive(:remote_to_boards).with(u, 'http://www.example.com/board.obf').and_return(boards)
+      res = Board.import(u.global_id, 'http://www.example.com/board.obf')
+      expect(res.length).to eq(2)
+      expect(res[0]['id']).to eq(b.global_id)
+      expect(res[1]['id']).to eq(b2.global_id)
+    end
+  end
 end

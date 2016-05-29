@@ -15,7 +15,7 @@ class Api::GoalsController < ApplicationController
 
     if params['template_header']
       goals = goals.where(:template_header => true)
-      goals = goals.sort('id ASC')
+      goals = goals.order('id ASC')
     else
       user = User.find_by_global_id(params['user_id'])
       return unless exists?(user)
@@ -30,14 +30,14 @@ class Api::GoalsController < ApplicationController
   
   def show
     goal = UserGoal.find_by_global_id(params['id'])
-    return unless exists?(goal)
+    return unless exists?(goal, params['id'])
     return unless allowed?(goal, 'view')
     render json: JsonApi::Goal.as_json(goal, :wrapper => true, :permissions => @api_user).to_json
   end
   
   def create
     user = User.find_by_global_id(params['goal']['user_id'])
-    return unless exists?(user)
+    return unless exists?(user, params['goal']['user_id'])
     return unless allowed?(user, 'edit')
     
     goal = UserGoal.process_new(params['goal'], {:user => user, :author => @api_user})
@@ -50,10 +50,10 @@ class Api::GoalsController < ApplicationController
   
   def update
     goal = UserGoal.find_by_global_id(params['id'])
-    return unless exists?(goal)
+    return unless exists?(goal, params['id'])
     return unless allowed?(goal, 'comment')
     
-    if !goal.allows?(user, 'edit')
+    if !goal.allows?(@api_user, 'edit')
       new_params = {
         'comment' => params['goal']['comment']
       }
@@ -69,10 +69,10 @@ class Api::GoalsController < ApplicationController
   
   def destroy
     goal = UserGoal.find_by_global_id(params['id'])
-    return unless exists?(goal)
+    return unless exists?(goal, params['id'])
     return unless allowed?(goal, 'edit')
 
     goal.destroy
-    render json: JsonApi::Board.as_json(board, :wrapper => true).to_json
+    render json: JsonApi::Goal.as_json(goal, :wrapper => true).to_json
   end
 end

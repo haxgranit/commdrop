@@ -208,6 +208,97 @@ describe JsonApi::Log do
       expect(json['log']['next_log_id']).to eql(l_post.global_id)
       expect(json['log']['previous_log_id']).to eql(l_pre.global_id)
     end
+    
+    it "should include assessment data" do
+      u = User.create
+      d = Device.create(:user => u)
+      l = LogSession.new(data: {'assessment' => {'asdf' => 1}, 'stats' => {'bob' => 2}}, :log_type => 'assessment', started_at: Time.now, ended_at: Time.now, :user => u, :device => d, :author => u)
+      l.save
+      json = JsonApi::Log.as_json(l, :wrapper => true)
+      expect(json['log']['assessment']).to eq({
+        'asdf' => 1,
+        'tallies' => [],
+        'summary' => '(0 correct, 0 incorrect)',
+        'totals' => {
+          'correct' => 0,
+          'incorrect' => 0
+        },
+        'stats' => {
+          'session_seconds' => 0,
+          'total_correct' => 0,
+          'total_incorrect' => 0,
+          'recorded_correct' => 0,
+          'recorded_incorrect' => 0,
+          'total_tallies' => 0,
+          'total_recorded_tallies' => 0,
+          'percent_correct' => 0.0,
+          'percent_incorrect' => 0.0,
+          'longest_correct_streak' => 0,
+          'longest_incorrect_streak' => 0
+        }
+      })
+      
+      l.log_type = 'note'
+      json = JsonApi::Log.as_json(l, :wrapper => true)
+      expect(json['log']['assessment']).to eq({
+        'asdf' => 1,
+        'tallies' => [],
+        'summary' => '(0 correct, 0 incorrect)',
+        'totals' => {
+          'correct' => 0,
+          'incorrect' => 0
+        }
+      })
+    end
+    
+    it "should include video data" do
+      u = User.create
+      d = Device.create(:user => u)
+      v = UserVideo.create(:url => 'http://www.example.com/video.mp4')
+      l = LogSession.new(data: {'note' => {'note' => 'howdy', 'video' => {'id' => v.global_id}}, 'stats' => {'bob' => 2}}, :log_type => 'note', started_at: Time.now, ended_at: Time.now, :user => u, :device => d, :author => u)
+      json = JsonApi::Log.as_json(l, :wrapper => true, :permissions => u)
+      expect(json['log']['video']).to eq({
+        'duration' => nil,
+        'id' => v.global_id,
+        'url' => 'http://www.example.com/video.mp4'
+      })
+
+      l.data['note']['video']['id'] = 'asdf'
+      json = JsonApi::Log.as_json(l, :wrapper => true, :permissions => u)
+      expect(json['log']['video']).to eq(nil)
+
+      v.url = nil
+      v.save
+      l.data['note']['video']['id'] = v.global_id
+      json = JsonApi::Log.as_json(l, :wrapper => true, :permissions => u)
+      expect(json['log']['video']).to eq(nil)
+    end
+    
+    it "should include goal data" do
+      u = User.create
+      d = Device.create(:user => u)
+      g = UserGoal.create(:settings => {'summary' => 'awesomeness'})
+      l = LogSession.new(data: {'note' => {'note' => 'howdy'}, 'goal' => {'id' => g.global_id, 'summary' => 'something', 'status' => 3}, 'stats' => {'bob' => 2}}, :log_type => 'note', started_at: Time.now, ended_at: Time.now, :user => u, :device => d, :author => u)
+      json = JsonApi::Log.as_json(l)
+      expect(json['goal']).to eq({
+        'id' => g.global_id,
+        'summary' => 'something',
+        'status' => 3
+      })
+
+      l.data['goal'] = nil
+      json = JsonApi::Log.as_json(l)
+      expect(json['goal']).to eq(nil)
+
+      
+      l.data['goal'] = {'id' => g.global_id, 'summary' => 'something', 'status' => 3}
+      json = JsonApi::Log.as_json(l, :wrapper => true, :permissions => u)
+      expect(json['log']['goal']).to eq({
+        'id' => g.global_id,
+        'summary' => 'awesomeness',
+        'status' => 3
+      })
+    end
   end
   
 end

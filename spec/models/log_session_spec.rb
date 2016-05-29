@@ -63,6 +63,94 @@ describe LogSession, :type => :model do
       expect(s.ended_at).to be > 1.second.ago
       expect(s.data['event_summary']).to eq('Note by fred: I am happy')
     end
+
+    it "should track hit locations" do
+      s = LogSession.new
+      s.data = {}
+      time1 = 10.minutes.ago
+      s.data['events'] = [
+        {'timestamp' => time1.to_i, 'button' => {'percent_x' => 0.9, 'percent_y' => 0.051, 'board' => {'id' => '1_1'}}},
+        {'timestamp' => time1.to_i, 'button' => {'percent_x' => 0.9, 'percent_y' => 0.052, 'board' => {'id' => '1_1'}}},
+        {'timestamp' => time1.to_i, 'button' => {'percent_x' => 0.6, 'percent_y' => 0.051, 'board' => {'id' => '1_1'}}},
+        {'timestamp' => time1.to_i, 'button' => {'percent_x' => 0.601, 'percent_y' => 0.051, 'board' => {'id' => '1_1'}}},
+        {'timestamp' => time1.to_i, 'button' => {'percent_x' => 0.599, 'percent_y' => 0.052, 'board' => {'id' => '1_1'}}},
+        {'timestamp' => time1.to_i, 'button' => {'percent_x' => 0.6, 'percent_y' => 0.053, 'board' => {'id' => '1_1'}}},
+        {'timestamp' => time1.to_i, 'button' => {'percent_x' => 0.899, 'percent_y' => 0.054, 'board' => {'id' => '1_1'}}},
+      ]
+      s.generate_defaults
+      expect(s.data['touch_locations']).to eq({
+        '1_1' => {
+          0.6 => {
+            0.05 => 4
+          },
+          0.9 => {
+            0.05 => 3
+          }
+        }
+      })
+    end
+    
+    it "should track video attachments" do
+      u = User.create
+      s = LogSession.new(:author => u, :data => {
+        'note' => {
+          'text' => 'cool stuff',
+          'video' => {
+            'duration' => 90,
+          }
+        }
+      })
+      s.generate_defaults
+      expect(s.data['event_summary']).to eq('Note by no-name: recording (1m) - cool stuff')
+    end
+
+    it "should track goal data" do
+      u = User.create
+      s = LogSession.new(:author => u, :data => {
+        'goal' => {
+          'status' => 0
+        }
+      })
+      s.generate_defaults
+      expect(s.data['goal']).to eq({
+        'status' => 0,
+        'positives' => 0,
+        'negatives' => 1
+      })
+      
+      s2 = LogSession.new(:author => u, :data => {
+        'goal' => {
+          'status' => 3
+        }
+      })
+      s2.generate_defaults
+      expect(s2.data['goal']).to eq({
+        'status' => 3,
+        'positives' => 1,
+        'negatives' => 0
+      })
+      
+      s3 = LogSession.new(:author => u, :data => {
+        'goal' => {
+          'status' => 0
+        },
+        'assessment' => {
+          'totals' => {
+            'correct' => 7,
+            'incorrect' => 3
+          }
+        }
+      })
+      s3.generate_defaults
+      expect(s3.data['goal']).to eq({
+        'status' => 0,
+        'positives' => 7,
+        'negatives' => 3
+      })
+    end
+    
+    it "should schedule log session tracking if goal attached" do
+    end
     
     it "should not include auto_home events in the summary" do
       s = LogSession.new
@@ -859,6 +947,23 @@ describe LogSession, :type => :model do
       expect(s3.data['event_summary']).to eq("Assessment by #{u.user_name}: Quick assessment (12 correct, 3 incorrect, 80.0%)")
     end
     
+    it "should attach user video if specified" do
+    end
+    
+    it "should not attach invalid video" do
+    end
+    
+    it "should attach referenced user if specified and allowed" do
+    end
+    
+    it "should not attach referenced user if not valid" do
+    end
+    
+    it "should attach goal data if specified" do
+    end
+    
+    it "should not attach a goal if not valid" do
+    end
   end
 
   describe "process_raw_log" do
@@ -1336,5 +1441,10 @@ describe LogSession, :type => :model do
     ]
     l.save    
     expect(Worker.scheduled?(WeeklyStatsSummary, :perform_action, {'method' => 'update_for', 'arguments' => [l.global_id]})).to eq(true)
+  end
+  
+  describe "push_logs_remotely" do
+    it "should only notify applicable logs" do
+    end
   end
 end

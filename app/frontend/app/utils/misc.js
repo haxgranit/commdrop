@@ -56,7 +56,7 @@ Utils.uniq = function(list, compare) {
   });
   return result;
 };
-Utils.mode = function(list) {
+Utils.max_appearance = function(list) {
   var counts = {};
   list.forEach(function(item) {
     counts[item] = counts[item] || 0;

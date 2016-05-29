@@ -135,6 +135,7 @@ var persistence = Ember.Object.extend({
       if(persistence.known_missing && persistence.known_missing[store] && persistence.known_missing[store][key]) {
 //         console.error('found a known missing!');
         reject({error: 'record known missing: ' + store + ' ' + key});
+        return;
       }
       var id = Ember.RSVP.resolve(key);
       if(store == 'user' && key == 'self') {

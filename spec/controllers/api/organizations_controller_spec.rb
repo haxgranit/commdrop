@@ -721,7 +721,7 @@ describe Api::OrganizationsController, :type => :controller do
       token_user
       o = Organization.create(:admin => true)
       o.add_manager(@user.user_name, false)
-      ae1 = AuditEvent.create(:event_type => 'voice_added', :data => {'voice_id' => 'asd'})
+      ae1 = AuditEvent.create(:event_type => 'voice_added', :data => {'voice_id' => 'asd', 'system' => 'Android'})
       ae2 = AuditEvent.create(:data => {'voice_id' => 'asd'})
       ae3 = AuditEvent.create(:event_type => 'voice_added', :data => {'voice_id' => 'asd'})
       ae4 = AuditEvent.create(:event_type => 'voice_added', :data => {'voice_id' => 'asdf'})
@@ -730,8 +730,9 @@ describe Api::OrganizationsController, :type => :controller do
       json = JSON.parse(response.body)
       ts = Time.now.strftime('%m-%Y')
       expect(json['stats']).to eq({
-        "#{ts} asd" => 2,
-        "#{ts} asdf" => 1
+        "#{ts} asd iOS" => 1,
+        "#{ts} asd Android" => 1,
+        "#{ts} asdf iOS" => 1
       })
     end
     
@@ -753,7 +754,184 @@ describe Api::OrganizationsController, :type => :controller do
       expect(response).to be_success
     end
     
-    it "should generate other admin reports"
+    it "should generate unused_ report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "unused_3"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
     
+    it "should generate setup_but_expired report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "setup_but_expired"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate current_but_expired report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "current_but_expired"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate free_supervisor_without_supervisees report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "free_supervisor_without_supervisees"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate free_supervisor_with_supervisors report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "free_supervisor_with_supervisors"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate active_free_supervisor_without_supervisees_or_org report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "active_free_supervisor_without_supervisees_or_org"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate eval_accounts report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "eval_accounts"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate recent_ report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "recent_"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate new_users report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "new_users"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['user'][0]['id']).to eq(@user.global_id)
+    end
+    
+    it "should generate logged_ report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "logged_3"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate not_logged_ report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "not_logged_3"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => []})
+    end
+    
+    it "should generate missing_words report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "missing_words"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['stats']).to_not eq(nil)
+    end
+    
+    it "should generate missing_symbols report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "missing_symbols"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['stats']).to_not eq(nil)
+    end
+    
+    it "should generate overridden_parts_of_speech report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "overridden_parts_of_speech"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['stats']).to_not eq(nil)
+    end
+    
+    it "should generate multiple_emails report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "multiple_emails"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'user' => [], 'stats' => {}})
+    end
+    
+    it "should generate premium_voices report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "premium_voices"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'stats' => {}})
+    end
+    
+    it "should generate feature_flags report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "feature_flags"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['stats']).to_not eq(nil)
+    end
+    
+    it "should generate totals report" do
+      token_user
+      o = Organization.create(:admin => true)
+      o.add_manager(@user.user_name, false)
+      get :admin_reports, :organization_id => o.global_id, :report => "totals"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['stats']).to_not eq(nil)
+    end
   end
 end

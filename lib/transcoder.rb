@@ -60,7 +60,7 @@ module Transcoder
   end
   
   def self.convert_video(video_id, prefix, transcoding_key)
-    video = nil
+    video = UserVideo.find_by_global_id(video_id)
     return false unless video
     config = self.config
     res = config.create_job({
@@ -74,7 +74,7 @@ module Transcoder
         thumbnail_pattern: "#{prefix}.mp4.{count}"
       },
       user_metadata: {
-        audio_id: video.global_id,
+        video_id: video.global_id,
         conversion_type: 'video',
         transcoding_key: transcoding_key
       }

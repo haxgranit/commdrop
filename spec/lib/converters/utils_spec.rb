@@ -99,6 +99,33 @@ describe Converters::Utils do
   end
   
   describe "find_by_data_url" do
-    it "should have specs"
+    it "should return nil unless a string" do
+      expect(Converters::Utils.find_by_data_url(12)).to eq(nil)
+    end
+    
+    it "should return nil for invalid paths" do
+      expect(Converters::Utils.find_by_data_url('http://www.example.com/bacon')).to eq(nil)
+    end
+    
+    it "should return nil for invalid hosts" do
+      bs = ButtonSound.create
+      expect(Converters::Utils.find_by_data_url("http://www.baddomain.frost/api/v1/images/#{bs.global_id}")).to eq(nil)
+    end
+    
+    it "should return image if found" do
+      bi = ButtonImage.create
+      expect(Converters::Utils.find_by_data_url("#{JsonApi::Json.current_host}/api/v1/images/#{bi.global_id}")).to eq(bi)
+    end
+    
+    it "should return sound if found" do
+      bs = ButtonSound.create
+      expect(Converters::Utils.find_by_data_url("#{JsonApi::Json.current_host}/api/v1/sounds/#{bs.global_id}")).to eq(bs)
+    end
+    
+    it "should return board if found" do
+      u = User.create
+      b = Board.create(:user => u)
+      expect(Converters::Utils.find_by_data_url("#{JsonApi::Json.current_host}/api/v1/boards/#{b.global_id}")).to eq(b)
+    end
   end
 end

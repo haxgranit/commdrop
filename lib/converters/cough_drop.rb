@@ -19,7 +19,8 @@ module Converters::CoughDrop
     res['ext_coughdrop_settings'] = {
       'private' => !board.public,
       'key' => board.key,
-      'word_suggestions' => !!board.settings['word_suggestions']
+      'word_suggestions' => !!board.settings['word_suggestions'],
+      
     }
     grid = []
     res['buttons'] = []
@@ -56,6 +57,16 @@ module Converters::CoughDrop
       if original_button['link_disabled']
         button['ext_coughdrop_link_disabled'] = original_button['link_disabled']
       end
+      if original_button['add_to_vocalization'] != nil
+        button['ext_coughdrop_add_to_vocalization'] = original_button['add_to_vocalization']
+      end
+      if original_button['home_lock']
+        button['ext_coughdrop_home_lock'] = original_button['home_lock']
+      end
+      if original_button['part_of_speech']
+        button['ext_coughdrop_part_of_speech'] = original_button['part_of_speech']
+      end
+
       if original_button['apps']
         button['ext_coughdrop_apps'] = original_button['apps']
         if original_button['apps']['web'] && original_button['apps']['web']['launch_url']
@@ -182,6 +193,14 @@ module Converters::CoughDrop
       if button['ext_coughdrop_link_disabled']
         new_button['link_disabled'] = button['ext_coughdrop_link_disabled']
       end
+      if button['ext_coughdrop_part_of_speech']
+        new_button['part_of_speech'] = button['ext_coughdrop_part_of_speech']
+      end
+      new_button['add_to_vocalization'] = button['ext_coughdrop_add_to_vocalization'] != false
+      if button['ext_coughdrop_home_lock']
+        new_button['home_lock'] = button['ext_coughdrop_home_lock']
+      end
+
       if button['load_board']
         if opts['boards'] && opts['boards'][button['load_board']['id']]
           new_button['load_board'] = opts['boards'][button['load_board']['id']]

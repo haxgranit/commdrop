@@ -232,6 +232,20 @@ function fakeRecorder() {
     }
   }).create();
 }
+function fakeMediaRecorder(stream, options) {
+  return Ember.Object.extend({
+    addEventListener: function(type, callback) {
+      this.listeners = this.listeners || {};
+      this.listeners[type] = this.listeners[type] || [];
+      this.listeners[type].push(callback);
+    },
+    trigger: function(type, event) {
+      ((this.listeners || {})[type] || []).forEach(function(l) {
+        l(event);
+      });
+    }
+  }).create({stream: stream, options: options});
+}
 
 function fakeCanvas() {
   return {
@@ -390,6 +404,7 @@ beforeEach(function() {
   persistence.storing_urls = null;
   persistence.url_cache = null;
   persistence.url_uncache = null;
+  persistence.known_missing = null;
   stashes.set('online', true);
   app_state.reset();
   CoughDrop.store = App.__container__.lookup('service:store');
@@ -429,4 +444,4 @@ afterEach(function() {
   stub.stubs = [];
 });
 
-export { queryLog, fakeAudio, fakeRecorder, fakeCanvas, easyPromise, db_wait, fake_dbman, queue_promise };
+export { queryLog, fakeAudio, fakeRecorder, fakeMediaRecorder, fakeCanvas, easyPromise, db_wait, fake_dbman, queue_promise };

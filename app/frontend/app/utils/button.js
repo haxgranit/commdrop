@@ -175,10 +175,10 @@ var Button = Ember.Object.extend({
       str = str + "top: " + pos.top + "px;";
     }
     if(pos.width) {
-      str = str + "width: " + pos.width + "px;";
+      str = str + "width: " + Math.max(pos.width, 20) + "px;";
     }
     if(pos.height) {
-      str = str + "height: " + pos.height + "px;";
+      str = str + "height: " + Math.max(pos.height, 20) + "px;";
     }
     return new Ember.Handlebars.SafeString(str);
   }.property('positioning'),

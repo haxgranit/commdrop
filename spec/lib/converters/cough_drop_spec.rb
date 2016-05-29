@@ -168,6 +168,7 @@ describe Converters::CoughDrop do
     
     it "should include images and sounds inline" do
       res = OpenStruct.new(:success? => true, :body => "abc", :headers => {'Content-Type' => 'text/plaintext'})
+      expect(OBF::Utils).to receive(:image_attrs).and_return({})
       expect(Typhoeus).to receive(:get).with("http://example.com/pic.png").and_return(res)
       expect(Typhoeus).to receive(:get).with("http://example.com/sound.mp3").and_return(res)
       i = ButtonImage.create(:url => "http://example.com/pic.png", :settings => {'content_type' => 'text/plaintext'})
@@ -491,6 +492,7 @@ describe Converters::CoughDrop do
     
     it "should include images" do
       res = OpenStruct.new(:success? => true, :body => "abc", :headers => {'Content-Type' => 'text/plaintext'})
+      expect(OBF::Utils).to receive(:image_attrs).and_return({})
       expect(Typhoeus).to receive(:get).with("http://example.com/pic.png").and_return(res)
       expect(Typhoeus).to receive(:get).with("http://example.com/sound.mp3").and_return(res)
       i = ButtonImage.create(:url => "http://example.com/pic.png", :settings => {'content_type' => 'text/plaintext'})
@@ -630,6 +632,34 @@ describe Converters::CoughDrop do
         expect(dest).to eq("/file.png")
       end
       Converters::CoughDrop.to_png(nil, "/file.png")
+    end
+  end
+  
+  describe "to_external" do
+    it "should include custom parameters" do
+      u = User.create
+      b = Board.create(:user => u)
+      b.settings['buttons'] = [
+        {'id' => 1, 'hidden' => true},
+        {'id' => 2, 'link_disabled' => true},
+        {'id' => 3, 'home_lock' => true},
+        {'id' => 4, 'part_of_speech' => 'noun'},
+        {'id' => 5, 'add_to_vocalization' => true}
+      ]
+      b.save
+      hash = Converters::CoughDrop.to_external(b)
+      expect(hash['id']).to eq(b.global_id)
+      expect(hash['buttons'].length).to eq(5)
+      expect(hash['buttons'][0]['id']).to eq(1)
+      expect(hash['buttons'][0]['hidden']).to eq(true)
+      expect(hash['buttons'][1]['id']).to eq(2)
+      expect(hash['buttons'][1]['ext_coughdrop_link_disabled']).to eq(true)
+      expect(hash['buttons'][2]['id']).to eq(3)
+      expect(hash['buttons'][2]['ext_coughdrop_home_lock']).to eq(true)
+      expect(hash['buttons'][3]['id']).to eq(4)
+      expect(hash['buttons'][3]['ext_coughdrop_part_of_speech']).to eq('noun')
+      expect(hash['buttons'][4]['id']).to eq(5)
+      expect(hash['buttons'][4]['ext_coughdrop_add_to_vocalization']).to eq(true)
     end
   end
 end

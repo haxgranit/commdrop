@@ -930,6 +930,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should return success and add the voice if correct" do
       token_user
+      @user.subscription_override('never_expires')
       post :claim_voice, :user_id => @user.global_id, :voice_id => 'asdf'
       expect(response).to be_success
       json = JSON.parse(response.body)
@@ -940,6 +941,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should generate a signed download url on success" do
       token_user
+      @user.subscription_override('never_expires')
       expect(Uploader).to receive(:signed_download_url).with('asdf').and_return("asdfjkl")
       post :claim_voice, :user_id => @user.global_id, :voice_id => 'asdf', :voice_url => 'asdf'
       expect(response).to be_success

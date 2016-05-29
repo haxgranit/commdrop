@@ -375,7 +375,7 @@ describe("persistence", function() {
         keys.forEach(function(key) {
           found.push(key);
           res.push({data: {id: key, raw: {id: key}}});
-        })
+        });
         return Ember.RSVP.resolve(res);
       });
       stub(CoughDrop.store, 'push', function(obj) {
@@ -1858,6 +1858,62 @@ describe("persistence", function() {
         expect(records.c.get('url')).toEqual('http://www.example.com/c.png');
         expect(records.e).toEqual(undefined);
         expect(records.d).toEqual(undefined);
+      });
+    });
+  });
+
+  describe("known_missing", function() {
+    it("should flag results from push_records", function() {
+      var done = false;
+      persistence.push_records('image', ['a', 'b', 'c']).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.known_missing).toNotEqual(null);
+        expect(persistence.known_missing['image']).toEqual({a: true, b: true, c: true});
+      });
+    });
+
+    it("should flag failed finds", function() {
+      var done = false;
+      persistence.find('image', 'asdf').then(null, function() { done = true; });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.known_missing).toNotEqual(null);
+        expect(persistence.known_missing.image).toEqual({asdf: true});
+      });
+    });
+
+    it("should stop lookup on a known_missing find", function() {
+      var done = false;
+      var queried = false;
+      persistence.known_missing = {image: {asdf: true}};
+      stub(coughDropExtras.storage, 'find', function(store, id) {
+        if(store == 'image' && id == 'asdf') {
+          queried = true;
+        }
+        return Ember.RSVP.reject();
+      });
+      persistence.find('image', 'asdf').then(null, function() { done = true; });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(queried).toEqual(false);
+      });
+    });
+
+    it("should clear the record type on store", function() {
+      persistence.known_missing = {image: {asdf: true}};
+      var done = false;
+      persistence.store('image', {
+        image: {id: 'asdf'}
+      }, 'asdf').then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.known_missing).toNotEqual(null);
+        expect(persistence.known_missing.image).toEqual({});
       });
     });
   });

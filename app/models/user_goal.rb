@@ -13,13 +13,16 @@ class UserGoal < ActiveRecord::Base
 
   secure_serialize :settings
 
+  add_permissions('view', 'comment', 'edit') {|user| self.user && self.user == user }
   add_permissions('view', 'comment') {|user| self.user && self.user.allows?(user, 'supervise') }
   add_permissions('view', 'comment', 'edit') {|user| self.user && self.user.allows?(user, 'edit') }
+  cache_permissions
   
   def generate_defaults
     self.settings ||= {}
     self.settings['summary'] ||= "user goal"
     self.generate_stats
+    self.primary ||= false
     if self.active && !self.settings['started_at']
       self.settings['started_at'] = Time.now.iso8601
     end
@@ -61,16 +64,21 @@ class UserGoal < ActiveRecord::Base
           stats[level][k]['statuses'] << session.data['goal']['status'] if session.data['goal'] && session.data['goal']['status']
         end
       end
+      stats[level]['totals'] ||= {
+        'sessions' => 0,
+        'positives' => 0,
+        'negatives' => 0,
+        'statuses' => []
+      }
     end
     all_statuses = stats['monthly']['totals']['statuses']
     status_tally = 0.0
     positive_tally = 0.0
     status_total = 0.0
     positive_total = 0.0
-    last_session = sessions.map(&:started_at).last
+    last_session = sessions.map(&:started_at).max
     sessions.each do |session|
       diff = last_session - session.started_at
-      positives = 
       mult = 1.0
       if diff < 1.week
         mult = 5.0
@@ -81,22 +89,23 @@ class UserGoal < ActiveRecord::Base
       elsif diff < 3.months
         mult = 1.5
       end
-      if session.data['goal']['positives']
+      if session.data['goal']['status']
         status_total += mult
         status_tally += session.data['goal']['status'] * mult
       end
       if session.data['goal']['positives']
-        positive_total += mult
+        positive_total += (session.data['goal']['positives'] + session.data['goal']['negatives']) * mult
         positive_tally += session.data['goal']['positives'] * mult
       end
     end
     stats['average_status'] = all_statuses.length > 0 ? all_statuses.sum.to_f / all_statuses.length.to_f : 0
     total_tallies = stats['monthly']['totals']['positives'].to_f + stats['monthly']['totals']['negatives'].to_f
-    stats['percent_positive'] = total_tallies ? (stats['monthly']['totals']['positives'].to_f / total_tallies * 100.0) : 0
+    stats['percent_positive'] = total_tallies > 0 ? (stats['monthly']['totals']['positives'].to_f / total_tallies * 100.0) : 0
     stats['weighted_percent_positive'] = positive_total > 0 ? (positive_tally.to_f / positive_total.to_f * 100.0) : 0
     stats['weighted_average_status'] = status_total > 0 ? (status_tally.to_f / status_total.to_f) : 0
     stats['sessions'] = sessions.length
     stats['suggested_level'] = suggested_level
+    self.settings ||= {}
     self.settings['stats'] = stats
   end
   
@@ -157,15 +166,17 @@ class UserGoal < ActiveRecord::Base
       end
     end
     if params['comment']
-      self.settings['comments'] || []
+      self.settings['comments'] ||= []
+      self.settings['last_comment_id'] ||= 0
       video = UserVideo.find_by_global_id(params['comment']['video_id']) if params['comment']['video_id']
       comment = {
-        'id' => 0,
+        'id' => self.settings['last_comment_id'],
         'user_id' => non_user_params[:author].global_id,
         'user_name' => non_user_params[:author].user_name,
         'created' => Time.now.iso8601,
         'text' => params['comment']['text']
       }
+      self.settings['last_comment_id'] += 1
       if video
         comment['video'] = {
           'id' => video.global_id,
@@ -186,7 +197,6 @@ class UserGoal < ActiveRecord::Base
   end
 
   def calculate_advancement     
-    return nil unless self.settings && self.settings['next_template_id']
     if self.settings['goal_duration']
       Time.now + self.settings['goal_duration']
     elsif self.settings['goal_advances_at']
@@ -201,8 +211,13 @@ class UserGoal < ActiveRecord::Base
     self.settings['template_id'] = template.global_id
     self.advance_at = template.calculate_advancement
     self.user = user
-    self.settings['author_id'] = prior_goal.settings['author_id']
-    self.settings['video_id'] = template.settings['video_id']
+    prior_goal = self.settings['prior_goal_id'] && UserGoal.find_by_global_id(self.settings['prior_goal_id'])
+    self.settings['author_id'] = prior_goal && prior_goal.settings['author_id']
+    self.settings['author_id'] ||= user.global_id
+    self.settings['video'] = template.settings['video']
+    self.settings['summary'] = nil if self.settings['summary'] == 'user goal'
+    self.settings['summary'] ||= template.settings['summary']
+    self.settings['description'] ||= template.settings['description']
     self.active = true
     @set_as_primary = true if set_as_primary
   end
@@ -228,12 +243,15 @@ class UserGoal < ActiveRecord::Base
     template = UserGoal.find_by_global_id(self.settings['template_id'])
     return false unless template && template.template
     next_template = template.next_template
-    return false unless next_template
-    return false unless self.user
-    new_goal = UserGoal.new
-    new_goal.build_from_template(next_template, self.user, self.primary?)
-    new_goal.save
-
+    if !next_template || !self.user
+      # TODO: notification that goal has ended with no follow-up
+    else
+      new_goal = UserGoal.new(:settings => {'prior_goal_id' => self.global_id})
+      new_goal.build_from_template(next_template, self.user, self.primary?)
+      new_goal.save
+      self.settings['next_goal_id'] = new_goal.global_id
+    end
+    
     self.active = false
     self.save
   end

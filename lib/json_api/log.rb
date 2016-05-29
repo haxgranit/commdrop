@@ -52,10 +52,7 @@ module JsonApi::Log
       end
     elsif log.data['assessment']
       json['percent'] = log.data['stats']['percent_correct']
-      json['assessment'] = {
-        'description' => log.data['assessment']['description'],
-        'summary' => log.data['assessment']['summary']
-      }
+      json['assessment'] = log.data['assessment']
     else
       json['duration'] = log.data['duration']
       json['button_count'] = log.data['button_count']
@@ -130,8 +127,17 @@ module JsonApi::Log
     end
     
     if json['log']['type'] == 'assessment'
-      json['log']['assessment'] = log.data['assessment']
+      json['log']['assessment'] = {}.merge(log.data['assessment'] || {})
       json['log']['assessment']['stats'] = log.data['stats']
+    end
+    
+    if json['log']['goal'] && json['log']['goal']['id']
+      goal = UserGoal.find_by_global_id(json['log']['goal']['id'])
+      if goal
+        json['log']['goal']['summary'] = goal.summary
+      else
+        json['log']['goal'] = nil
+      end
     end
     
     if json['log']['type'] == 'session'

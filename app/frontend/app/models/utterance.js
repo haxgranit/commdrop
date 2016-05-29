@@ -24,6 +24,9 @@ CoughDrop.Utterance = DS.Model.extend({
           _this.check_for_large_image_url();
         });
       }, attempt * 500);
+      return true;
+    } else {
+      return false;
     }
   },
 });

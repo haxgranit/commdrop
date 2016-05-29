@@ -6,11 +6,11 @@ module Converters::Utils
     return nil unless pre == JsonApi::Json.current_host
     type, key = path.split(/\//, 2)
     if type == 'images'
-      ButtonImage.find_by_global_id(key)
+      return ButtonImage.find_by_global_id(key)
     elsif type == 'sounds'
-      ButtonSound.find_by_global_id(key)
+      return ButtonSound.find_by_global_id(key)
     elsif type == 'boards'
-      Board.find_by_path(key)
+      return Board.find_by_path(key)
     end
     nil
   end

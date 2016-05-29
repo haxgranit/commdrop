@@ -64,6 +64,35 @@ describe ApplicationController, :type => :controller do
       expect(assigns[:api_user]).to eq(nil)
       expect(response).to be_success
     end
+    
+    it "should set user from as_user_id if org admin" do
+      o = Organization.create(:admin => true)
+      u = User.create
+      u2 = User.create
+      o.add_manager(u.user_name, true)
+      d = Device.create(:user => u)
+      request.headers['Authorization'] = "Bearer #{d.token}"
+      get :index, :check_token => true, :as_user_id => u2.global_id
+      expect(assigns[:api_device]).to eq(d)
+      expect(assigns[:api_user]).to eq(u2)
+      expect(assigns[:true_user]).to eq(u)
+      expect(response).to be_success
+    end
+    
+    it "should set user from X-As-User-Id if org admin" do
+      o = Organization.create(:admin => true)
+      u = User.create
+      u2 = User.create
+      o.add_manager(u.user_name, true)
+      d = Device.create(:user => u)
+      request.headers['Authorization'] = "Bearer #{d.token}"
+      request.headers['X-As-User-Id'] = u2.global_id
+      get :index, :check_token => true
+      expect(assigns[:api_device]).to eq(d)
+      expect(assigns[:api_user]).to eq(u2)
+      expect(assigns[:true_user]).to eq(u)
+      expect(response).to be_success
+    end
   end
   
   describe "log_api_call" do
@@ -89,11 +118,6 @@ describe ApplicationController, :type => :controller do
       get :index
     end
   end
-#   def log_api_call
-#     time = @time ? (Time.now - @time) : nil
-#     ApiCall.log(@token, @api_user, request, response, time)
-#     true
-#   end
   
   describe "user_for_paper_trail" do
     it "should return user information if there is a user" do

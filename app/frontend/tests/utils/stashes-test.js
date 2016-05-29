@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, waitsFor, runs } from 'frontend/tests/helpers/jasmine';
+import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } from 'frontend/tests/helpers/jasmine';
 import { queryLog } from 'frontend/tests/helpers/ember_helper';
 import stashes from '../../utils/_stashes';
 import Ember from 'ember';
@@ -263,6 +263,107 @@ describe('stashes', function() {
         var req = queryLog[queryLog.length - 1];
         expect(req.method).toEqual('POST');
         expect(req.simple_type).toEqual('log');
+      });
+    });
+  });
+
+  describe("log_event", function() {
+    it("should correctly log events", function() {
+      stashes.orientation = null;
+      stashes.volume = null;
+      stashes.ambient_light = null;
+      stashes.screen_brightness = null;
+      stashes.geo = {};
+      stashes.set('referenced_user_id', null);
+
+      var log_pushed = false;
+      stub(stashes, 'push_log', function() {
+        log_pushed = true;
+      });
+      var last_event = null;
+      stub(stashes, 'persist', function(key, val) {
+        if(key == 'last_event') {
+          last_event = val;
+        }
+      });
+
+      stashes.log_event({}, 'asdf');
+      expect(last_event).toEqual({
+        action: {},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'action',
+        user_id: 'asdf'
+      });
+
+      stashes.log_event({buttons: []}, 'asdf');
+      expect(last_event).toEqual({
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'utterance',
+        user_id: 'asdf',
+        utterance: {buttons: []}
+      });
+
+      stashes.log_event({button_id: 9}, 'asdf');
+      expect(last_event).toEqual({
+        button: {button_id: 9},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'button',
+        user_id: 'asdf'
+      });
+
+      stashes.log_event({tallies: []}, 'asdf');
+      expect(last_event).toEqual({
+        assessment: {tallies: []},
+        user_id: 'asdf',
+        type: 'assessment',
+        geo: null,
+        timestamp: last_event.timestamp
+      });
+
+      stashes.log_event({note: 'haha'}, 'asdf');
+      expect(last_event).toEqual({
+        geo: null,
+        type: 'note',
+        user_id: 'asdf',
+        timestamp: last_event.timestamp,
+        note: {note: 'haha'}
+      });
+    });
+
+    it("should include sensor data if defined", function() {
+      var log_pushed = false;
+      stub(stashes, 'push_log', function() {
+        log_pushed = true;
+      });
+      var last_event = null;
+      stub(stashes, 'persist', function(key, val) {
+        if(key == 'last_event') {
+          last_event = val;
+        }
+      });
+
+      stashes.orientation = {};
+      stashes.volume = 90;
+      stashes.geo = {};
+      stashes.ambient_light = 1200;
+      stashes.screen_brightness = 88;
+      stashes.set('referenced_user_id', '1234');
+
+      stashes.log_event({}, 'asdf');
+      expect(last_event).toEqual({
+        action: {},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'action',
+        user_id: 'asdf',
+        orientation: {},
+        volume: 90,
+        ambient_light: 1200,
+        screen_brightness: 88,
+        referenced_user_id: '1234'
       });
     });
   });
