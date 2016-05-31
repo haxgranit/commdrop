@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } from 'frontend/tests/helpers/jasmine';
 import { db_wait } from 'frontend/tests/helpers/ember_helper';
+import CoughDrop from 'frontend/app';
 import Subscription from '../../utils/subscription';
 import Ember from 'ember';
 
@@ -199,7 +200,7 @@ describe('subscription', function() {
           email: 'susan@example.com'
         });
         var s = Subscription.create({user: u});
-        expect(s.get('cheaper_offer')).toEqual(false)
+        expect(s.get('cheaper_offer')).toEqual(false);
         stub(CoughDrop, 'sale', ((new Date()).getTime() / 1000) + 500);
         s.reset();
         expect(s.get('sale')).toEqual(true);
@@ -216,7 +217,7 @@ describe('subscription', function() {
           email: 'susan@example.com'
         });
         var s = Subscription.create({user: u});
-        expect(s.get('much_cheaper_offer')).toEqual(false)
+        expect(s.get('much_cheaper_offer')).toEqual(false);
         stub(CoughDrop, 'sale', ((new Date()).getTime() / 1000) + 500);
         s.reset();
         expect(s.get('sale')).toEqual(true);
@@ -234,7 +235,7 @@ describe('subscription', function() {
           email: 'susan@example.com'
         });
         var s = Subscription.create({user: u});
-        expect(s.get('cheaper_offer')).toEqual(false)
+        expect(s.get('cheaper_offer')).toEqual(false);
         expect(s.get('discount_period')).toEqual(false);
         u.set('joined_within_24_hours', true);
         expect(s.get('discount_period')).toEqual(true);
@@ -253,7 +254,7 @@ describe('subscription', function() {
           email: 'susan@example.com'
         });
         var s = Subscription.create({user: u});
-        expect(s.get('cheaper_offer')).toEqual(false)
+        expect(s.get('cheaper_offer')).toEqual(false);
         expect(s.get('discount_period')).toEqual(false);
         expect(s.get('much_cheaper_offer')).toEqual(false);
       });
@@ -269,12 +270,12 @@ describe('subscription', function() {
           email: 'susan@example.com'
         });
         var s = Subscription.create({user: u});
-        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('cheaper_offer')).toEqual(true);
         expect(s.get('discount_period')).toEqual(false);
         expect(s.get('much_cheaper_offer')).toEqual(false);
         u.set('subscription.plan_id', 'monthly_4_plus_trial');
         s.reset();
-        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('cheaper_offer')).toEqual(true);
         expect(s.get('discount_period')).toEqual(false);
         expect(s.get('much_cheaper_offer')).toEqual(false);
       });
@@ -290,12 +291,12 @@ describe('subscription', function() {
           email: 'susan@example.com'
         });
         var s = Subscription.create({user: u});
-        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('cheaper_offer')).toEqual(true);
         expect(s.get('discount_period')).toEqual(false);
         expect(s.get('much_cheaper_offer')).toEqual(true);
         u.set('subscription.plan_id', 'monthly_3_plus_trial');
         s.reset();
-        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('cheaper_offer')).toEqual(true);
         expect(s.get('discount_period')).toEqual(false);
         expect(s.get('much_cheaper_offer')).toEqual(true);
       });
@@ -311,12 +312,12 @@ describe('subscription', function() {
           email: 'susan@example.com'
         });
         var s = Subscription.create({user: u});
-        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('cheaper_offer')).toEqual(true);
         expect(s.get('discount_period')).toEqual(false);
         expect(s.get('much_cheaper_offer')).toEqual(true);
         u.set('subscription.plan_id', 'monthly_3_plus_trial');
         s.reset();
-        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('cheaper_offer')).toEqual(true);
         expect(s.get('discount_period')).toEqual(false);
         expect(s.get('much_cheaper_offer')).toEqual(true);
       });
