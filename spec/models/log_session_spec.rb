@@ -782,7 +782,7 @@ describe LogSession, :type => :model do
       expect(s.author).to eq(u)
       expect(s.device).to eq(d)
     end
-    
+
     it "should process standalone notes" do
       u = User.create
       d = Device.create
@@ -869,6 +869,52 @@ describe LogSession, :type => :model do
       expect(s2.data['note']['text']).to eq('ok cool')
     end
 
+    it "should attach referenced user if specified and allowed" do
+      d = Device.create
+      u = User.create
+      u2 = User.create
+      u3 = User.create
+      User.link_supervisor_to_user(u, u2, nil, true)
+      s = LogSession.process_new({
+        'events' => [
+          {'user_id' => u.global_id, 'referenced_user_id' => u2.global_id, 'geo' => ['1', '2'], 'timestamp' => 1431461204, 'type' => 'button', 'button' => {'label' => 'hat', 'board' => {'id' => '1_1'}}},
+          {'user_id' => u.global_id, 'referenced_user_id' => u3.global_id, 'geo' => ['2', '3'], 'timestamp' => 1431461206, 'type' => 'button', 'button' => {'label' => 'cow', 'board' => {'id' => '1_1'}}},
+        ]
+      }, {:user => u, :author => u, :device => d})
+      
+      expect(s).not_to eq(nil)
+      expect(s.errored?).to eq(false)
+      expect(s.user).to eq(u)
+      expect(s.data['events'].length).to eq(2)
+      expect(LogSession.count).to eq(1)
+      
+      expect(s.data['events'][0]['referenced_user_id']).to eq(u2.global_id)
+      expect(s.data['events'][1]['referenced_user_id']).to eq(nil)
+    end
+    
+    it "should not attach referenced user if not valid" do
+      d = Device.create
+      u = User.create
+      u2 = User.create
+      u3 = User.create
+      User.link_supervisor_to_user(u, u2, nil, true)
+      s = LogSession.process_new({
+        'events' => [
+          {'user_id' => u.global_id, 'referenced_user_id' => 'asdf', 'geo' => ['1', '2'], 'timestamp' => 1431461204, 'type' => 'button', 'button' => {'label' => 'hat', 'board' => {'id' => '1_1'}}},
+          {'user_id' => u.global_id, 'referenced_user_id' => u3.global_id, 'geo' => ['2', '3'], 'timestamp' => 1431461206, 'type' => 'button', 'button' => {'label' => 'cow', 'board' => {'id' => '1_1'}}},
+        ]
+      }, {:user => u, :author => u, :device => d})
+      
+      expect(s).not_to eq(nil)
+      expect(s.errored?).to eq(false)
+      expect(s.user).to eq(u)
+      expect(s.data['events'].length).to eq(2)
+      expect(LogSession.count).to eq(1)
+      
+      expect(s.data['events'][0]['referenced_user_id']).to eq(nil)
+      expect(s.data['events'][1]['referenced_user_id']).to eq(nil)
+    end
+
     it "should pull out embedded note events even at the beginning of the list" do
       d = Device.create
       u = User.create
@@ -948,21 +994,94 @@ describe LogSession, :type => :model do
     end
     
     it "should attach user video if specified" do
+      u = User.create
+      v = UserVideo.create(:settings => {'duration' => 12})
+      d = Device.create
+      s = LogSession.process_new({
+        'note' => {
+          'text' => 'ahem',
+          'timestamp' => 1431461182
+        },
+        'video_id' => v.global_id
+      }, {'user' => u, 'author' => u, 'device' => d, 'ip_address' => '1.2.3.4'})
+      expect(s).not_to eq(nil)
+      expect(s.errored?).to eq(false)
+      expect(s.started_at.to_i).to eq(1431461182)
+      expect(s.ended_at.to_i).to eq(1431461182)
+      expect(s.log_type).to eq('note')
+      expect(s.data['event_summary']).to eq("Note by #{u.user_name}: recording (12s) - ahem")
+      expect(s.data['note']['text']).to eq('ahem')
+      expect(s.data['note']['video']).to eq({'id' => v.global_id, 'duration' => 12})
     end
     
     it "should not attach invalid video" do
-    end
-    
-    it "should attach referenced user if specified and allowed" do
-    end
-    
-    it "should not attach referenced user if not valid" do
+      u = User.create
+      v = UserVideo.create(:settings => {'duration' => 12})
+      d = Device.create
+      s = LogSession.process_new({
+        'note' => {
+          'text' => 'ahem',
+          'timestamp' => 1431461182
+        },
+        'video_id' => v.id
+      }, {'user' => u, 'author' => u, 'device' => d, 'ip_address' => '1.2.3.4'})
+      expect(s).not_to eq(nil)
+      expect(s.errored?).to eq(false)
+      expect(s.started_at.to_i).to eq(1431461182)
+      expect(s.ended_at.to_i).to eq(1431461182)
+      expect(s.log_type).to eq('note')
+      expect(s.data['event_summary']).to eq("Note by #{u.user_name}: ahem")
+      expect(s.data['note']['text']).to eq('ahem')
+      expect(s.data['note']['video']).to eq(nil)
     end
     
     it "should attach goal data if specified" do
+      u = User.create
+      g = UserGoal.create(:user => u)
+      d = Device.create
+      s = LogSession.process_new({
+        'note' => {
+          'text' => 'ahem',
+          'timestamp' => 1431461182
+        },
+        'goal_id' => g.global_id,
+        'goal_status' => 3,
+      }, {'user' => u, 'author' => u, 'device' => d, 'ip_address' => '1.2.3.4'})
+      expect(s).not_to eq(nil)
+      expect(s.errored?).to eq(false)
+      expect(s.started_at.to_i).to eq(1431461182)
+      expect(s.ended_at.to_i).to eq(1431461182)
+      expect(s.log_type).to eq('note')
+      expect(s.data['note']['text']).to eq('ahem')
+      expect(s.data['goal']).to eq({
+        'id' => g.global_id, 
+        'negatives' => 0,
+        'positives' => 1,
+        'status' => 3,
+        'summary' => 'user goal'
+      })
     end
     
     it "should not attach a goal if not valid" do
+      u = User.create
+      u2 = User.create
+      g = UserGoal.create(:user => u2)
+      d = Device.create
+      s = LogSession.process_new({
+        'note' => {
+          'text' => 'ahem',
+          'timestamp' => 1431461182
+        },
+        'goal_id' => g.global_id,
+        'goal_status' => 3,
+      }, {'user' => u, 'author' => u, 'device' => d, 'ip_address' => '1.2.3.4'})
+      expect(s).not_to eq(nil)
+      expect(s.errored?).to eq(false)
+      expect(s.started_at.to_i).to eq(1431461182)
+      expect(s.ended_at.to_i).to eq(1431461182)
+      expect(s.log_type).to eq('note')
+      expect(s.data['note']['text']).to eq('ahem')
+      expect(s.data['goal']).to eq(nil)
     end
   end
 
@@ -1445,6 +1564,7 @@ describe LogSession, :type => :model do
   
   describe "push_logs_remotely" do
     it "should only notify applicable logs" do
+      expect(1).to eq(2)
     end
   end
 end

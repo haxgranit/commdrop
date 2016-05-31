@@ -516,8 +516,14 @@ class LogSession < ActiveRecord::Base
       ip_address = non_user_params[:ip_address]
       if params['events']
         self.data['events'] ||= []
+        ref_user_ids = params['events'].map{|e| e['referenced_user_id'] }.compact.uniq
+        valid_ref_user_ids = {}
+        User.find_all_by_global_id(ref_user_ids).each do |u|
+          valid_ref_user_ids[u.global_id] = true if u.allows?(self.author, 'supervise')
+        end
         params['events'].each do |e|
           e['timestamp'] = e['timestamp'].to_f
+          e.delete('referenced_user_id') unless valid_ref_user_ids[e['referenced_user_id']]
           e['ip_address'] = ip_address
           if !e['id']
             ids += 1
@@ -537,12 +543,6 @@ class LogSession < ActiveRecord::Base
             'id' => params['video_id'],
             'duration' => video.settings['duration']
           }
-        end
-      end
-      if self.user == self.author && params['referenced_user_id']
-        ref_user = User.find_by_path(params['referenced_user_id'])
-        if ref_user.allows?(self.author, 'supervise')
-          self.data['referenced_user_id'] = ref_user.global_id
         end
       end
       if params['goal_id'] || self.goal_id
