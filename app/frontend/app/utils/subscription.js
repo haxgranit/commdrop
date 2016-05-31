@@ -92,7 +92,7 @@ var Subscription = Ember.Object.extend({
           this.set('user_type', 'supporter');
         }
         this.set('subscription_plan', plan);
-        this.set('subscription_amount', plan);
+        this.set('subscription_amount', plan.replace(/_plus_trial$/, ''));
       }
     }
     if(this.get('code')) {
@@ -139,11 +139,11 @@ var Subscription = Ember.Object.extend({
     return this.get('subscription_amount');
   }.property('subscription_amount', 'discount_period'),
   much_cheaper_offer: function() {
-    return this.get('sale');
-  }.property('sale'),
+    return !!(this.get('sale') || (this.get('user.subscription.plan_id') || '').match(/monthly_3/));
+  }.property('sale', 'user.subscription.plan_id'),
   cheaper_offer: function() {
-    return this.get('sale') || this.get('discount_period');
-  }.property('sale', 'discount_period'),
+    return !!(this.get('sale') || this.get('discount_period') || (this.get('user.subscription.plan_id') || '').match(/monthly_4/) || (this.get('user.subscription.plan_id') || '').match(/monthly_3/));
+  }.property('sale', 'discount_period', 'user.subscription.plan_id'),
   set_default_subscription_amount: function() {
     if(this.get('user_type') == 'communicator') {
       if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^(monthly_|long_term_)/)) {

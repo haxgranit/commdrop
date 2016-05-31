@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } fro
 import { db_wait } from 'frontend/tests/helpers/ember_helper';
 import Subscription from '../../utils/subscription';
 import Ember from 'ember';
- 
+
 describe('subscription', function() {
   it("should initialize with reasonable values", function() {
     db_wait(function() {
@@ -13,7 +13,7 @@ describe('subscription', function() {
       expect(s.get('show_options')).toEqual(false);
     });
   });
-  
+
   it("should initialize with the user object if provided", function() {
     db_wait(function() {
       var u = Ember.Object.create({
@@ -31,7 +31,25 @@ describe('subscription', function() {
       expect(s.get('email')).toEqual('susan@example.com');
     });
   });
-  
+
+  it("should initialize subscription_amount correctly", function() {
+    db_wait(function() {
+      var u = Ember.Object.create({
+        subscription: {
+          plan_id: 'monthly_4_plus_trial',
+          expires: new Date(0)
+        },
+        email: 'susan@example.com'
+      });
+      var s = Subscription.create({user: u});
+      expect(s.get('user_type')).toEqual('communicator');
+      expect(s.get('user_expired')).toEqual(true);
+      expect(s.get('subscription_type')).toEqual('monthly');
+      expect(s.get('subscription_amount')).toEqual('monthly_4');
+      expect(s.get('email')).toEqual('susan@example.com');
+    });
+  });
+
   it("should reset properly", function() {
     db_wait(function() {
       var s = Subscription.create();
@@ -46,7 +64,7 @@ describe('subscription', function() {
       expect(s.get('subscription_type')).toEqual('monthly');
     });
   });
-  
+
   it("should validate plan configurations", function() {
     db_wait(function() {
       var s = Subscription.create();
@@ -79,7 +97,7 @@ describe('subscription', function() {
       expect(s.get('valid')).toEqual(true);
       s.set('subscription_amount', 'long_term_100');
       expect(s.get('valid')).toEqual(true);
-    
+
       s.set('subscription_type', 'gift_code');
       expect(s.get('valid')).toEqual(false);
       s.set('gift_code', 'abcdefg');
@@ -105,8 +123,8 @@ describe('subscription', function() {
       expect(s.get('valid')).toEqual(true);
     });
   });
-  
-  
+
+
   it("should process settings and return correct descriptions", function() {
     db_wait(function() {
       var s = Subscription.create();
@@ -120,7 +138,7 @@ describe('subscription', function() {
       s.set('subscription_amount', 'slp_long_term_100');
       expect(s.get('subscription_amount')).toEqual('monthly_6');
       expect(s.get('amount_in_cents')).toEqual(600);
-    
+
       s.set('subscription_type', 'long_term');
       s.set('user_type', 'supporter');
       s.set('subscription_amount', 'slp_long_term_100');
@@ -130,7 +148,7 @@ describe('subscription', function() {
       expect(s.get('purchase_description')).toEqual('Purchase');
     });
   });
-  
+
   it("should return correct description for free forever plans", function() {
       var s = Subscription.create();
       s.set('subscription_amount', 'monthly_6');
@@ -163,9 +181,144 @@ describe('subscription', function() {
         expect(handler.args.key).toEqual('asdfasdf');
         expect(handler.args.image).toEqual('/images/logo-big.png');
         expect(handler.args.token).toNotEqual(undefined);
-      
+
         window.StripeCheckout = null;
         window.stripe_public_key = old_key;
+      });
+    });
+  });
+
+  describe("cheaper_offer", function() {
+    it("should return cheaper_offer if there's a sale", function() {
+      db_wait(function() {
+        var u = Ember.Object.create({
+          subscription: {
+            plan_id: 'monthly_6',
+            expires: new Date(0)
+          },
+          email: 'susan@example.com'
+        });
+        var s = Subscription.create({user: u});
+        expect(s.get('cheaper_offer')).toEqual(false)
+        stub(CoughDrop, 'sale', ((new Date()).getTime() / 1000) + 500);
+        s.reset();
+        expect(s.get('sale')).toEqual(true);
+        expect(s.get('cheaper_offer')).toEqual(true);
+      });
+    });
+    it("should return much_cheaper_offer if there's a sale", function() {
+      db_wait(function() {
+        var u = Ember.Object.create({
+          subscription: {
+            plan_id: 'monthly_6',
+            expires: new Date(0)
+          },
+          email: 'susan@example.com'
+        });
+        var s = Subscription.create({user: u});
+        expect(s.get('much_cheaper_offer')).toEqual(false)
+        stub(CoughDrop, 'sale', ((new Date()).getTime() / 1000) + 500);
+        s.reset();
+        expect(s.get('sale')).toEqual(true);
+        expect(s.get('much_cheaper_offer')).toEqual(true);
+      });
+    });
+    it("should return cheaper_offer if the user is still in the discount period", function() {
+      db_wait(function() {
+        var u = Ember.Object.create({
+          subscription: {
+            plan_id: 'monthly_6',
+            expires: new Date(0)
+          },
+          joined: window.moment('2010-01-01'),
+          email: 'susan@example.com'
+        });
+        var s = Subscription.create({user: u});
+        expect(s.get('cheaper_offer')).toEqual(false)
+        expect(s.get('discount_period')).toEqual(false);
+        u.set('joined_within_24_hours', true);
+        expect(s.get('discount_period')).toEqual(true);
+        expect(s.get('cheaper_offer')).toEqual(true);
+        expect(s.get('much_cheaper_offer')).toEqual(false);
+      });
+    });
+    it("should not return cheaper offer if no sale and not in the discount period", function() {
+      db_wait(function() {
+        var u = Ember.Object.create({
+          subscription: {
+            plan_id: 'monthly_6',
+            expires: new Date(0)
+          },
+          joined: window.moment('2010-01-01'),
+          email: 'susan@example.com'
+        });
+        var s = Subscription.create({user: u});
+        expect(s.get('cheaper_offer')).toEqual(false)
+        expect(s.get('discount_period')).toEqual(false);
+        expect(s.get('much_cheaper_offer')).toEqual(false);
+      });
+    });
+    it("should return cheaper_offer if the user is already subscribed with cheaper_offer", function() {
+      db_wait(function() {
+        var u = Ember.Object.create({
+          subscription: {
+            plan_id: 'monthly_4',
+            expires: new Date(0)
+          },
+          joined: window.moment('2010-01-01'),
+          email: 'susan@example.com'
+        });
+        var s = Subscription.create({user: u});
+        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('discount_period')).toEqual(false);
+        expect(s.get('much_cheaper_offer')).toEqual(false);
+        u.set('subscription.plan_id', 'monthly_4_plus_trial');
+        s.reset();
+        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('discount_period')).toEqual(false);
+        expect(s.get('much_cheaper_offer')).toEqual(false);
+      });
+    });
+    it("should return cheaper_offer if the user is already subscribed with much_cheaper_offer", function() {
+      db_wait(function() {
+        var u = Ember.Object.create({
+          subscription: {
+            plan_id: 'monthly_3',
+            expires: new Date(0)
+          },
+          joined: window.moment('2010-01-01'),
+          email: 'susan@example.com'
+        });
+        var s = Subscription.create({user: u});
+        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('discount_period')).toEqual(false);
+        expect(s.get('much_cheaper_offer')).toEqual(true);
+        u.set('subscription.plan_id', 'monthly_3_plus_trial');
+        s.reset();
+        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('discount_period')).toEqual(false);
+        expect(s.get('much_cheaper_offer')).toEqual(true);
+      });
+    });
+    it("should return much_cheaper_offer if the user is already subscribed with much_cheaper_offer", function() {
+      db_wait(function() {
+        var u = Ember.Object.create({
+          subscription: {
+            plan_id: 'monthly_3',
+            expires: new Date(0)
+          },
+          joined: window.moment('2010-01-01'),
+          email: 'susan@example.com'
+        });
+        var s = Subscription.create({user: u});
+        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('discount_period')).toEqual(false);
+        expect(s.get('much_cheaper_offer')).toEqual(true);
+        u.set('subscription.plan_id', 'monthly_3_plus_trial');
+        s.reset();
+        expect(s.get('cheaper_offer')).toEqual(true)
+        expect(s.get('discount_period')).toEqual(false);
+        expect(s.get('much_cheaper_offer')).toEqual(true);
       });
     });
   });
@@ -184,7 +337,7 @@ describe('subscription', function() {
         });
       });
     });
-    
+
     it("should return a valid promise if initialized", function() {
       db_wait(function() {
         var open_args = null;
@@ -196,7 +349,7 @@ describe('subscription', function() {
         var checkout = {};
         window.StripeCheckout = checkout;
         Subscription.handler = handler;
-      
+
         var s = Subscription.create();
         s.set('subscription_amount', 'monthly_6');
         var res = Subscription.purchase(s);
@@ -204,7 +357,7 @@ describe('subscription', function() {
         window.StripeCheckout = null;
       });
     });
-    
+
     it("should call the purchasing tool", function() {
       db_wait(function() {
         var open_args = null;
@@ -216,7 +369,7 @@ describe('subscription', function() {
         var checkout = {};
         window.StripeCheckout = checkout;
         Subscription.handler = handler;
-      
+
         var s = Subscription.create();
         s.set('subscription_amount', 'monthly_6');
         var res = Subscription.purchase(s);
