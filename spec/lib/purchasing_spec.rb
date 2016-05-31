@@ -117,11 +117,14 @@ describe Purchasing do
     describe "charge.failed" do
       it "should trigger a purchase_failed event" do
         u = User.create
-        expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_bounced, u.global_id)
-        res = stripe_event_request 'charge.failed', {
+        expect(Stripe::Customer).to receive(:retrieve).with('qwer').and_return({
           'metadata' => {
             'user_id' => u.global_id
           }
+        })
+        expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_bounced, u.global_id)
+        res = stripe_event_request 'charge.failed', {
+          'customer' => 'qwer'
         }
         expect(res[:data]).to eq({:notified => true, :purchase => false, :valid => true})
       end

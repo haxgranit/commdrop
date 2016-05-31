@@ -28,10 +28,12 @@ module Purchasing
         end
         data = {:purchase => true, :purchase_id => object['id'], :valid => !!valid}
       elsif event['type'] == 'charge.failed'
-        valid = object['metadata'] && object['metadata']['user_id']
+        customer = Stripe::Customer.retrieve(object['customer'])
+        valid = customer && customer['metadata'] && customer['metadata']['user_id']
+
         if valid
           User.subscription_event({
-            'user_id' => object['metadata'] && object['metadata']['user_id'],
+            'user_id' => customer['metadata'] && customer['metadata']['user_id'],
             'purchase_failed' => true
           })
         end
