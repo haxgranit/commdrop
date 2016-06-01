@@ -607,4 +607,50 @@ class LogSession < ActiveRecord::Base
       []
     end
   end
+  
+  def self.needs_log_summary?(user)
+    user_ids = []
+    user_ids << user.global_id if user.premium? && user.settings && user.settings['preferences'] && user.settings['preferences']['role'] == 'communicator'
+    user_ids += user.supervised_user_ids
+    # short-circuit in the case where the communicator is expired and has no supervisees
+    return false if user_ids.length == 0
+    # if notifications have been coming, don't cut them off immediately when logs stop
+    threshold = 3.weeks.ago
+    if user.settings && user.settings['preferences'] && user.settings['preferences']['notification_frequency'] == '2_weeks'
+      threshold = 6.weeks.ago
+    elsif user.settings && user.settings['preferences'] && user.settings['preferences']['notification_frequency'] == '1_month'
+      threshold = 3.months.ago
+    end
+    # TODO: sharding
+    counts = LogSession.where(:user_id => User.local_ids(user_ids.uniq), :log_type => 'session').where(['started_at > ?', threshold]).group('user_id').count('user_id')
+    # only mark as true if there's reportable data for at least one connected user
+    ids = counts.to_a.select{|key, cnt| cnt > 0 }.map(&:first)
+    # TODO: sharding
+    User.where(:id => ids).each do |u|
+      return true if u.premium? && u.settings && u.settings['preferences'] && u.settings['preferences']['role'] == 'communicator'
+    end
+    false
+  end
+  
+  def self.generate_log_summaries
+    possible_user_ids = []
+    # find any users with a recent-enough session to trigger notifications (loose bounds)
+    ids = LogSession.where(:log_type => 'session').where(['started_at > ?', 14.weeks.ago]).group('user_id').count('user_id').map(&:first)
+    # find all users who might be need a notification about the change
+    # TODO: sharding
+    User.where(:id => ids).each do |user|
+      possible_user_ids << user.global_id
+      possible_user_ids += user.supervisor_user_ids
+    end
+    # find any users who are due for a notification and might have an update (loose bounds)
+    users = User.where(['next_notification_at < ?', Time.now])
+    # TODO: sharding
+    users = users.where({:id => User.local_ids(possible_user_ids) })
+    users.find_in_batches(:batch_size => 100).each do |batch|
+      batch.each do |user|
+        # trigger a notification if it's time and the user has an update (tight bounds)
+        user.notify('log_summary') if LogSession.needs_log_summary?(user)
+      end
+    end
+  end
 end

@@ -33,6 +33,7 @@ module JsonApi::User
       json['prior_avatar_urls'] = user.prior_avatar_urls
       
       json['goal'] = user.settings['primary_goal']
+      json['cell_phone'] = user.settings['cell_phone']
       
       json['preferences']['sidebar_boards'] = user.settings['preferences']['sidebar_boards'] || []
       json['preferences']['sidebar_boards'] = User.default_sidebar_boards if json['preferences']['sidebar_boards'].length == 0

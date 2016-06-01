@@ -1567,4 +1567,196 @@ describe LogSession, :type => :model do
       expect(1).to eq(2)
     end
   end
+  
+  describe "generate_log_summaries" do
+    it "should not generate for non-premium communicators" do
+      u = User.create(:expires_at => 2.weeks.ago, :next_notification_at => 2.weeks.ago)
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(false)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(false)
+    end
+    
+    it "should not generate for supervisor role users with no supervisees" do
+      u = User.create(:next_notification_at => 2.weeks.ago)
+      u.settings['preferences']['role'] = 'supervisor'
+      u.save
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(false)
+    end
+    
+    it "should not generate for supervisor roel users with only expired supervisees" do
+      u = User.create(:next_notification_at => 2.weeks.ago)
+      u2 = User.create(:expires_at => 2.weeks.ago)
+      d = Device.create
+      User.link_supervisor_to_user(u, u2)
+      u.settings['preferences']['role'] = 'supervisor'
+      u.save
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u2, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u2.premium?).to eq(false)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(false)
+    end
+    
+    it "should not generate for users with no recent logs" do
+      u = User.create(:next_notification_at => 2.weeks.ago)
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 11.weeks.ago.to_time.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 11.weeks.ago.to_time.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(false)
+    end
+
+    it "should generate for users with sort-of recent logs" do
+      u = User.create(:next_notification_at => 2.weeks.ago)
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 3.weeks.ago.to_time.to_i + 100},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 3.weeks.ago.to_time.to_i + 50}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(true)
+    end
+
+    it "should not generate for premium users with recent logs but no notification preference set" do
+      u = User.create(:next_notification_at => nil)
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(false)
+    end
+    
+    it "should generate for premium users with recent logs" do
+      u = User.create(:next_notification_at => 2.weeks.ago)
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(true)
+    end
+    
+    it "should generate for supervisors with one or more premium communicators with recent logs" do
+      u = User.create(:next_notification_at => 2.weeks.ago)
+      u2 = User.create
+      d = Device.create
+      User.link_supervisor_to_user(u, u2)
+      u.settings['preferences']['role'] = 'supervisor'
+      u.save
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u2, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u2.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(true)
+    end
+    
+    it "should not generate for user with 2-week preference and no logs for 6 weeks" do
+      u = User.create(:settings => {'preferences' => {'notification_frequency' => '2_weeks'}})
+      expect(u.next_notification_at).to be > Time.now
+      u.next_notification_at = 2.weeks.ago
+      u.save
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 6.weeks.ago.to_time.to_i - 101},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 6.weeks.ago.to_time.to_i - 100}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(false)
+    end
+    
+    it "should generate for user with 2-week preference and logs within last 6 weeks" do
+      u = User.create(:settings => {'preferences' => {'notification_frequency' => '2_weeks'}})
+      expect(u.next_notification_at).to be > Time.now
+      u.next_notification_at = 2.weeks.ago
+      u.save
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 6.weeks.ago.to_time.to_i + 101},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 6.weeks.ago.to_time.to_i + 100}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(true)
+    end
+
+    it "should not generate for user with 1-month preference and no logs for 3 months" do
+      u = User.create(:settings => {'preferences' => {'notification_frequency' => '1_month'}})
+      expect(u.next_notification_at).to be > Time.now
+      u.next_notification_at = 2.weeks.ago
+      u.save
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 3.months.ago.to_time.to_i - 101},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 3.months.ago.to_time.to_i - 100}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(false)
+    end
+    
+    it "should generate for user with 1-month preference and logs within last 3 months" do
+      u = User.create(:settings => {'preferences' => {'notification_frequency' => '1_month'}})
+      expect(u.next_notification_at).to be > Time.now
+      u.next_notification_at = 2.weeks.ago
+      u.save
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 3.months.ago.to_time.to_i + 101},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 3.months.ago.to_time.to_i + 100}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+
+      expect(u.premium?).to eq(true)
+      LogSession.generate_log_summaries
+      expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(true)
+    end
+  end
 end

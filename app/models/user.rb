@@ -210,6 +210,9 @@ class User < ActiveRecord::Base
     if self.settings['preferences']['role'] != 'communicator'
       self.settings['preferences'].delete('auto_open_speak_mode')
     end
+    if self.settings['preferences']['notification_frequency']
+      self.next_notification_at ||= next_notification_schedule
+    end
     self.expires_at ||= Date.today + 60 if !self.id
     self.user_name ||= self.generate_user_name(self.settings['name'])
     self.email_hash = User.generate_email_hash(self.settings['email'])
@@ -353,12 +356,12 @@ class User < ActiveRecord::Base
       'scanning_select_on_any_event', 'vocalize_linked_buttons', 'sidebar_boards',
       'silence_spelling_buttons', 'stretch_buttons', 'registration_type',
       'board_background', 'vocalization_height', 'role', 'auto_open_speak_mode',
-      'canvas_render', 'blank_status', 'share_notifications']
+      'canvas_render', 'blank_status', 'share_notifications', 'notification_frequency']
 
   PROGRESS_PARAMS = ['setup_done', 'intro_watched', 'profile_edited', 'preferences_edited', 'home_board_set', 'app_added', 'skipped_subscribe_modal']
   def process_params(params, non_user_params)
     self.settings ||= {}
-    ['name', 'description', 'details_url', 'location'].each do |arg|
+    ['name', 'description', 'details_url', 'location', 'cell_phone'].each do |arg|
       self.settings[arg] = params[arg] if params[arg]
     end
     if params['terms_agree']
@@ -655,9 +658,45 @@ class User < ActiveRecord::Base
         :sharer_user_name => args['sharer']['user_name'],
         :text => args['text']
       })
+    elsif notification == 'log_summary'
+      self.next_notification_at = self.next_notification_schedule
+      self.save
+      UserMailer.schedule_delivery(:log_summary, self.global_id)
     end
   end
-
+  
+  def next_notification_schedule
+    res = Time.now.utc
+    if !self.settings || !self.settings['preferences'] || !self.settings['preferences']['notification_frequency'] || self.settings['preferences']['notification_frequency'] == ''
+      return nil
+    elsif self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '1_month'
+    else
+      # friday or saturday in the US
+      friday_or_saturday = (self.id || 0) % 2 == 0 ? 5 : 6
+      while res.wday != friday_or_saturday
+        res += 1.day
+      end
+    end
+          # 6pm eastern thru 10pm eastern
+    hours = [22, 23, 0, 1, 2]
+    hour_idx = (self.id || 0) % hours.length
+    hour = hours[hour_idx]
+    if hour < 20
+      res += 1.day
+    end
+    min = (self.id || 0) % 2 == 0 ? 0 : 30
+    res = res.change(:hour => hour, :min => min)
+    # set to a nice happy time of day
+    if self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '2_weeks'
+      res += 14.days
+    elsif self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '1_month'
+      res += 1.month
+    else
+      res += 7.days
+    end
+    res
+  end
+  
   def default_listeners(notification_type)
     if notification_type == 'home_board_changed'
       res = [self]
@@ -693,12 +732,6 @@ class User < ActiveRecord::Base
     PaperTrail.whodunnit = prior
   end
   
-  def self.generate_weekly_summaries
-    User.where(:id => false).each do |user|
-      user.notify('weekly_summary')
-    end
-  end
-
   def notify_on(attributes, notification_type)
     # TODO: ...
   end

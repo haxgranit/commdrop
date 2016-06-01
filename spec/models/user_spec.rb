@@ -1104,4 +1104,105 @@ describe User, :type => :model do
       expect(u.reload.settings['pending']).to eq(false)
     end
   end
+  
+  describe "next_notification_at" do
+    it "should not schedule by default" do
+      u = User.create
+      expect(u.next_notification_at).to eq(nil)
+    end
+    
+    it "should correctly schedule if notification_frequency is set" do
+      u = User.create
+      u.settings['preferences']['notification_frequency'] = 'something'
+      u.save
+      expect(u.next_notification_at).to be > Time.now
+      expect(u.next_notification_at).to be < Time.now + 2.weeks
+
+      u.settings['preferences']['notification_frequency'] = '2_weeks'
+      u.save
+      expect(u.next_notification_at).to be > Time.now
+      expect(u.next_notification_at).to be < Time.now + 2.weeks
+      u.next_notification_at = nil
+      u.save
+      expect(u.next_notification_at).to be > Time.now
+      expect(u.next_notification_at).to be > Time.now + 2.weeks
+      expect(u.next_notification_at).to be < Time.now + 3.weeks
+    end
+    
+    it "should generate correct next_notification_schedule for weekly updates" do
+      # 2015-01-01 was a thursday
+      expect(Time).to receive(:now).and_return(Time.parse("2015-01-01")).at_least(1).times
+      u = User.new(:settings => {'preferences' => {'notification_frequency' => 'whatever'}})
+      u.id = 1
+      # a week from saturday at 23:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 23:30 UTC'));
+      u.id = 0
+      # a week from friday at 22:00
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-09 22:00 UTC'));
+      u.id = 2
+      # a week from friday at 0:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 00:00 UTC'));
+      u.id = 3
+      # a week from saturday at 1:30 (move to sunday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-11 01:30 UTC'));
+      u.id = 4
+      # a week from friday at 2:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 02:00 UTC'));
+      u.id = 5
+      # a week from saturday at 22:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 22:30 UTC'));
+      u.settings['preferences']['notification_frequency'] = '1_week'
+      u.id = 1
+      # a week from saturday at 23:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 23:30 UTC'));
+    end
+    
+    it "should generate correct next_notification_schedule for every other week updates" do
+      # 2016-06-03 was a friday
+      expect(Time).to receive(:now).and_return(Time.parse("2016-06-03 11:00")).at_least(1).times
+      u = User.new(:settings => {'preferences' => {'notification_frequency' => '2_weeks'}})
+      u.id = 1
+      # two weeks from saturday at 23:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-06-18 23:30 UTC'));
+      u.id = 0
+      # two weeks from today at 22:00
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-06-17 22:00 UTC'));
+      u.id = 2
+      # two weeks from today at 0:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-06-18 00:00 UTC'));
+      u.id = 3
+      # two weeks from saturday at 1:30 (move to sunday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-06-19 01:30 UTC'));
+      u.id = 4
+      # two weeks from today at 2:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-06-18 02:00 UTC'));
+      u.id = 5
+      # two weeks from saturday at 22:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-06-18 22:30 UTC'));
+    end
+
+    it "should generate correct next_notification_schedule for monthly updates" do
+      # 2016-03-02 was a wednesday
+      expect(Time).to receive(:now).and_return(Time.parse("2016-03-02 02:00")).at_least(1).times
+      u = User.new(:settings => {'preferences' => {'notification_frequency' => '1_month'}})
+      u.id = 1
+      # one month from today at 23:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-04-02 23:30 UTC'));
+      u.id = 0
+      # one month from today at 22:00
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-04-02 22:00 UTC'));
+      u.id = 2
+      # one month from today at 0:00 (move to next day)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-04-03 00:00 UTC'));
+      u.id = 3
+      # one month from today at 1:30 (move to next day)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-04-03 01:30 UTC'));
+      u.id = 4
+      # one month from today at 2:00 (move to next day)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-04-03 02:00 UTC'));
+      u.id = 5
+      # one month from today at 22:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-04-02 22:30 UTC'));
+    end
+  end
 end

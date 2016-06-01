@@ -54,6 +54,8 @@ CoughDrop.User = DS.Model.extend({
   goal: DS.attr('raw'),
   pending_board_shares: DS.attr('raw'),
   edit_permission: DS.attr('boolean'),
+  cell_phone: DS.attr('string'),
+  next_notification_delay: DS.attr('string'),
   has_management_responsibility: function() {
     return this.get('managed_orgs').length > 0;
   }.property('managed_orgs'),

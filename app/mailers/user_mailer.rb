@@ -55,6 +55,99 @@ class UserMailer < ActionMailer::Base
     mail_message(@user, "New Message")
   end
   
+  def log_summary(user_id)
+    @user = User.find_by_global_id(user_id)
+    @supervisees = User.find_all_by_global_id(@user.supervised_user_ids)
+    @log_duration = 'last week'
+    @log_period = 'week'
+    pre_start = 2.weeks.ago
+    pre_end = 1.week.ago
+    if @user.settings['next_notification_delay'] == '2_weeks'
+      pre_start = 4.weeks.ago
+      pre_end = 2.weeks.ago
+      @log_duration = 'last two weeks'
+      @log_period = 'two weeks'
+    elsif @user.settings['next_notification_delay'] == '1_month'
+      pre_start = 2.months.ago
+      pre_end = 1.month.ago
+      @log_duration = 'last month'
+      @log_period = 'month'
+    end
+    @users = []
+    ([@user] + @supervisees).uniq.each do |user|
+      # collect stats for the time period
+      # also should compare to last time period
+      # - total sessions (delta vs. last time period)
+      # - total buttons (delta vs. last time period)
+      # - new words since last time period
+      # - lost words since last time period
+      # - number of new notes in time period (with link if any)
+      # - primary goal status weighted average (vs. last time period)
+      # - link to update primary goal status
+      pre_stats = nil
+      current_stats = nil
+      user_report = OpenStruct.new({
+        :label => user.user_name,
+        :user_name => user.user_name,
+        :premium => user.premium?
+      })
+      begin
+        if user.premium?
+          user_report.pre_stats = Stats.cached_daily_use(user.global_id, {:start_at => pre_start, :end_at => pre_end})
+          user_report.current_stats = Stats.cached_daily_use(user.global_id, {:start_at => pre_end, :end_at => Time.now})
+          # TODO: sharding
+          user_report.total_notes = LogSession.where(:user_id => user.id).where(:log_type => ['note', 'assessment']).where(['started_at > ? AND ended_at < ?', pre_start, Time.now]).count
+          user_report.primary_goal = UserGoal.primary_goal(user)
+          user_report.total_sessions_delta = user_report.pre_stats[:total_sessions] == 0 ? nil : (user_report.current_stats[:total_sessions].to_f / user_report.pre_stats[:total_sessions].to_f * 100.0).round(0)
+          user_report.total_buttons_delta = user_report.pre_stats[:total_buttons] == 0 ? nil : (user_report.current_stats[:total_buttons].to_f / user_report.pre_stats[:total_buttons].to_f * 100.0).round(0)
+          lost_percents = []
+          # TODO: this really shouldn't be in a mailer, put it in a lib or something
+          user_report.pre_stats[:words_by_frequency].each do |word|
+            pre_percent = word['count'].to_f / user_report.pre_stats[:total_words].to_f
+            found_word = user_report.current_stats[:words_by_frequency].detect{|w| w['text'] == word['text'] }
+            post_percent = found_word ? (found_word['count'].to_f / usage_report.current_stats[:total_words].to_f) : 0.0
+            if post_percent < pre_percent
+              res = {
+                :text => word['text'],
+                :multiplier => pre_percent / post_percent
+              }
+              if post_percent == 0
+                res[:multiplier] = pre_percent * 100.0 * 10.0
+              end
+              lost_percents.push(res)
+            end
+          end
+          lost_percents = lost_percents.sort_by{|p| p[:multiplier] }.reverse
+          user_report.lost_words = lost_percents[0, 10].map{|p| p[:text] }.join(', ')
+
+          gained_percents = []
+          user_report.current_stats[:words_by_frequency].each do |word|
+            post_percent = word['count'].to_f / user_report.current_stats[:total_words].to_f
+            found_word = user_report.pre_stats[:words_by_frequency].detect{|w| w['text'] == word['text'] }
+            pre_percent = found_word ? (found_word['count'].to_f / usage_report.pre_stats[:total_words].to_f) : 0.0
+            if post_percent > pre_percent
+              res = {
+                :text => word['text'],
+                :multiplier => post_percent / pre_percent
+              }
+              if pre_percent == 0
+                res[:multiplier] = post_percent * 100.0 * 10.0
+              end
+              gained_percents.push(res)
+            end
+          end
+          gained_percents = gained_percents.sort_by{|p| p[:multiplier] }.reverse
+          user_report.gained_words = gained_percents[0, 10].map{|p| p[:text] }.join(', ')
+          
+          # TODO: average goal status specific to the time range, plus delta
+        end
+      rescue Stats::StatsError => e
+      end
+      @users << user_report
+    end
+    mail_message(@user, "Communication Report")
+  end
+
   def usage_reminder(user_id)
     @user = User.find_by_global_id(user_id)
     

@@ -10,6 +10,12 @@ export default Ember.Controller.extend({
     {name: i18n.t('text_shares', "Text Me When People I Supervise Share a Message with Me"), id: 'text'},
     {name: i18n.t('app_shares', "Show In the App When People I Supervise Share a Message with Me"), id: 'app'}
   ],
+  notification_frequency_options: [
+    {name: i18n.t('no_notifications', "Don't Email Me Communicator Reports"), id: ''},
+    {name: i18n.t('weekly_notifications', "Email Me Weekly Communicator Reports"), id: '1_week'},
+    {name: i18n.t('text_shares', "Email Me Communicator Reports Every Two Weeks"), id: '2_weeks'},
+    {name: i18n.t('app_shares', "Email Me Monthly Communicator Reports"), id: '1_month'}
+  ],
   title: function() {
     return "Edit " + this.get('model.user_name');
   }.property('model.user_name'),

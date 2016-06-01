@@ -1,0 +1,115 @@
+<p>Hello! You are receiving this because the user <b><%= @user.user_name %><b> has opted to receive email updates when one or more
+of the CoughDrop users tied to your account generate usage. You are signed up to receive these
+updates every <%= @log_period %>.</p>
+
+<% if @users.length > 1 %>
+  <p><span style='font-size: 20px; font-weight: bold;'>All Communicators</span></p>
+<% end %>
+
+<% @users.each do |user| %>
+  <div style='margin-top: 20px;'>
+    <a href="<%= JsonApi::Json.current_host %>/<%= user.user_name %>" style='font-size: 16px; font-weight: bold;'><%= user.user_name %></a><br/>
+    <% if user.current_stats && user.pre_stats %>
+      <table style='border-bottom: 1px solid #eee;'>
+        <tbody>
+          <tr>
+            <td style='border-top: 1px solid #eee;'>Total Sessions</td>
+            <td style='border-top: 1px solid #eee; width: 10%;'><%= user.current_stats[:total_sessions] %></td>
+            <td style='border-top: 1px solid #eee; width: 10%;'>
+              <% if user.total_sessions_delta %>
+                <% if user.total_sessions_delta > 0 %>
+                  <span style='color: #4cc560;'>+<%= user.total_sessions_delta %>%</span>
+                <% elsif user.total_sessions_delta < 0 %>
+                  <span style='color: #fc3a39;'>-<%= user.total_sessions_delta %>%</span>
+                <% else %>
+                  <%= user.total_sessions_delta %>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+
+          <tr>
+            <td style='border-top: 1px solid #eee;'>Total Buttons</td>
+            <td style='border-top: 1px solid #eee; width: 10%;'><%= user.current_stats[:total_buttons] %></td>
+            <td style='border-top: 1px solid #eee; width: 10%;'>
+              <% if user.total_buttons_delta %>
+                <% if user.total_buttons_delta > 0 %>
+                  <span style='color: #4cc560;'>+<%= user.total_buttons_delta %>%</span>
+                <% elsif user.total_buttons_delta < 0 %>
+                  <span style='color: #fc3a39;'>-<%= user.total_buttons_delta %>%</span>
+                <% else %>
+                  <%= user.total_buttons_delta %>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+
+          <tr>
+            <td style='border-top: 1px solid #eee;'>Gained Words</td>
+            <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+              <% if user.gained_words && user.gained_words != '' %>
+                <%= user.gained_words %>
+              <% else %>
+                <span style='color: #888;'>None to show</span>
+              <% end %>
+            </td>
+          </tr>
+
+          <tr>
+            <td style='border-top: 1px solid #eee;'>Lost Words</td>
+            <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+              <% if user.lost_words && user.lost_words != '' %>
+                <%= user.lost_words %>
+              <% else %>
+                <span style='color: #888;'>None to show</span>
+              <% end %>
+            </td>
+          </tr>
+
+          <tr>
+            <td style='border-top: 1px solid #eee;'>Notes & Assessments</td>
+            <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+              <% if user.total_notes && user.total_notes > 0 %>
+                <a href="<%= JsonApi::Json.current_host %>/<%= user.user_name %>/logs">
+                  <%= user.total_notes %>
+                </a>
+              <% else %>
+                <span style='color: #888;'>None</span>
+              <% end %>
+            </td>
+          </tr>
+
+          <% if user.primary_goal %>
+            <tr>
+              <td style='border-top: 1px solid #eee;'>
+                Primary Goal:<br/>
+                <%= user.primary_goal.summary %>
+              </td>
+              <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+                <%= user.primary_goal.settings['stats']['weighted_average_status'] %> weighted status
+              </td>
+            </tr>
+            <tr>
+              <td style='border-top: 1px solid #eee;' colspan='3'>
+                Update Goal Status
+                <a href="#">4</a>
+                <a href="#">3</a>
+                <a href="#">2</a>
+                <a href="#">1</a>
+              </td>
+            </tr>
+          <% end %>
+          
+        </tbody>
+      </table>
+    <% elsif !user.premium %>
+      <p>This user doesn't have a premium account, so no reports are generated</p>
+    <% else %>
+      <p>No data available</p>
+    <% end %>
+  </div>
+<% end %>
+
+<p>If you no longer want to receive these notifications, or want to change how often you receive
+them, please 
+<a href="<%= JsonApi::Json.current_host %>/<%= @user.user_name %>/edit">update the "Usage Summaries" preference</a> in your CoughDrop account settings.</p>

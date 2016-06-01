@@ -353,6 +353,92 @@ describe UserMailer, :type => :mailer do
     end
   end
   
+  describe "log_summary" do
+    it "should generate a message to the intended user" do
+      u = User.create(:settings => {'name' => 'stacy', 'email' => 'stacy@example.com'})
+      d = Device.create
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1.day.ago.to_time.to_i - 2},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1.day.ago.to_time.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 1.day.ago.to_time.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'never ever ever ever again', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 8.days.ago.to_time.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 8.days.ago.to_time.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      
+      ClusterLocation.clusterize(u.global_id)
+      WeeklyStatsSummary.update_for(s1.global_id)
+      WeeklyStatsSummary.update_for(s2.global_id)
+      WeeklyStatsSummary.update_for(s3.global_id)
+      
+      m = UserMailer.log_summary(u.global_id)
+      
+      expect(m.to).to eq(['stacy@example.com'])
+      expect(m.subject).to eq("CoughDrop - Communication Report")
+
+      html = m.body.to_s
+      expect(html).to_not match(/All Communicators/)
+      expect(html).to match(/ever, again, never/)
+      expect(html).to match(/ok, go/)
+      expect(html).to match(/\+200%/)
+      expect(html).to match(/\+300%/)
+    end
+    
+    it "should include supervisees" do
+      u = User.create(:settings => {'name' => 'stacy', 'email' => 'stacy@example.com'})
+      u2 = User.create
+      u3 = User.create
+      d = Device.create
+      User.link_supervisor_to_user(u, u2)
+      User.link_supervisor_to_user(u, u3)
+      Worker.process_queues
+      u3.expires_at = 2.weeks.ago
+      u3.save
+
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u2, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1.day.ago.to_time.to_i - 2},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 1.day.ago.to_time.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 1.day.ago.to_time.to_i}
+      ]}, {:user => u3, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'button' => {'label' => 'never ever ever ever again', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => 8.days.ago.to_time.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 8.days.ago.to_time.to_i}
+      ]}, {:user => u2, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      
+      ClusterLocation.clusterize(u.global_id)
+      WeeklyStatsSummary.update_for(s1.global_id)
+      WeeklyStatsSummary.update_for(s2.global_id)
+      WeeklyStatsSummary.update_for(s3.global_id)
+      
+      m = UserMailer.log_summary(u.global_id)
+      
+      expect(m.to).to eq(['stacy@example.com'])
+      expect(m.subject).to eq("CoughDrop - Communication Report")
+
+      html = m.body.to_s
+      expect(html).to match(/All Communicators/)
+      expect(html).to match(/stacy/)
+      expect(html).to match(/#{u2.user_name}/)
+      expect(html).to match(/#{u3.user_name}/)
+      expect(html).to match(/ever, again, never/)
+      expect(html).to match(/ok, go/)
+      expect(html).to match(/\+100%/)
+      expect(html).to match(/so no reports are generated/)
+    end
+    
+    it "should include goal data"
+  end
+  
   it "should have a default reply-to of noreply@mycoughdrop.com"
   it "should have specs for the mailer erb templates"
 end

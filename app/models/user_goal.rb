@@ -121,9 +121,15 @@ class UserGoal < ActiveRecord::Base
     true
   end
   
+  def self.primary_goal(user)
+    # TODO: sharding
+    UserGoal.where(:user_id => user.id, :primary => true).first
+  end
+  
   def check_set_as_primary
     if @set_as_primary
       if self.user && self.user.settings
+        # TODO: sharding
         UserGoal.where(:user_id => self.user_id).update_all(:primary => false)
         UserGoal.where(:id => self.id).update_all(:primary => true)
         self.user.settings['primary_goal'] = {
