@@ -27,7 +27,7 @@ export default Ember.Component.extend({
       percents = percents.sort(function(a, b) { return b.multiplier - a.multiplier; });
       percents.some = true;
       return percents.slice(0, 10);
-    } 
+    }
     return null;
   }.property('usage_stats', 'ref_stats'),
   gained_words: function() {
@@ -35,9 +35,9 @@ export default Ember.Component.extend({
       var percents = [];
       var _this = this;
       this.get('usage_stats.words_by_frequency').forEach(function(word) {
-        var pre_percent = word.count / _this.get('usage_stats.total_words');
+        var post_percent = word.count / _this.get('usage_stats.total_words');
         var found_word = _this.get('ref_stats.words_by_frequency').find(function(w) { return w.text == word.text; });
-        var post_percent = found_word ? (found_word.count / _this.get('ref_stats.total_words')) : 0;
+        var pre_percent = found_word ? (found_word.count / _this.get('ref_stats.total_words')) : 0;
         if(post_percent > pre_percent) {
           var res = {
             text: word.text,
@@ -56,7 +56,7 @@ export default Ember.Component.extend({
       percents = percents.sort(function(a, b) { return b.percent - a.percent; });
       percents.some = true;
       return percents.slice(0, 10);
-    } 
+    }
     return null;
   }.property('usage_stats', 'ref_stats'),
   this_before_that: function() {
