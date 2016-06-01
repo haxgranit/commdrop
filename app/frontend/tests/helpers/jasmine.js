@@ -30,13 +30,13 @@ function test_wrap(name, instance, befores, afters, lookup) {
       pre.forEach(function(callback) {
         callback();
       });
-      
+
       var this_arg = window;
       if(lookup) { this_arg = window.Frontend.__container__.lookup(lookup); }
-      
+
       current_test_id++;
       instance.call(this_arg);
-      
+
       waitsFor(function() { return waiting[current_test_id] <= 1; });
       runs(function() {
         current_afters = [];
@@ -50,13 +50,13 @@ function test_wrap(name, instance, befores, afters, lookup) {
 
 var container_lookup = null;
 var describe = function(name, lookup, callback) {
-  if(!callback) { 
-    callback = lookup; 
+  if(!callback) {
+    callback = lookup;
   } else {
     if(names.length === 0) { container_lookup = lookup; }
   }
-  if(names.length === 0) { 
-    module(name); 
+  if(names.length === 0) {
+    module(name);
   }
   names.push(name);
   all_tests.push([]);
@@ -92,7 +92,7 @@ var expect = function(data) {
     var falsy = !!data;
     ok(falsy === false, data + ' should be falsey');
   };
-  
+
   expectation.toNotEqual = function(arg) {
     if((typeof data === 'object') || (typeof arg === 'object')) {
       QUnit.notDeepEqual(data, arg);
@@ -145,7 +145,7 @@ var expect = function(data) {
       }
     }
   };
-  
+
   return expectation;
 };
 
@@ -162,7 +162,7 @@ var runs = function(callback) {
   waiting[current_test_id]++;
   QUnit.stop(); // TODO: this seems like it should be QUnit.async()
   var done = function() {
-    if(id == current_test_id) { 
+    if(id == current_test_id) {
       waiting[current_test_id]--;
       QUnit.start();
     }
@@ -173,12 +173,12 @@ var runs = function(callback) {
       Ember.run(callback);
     } else if(id == current_test_id) {
       attempts++;
-      if(attempts >= 50) {
+      if(attempts >= 55) {
         ok(false, 'condition failed for more than 5000ms');
         done();
       } else {
         var delay = 1;
-        if(attempts == 2) { delay = 10; }
+        if(attempts  < 10) { delay = 10; }
         else if(attempts > 3) { delay = 100; }
         setTimeout(try_again, delay);
       }
