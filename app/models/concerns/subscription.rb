@@ -123,12 +123,11 @@ module Subscription
           self.settings['subscription'].delete('seconds_left')
         end
         self.expires_at = [self.expires_at, 2.weeks.from_now].compact.max
-        self.settings['subscription'].delete('subscription_id')     
-        self.settings['subscription'].delete('token_summary')     
-        self.settings['subscription'].delete('started')     
-        self.settings['subscription'].delete('plan_id')     
-        self.settings['subscription'].delete('free_pemium')
-        self.settings['subscription'].delete('never_expires')
+        ['subscription_id', 'tokey_summary', 'started', 'plan_id', 'free_premium', 'never_expires'].each do |key|
+          self.settings['subscription']['canceled'] ||= {}
+          self.settings['subscription']['canceled'][key] = self.settings['subscription'][key]
+          self.settings['subscription'].delete(key)
+        end
         self.settings['pending'] = false
         self.save
       else
