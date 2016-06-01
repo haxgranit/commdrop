@@ -1,4 +1,4 @@
-<p>Hello! You are receiving this because the user <b><%= @user.user_name %><b> has opted to receive email updates when one or more
+<p>Hello! You are receiving this because the user <b><%= @user.user_name %></b> has opted to receive email updates when one or more
 of the CoughDrop users tied to your account generate usage. You are signed up to receive these
 updates every <%= @log_period %>.</p>
 
@@ -8,45 +8,41 @@ updates every <%= @log_period %>.</p>
 
 <% @users.each do |user| %>
   <div style='margin-top: 20px;'>
-    <a href="<%= JsonApi::Json.current_host %>/<%= user.user_name %>" style='font-size: 16px; font-weight: bold;'><%= user.user_name %></a><br/>
+    <a href="<%= JsonApi::Json.current_host %>/<%= user.user_name %>" style='color: #337ab7; text-decoration: none; font-size: 20px; font-weight: bold;'><%= user.user_name %></a><br/>
     <% if user.current_stats && user.pre_stats %>
-      <table style='border-bottom: 1px solid #eee;'>
+      <table style='border-bottom: 1px solid #eee; width: 100%;' cellpadding='0' cellspacing='0'>
         <tbody>
           <tr>
-            <td style='border-top: 1px solid #eee;'>Total Sessions</td>
-            <td style='border-top: 1px solid #eee; width: 10%;'><%= user.current_stats[:total_sessions] %></td>
-            <td style='border-top: 1px solid #eee; width: 10%;'>
+            <td style='border-top: 1px solid #eee; padding: 10px;'>Total Sessions for <%= @log_duration %></td>
+            <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; width: 20%;'><%= user.current_stats[:total_sessions] %></td>
+            <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; width: 20%;'>
               <% if user.total_sessions_delta %>
                 <% if user.total_sessions_delta > 0 %>
                   <span style='color: #4cc560;'>+<%= user.total_sessions_delta %>%</span>
                 <% elsif user.total_sessions_delta < 0 %>
                   <span style='color: #fc3a39;'>-<%= user.total_sessions_delta %>%</span>
-                <% else %>
-                  <%= user.total_sessions_delta %>
                 <% end %>
               <% end %>
             </td>
           </tr>
 
           <tr>
-            <td style='border-top: 1px solid #eee;'>Total Buttons</td>
-            <td style='border-top: 1px solid #eee; width: 10%;'><%= user.current_stats[:total_buttons] %></td>
-            <td style='border-top: 1px solid #eee; width: 10%;'>
+            <td style='border-top: 1px solid #eee; padding: 10px; background: #fafafa;'>Total Buttons for <%= @log_duration %></td>
+            <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; background: #fafafa; width: 20%;'><%= user.current_stats[:total_buttons] %></td>
+            <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; background: #fafafa; width: 20%;'>
               <% if user.total_buttons_delta %>
                 <% if user.total_buttons_delta > 0 %>
                   <span style='color: #4cc560;'>+<%= user.total_buttons_delta %>%</span>
                 <% elsif user.total_buttons_delta < 0 %>
                   <span style='color: #fc3a39;'>-<%= user.total_buttons_delta %>%</span>
-                <% else %>
-                  <%= user.total_buttons_delta %>
                 <% end %>
               <% end %>
             </td>
           </tr>
 
           <tr>
-            <td style='border-top: 1px solid #eee;'>Gained Words</td>
-            <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+            <td style='border-top: 1px solid #eee; padding: 10px;'>Gained Words</td>
+            <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; width: 40%;' colspan='2'>
               <% if user.gained_words && user.gained_words != '' %>
                 <%= user.gained_words %>
               <% else %>
@@ -56,8 +52,8 @@ updates every <%= @log_period %>.</p>
           </tr>
 
           <tr>
-            <td style='border-top: 1px solid #eee;'>Lost Words</td>
-            <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+            <td style='border-top: 1px solid #eee; padding: 10px; background: #fafafa;'>Lost Words</td>
+            <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; background: #fafafa; width: 40%;' colspan='2'>
               <% if user.lost_words && user.lost_words != '' %>
                 <%= user.lost_words %>
               <% else %>
@@ -67,10 +63,10 @@ updates every <%= @log_period %>.</p>
           </tr>
 
           <tr>
-            <td style='border-top: 1px solid #eee;'>Notes & Assessments</td>
-            <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+            <td style='border-top: 1px solid #eee; padding: 10px;'>Notes & Assessments</td>
+            <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; width: 40%;' colspan='2'>
               <% if user.total_notes && user.total_notes > 0 %>
-                <a href="<%= JsonApi::Json.current_host %>/<%= user.user_name %>/logs">
+                <a href="<%= JsonApi::Json.current_host %>/<%= user.user_name %>/logs" style="color: #337ab7; text-decoration: none;">
                   <%= user.total_notes %>
                 </a>
               <% else %>
@@ -81,16 +77,16 @@ updates every <%= @log_period %>.</p>
 
           <% if user.primary_goal %>
             <tr>
-              <td style='border-top: 1px solid #eee;'>
+              <td style='border-top: 1px solid #eee; padding: 10px; background: #fafafa;'>
                 Primary Goal:<br/>
                 <%= user.primary_goal.summary %>
               </td>
-              <td style='border-top: 1px solid #eee; width: 20%;' colspan='2'>
+              <td style='border-top: 1px solid #eee; padding: 10px; text-align: right; background: #fafafa; width: 40%;' colspan='2'>
                 <%= user.primary_goal.settings['stats']['weighted_average_status'] %> weighted status
               </td>
             </tr>
             <tr>
-              <td style='border-top: 1px solid #eee;' colspan='3'>
+              <td style='border-top: 1px solid #eee; padding: 10px; ' colspan='3'>
                 Update Goal Status
                 <a href="#">4</a>
                 <a href="#">3</a>

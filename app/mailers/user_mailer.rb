@@ -58,23 +58,27 @@ class UserMailer < ActionMailer::Base
   def log_summary(user_id)
     @user = User.find_by_global_id(user_id)
     @supervisees = User.find_all_by_global_id(@user.supervised_user_ids)
-    @log_duration = 'last week'
+    @log_duration = 'the last week'
     @log_period = 'week'
     pre_start = 2.weeks.ago
     pre_end = 1.week.ago
     if @user.settings['next_notification_delay'] == '2_weeks'
       pre_start = 4.weeks.ago
       pre_end = 2.weeks.ago
-      @log_duration = 'last two weeks'
+      @log_duration = 'the last two weeks'
       @log_period = 'two weeks'
     elsif @user.settings['next_notification_delay'] == '1_month'
       pre_start = 2.months.ago
       pre_end = 1.month.ago
-      @log_duration = 'last month'
+      @log_duration = 'the last month'
       @log_period = 'month'
     end
     @users = []
-    ([@user] + @supervisees).uniq.each do |user|
+    users_to_check = []
+    users_to_check << @user if @user.premium? && @user.settings['preferences'] && @user.settings['preferences']['role'] == 'communicator'
+    users_to_check += @supervisees
+    
+    users_to_check.uniq.each do |user|
       # collect stats for the time period
       # also should compare to last time period
       # - total sessions (delta vs. last time period)
@@ -92,7 +96,7 @@ class UserMailer < ActionMailer::Base
         :premium => user.premium?
       })
       begin
-        if user.premium?
+        if user.premium? && user.settings['preferences'] && user.settings['preferences']['role'] == 'communicator'
           user_report.pre_stats = Stats.cached_daily_use(user.global_id, {:start_at => pre_start, :end_at => pre_end})
           user_report.current_stats = Stats.cached_daily_use(user.global_id, {:start_at => pre_end, :end_at => Time.now})
           # TODO: sharding
@@ -105,7 +109,7 @@ class UserMailer < ActionMailer::Base
           user_report.pre_stats[:words_by_frequency].each do |word|
             pre_percent = word['count'].to_f / user_report.pre_stats[:total_words].to_f
             found_word = user_report.current_stats[:words_by_frequency].detect{|w| w['text'] == word['text'] }
-            post_percent = found_word ? (found_word['count'].to_f / usage_report.current_stats[:total_words].to_f) : 0.0
+            post_percent = found_word ? (found_word['count'].to_f / user_report.current_stats[:total_words].to_f) : 0.0
             if post_percent < pre_percent
               res = {
                 :text => word['text'],
@@ -124,7 +128,7 @@ class UserMailer < ActionMailer::Base
           user_report.current_stats[:words_by_frequency].each do |word|
             post_percent = word['count'].to_f / user_report.current_stats[:total_words].to_f
             found_word = user_report.pre_stats[:words_by_frequency].detect{|w| w['text'] == word['text'] }
-            pre_percent = found_word ? (found_word['count'].to_f / usage_report.pre_stats[:total_words].to_f) : 0.0
+            pre_percent = found_word ? (found_word['count'].to_f / user_report.pre_stats[:total_words].to_f) : 0.0
             if post_percent > pre_percent
               res = {
                 :text => word['text'],
