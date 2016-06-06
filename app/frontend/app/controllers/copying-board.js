@@ -51,7 +51,7 @@ export default modal.ModalController.extend({
       board_ids_to_include = this.get('hierarchy').selected_board_ids();
       this.set('hierarchy', null);
     }
-    this.get('model.board').set('downstream_board_ids_to_copy', board_ids_to_include)
+    this.get('model.board').set('downstream_board_ids_to_copy', board_ids_to_include);
     var _this = this;
     editManager.copy_board(_this.get('model.board'), _this.get('model.action'), _this.get('model.user')).then(function(board) {
       var next = Ember.RSVP.resolve();

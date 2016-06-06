@@ -2166,7 +2166,8 @@ describe('editManager', function() {
           data: {
             new_board_id: '1_2',
             old_board_id: '1_1',
-            update_inline: false
+            update_inline: false,
+            ids_to_copy: ""
           }
         });
       });
@@ -2459,7 +2460,8 @@ describe('editManager', function() {
           data: {
             new_board_id: '1_2',
             old_board_id: '1_1',
-            update_inline: false
+            update_inline: false,
+            ids_to_copy: ""
           }
         });
       });
