@@ -19,7 +19,7 @@ export default modal.ModalController.extend({
     });
   },
   closing: function() {
-    if(this.get('player')) {
+    if(this.get('player') && this.get('player').cleanup) {
       this.get('player').cleanup();
     }
   },
