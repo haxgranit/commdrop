@@ -746,8 +746,10 @@ var editManager = Ember.Object.extend({
   },
   copy_board: function(old_board, decision, user) {
     return new Ember.RSVP.Promise(function(resolve, reject) {
+      var ids_to_copy = old_board.get('downstream_board_ids_to_copy') || [];
       var save = old_board.create_copy(user);
       save.then(function(board) {
+        board.set('should_reload', true);
         var done_callback = function(affected_board_ids) {
           if(decision && decision.match(/as_home$/)) {
             user.set('preferences.home_board', {
@@ -778,7 +780,8 @@ var editManager = Ember.Object.extend({
             data: {
               old_board_id: old_board.get('id'),
               new_board_id: board.get('id'),
-              update_inline: (decision == 'modify_links_update')
+              update_inline: (decision == 'modify_links_update'),
+              ids_to_copy: ids_to_copy.join(',')
             }
           }).then(function(data) {
             progress_tracker.track(data.progress, function(event) {

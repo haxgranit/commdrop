@@ -262,8 +262,11 @@ export default modal.ModalController.extend({
     cancel_build_board: function() {
       contentGrabbers.boardGrabber.cancel_build_board();
     },
-    selectFoundBoard: function(board) {
-      contentGrabbers.boardGrabber.pick_board(board);
+    selectFoundBoard: function(board, force) {
+      contentGrabbers.boardGrabber.pick_board(board, force);
+    },
+    copy_found_board: function() {
+      contentGrabbers.boardGrabber.copy_found_board();
     },
     create_board: function() {
       contentGrabbers.boardGrabber.create_board();

@@ -446,15 +446,21 @@ class LogSession < ActiveRecord::Base
     if params['events']
       if active_session
         active_session.process(params, non_user_params)
-        active_session
+        active_session.schedule(:check_for_merger)
       else
-        self.process_new(params, non_user_params)
+        session = self.process_new(params, non_user_params)
+        session.schedule(:check_for_merger)
       end
     else
       raise "only event-list logs can be delay-processed"
     end
   end
   
+  def check_for_merger
+    # TODO: there's the possiblity of a race condition where two sets of logs
+    # for the same user get created in separate job processes, even though they
+    # should be part of the same session.
+  end
   
   def process_params(params, non_user_params)
     raise "user required" if !self.user_id && !non_user_params[:user]

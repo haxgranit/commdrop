@@ -1394,11 +1394,13 @@ var boardGrabber = Ember.Object.extend({
     this.controller.set('foundBoards', null);
     this.controller.set('linkedBoardName', null);
     this.controller.set('pending_board', null);
+    this.controller.set('confirm_found_board', null);
   },
   find_board: function() {
     var _this = this;
     var search_type = this.controller.get('board_search_type');
     this.controller.set('foundBoards', {term: this.controller.get('linkedBoardName'), ready: false});
+    this.controller.set('confirm_found_board', null);
     var find_args =  {};
     var q = this.controller.get('linkedBoardName');
     if(search_type == 'personal') {
@@ -1445,6 +1447,7 @@ var boardGrabber = Ember.Object.extend({
       copy_access: true,
       grid: {}
     });
+    this.controller.set('confirm_found_board', null);
     var original_board = this.controller.get('board');
     if(original_board) {
       board.set('grid.rows', original_board.get('grid.rows') || 2);
@@ -1484,14 +1487,64 @@ var boardGrabber = Ember.Object.extend({
       _this.pick_board(board);
     }, function() { });
   },
-  pick_board: function(board) {
-    editManager.change_button(this.controller.get('model.id'), {
-      load_board: {
-        id: board.id,
-        key: board.get('key')
-      }
+  copy_found_board: function() {
+    var _this = this;
+    var board = _this.controller.get('confirm_found_board');
+    if(!board) { return; }
+
+    var source_board_user_name = _this.controller.get('board.user_name');
+    var editable_supervisee_author = (app_state.get('currentUser.supervisees') || []).find(function(s) { return s.edit_permission && s.user_name == source_board_user_name; });
+    var new_author = (editable_supervisee_author || {}).user_name || app_state.get('currentUser.user_name');
+
+    board.set('copy_status', {copying: true});
+    board.reload().then(function() {
+      board.set('copy_status', {copying: true});
+      CoughDrop.store.findRecord('user', new_author).then(function(user) {
+        editManager.copy_board(board, 'copy_only', user).then(function(copy) {
+          board.set('copy_status', null);
+          _this.pick_board(copy, true);
+        }, function(err) {
+          board.set('copy_status', {error: true});
+        });
+      }, function() {
+        board.set('copy_status', {error: true});
+      });
+    }, function() {
+      board.set('copy_status', {error: true});
     });
-    this.clear();
+  },
+  pick_board: function(board, force) {
+    var _this = this;
+    var source_board_user_name = _this.controller.get('board.user_name');
+    var linked_board_user_name = board.get('user_name');
+    var current_user_name = app_state.get('currentUser.user_name');
+    var editable_supervisee_author = (app_state.get('currentUser.supervisees') || []).find(function(s) { return s.edit_permission && s.user_name == source_board_user_name; });
+    var can_copy_for_author = editable_supervisee_author || current_user_name == source_board_user_name;
+
+    var confirm = false;
+    if(can_copy_for_author && source_board_user_name != linked_board_user_name) {
+      // if the current user is allowed to make copies for the edited board's author, ask for
+      // confirmation and copy for the edited board's author
+      confirm = true;
+    } else if(!can_copy_for_author && source_board_user_name != linked_board_user_name && current_user_name != linked_board_user_name) {
+      // if the current user is not allowed to make copies for the edited board's author,
+      // only ask if the board matches neither the current user not the board author,
+      // and then make the copy for the current user
+      confirm = true;
+    }
+    if(confirm && !force) {
+      board.set('copy_status', null);
+      this.controller.set('confirm_found_board', board);
+    } else {
+      this.controller.set('confirm_found_board', null);
+      editManager.change_button(this.controller.get('model.id'), {
+        load_board: {
+          id: board.id,
+          key: board.get('key')
+        }
+      });
+      this.clear();
+    }
   },
   files_dropped: function(files) {
     var board = null;

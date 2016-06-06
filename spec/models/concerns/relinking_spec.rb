@@ -164,6 +164,51 @@ describe Relinking, :type => :model do
       expect(b2.settings['buttons'][0]['load_board']).to eq({'key' => b2a.key, 'id' => b2a.global_id})
       expect(b2a.settings['buttons'][0]['load_board']).to eq({'key' => b2b.key, 'id' => b2b.global_id, 'link_disabled' => true})
     end
+    
+    it "should only copy explicitly-listed boards if there's a list" do
+      u1 = User.create
+      u2 = User.create
+      b1 = Board.create(:user => u1, :public => true)
+      b1a = Board.create(:user => u1, :public => true)
+      b1b = Board.create(:user => u1, :public => true)
+      b1a.settings['buttons'] = [{'id' => 1, 'load_board' => {'key' => b1b.key, 'id' => b1b.global_id, 'link_disabled' => true}}]
+      b1a.save!
+      b1a.track_downstream_boards!
+      b1.settings['buttons'] = [{'id' => 1, 'load_board' => {'key' => b1a.key, 'id' => b1a.global_id}}]
+      b1.save!
+      b1.track_downstream_boards!
+      expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id, b1b.global_id])
+      b2 = b1.copy_for(u2)
+      Board.copy_board_links_for(u2, {:valid_ids => [b1.global_id, b1a.global_id], :starting_old_board => b1, :starting_new_board => b2})
+
+      b2.reload
+      expect(b2.settings['buttons'][0]['load_board']['key']).not_to eq(b1a.key)
+      b2a = Board.find_by_path(b2.settings['buttons'][0]['load_board']['key'])
+      expect(b2a.settings['buttons'][0]['load_board']['key']).to eq(b1b.key)
+    end
+    
+    it "should not copy explicitly-listed boards unless there's a valid route to the board that makes it happen" do
+      u1 = User.create
+      u2 = User.create
+      b1 = Board.create(:user => u1, :public => true)
+      b1a = Board.create(:user => u1, :public => true)
+      b1b = Board.create(:user => u1, :public => true)
+      b1a.settings['buttons'] = [{'id' => 1, 'load_board' => {'key' => b1b.key, 'id' => b1b.global_id, 'link_disabled' => true}}]
+      b1a.save!
+      b1a.track_downstream_boards!
+      b1.settings['buttons'] = [{'id' => 1, 'load_board' => {'key' => b1a.key, 'id' => b1a.global_id}}]
+      b1.save!
+      b1.track_downstream_boards!
+      expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id, b1b.global_id])
+      b2 = b1.copy_for(u2)
+      Board.copy_board_links_for(u2, {:valid_ids => [b1.global_id, b1b.global_id], :starting_old_board => b1, :starting_new_board => b2})
+
+      b2.reload
+      expect(b2.settings['buttons'][0]['load_board']['key']).to eq(b1a.key)
+      b2a = Board.find_by_path(b2.settings['buttons'][0]['load_board']['key'])
+      expect(b2a.settings['buttons'][0]['load_board']['key']).to eq(b1b.key)
+      b2b = Board.find_by_path(b2a.settings['buttons'][0]['load_board']['key'])
+    end    
   end
  
   describe "replace_board_for" do
@@ -419,6 +464,117 @@ describe Relinking, :type => :model do
       expect(b.settings['name']).to eq('make copy')
       expect(b.settings['immediately_downstream_board_ids'].length).to eq(1)
       expect(b.settings['immediately_downstream_board_ids']).to eq([new.global_id])
+    end
+    
+    it "should only copy boards explicitly listed if there's a list" do
+      u = User.create
+      level0 = Board.create(:user => u, :public => true, :settings => {'name' => 'level0'})
+      level1 = Board.create(:user => u, :public => true, :settings => {'name' => 'level1'})
+      level2 = Board.create(:user => u, :public => true, :settings => {'name' => 'level2'})
+      level2b = Board.create(:user => u, :public => true, :settings => {'name' => 'level2b'})
+      level3 = Board.create(:user => u, :public => true, :settings => {'name' => 'level3'})
+      
+      level0.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => level1.global_id}}
+      ]
+      level0.save
+      level1.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => level2.global_id}},
+        {'id' => 2, 'load_board' => {'id' => level2b.global_id}}
+      ]
+      level1.save
+      level2.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => level3.global_id}}
+      ]
+      level2.save
+      
+      new_level3 = level3.copy_for(u)
+      new_level3.settings['name'] = 'new_level3'
+      new_level3.save
+      u.settings['preferences']['home_board'] = {'id' => level0.global_id}
+      u.save
+      Worker.process_queues
+      
+      Board.replace_board_for(u.reload, {:valid_ids => [level0.global_id, level1.global_id, level2.global_id, level3.global_id], :starting_old_board => level3.reload, :starting_new_board => new_level3.reload})
+      expect(u.settings['preferences']['home_board']['id']).not_to eq(level0.global_id)
+      b = Board.find_by_path(u.settings['preferences']['home_board']['id'])
+      expect(b).not_to eq(nil)
+      expect(b.settings['name']).to eq('level0')
+      expect(b.settings['immediately_downstream_board_ids'].length).to eq(1)
+      expect(b.settings['immediately_downstream_board_ids']).not_to be_include(level1.global_id)
+      
+      b = Board.find_by_path(b.settings['immediately_downstream_board_ids'][0])
+      expect(b).not_to eq(nil)
+      expect(b.settings['name']).to eq('level1')
+      expect(b.settings['immediately_downstream_board_ids'].length).to eq(2)
+      expect(b.settings['immediately_downstream_board_ids']).not_to be_include(level2.global_id)
+      expect(b.settings['immediately_downstream_board_ids']).to be_include(level2b.global_id)
+      
+      b = Board.find_by_path(b.settings['immediately_downstream_board_ids'].detect{|id| id != level2b.global_id})
+      expect(b).not_to eq(nil)
+      expect(b.settings['name']).to eq('level2')
+      expect(b.settings['immediately_downstream_board_ids'].length).to eq(1)
+      expect(b.settings['immediately_downstream_board_ids']).not_to be_include(level3.global_id)
+      expect(b.settings['immediately_downstream_board_ids']).to be_include(new_level3.global_id)
+      
+      expect(level0.reload.child_boards.count).to eq(1)
+      expect(level1.reload.child_boards.count).to eq(1)
+      expect(level2.reload.child_boards.count).to eq(1)
+      expect(level3.reload.child_boards.count).to eq(1)
+    end
+    
+    it "should not copy explicitly-listed boards if there's not a valid copyable route to the board" do
+      u = User.create
+      level0 = Board.create(:user => u, :public => true, :settings => {'name' => 'level0'})
+      level1 = Board.create(:user => u, :public => true, :settings => {'name' => 'level1'})
+      level2 = Board.create(:user => u, :public => true, :settings => {'name' => 'level2'})
+      level3 = Board.create(:user => u, :public => true, :settings => {'name' => 'level3'})
+      
+      level0.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => level1.global_id}}
+      ]
+      level0.save
+      level1.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => level2.global_id}}
+      ]
+      level1.save
+      level2.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => level3.global_id}}
+      ]
+      level2.save
+      
+      new_level3 = level3.copy_for(u)
+      new_level3.settings['name'] = 'new_level3'
+      new_level3.save
+      u.settings['preferences']['home_board'] = {'id' => level0.global_id}
+      u.save
+      Worker.process_queues
+      
+      Board.replace_board_for(u.reload, {:valid_ids => [level3.global_id, level2.global_id], :starting_old_board => level3.reload, :starting_new_board => new_level3.reload})
+      expect(u.settings['preferences']['home_board']['id']).to eq(level0.global_id)
+      b = Board.find_by_path(u.settings['preferences']['home_board']['id'])
+      expect(b).to eq(level0)
+      expect(b.settings['name']).to eq('level0')
+      expect(b.settings['immediately_downstream_board_ids'].length).to eq(1)
+      expect(b.settings['immediately_downstream_board_ids']).to be_include(level1.global_id)
+      
+      b = Board.find_by_path(b.settings['immediately_downstream_board_ids'][0])
+      expect(b).to eq(level1)
+      expect(b.settings['name']).to eq('level1')
+      expect(b.settings['immediately_downstream_board_ids'].length).to eq(1)
+      expect(b.settings['immediately_downstream_board_ids']).to be_include(level2.global_id)
+      
+      b = Board.find_by_path(b.settings['immediately_downstream_board_ids'][0])
+      expect(b).to eq(level2)
+      expect(b.settings['name']).to eq('level2')
+      expect(b.settings['immediately_downstream_board_ids'].length).to eq(1)
+      expect(b.settings['immediately_downstream_board_ids']).to be_include(level3.global_id)
+      expect(b.settings['immediately_downstream_board_ids']).to_not be_include(new_level3.global_id)
+      
+      expect(level0.reload.child_boards.count).to eq(0)
+      expect(level1.reload.child_boards.count).to eq(0)
+      expect(level2.reload.child_boards.count).to eq(1)
+      expect(level3.reload.child_boards.count).to eq(1)
     end
   end
   

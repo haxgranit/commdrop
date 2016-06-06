@@ -301,6 +301,10 @@ CoughDrop.Board = DS.Model.extend({
   unstar: function() {
     return this.star_or_unstar(false);
   },
+  embed_code: function() {
+    return "<iframe src=\"" + this.get('link') + "?embed=1\" frameborder=\"0\" style=\"min-width: 640px; min-height: 480px;\"><\iframe>"
+
+  }.property('link'),
   check_for_copy: function() {
     // TODO: check local records for a user-specific copy as a fallback in case
     // offline

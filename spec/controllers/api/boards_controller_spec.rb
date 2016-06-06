@@ -840,7 +840,7 @@ describe Api::BoardsController, :type => :controller do
         new_b = b.copy_for(@user)
         Worker.process_queues
         
-        @user.copy_board_links(b.global_id, new_b.global_id, "user:#{@user.global_id}")
+        @user.copy_board_links(b.global_id, new_b.global_id, [], "user:#{@user.global_id}")
         Worker.process_queues
         
         new_b.reload

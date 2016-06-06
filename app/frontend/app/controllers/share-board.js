@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import modal from '../utils/modal';
 import i18n from '../utils/i18n';
+import app_state from '../utils/app_state';
 import coughDropExtras from '../utils/extras';
 
 export default modal.ModalController.extend({
@@ -10,8 +11,17 @@ export default modal.ModalController.extend({
     controller.set('model', {});
     controller.set('board', board);
     this.set('confirm_public_board', false);
+    this.set('show_embed', false);
     this.set('error_confirming_public_board', false);
   },
+  supervisee_share: function() {
+    var un = this.get('share_user_name');
+    return un && (app_state.get('currentUser.supervisees') || []).find(function(s) { return s.user_name == un; });
+  }.property('share_user_name', 'app_state.currentUser.supervisees'),
+  not_copyable: function() {
+    var un = this.get('share_user_name');
+    return !(un && (app_state.get('currentUser.supervisees') || []).find(function(s) { return s.user_name == un && s.edit_permission; }));
+  }.property('share_user_name', 'app_state.currentUser.supervisees'),
   actions: {
     share_with_user: function() {
       var user_name = this.get('share_user_name');
@@ -70,6 +80,15 @@ export default modal.ModalController.extend({
       } else {
         this.set('copy_result', {failed: true});
       }
+    },
+    copy_board: function() {
+      app_state.controller.copy_board(null, null, this.get('share_user_name'));
+    },
+    set_share_user_name: function(user_name) {
+      this.set('share_user_name', user_name);
+    },
+    show_embed_board: function() {
+      this.set('show_embed', !this.get('show_embed'));
     }
   }
 });

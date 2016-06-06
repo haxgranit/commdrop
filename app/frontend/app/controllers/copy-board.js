@@ -7,15 +7,20 @@ export default modal.ModalController.extend({
   opening: function() {
     this.set('model.jump_home', true);
     this.set('model.keep_as_self', false);
+    var user_name = this.get('model.selected_user_name');
     var supervisees = [];
     if(app_state.get('sessionUser.supervisees')) {
+      var selected_user_id = null;
       app_state.get('sessionUser.supervisees').forEach(function(supervisee) {
         var res = Ember.Object.create(supervisee);
         res.set('currently_speaking', app_state.get('currentUser.id') == supervisee.id);
         res.set('disabled', !supervisee.edit_permission);
+        if(user_name && supervisee.user_name == user_name && supervisee.edit_permission) {
+          selected_user_id = supervisee.id;
+        }
         supervisees.push(res);
       });
-      this.set('currently_selected_id', null);
+      this.set('currently_selected_id', selected_user_id);
     } else {
       this.set('currently_selected_id', 'self');
     }

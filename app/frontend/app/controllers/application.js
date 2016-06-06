@@ -23,7 +23,7 @@ export default Ember.Controller.extend({
       }
     }
   },
-  copy_board: function(decision, for_editing) {
+  copy_board: function(decision, for_editing, selected_user_name) {
     var oldBoard = this.get('board').get('model');
     if(!persistence.get('online')) {
       modal.error(i18n.t('need_online_for_copying', "You must be connected to the Internet to make copies of boards."));
@@ -38,8 +38,8 @@ export default Ember.Controller.extend({
     needs_decision = needs_decision || (app_state.get('currentUser.stats.board_set_ids') || []).indexOf(oldBoard.get('id')) >= 0;
 
     if(!decision && needs_decision) {
-      return modal.open('copy-board', {board: oldBoard, for_editing: for_editing}).then(function(opts) {
-        return _this.copy_board(opts);
+      return modal.open('copy-board', {board: oldBoard, for_editing: for_editing, selected_user_name: selected_user_name}).then(function(opts) {
+        return _this.copy_board(opts, for_editing);
       });
     }
     decision = decision || {};

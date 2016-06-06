@@ -225,7 +225,7 @@ class User < ActiveRecord::Base
   end
   
   def self.generate_email_hash(email)
-    Digest::MD5.hexdigest((email || "none").to_s)
+    Digest::MD5.hexdigest((email || "none").to_s.downcase)
   end
   
   def generated_avatar_url(override_url=nil)
@@ -706,12 +706,17 @@ class User < ActiveRecord::Base
     end
   end
   
-  def replace_board(starting_old_board_id, starting_new_board_id, update_inline=false, whodunnit=nil)
+  def replace_board(starting_old_board_id, starting_new_board_id, ids_to_copy=[], update_inline=false, whodunnit=nil)
     prior = PaperTrail.whodunnit
     PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
     starting_new_board = Board.find_by_path(starting_new_board_id)
-    Board.replace_board_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :update_inline => update_inline})
+    valid_ids = nil
+    if ids_to_copy && ids_to_copy.length > 0
+      valid_ids = ids_to_copy.split(/,/)
+      valid_ids = nil if valid_ids.length == 0
+    end
+    Board.replace_board_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :update_inline => update_inline})
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
@@ -719,12 +724,17 @@ class User < ActiveRecord::Base
     PaperTrail.whodunnit = prior
   end
   
-  def copy_board_links(starting_old_board_id, starting_new_board_id, whodunnit=nil)
+  def copy_board_links(starting_old_board_id, starting_new_board_id, ids_to_copy=[], whodunnit=nil)
     prior = PaperTrail.whodunnit
     PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
     starting_new_board = Board.find_by_path(starting_new_board_id)
-    Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board})
+    valid_ids = nil
+    if ids_to_copy && ids_to_copy.length > 0
+      valid_ids = ids_to_copy.split(/,/)
+      valid_ids = nil if valid_ids.length == 0
+    end
+    Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids})
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}

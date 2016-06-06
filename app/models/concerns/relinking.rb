@@ -54,7 +54,11 @@ module Relinking
         board_ids += [user.settings['preferences']['home_board']['id']] 
         board = Board.find_by_path(user.settings['preferences']['home_board']['id'])
         board.track_downstream_boards!
-        board_ids += board.settings['downstream_board_ids']
+        downstream_ids = board.settings['downstream_board_ids']
+        if opts[:valid_ids]
+          downstream_ids = downstream_ids & opts[:valid_ids]
+        end
+        board_ids += downstream_ids
       end
       boards = Board.find_all_by_path(board_ids)
       pending_replacements = [[starting_old_board, starting_new_board]]
@@ -80,6 +84,9 @@ module Relinking
       starting_old_board = opts[:starting_old_board] || raise("starting_old_board required")
       starting_new_board = opts[:starting_new_board] || raise("starting_new_board required")
       board_ids = starting_old_board.settings['downstream_board_ids']
+      if opts[:valid_ids]
+        board_ids = board_ids & opts[:valid_ids]
+      end
       boards = Board.find_all_by_path(board_ids)
       pending_replacements = [[starting_old_board, starting_new_board]]
       boards.each do |orig|
