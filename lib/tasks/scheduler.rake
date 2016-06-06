@@ -7,6 +7,12 @@ task :check_for_expiring_subscriptions => :environment do
   puts JSON.pretty_generate(res)
 end
 
+task :generate_log_summaries => :environment do
+  puts "Generating log summaries..."
+  LogSession.generate_log_summaries
+  puts "done."
+end
+
 task :clean_old_deleted_boards => :environment do
   puts "Cleaning old deleted boards..."
   count = DeletedBoard.flush_old_records
