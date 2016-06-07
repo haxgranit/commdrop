@@ -53,7 +53,7 @@ export default Ember.Component.extend({
           percents.push(res);
         }
       });
-      percents = percents.sort(function(a, b) { return b.percent - a.percent; });
+      percents = percents.sort(function(a, b) { return b.multiplier - a.multiplier; });
       percents.some = true;
       return percents.slice(0, 10);
     }
