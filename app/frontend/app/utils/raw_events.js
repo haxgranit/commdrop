@@ -108,6 +108,12 @@ Ember.$(document).on('mousedown touchstart', function(event) {
   Ember.$(this).focus().select();
   event.preventDefault();
 });
+Ember.$(document).on('click', "a[target='_blank']", function(event) {
+  if(capabilities.installed_app) {
+    event.preventDefault();
+    window.open(event.target.href, capabilities.mobile ? '_system' : '_blank');
+  }
+});
 Ember.$(window).on('blur', function(event) {
   Ember.run.cancel(buttonTracker.linger_clear_later);
   Ember.run.cancel(buttonTracker.linger_close_enough_later);
