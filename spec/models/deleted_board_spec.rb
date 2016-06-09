@@ -80,8 +80,8 @@ describe DeletedBoard, :type => :model do
       db = DeletedBoard.process(b)
       DeletedBoard.where(:id => db.id).update_all(:created_at => 6.months.ago)
       db = DeletedBoard.process(b2)
-      expect(Worker).to receive(:flush_board_by_db_id).with(b.id, b.key)
-      expect(Worker).not_to receive(:flush_board_by_db_id).with(b2.id, b2.key)
+      expect(Flusher).to receive(:flush_board_by_db_id).with(b.id, b.key)
+      expect(Flusher).not_to receive(:flush_board_by_db_id).with(b2.id, b2.key)
       DeletedBoard.flush_old_records
     end
     
@@ -92,8 +92,8 @@ describe DeletedBoard, :type => :model do
       db = DeletedBoard.process(b)
       DeletedBoard.where(:id => db.id).update_all(:created_at => 6.months.ago)
       db = DeletedBoard.process(b2)
-      expect(Worker).to receive(:flush_board_by_db_id).with(b.id, b.key)
-      expect(Worker).not_to receive(:flush_board_by_db_id).with(b2.id, b2.key)
+      expect(Flusher).to receive(:flush_board_by_db_id).with(b.id, b.key)
+      expect(Flusher).not_to receive(:flush_board_by_db_id).with(b2.id, b2.key)
       res = DeletedBoard.flush_old_records
       expect(res).to eq(1)
     end
