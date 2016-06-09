@@ -813,7 +813,7 @@ var i18n = Ember.Object.extend({
     }
   },
   core_words: {
-    default: [
+    'default': [
       // allow picking from core words (source: http://aac.unl.edu/VLAACCU1.html)
       // also consider: http://www.aacandautism.com/common-words
       // http://praacticalaac.org/praactical/aac-vocabulary-lists/
