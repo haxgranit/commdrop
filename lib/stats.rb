@@ -66,6 +66,7 @@ module Stats
     
     res.merge!(touch_stats(sessions))
     res.merge!(device_stats(sessions))
+    res.merge!(sensor_stats(sessions))
     res.merge!(parts_of_speech_stats(sessions))
     
     res[:days] = days
@@ -170,7 +171,70 @@ module Stats
     res = res.sort_by{|r| r[:total_sessions] }.reverse
     {:devices => res}
   end
-
+  
+  def self.merge_sensor_stats!(res, stats)
+    ['volume', 'ambient_light', 'screen_brightness', 'orientation'].each do |sensor_metric|
+      if stats[sensor_metric] && stats[sensor_metric]['total'] > 0
+        res[sensor_metric] ||= {}
+        res[sensor_metric]['total'] ||= 0
+        res[sensor_metric]['average'] ||= 0
+        if stats[sensor_metric]['average']
+          if res[sensor_metric]['total'] > 0
+            res[sensor_metric]['average'] = ((res[sensor_metric]['average'] * res[sensor_metric]['total']) + (stats[sensor_metric]['average'] * stats[sensor_metric]['total'])) / (res[sensor_metric]['total'] + stats[sensor_metric]['total'])
+          else
+            res[sensor_metric]['average'] = stats[sensor_metric]['average']
+          end
+          res[sensor_metric]['average'] = res[sensor_metric]['average'].round(2)
+        end
+        res[sensor_metric]['total'] += stats[sensor_metric]['total']
+        if sensor_metric == 'orientation'
+          ['alpha', 'beta', 'gamma'].each do |level|
+            if stats[sensor_metric][level] && stats[sensor_metric][level]['total'] > 0
+              res[sensor_metric][level] ||= {}
+              res[sensor_metric][level]['total'] ||= 0
+              res[sensor_metric][level]['average'] ||= 0
+              if stats[sensor_metric][level]['average']
+                if res[sensor_metric][level]['total'] > 0
+                  res[sensor_metric][level]['average'] = ((res[sensor_metric][level]['average'] * res[sensor_metric][level]['total']) + (stats[sensor_metric][level]['average'] * stats[sensor_metric][level]['total'])) / (res[sensor_metric][level]['total'] + stats[sensor_metric][level]['total'])
+                else
+                  res[sensor_metric][level]['average'] = stats[sensor_metric][level]['average']
+                end
+                res[sensor_metric][level]['average'] = res[sensor_metric][level]['average'].round(2)
+              end
+              res[sensor_metric][level]['total'] += stats[sensor_metric][level]['total']
+              stats[sensor_metric][level]['histogram'].each do |key, cnt|
+                res[sensor_metric][level]['histogram'] ||= {}
+                res[sensor_metric][level]['histogram'][key] ||= 0
+                res[sensor_metric][level]['histogram'][key] += cnt
+              end
+            end
+          end
+          if stats[sensor_metric]['layout'] && stats[sensor_metric]['layout']['total'] > 0
+            res[sensor_metric]['layout'] ||= {}
+            stats[sensor_metric]['layout'].each do |key, cnt|
+              res[sensor_metric]['layout'][key] ||= 0
+              res[sensor_metric]['layout'][key] += cnt
+            end
+          end
+        else
+          stats[sensor_metric]['histogram'].each do |key, cnt|
+            res[sensor_metric]['histogram'] ||= {}
+            res[sensor_metric]['histogram'][key] ||= 0
+            res[sensor_metric]['histogram'][key] += cnt
+          end
+        end
+      end
+    end
+  end
+  
+  def self.sensor_stats(sessions)
+    res = {}
+    sessions.each do |session|
+      merge_sensor_stats!(res, session.data['stats'])
+    end
+    res
+  end
+  
   def self.touch_stats(sessions)
     counts = {}
     max = 0
@@ -252,12 +316,16 @@ module Stats
         all_word_counts[word] ||= 0
         all_word_counts[word] += cnt
       end
+      
+      merge_sensor_stats!(res, stats)
 
-      if stats[:touch_locations]
-        res[:touch_locations] ||= {}
-        stats[:touch_locations].each do |loc, cnt|
-          res[:touch_locations][loc] ||= 0
-          res[:touch_locations][loc] += cnt
+      [:touch_locations, :parts_of_speech, :core_words, :parts_of_speech_combinations].each do |metric|
+        if stats[metric]
+          res[metric] ||= {}
+          stats[metric].each do |key, cnt|
+            res[metric][key] ||= 0
+            res[metric][key] += cnt
+          end
         end
       end
       
@@ -269,20 +337,7 @@ module Stats
           res[:time_offset_blocks][block] += cnt
         end
       end
-      if stats[:parts_of_speech]
-        stats[:parts_of_speech].each do |key, cnt|
-          res[:parts_of_speech] ||= {}
-          res[:parts_of_speech][key] ||= 0
-          res[:parts_of_speech][key] += cnt
-        end
-      end
-      if stats[:parts_of_speech_combinations]
-        res[:parts_of_speech_combinations] ||= {}
-        stats[:parts_of_speech_combinations].each do |key, cnt|
-          res[:parts_of_speech_combinations][key] ||= 0
-          res[:parts_of_speech_combinations][key] += cnt
-        end
-      end
+
       if stats[:devices]
         all_devices ||= {}
         stats[:devices].each do |device|
@@ -519,11 +574,16 @@ module Stats
   
   def self.parts_of_speech_stats(sessions)
     parts = {}
+    core_words = {}
     sequences = {}
     sessions.each do |session|
       (session.data['stats']['parts_of_speech'] || {}).each do |part, cnt|
         parts[part] ||= 0
         parts[part] += cnt
+      end
+      (session.data['stats']['core_words'] || {}).each do |type, cnt|
+        core_words[type] ||= 0
+        core_words[type] += cnt
       end
       
       prior_parts = []
@@ -557,7 +617,7 @@ module Stats
         end
       end
     end
-    {:parts_of_speech => parts, :parts_of_speech_combinations => sequences}
+    {:parts_of_speech => parts, :core_words => core_words, :parts_of_speech_combinations => sequences}
   end
   
   TIMEBLOCK_MOD = 7 * 24 * 4

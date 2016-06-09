@@ -102,6 +102,7 @@ class LogSession < ActiveRecord::Base
           end
         end
         event['parts_of_speech'] = speech
+        event['core_word'] = WordData.core_for?(word, self.user)
       end
       event_notes += (event['notes'] || []).length
       
@@ -227,6 +228,11 @@ class LogSession < ActiveRecord::Base
     self.data['stats']['all_word_counts'] = {}
     self.data['stats']['all_board_counts'] = {}
     self.data['stats']['parts_of_speech'] = {}
+    self.data['stats']['core_words'] = {}
+    self.data['stats']['all_volumes'] = []
+    self.data['stats']['all_ambient_light_levels'] = []
+    self.data['stats']['all_screen_brightness_levels'] = []
+    self.data['stats']['all_orientations'] = []
     if self.data['events'] && self.started_at && self.ended_at
       self.data['stats']['session_seconds'] = (self.ended_at - self.started_at).to_i
       self.data['events'].each do |event|
@@ -260,6 +266,12 @@ class LogSession < ActiveRecord::Base
             end
           end
         end
+        
+        self.data['stats']['all_volumes'] << event['volume'].to_f if event['volume']
+        self.data['stats']['all_ambient_light_levels'] << event['ambient_light'].to_f if event['ambient_light']
+        self.data['stats']['all_screen_brightness_levels'] << event['screen_brightness'].to_f if event['screen_brightness']
+        self.data['stats']['all_orientations'] << event['orientation'] if event['orientation']
+        
         if event['parts_of_speech'] && event['parts_of_speech']['types'] && event['button'] && event['button']['spoken']
           part = event['parts_of_speech']['types'][0]
           if part
@@ -267,7 +279,12 @@ class LogSession < ActiveRecord::Base
             self.data['stats']['parts_of_speech'][part] += 1
           end
         end
+        if event['core_word'] != nil
+          self.data['stats']['core_words'][event['core_word'] ? 'core' : 'not_core'] ||= 0
+          self.data['stats']['core_words'][event['core_word'] ? 'core' : 'not_core'] += 1
+        end
       end
+      self.generate_sensor_stats
     end
     if self.data['assessment'] && self.started_at && self.ended_at
       self.data['stats'] = {}
@@ -299,6 +316,114 @@ class LogSession < ActiveRecord::Base
       self.data['stats']['longest_incorrect_streak'] = biggest_incorrect_streak
     end
     true
+  end
+  
+  def generate_sensor_stats
+    session = self
+    if !session.data['stats']['all_volumes'].blank?
+      session.data['stats']['volume'] = {
+        'total' => session.data['stats']['all_volumes'].length,
+        'average' => (session.data['stats']['all_volumes'].sum.to_f / session.data['stats']['all_volumes'].length.to_f),
+        'histogram' => {
+          '0-10' => session.data['stats']['all_volumes'].select{|v| v < 10 }.length,
+          '10-20' => session.data['stats']['all_volumes'].select{|v| v >= 10 && v < 20 }.length,
+          '20-30' => session.data['stats']['all_volumes'].select{|v| v >= 20 && v < 30 }.length,
+          '30-40' => session.data['stats']['all_volumes'].select{|v| v >= 30 && v < 40 }.length,
+          '40-50' => session.data['stats']['all_volumes'].select{|v| v >= 40 && v < 50 }.length,
+          '50-60' => session.data['stats']['all_volumes'].select{|v| v >= 50 && v < 60 }.length,
+          '60-70' => session.data['stats']['all_volumes'].select{|v| v >= 60 && v < 70 }.length,
+          '70-80' => session.data['stats']['all_volumes'].select{|v| v >= 70 && v < 80 }.length,
+          '80-90' => session.data['stats']['all_volumes'].select{|v| v >= 80 && v < 90 }.length,
+          '90-100' => session.data['stats']['all_volumes'].select{|v| v >= 90 }.length
+        }
+      }
+    end
+    if !session.data['stats']['all_ambient_light_levels'].blank?
+      session.data['stats']['ambient_light'] = {
+        'total' => session.data['stats']['all_ambient_light_levels'].length,
+        'average' => (session.data['stats']['all_ambient_light_levels'].sum.to_f / session.data['stats']['all_ambient_light_levels'].length.to_f),
+        'histogram' => {
+          '0-1' => session.data['stats']['all_ambient_light_levels'].select{|v| v < 1 }.length,
+          '1-50' => session.data['stats']['all_ambient_light_levels'].select{|v| v >= 1 && v < 50 }.length,
+          '50-100' => session.data['stats']['all_ambient_light_levels'].select{|v| v >= 50 && v < 100 }.length,
+          '100-250' => session.data['stats']['all_ambient_light_levels'].select{|v| v >= 100 && v < 250 }.length,
+          '250-500' => session.data['stats']['all_ambient_light_levels'].select{|v| v >= 250 && v < 500 }.length,
+          '500-1000' => session.data['stats']['all_ambient_light_levels'].select{|v| v >= 500 && v < 1000 }.length,
+          '1000-15000' => session.data['stats']['all_ambient_light_levels'].select{|v| v >= 1000 && v < 15000 }.length,
+          '15000-30000' => session.data['stats']['all_ambient_light_levels'].select{|v| v >= 15000 }.length
+        }
+      }
+    end
+    if !session.data['stats']['all_screen_brightness_levels'].blank?
+      session.data['stats']['screen_brightness'] = {
+        'total' => session.data['stats']['all_screen_brightness_levels'].length,
+        'average' => (session.data['stats']['all_screen_brightness_levels'].sum.to_f / session.data['stats']['all_screen_brightness_levels'].length.to_f),
+        'histogram' => {
+          '0-10' => session.data['stats']['all_screen_brightness_levels'].select{|v| v < 10 }.length,
+          '10-20' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 10 && v < 20 }.length,
+          '20-30' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 20 && v < 30 }.length,
+          '30-40' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 30 && v < 40 }.length,
+          '40-50' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 40 && v < 50 }.length,
+          '50-60' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 50 && v < 60 }.length,
+          '60-70' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 60 && v < 70 }.length,
+          '70-80' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 70 && v < 80 }.length,
+          '80-90' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 80 && v < 90 }.length,
+          '90-100' => session.data['stats']['all_screen_brightness_levels'].select{|v| v >= 90 }.length
+        }
+      }
+    end
+    if !session.data['stats']['all_orientations'].blank?
+      session.data['stats']['orientation'] = {
+        'total' => session.data['stats']['all_orientations'].length,
+        'alpha' => {
+          'total' => session.data['stats']['all_orientations'].select{|o| o['alpha'] }.length,
+          'average' => (session.data['stats']['all_orientations'].map{|o| o['alpha'] }.sum.to_f / session.data['stats']['all_orientations'].length.to_f),
+          'histogram' => { # 0 - 360
+            'N' => session.data['stats']['all_orientations'].select{|o| (o['alpha'] >= 0 && o['alpha'] < 22.5) || o['alpha'] > 337.5 }.length,
+            'NE' => session.data['stats']['all_orientations'].select{|o| o['alpha'] >= 22.5 && o['alpha'] < 67.5 }.length,
+            'E' => session.data['stats']['all_orientations'].select{|o| o['alpha'] >= 67.5 && o['alpha'] < 112.5 }.length,
+            'SE' => session.data['stats']['all_orientations'].select{|o| o['alpha'] >= 112.5 && o['alpha'] < 157.5 }.length,
+            'S' => session.data['stats']['all_orientations'].select{|o| o['alpha'] >= 157.5 && o['alpha'] < 202.5 }.length,
+            'SW' => session.data['stats']['all_orientations'].select{|o| o['alpha'] >= 202.5 && o['alpha'] < 247.5 }.length,
+            'W' => session.data['stats']['all_orientations'].select{|o| o['alpha'] >= 247.5 && o['alpha'] < 292.5 }.length,
+            'NW' => session.data['stats']['all_orientations'].select{|o| o['alpha'] >= 292.5 && o['alpha'] < 337.5 }.length
+          }
+        },
+        'beta' => {
+          'total' => session.data['stats']['all_orientations'].select{|o| o['beta'] }.length,
+          'average' => (session.data['stats']['all_orientations'].map{|o| o['beta'] }.sum.to_f / session.data['stats']['all_orientations'].length.to_f),
+          'histogram' => { # -180 - 180
+            '180-140' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= 140 }.length,
+            '140-100' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= 100 && o['beta'] < 140 }.length,
+            '100-60' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= 60 && o['beta'] < 100 }.length,
+            '20-60' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= 20 && o['beta'] < 60 }.length,
+            '-20-20' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= -20 && o['beta'] < 20 }.length,
+            '-60--20' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= -60 && o['beta'] < -20 }.length,
+            '-100--60' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= -100 && o['beta'] < -60 }.length,
+            '-140--100' => session.data['stats']['all_orientations'].select{|o| o['beta'] >= -140 && o['beta'] < -100 }.length,
+            '-180--140' => session.data['stats']['all_orientations'].select{|o| o['beta'] < -140 }.length
+          }
+        },
+        'gamma' => {
+          'total' => session.data['stats']['all_orientations'].select{|o| o['gamma'] }.length,
+          'average' => (session.data['stats']['all_orientations'].map{|o| o['gamma'] }.sum.to_f / session.data['stats']['all_orientations'].length.to_f),
+          'histogram' => { # -90 - 90
+            '-90--54' => session.data['stats']['all_orientations'].select{|o| o['gamma'] < -54 }.length,
+            '-54--18' => session.data['stats']['all_orientations'].select{|o| o['gamma'] >= -54 && o['gamma'] < -18 }.length,
+            '-18-18' => session.data['stats']['all_orientations'].select{|o| o['gamma'] >= -18 && o['gamma'] < 18 }.length,
+            '18-54' => session.data['stats']['all_orientations'].select{|o| o['gamma'] >= 18 && o['gamma'] < 54 }.length,
+            '54-90' => session.data['stats']['all_orientations'].select{|o| o['gamma'] >= 54 }.length,
+          }
+        },
+        'layout' => {
+          'total' => session.data['stats']['all_orientations'].select{|o| o['layout'] }.length,
+          'landscape-primary' => session.data['stats']['all_orientations'].select{|o| o['layout'] == 'landscape-primary' }.length,
+          'landscape-secondary' => session.data['stats']['all_orientations'].select{|o| o['layout'] == 'landscape-secondary' }.length,
+          'portrait-primary' => session.data['stats']['all_orientations'].select{|o| o['layout'] == 'portrait-primary' }.length,
+          'portrait-secondary' => session.data['stats']['all_orientations'].select{|o| o['layout'] == 'portrair-secondary' }.length
+        }
+      }
+    end
   end
   
   def schedule_clustering

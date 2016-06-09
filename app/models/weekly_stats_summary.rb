@@ -43,6 +43,7 @@ class WeeklyStatsSummary < ActiveRecord::Base
         
         group_stats.merge!(Stats.touch_stats(group_sessions))
         group_stats.merge!(Stats.device_stats(group_sessions))
+        group_stats.merge!(Stats.sensor_stats(group_sessions))
         group_stats.merge!(Stats.time_block_use_for_sessions(group_sessions))
         group_stats.merge!(Stats.parts_of_speech_stats(group_sessions))
         group_stats[:locations] = Stats.location_use_for_sessions(group_sessions)
@@ -52,6 +53,7 @@ class WeeklyStatsSummary < ActiveRecord::Base
       # TODO: cache this day object, maybe in advance
       day_stats.merge!(Stats.touch_stats(day_sessions))
       day_stats.merge!(Stats.device_stats(day_sessions))
+      day_stats.merge!(Stats.sensor_stats(day_sessions))
       day_stats.merge!(Stats.time_block_use_for_sessions(day_sessions))
       day_stats.merge!(Stats.parts_of_speech_stats(day_sessions))
       day_stats[:locations] = Stats.location_use_for_sessions(day_sessions)
@@ -64,6 +66,7 @@ class WeeklyStatsSummary < ActiveRecord::Base
 
     total_stats.merge!(Stats.touch_stats(sessions))
     total_stats.merge!(Stats.device_stats(sessions))
+    total_stats.merge!(Stats.sensor_stats(sessions))
     total_stats.merge!(Stats.time_block_use_for_sessions(sessions))
     total_stats.merge!(Stats.parts_of_speech_stats(sessions))
     total_stats[:days] = days

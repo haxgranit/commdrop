@@ -417,6 +417,41 @@ describe LogSession, :type => :model do
         'noun' => 3
       })
     end
+    
+    it "should generate sensor stats" do
+      u = User.create
+      d = Device.create
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'volume' => 75, 'screen_brightness' => 50, 'ambient_light' => 200, 'orientation' => {'alpha' => 355, 'beta' => 10, 'gamma' => 45, 'layout' => 'landscape-primary'}, 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'volume' => 54, 'screen_brightness' => 50, 'ambient_light' => 1000, 'orientation' => {'alpha' => 90, 'beta' => 5, 'gamma' => 0, 'layout' => 'landscape-secondary'}, 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      
+      day = s1.data['stats']
+      expect(day['utterances']).to eq(1)
+      expect(day['volume']['average']).to eq(64.5)
+      expect(day['volume']['total']).to eq(2)
+      expect(day['volume']['histogram']['50-60']).to eq(1)
+      expect(day['volume']['histogram']['70-80']).to eq(1)
+      expect(day['screen_brightness']['average']).to eq(50)
+      expect(day['screen_brightness']['total']).to eq(2)
+      expect(day['screen_brightness']['histogram']['50-60']).to eq(2)
+      expect(day['ambient_light']['average']).to eq(600)
+      expect(day['ambient_light']['total']).to eq(2)
+      expect(day['ambient_light']['histogram']['100-250']).to eq(1)
+      expect(day['ambient_light']['histogram']['1000-15000']).to eq(1)
+      expect(day['orientation']['total']).to eq(2)
+      expect(day['orientation']['alpha']['total']).to eq(2)
+      expect(day['orientation']['alpha']['average']).to eq(222.5)
+      expect(day['orientation']['alpha']['histogram']['N']).to eq(1)
+      expect(day['orientation']['alpha']['histogram']['E']).to eq(1)
+      expect(day['orientation']['beta']['total']).to eq(2)
+      expect(day['orientation']['beta']['average']).to eq(7.5)
+      expect(day['orientation']['beta']['histogram']['-20-20']).to eq(2)
+      expect(day['orientation']['gamma']['total']).to eq(2)
+      expect(day['orientation']['gamma']['average']).to eq(22.5)
+      expect(day['orientation']['gamma']['histogram']['-18-18']).to eq(1)
+      expect(day['orientation']['gamma']['histogram']['18-54']).to eq(1)
+    end
   end
 
   describe "split_out_later_sessions" do
