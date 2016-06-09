@@ -40,11 +40,7 @@ describe Stats do
         :started_at => nil,
         :ended_at => nil,
         :goals => [],
-        :volume => {},
-        :ambient_light => {},
-        :core_words => {},
-        :screen_brightness => {},
-        :orientation => {}
+        :core_words => {}
       })
       expect(days).not_to eq(nil)
       expect(days.keys.length).to eq(3)
@@ -66,11 +62,7 @@ describe Stats do
         :ended_at => nil,
         :max_time_block => nil,
         :time_offset_blocks => {},
-        :goals => [],
-        :volume => {},
-        :ambient_light => {},
-        :screen_brightness => {},
-        :orientation => {}
+        :goals => []
       })
     end
     
