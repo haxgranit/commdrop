@@ -12,7 +12,6 @@ export default Ember.Route.extend({
   model: function(params) {
     var res = this.modelFor('board');
     if(res.get('should_reload')) {
-      alert('reloady!');
       res.set('should_reload', false);
       return res.reload();
     }
