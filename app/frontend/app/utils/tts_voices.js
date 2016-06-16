@@ -18,9 +18,9 @@ var voices = Ember.Object.extend({
         voice.voice_url = voice.voice_url || "https://s3.amazonaws.com/coughdrop/voices/" + voice.voice_dir + ".zip";
         voice.voice_sample = voice.voice_sample || "https://s3.amazonaws.com/coughdrop/voices/" + voice.name.toLowerCase() + "-sample.mp3";
         voice.language_dir = voice.voice_dir.split(/-/)[2];
-        voice.windows_available = !!(voice.language_dir && voice.language_dir != "");
+        voice.windows_available = !!(voice.language_dir && voice.language_dir !== "");
         voice.windows_language_url = "https://s3.amazonaws.com/coughdrop/voices/" + voice.language_dir + ".zip";
-        if(voice.language_version && voice.language_version != "") {
+        if(voice.language_version && voice.language_version !== "") {
           voice.windows_language_url = "https://s3.amazonaws.com/coughdrop/voices/" + voice.language_dir + "-" + voice.language_version + ".zip";
         }
         voice.windows_voice_url = voice.voice_url.replace(/\.zip/, '.win.zip');
@@ -160,7 +160,7 @@ var voices = Ember.Object.extend({
       voice_id: "acap:Will", size: 41,
       locale: "en-US", gender: "m", age: "adult",
       ref_id: "enu_will_22k_ns",
-      langauge_version: 1.128"",
+      langauge_version: "1.128",
       voice_dir: "hqm-ref-USEnglish-Will-22khz"
     },
     {
