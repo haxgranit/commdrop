@@ -102,7 +102,8 @@ module Subscription
           end
           self.settings['subscription']['customer_id'] = args['customer_id']
         end
-        self.settings['subscription']['started'] = Time.now.iso8601
+        self.settings['subscription']['started'] = Time.now.iso8601 
+        self.settings['subscription']['started'] = nil if args['plan_id'] == 'monthly_free'
         self.settings['subscription']['token_summary'] = args['token_summary']
         self.settings['subscription']['plan_id'] = args['plan_id']
         self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_monthly_free'
@@ -223,7 +224,18 @@ module Subscription
       })
     elsif type == 'add_voice'
       self.allow_additional_premium_voice!
-    elsif type == 'add_1'
+    elsif type == 'add_1' || type == 'communicator_trial'
+      if type == 'communicator_trial'
+        self.settings['preferences']['role'] = 'communicator'
+        self.save
+        self.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => 'free_trial',
+          'token_summary' => "Manually-set Communicator Account",
+          'plan_id' => 'monthly_free'
+        })
+        self.expires_at ||= Time.now
+      end
       if self.expires_at
         self.expires_at = [self.expires_at, Time.now].max + 1.month
         self.settings ||= {}

@@ -40,6 +40,9 @@ describe Subscription, :type => :model do
       expect(u.grace_period?).to eq(false)
       u.settings['subscription']['started'] = nil
       expect(u.grace_period?).to eq(true)
+      u.settings['subscription']['plan_id'] = 'asdf'
+      u.settings['subscription']['subscription_id'] = 'qwer'
+      expect(u.grace_period?).to eq(true)
     end
   end
   
@@ -659,12 +662,14 @@ describe Subscription, :type => :model do
     it "should send a notification for successful purchases" do
       u = User.create
       expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_confirmed, u.global_id)
+      expect(SubscriptionMailer).to receive(:schedule_delivery).with(:new_subscription, u.global_id)
       User.subscription_event({'user_id' => u.global_id, 'purchase' => true, 'purchase_id' => '1234', 'customer_id' => '2345', 'plan_id' => 'long_term_150', 'seconds_to_add' => 3.weeks.to_i})
     end
     
     it "should properly update the user settings depending on the purchase type" do
       u = User.create
       expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_confirmed, u.global_id)
+      expect(SubscriptionMailer).to receive(:schedule_delivery).with(:new_subscription, u.global_id)
       t = u.expires_at + 8.weeks
       User.subscription_event({'user_id' => u.global_id, 'purchase' => true, 'purchase_id' => '1234', 'customer_id' => '2345', 'plan_id' => 'long_term_150', 'seconds_to_add' => 8.weeks.to_i})
       u.reload
@@ -674,6 +679,7 @@ describe Subscription, :type => :model do
 
       u = User.create
       expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_confirmed, u.global_id)
+      expect(SubscriptionMailer).to receive(:schedule_delivery).with(:new_subscription, u.global_id)
       User.subscription_event({'user_id' => u.global_id, 'subscribe' => true, 'subscription_id' => '1234', 'customer_id' => '2345', 'plan_id' => 'monthly_6'})
       u.reload
       expect(u.settings['subscription']).not_to eq(nil)
@@ -686,6 +692,7 @@ describe Subscription, :type => :model do
       u.settings['subscription'] = {'prior_purchase_ids' => ['1234']}
       u.save
       expect(SubscriptionMailer).not_to receive(:schedule_delivery).with(:purchase_confirmed, u.global_id)
+      expect(SubscriptionMailer).not_to receive(:schedule_delivery).with(:new_subscription, u.global_id)
       t = u.expires_at + 8.weeks
       User.subscription_event({'user_id' => u.global_id, 'purchase' => true, 'purchase_id' => '1234', 'customer_id' => '2345', 'plan_id' => 'long_term_150', 'seconds_to_add' => 8.weeks.to_i})
     end
@@ -929,6 +936,22 @@ describe Subscription, :type => :model do
       u = User.new
       expect(u.subscription_override('bacon')).to eq(false)
       expect(u.subscription_override('slp_monthly_free')).to eq(false)
+    end
+    
+    it "should update to communicator type" do
+      u = User.create
+      expect(u.subscription_override('communicator_trial')).to eq(true)
+      expect(u.grace_period?).to eq(true)
+      
+      u = User.create
+      u.subscription_override('eval')
+      expect(u.subscription_override('communicator_trial')).to eq(true)
+      expect(u.grace_period?).to eq(true)
+      
+      u = User.create
+      u.subscription_override('manual_supporter')
+      expect(u.subscription_override('communicator_trial')).to eq(true)
+      expect(u.grace_period?).to eq(true)
     end
   end
   

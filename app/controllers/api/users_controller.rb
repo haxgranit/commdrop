@@ -163,7 +163,7 @@ class Api::UsersController < ApplicationController
     if params['type'] == 'gift_code'
       return unless allowed?(user, 'edit')
       progress = Progress.schedule(user, :redeem_gift_token, token['code'])
-    elsif params['type'] == 'never_expires' || params['type'] == 'eval' || params['type'] == 'add_1' || params['type'] == 'manual_supporter' || params['type'] == 'add_voice'
+    elsif ['never_expires', 'eval', 'add_1', 'manual_supporter', 'add_voice', 'communicator_trial'].include?(params['type'])
       return unless allowed?(user, 'admin_support_actions')
       progress = Progress.schedule(user, :subscription_override, params['type'], @api_user && @api_user.global_id)
     else
