@@ -68,6 +68,11 @@ export default modal.ModalController.extend({
       voice.set('download_progress', 0);
       capabilities.wakelock('download_voice', true);
       var data = {voice_id: voice.voice_id, voice_url: voice.get('voice_url'), system: capabilities.system };
+      if(capabilities.system == 'Windows') {
+        data.voice_url = voice.get('windows_voice_url');
+        data.language_url = voice.get('windows_language_url');
+        data.language_dir = voice.get('windows_language_dir');
+      }
 
       // claim the voice and get in return a signed download URL
       persistence.ajax('/api/v1/users/' + this.get('model.user.id') + '/claim_voice', {type: 'POST', data: data}).then(function(data) {

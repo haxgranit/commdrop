@@ -147,7 +147,7 @@ var capabilities;
             }, function(err) {
               promise.reject({error: 'cordova exec failed'});
             }, 'ExtraTTS', method, all_args);
-          } else if(window.node_tts) {
+          } else if(window.extra_tts) {
             args = args || {};
             args.success = function(res) {
               callback(promise, res);
@@ -180,10 +180,12 @@ var capabilities;
           });
         },
         download_voice: function(voice_id, voice_url, progress) {
+          var voice = tts_voices.find_voice(voice_id);
           return capabilities.tts.tts_exec('downloadVoice',
             {
               voice_id: voice_id,
-              voice_url: voice_url
+              voice_url: voice_url,
+              language_dir: voice.language_dir
             },
             function(promise, res) {
               if(res.done) {
@@ -202,7 +204,8 @@ var capabilities;
             return capabilities.tts.tts_exec('deleteVoice',
             {
               voice_id: voice.voice_id,
-              voice_dir: voice.voice_dir
+              voice_dir: voice.voice_dir,
+              language_dir: voice.language_dir
             },
             function(promise, res) {
               promise.resolve(res);
