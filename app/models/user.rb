@@ -699,8 +699,9 @@ class User < ActiveRecord::Base
   
   def default_listeners(notification_type)
     if notification_type == 'home_board_changed'
-      res = [self]
       ([self] + self.supervisors).uniq.map(&:record_code)
+    elsif notification_type == 'log_summary'
+      [self].map(&:record_code)
     else
       []
     end
