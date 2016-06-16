@@ -322,6 +322,8 @@ export default Ember.Controller.extend({
         this.set('subscription_settings', {action: action, type: i18n.t('manual_supporter', "Manually Set as Supporter")});
       } else if(action == 'add_1') {
         this.set('subscription_settings', {action: action, type: i18n.t('add_one_month', "Add 1 Month to Expiration")});
+      } else if(action == 'communicator_trial') {
+        this.set('subscription_settings', {action: action, type: i18n.t('communicator_trial', "Manually Set as Communicator Free Trial")});
       } else if(action == 'add_voice') {
         this.set('subscription_settings', {action: action, type: i18n.t('add_premium_voice', "Add 1 Premium Voice")});
       }
