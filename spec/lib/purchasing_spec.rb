@@ -96,6 +96,7 @@ describe Purchasing do
         u = User.create
         exp = u.expires_at
         expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_confirmed, u.global_id)
+        expect(SubscriptionMailer).to receive(:schedule_delivery).with(:new_subscription, u.global_id)
         
         res = stripe_event_request 'charge.succeeded', {
           'id' => '12345',
@@ -155,6 +156,7 @@ describe Purchasing do
           }
         })
         expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_confirmed, u.global_id)
+        expect(SubscriptionMailer).to receive(:schedule_delivery).with(:new_subscription, u.global_id)
         expect(Purchasing).to receive(:cancel_other_subscriptions).with(u, '12345')
         res = stripe_event_request 'customer.subscription.created', {
           'customer' => 'tyuio',
@@ -208,6 +210,7 @@ describe Purchasing do
           }
         })
         expect(SubscriptionMailer).to receive(:schedule_delivery).with(:purchase_confirmed, u.global_id)
+        expect(SubscriptionMailer).to receive(:schedule_delivery).with(:new_subscription, u.global_id)
         expect(Purchasing).to receive(:cancel_other_subscriptions).with(u, '12345')
         res = stripe_event_request 'customer.subscription.updated', {
           'customer' => 'tyuio',
