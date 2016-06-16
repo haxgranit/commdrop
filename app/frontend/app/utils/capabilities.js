@@ -608,7 +608,7 @@ var capabilities;
 
               var full_size = Math.max(req_size, requested);
               if((full_size - (used || 0)) < (1024*1024*50) || (requested || 0) < (1024*1024*50)) {
-                req_size = req_size + (1024*1024*50);
+                req_size = full_size + (1024*1024*50);
                 setTimeout(function() {
                   promise.reject({error: "timeout"});
                 }, 5000);
