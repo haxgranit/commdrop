@@ -794,10 +794,14 @@ var persistence = Ember.Object.extend({
         }
 
         resolve(object);
-      }, function() {
+      }, function(err) {
         persistence.url_uncache = persistence.url_uncache || {};
         persistence.url_uncache[url] = true;
-        reject({error: "saving to data cache failed"});
+        var error = {error: "saving to data cache failed"};
+        if(err && err.name == "QuotaExceededError") {
+          error.quota_maxed = true;
+        }
+        reject(error);
       });
     });
   },
@@ -1299,8 +1303,12 @@ var persistence = Ember.Object.extend({
       save_avatar.then(function(object) {
         importantIds.push("dataCache_" + object.url);
         resolve();
-      }, function() {
-        reject({error: "failed to save user avatar"});
+      }, function(err) {
+        if(err && err.quota_maxed) {
+          reject({error: "failed to save user avatar, storage is full"});
+        } else {
+          reject({error: "failed to save user avatar"});
+        }
       });
     });
   },
