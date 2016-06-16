@@ -155,7 +155,7 @@ var capabilities;
             args.error = function(str) {
               promise.reject({error: str});
             };
-            window.node_tts[method](args);
+            window.extra_tts[method](args);
           } else {
             promise.reject({erorr: 'platform-level tts not available'});
           }
@@ -185,7 +185,8 @@ var capabilities;
             {
               voice_id: voice_id,
               voice_url: voice_url,
-              language_dir: voice.language_dir
+              language_dir: voice.language_dir,
+              langauge_url: voice.windows_language_url
             },
             function(promise, res) {
               if(res.done) {
