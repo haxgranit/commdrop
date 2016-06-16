@@ -107,6 +107,20 @@ describe SubscriptionMailer, :type => :mailer do
     end
   end
   
+  describe "new_subscription" do
+    it "should generate the correct message" do
+      ENV['NEW_REGISTRATION_EMAIL'] = "nobody@example.com"
+      u = User.create(:settings => {'name' => 'fred', 'email' => 'fred@example.com'})
+      m = SubscriptionMailer.new_subscription(u.global_id)
+      expect(m.to).to eq(["nobody@example.com"])
+      expect(m.subject).to eq("CoughDrop - New Subscription")
+      
+      html = m.body.to_s
+      expect(html).to match(/just updated their CoughDrop subscription/)
+      expect(html).to match(/#{u.user_name}<\/a>/)
+    end  
+  end
+ 
   describe "subscription_pause_failed" do
     it "should generate the correct message" do
       ENV['SYSTEM_ERROR_EMAIL'] = "nobody@example.com"

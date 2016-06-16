@@ -268,12 +268,14 @@ module Subscription
           SubscriptionMailer.schedule_delivery(:gift_seconds_added, args['gift_id'])
         else
           SubscriptionMailer.schedule_delivery(:purchase_confirmed, self.global_id)
+          SubscriptionMailer.schedule_delivery(:new_subscription, self.global_id)
         end
       end
       return is_new
     elsif args['subscribe']
       is_new = update_subscription(args)
       SubscriptionMailer.schedule_delivery(:purchase_confirmed, self.global_id) if is_new
+      SubscriptionMailer.schedule_delivery(:new_subscription, self.global_id) if is_new
       return is_new
     elsif args['unsubscribe']
       is_new = update_subscription(args)

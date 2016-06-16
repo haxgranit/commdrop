@@ -1,0 +1,22 @@
+<%= @user.settings['name'] %> just updated their CoughDrop subscription!<br/><br/>
+User name: <b><a href="<%= JsonApi::Json.current_host %>/<%= @user.user_name %>"><%= @user.user_name %></a></b><br/>
+Email: <b><%= @user.settings['email'] %></b><br/>
+
+<% if @subscription['never_expires'] %>
+Subscription: Never Expires
+<% elsif @user.org_sponsored? %>
+Subscription: Org-Sponsored<br/>
+Organization: <%= (Organization.attached_orgs(@user).detect{|o| o['sponsored'] } || {})['name'] %>
+<% elsif @subscription['started'] %>
+Subscription: Recurring<br/>
+Plan: <%= @subscription['plan_id'] %>
+<% elsif @subscription['purchased'] %>
+Subscription: Purchase<br/>
+Plan: <%= @subscription['plan_id'] %>
+<% else %>
+Subscription: No subscription information provided (what the?)
+<% end %>
+<br/><br/>
+
+Thanks!<br/>
+-The CoughDrop Team

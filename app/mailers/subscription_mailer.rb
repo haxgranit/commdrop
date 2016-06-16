@@ -16,6 +16,14 @@ class SubscriptionMailer < ActionMailer::Base
       mail(to: ENV['SYSTEM_ERROR_EMAIL'], subject: "CoughDrop - Subscription Pause Failed")
     end
   end
+
+  def new_subscription(user_id)
+    @user = User.find_by_global_id(user_id)
+    @subscription = @user.subscription_hash
+    if ENV['NEW_REGISTRATION_EMAIL']
+      mail(to: ENV['NEW_REGISTRATION_EMAIL'], subject: "CoughDrop - New Subscription")
+    end
+  end
   
   def subscription_resume_failed(user_id)
     @user = User.find_by_global_id(user_id)
