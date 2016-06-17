@@ -773,14 +773,22 @@ class LogSession < ActiveRecord::Base
       possible_user_ids << user.global_id
       possible_user_ids += user.supervisor_user_ids
     end
-    # find any users who are due for a notification and might have an update (loose bounds)
+    # find any users who are due for a notification
     users = User.where(['next_notification_at < ?', Time.now])
-    # TODO: sharding
-    users = users.where({:id => User.local_ids(possible_user_ids) })
     users.find_in_batches(:batch_size => 100).each do |batch|
       batch.each do |user|
-        # trigger a notification if it's time and the user has an update (tight bounds)
-        user.notify('log_summary') if LogSession.needs_log_summary?(user)
+        # trigger a notification if it's time and 
+        # they might have an update (loose bounds) and
+        # the user has an update (tight bounds)
+        if possible_user_ids.include?(user.global_id) && LogSession.needs_log_summary?(user)
+          user.notify('log_summary')
+        # if nothing to report, postpone notification, so we don't keep checking for 
+        # this user forever and notify at a random point in time when the tight bounds
+        # finally fit
+        else
+          user.next_notification_at = next_notification_schedule
+          user.save
+        end
       end
     end
   end
