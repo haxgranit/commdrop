@@ -658,7 +658,7 @@ class User < ActiveRecord::Base
         :sharer_user_name => args['sharer']['user_name'],
         :text => args['text']
       })
-    elsif notification == 'log_summary'
+    elsif notification_type == 'log_summary'
       self.next_notification_at = self.next_notification_schedule
       self.save
       UserMailer.schedule_delivery(:log_summary, self.global_id)
