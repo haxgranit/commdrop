@@ -9,8 +9,8 @@ end
 
 task :generate_log_summaries => :environment do
   puts "Generating log summaries..."
-  LogSession.generate_log_summaries
-  puts "done."
+  res = LogSession.generate_log_summaries
+  puts "done. found #{res[:found]}, notified #{res[:notified]}"
 end
 
 task :clean_old_deleted_boards => :environment do

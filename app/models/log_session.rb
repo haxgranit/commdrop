@@ -775,12 +775,18 @@ class LogSession < ActiveRecord::Base
     end
     # find any users who are due for a notification
     users = User.where(['next_notification_at < ?', Time.now])
+    res = {
+      :notified => 0,
+      :found => 0
+    }
     users.find_in_batches(:batch_size => 100).each do |batch|
       batch.each do |user|
+        res[:found] += 1
         # trigger a notification if it's time and 
         # they might have an update (loose bounds) and
         # the user has an update (tight bounds)
         if possible_user_ids.include?(user.global_id) && LogSession.needs_log_summary?(user)
+          res[:notified] += 1
           user.notify('log_summary')
         # if nothing to report, postpone notification, so we don't keep checking for 
         # this user forever and notify at a random point in time when the tight bounds
@@ -791,5 +797,6 @@ class LogSession < ActiveRecord::Base
         end
       end
     end
+    res
   end
 end
