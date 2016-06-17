@@ -93,7 +93,11 @@ class UserMailer < ActionMailer::Base
       user_report = OpenStruct.new({
         :label => user.user_name,
         :user_name => user.user_name,
-        :premium => user.premium?
+        :premium => user.premium?,
+        :pre_start => pre_start.iso8601[0, 10],
+        :pre_end => pre_end.iso8601[0, 10],
+        :start => pre_end.iso8601[0, 10],
+        :end => Time.now.iso8601[0, 10]
       })
       begin
         if user.premium? && user.settings['preferences'] && user.settings['preferences']['role'] == 'communicator'
