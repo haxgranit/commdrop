@@ -54,6 +54,7 @@ Router.map(function() {
   this.route('organization', { path: '/organizations/:id' }, function() {
     this.route('reports');
     this.route('subscription');
+    this.route('rooms');
   });
   this.route('redeem', { path: '/redeem' });
   this.route('redeem_with_code', { path: '/redeem/:code' });

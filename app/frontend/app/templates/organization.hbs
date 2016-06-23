@@ -21,6 +21,7 @@
       <div class="btn-group-vertical" style="width: 100%;">
         {{#link-to 'organization.index' model.id class='btn btn-default'}}{{t "Admin" key='admin'}}{{/link-to}}
         {{#link-to 'organization.reports' model.id class='btn btn-default'}}{{t "Reports" key='reports'}}{{/link-to}}
+        {{#link-to 'organization.rooms' model.id class='btn btn-default'}}{{t "Rooms" key='rooms'}}{{/link-to}}
         {{#if model.permissions.manage_subscription}}
           {{#link-to 'organization.subscription' model.id class='btn btn-default'}}{{t "Subscription" key='subscription'}}{{/link-to}}
         {{/if}}

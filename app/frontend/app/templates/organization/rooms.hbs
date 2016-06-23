@@ -1,0 +1,128 @@
+<h2>{{t "Organization Rooms" key='org_rooms'}}</h2>
+{{#if units.loading}}
+  <p>{{t "Loading Rooms..." key='loading_rooms'}}</p>
+{{else if units.error}}
+  <p>{{t "There was an unexpected problem loading rooms" key='error_loading_rooms'}}</p>
+{{else if units}}
+  <table class='table table-striped'>
+    <tbody>
+      {{#each units as |unit|}}
+        <tr>
+          <td style='padding: 10px 10px 30px;'>
+            <h4 style='margin-top: 0;'>{{unit.name}}</h4>
+            <table style="width: 100%; margin-left: 30px;">
+              <thead>
+                <tr>
+                  <td style="width: 50%;">
+                    <strong>{{t "Supervisors" key='supervisors'}}</strong>
+                  </td>
+                  <td style="width: 50%;">
+                    <strong>{{t "Communicators" key='communicators'}}</strong>
+                  </td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 50%; vertical-align: top;">
+                    <div class='btn-group-vertical' style='width: 80%;'>
+                      {{#each unit.supervisors as |supervisor|}}
+                        <span class='btn btn-default' style='text-align: left; border-width: 0; border-bottom-width: 1px; border-radius: 0; background: transparent; cursor: default; border-color: #eee;'>
+                          {{#link-to 'user' supervisor.user_name}}
+                            <img src={{supervisor.avatar_url}} style="height: 30px;"/>
+                            {{supervisor.user_name}}
+                          {{/link-to}}
+
+                          {{#if supervisor.org_unit_edit_permission}}
+                            {{t "(can edit)" key='can_edit_paren'}}
+                          {{/if}}
+                          <div style='float: right; padding-top: 5px;'>
+                            {{#if model.permissions.edit}}
+                              <a href="#" {{action 'delete_unit_user' unit 'supervisor' supervisor.id}}>
+                                <span class='glyphicon glyphicon-remove'></span>
+                                <span class='sr-only'>{{t "Remove User" key='remove_user'}}</span>
+                              </a>
+                            {{/if}}
+                          </div>
+                          <div style='clear: right;'></div>
+                        </span>
+                      {{/each}}
+                    </div>
+                  </td>
+                  <td style="width: 50%; vertical-align: top;">
+                    <div class='btn-group-vertical' style='width: 80%;'>
+                      {{#each unit.communicators as |communicator|}}
+                        <span class='btn btn-default' style='text-align: left; border-width: 0; border-bottom-width: 1px; border-radius: 0; background: transparent; cursor: default; border-color: #eee;'>
+                          {{#link-to 'user' communicator.user_name}}
+                            <img src={{communicator.avatar_url}} style="height: 30px;"/>
+                            {{communicator.user_name}}
+                          {{/link-to}}
+
+                          <div style='float: right; padding-top: 5px;'>
+                            {{#if model.permissions.edit}}
+                              <a href="#" {{action 'delete_unit_user' unit 'communicator' communicator.id}}>
+                                <span class='glyphicon glyphicon-remove'></span>
+                                <span class='sr-only'>{{t "Remove User" key='remove_user'}}</span>
+                              </a>
+                            {{/if}}
+                          </div>
+                          <div style='clear: right;'></div>
+                        </span>
+                      {{/each}}
+                    </div>
+                  </td>
+                </tr>
+                {{#if unit.adding_users}}
+                  <tr>
+                    <td style="width: 50%;">
+                      <span style="display: inline-block; width: 150px;">
+                        {{bound-select select_class="form-control" content=supervisor_options selection=unit.supervisor_user_name action=(action (mut unit.supervisor_user_name)) }}
+                      </span>
+                      <div class="btn-group dropdown">
+                        <button class='btn btn-default dropdown-toggle' data-toggle="dropdown" aria-expanded="false">
+                          {{t "Add Supervisor" key='add_supervisor'}} <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                          <li><a href="#" {{action 'add_unit_user' unit 'edit_supervisor'}}>{{t "Add With Edit Permission" key='add_with_edit_permission'}}</a></li>
+                          <li><a href="#" {{action 'add_unit_user' unit 'supervisor'}}>{{t "Add As View Only" key='add_as_read_only'}}</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                    <td style="width: 50%;">
+                      <span style="display: inline-block; width: 150px;">
+                        {{bound-select select_class="form-control" content=communicator_options selection=unit.communicator_user_name action=(action (mut unit.communicator_user_name)) }}
+                      </span>
+                      <button class='btn btn-default' {{action 'add_unit_user' unit 'communicator'}}>{{t "Add Communicator" key='add_communicator'}}</button>
+                    </td>
+                  </tr>
+                {{/if}}
+              </tbody>
+            </table>
+          </td>
+          {{#if model.permissions.edit}}
+            <td style='width: 150px; padding: 10px 0 30px;'>
+              <div>
+                <button class='btn btn-default' {{action 'add_users' unit}}><span class='glyphicon glyphicon-plus'></span><span class='sr-only'>{{t "Add Users" key='add_users'}}</span></button>
+                <button class='btn btn-default' {{action 'edit_unit' unit}}><span class='glyphicon glyphicon-pencil'></span><span class='sr-only'>{{t "Edit" key='edit'}}</span></button>
+                <button class='btn btn-default' {{action 'delete_unit' unit}}><span class='glyphicon glyphicon-trash'></span><span class='sr-only'>{{t "Delete" key='delete'}}</span></button>
+              </div>
+            </td>
+          {{/if}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{else}}
+  <p>{{t "No rooms created" key='no_rooms_created'}}</p>
+  <p>{{t "Rooms are a way to organize supervisors and communicators into groups. Supervisors are automatically added to the accounts of all communicators in their rooms, and are automatically removed as supervisors when room changes happen." key='rooms_explainer'}}</p>
+{{/if}}
+{{#if model.permissions.edit}}
+  <form class="form-inline" {{action 'add_unit' on='submit'}}>
+    <div class="form-group">
+      <p class="form-control-static"><strong>{{t "Add a Room" key='add_a_room'}} </strong></p>
+    </div>
+    <div class="form-group">
+      {{input type="text" value=new_unit_name placeholder="Room Name" class="form-control"}}
+    </div>
+    <button type="submit" class="btn btn-default">{{t "Add Room" key='add_room'}}</button>
+  </form>
+{{/if}}

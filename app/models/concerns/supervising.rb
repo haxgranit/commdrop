@@ -76,6 +76,11 @@ module Supervising
   def edit_permission_for?(supervisee)
     !!(supervisee.settings['supervisors'] || []).detect{|s| s['user_id'] == self.global_id && s['edit_permission'] }
   end
+
+  def org_unit_for_supervising(supervisee)
+    sup = (supervisee.settings['supervisors'] || []).detect{|s| s['user_id'] == self.global_id && s['organization_unit_id'] }
+    sup && OrganizationUnit.find_by_global_id(sup['organization_unit_id'])
+  end
   
   def process_supervisor_key(key)
     action, key = key.split(/-/, 2)
@@ -153,13 +158,14 @@ module Supervising
       supervisor.save
     end
     
-    def link_supervisor_to_user(supervisor, user, code=nil, editor=true)
+    def link_supervisor_to_user(supervisor, user, code=nil, editor=true, organization_unit_id=nil)
       # raise "free_premium users can't add supervisors" if user.free_premium?
       user.settings['supervisors'] = (user.settings['supervisors'] || []).select{|s| s['user_id'] != supervisor.global_id }
       user.settings['supervisors'] << {
         'user_id' => supervisor.global_id,
         'user_name' => supervisor.user_name,
-        'edit_permission' => editor
+        'edit_permission' => editor,
+        'organization_unit_id' => organization_unit_id
       }
       user.settings['link_codes'] -= [code] if code
       user.save

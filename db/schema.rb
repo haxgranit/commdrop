@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160601172208) do
+ActiveRecord::Schema.define(version: 20160621174743) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -136,7 +136,7 @@ ActiveRecord::Schema.define(version: 20160601172208) do
     t.string   "cluster_hash", limit: 255
   end
 
-  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_cluster_hash", unique: true, using: :btree
+  add_index "cluster_locations", ["cluster_type", "cluster_hash"], name: "index_cluster_locations_on_cluster_type_and_hash", unique: true, using: :btree
 
   create_table "contact_messages", force: :cascade do |t|
     t.text     "settings"
@@ -225,6 +225,16 @@ ActiveRecord::Schema.define(version: 20160601172208) do
   add_index "log_sessions", ["user_id", "log_type", "started_at"], name: "index_log_sessions_on_user_id_and_log_type_and_started_at", using: :btree
   add_index "log_sessions", ["user_id", "started_at"], name: "index_log_sessions_on_user_id_and_started_at", using: :btree
 
+  create_table "log_snapshots", force: :cascade do |t|
+    t.integer  "user_id"
+    t.datetime "started_at"
+    t.text     "settings"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  add_index "log_snapshots", ["user_id", "started_at"], name: "index_log_snapshots_on_user_id_and_started_at", using: :btree
+
   create_table "old_keys", force: :cascade do |t|
     t.string   "record_id",  limit: 255
     t.string   "type",       limit: 255
@@ -234,6 +244,16 @@ ActiveRecord::Schema.define(version: 20160601172208) do
   end
 
   add_index "old_keys", ["type", "key"], name: "index_old_keys_on_type_and_key", using: :btree
+
+  create_table "organization_units", force: :cascade do |t|
+    t.integer  "organization_id"
+    t.text     "settings"
+    t.integer  "position"
+    t.datetime "created_at",      null: false
+    t.datetime "updated_at",      null: false
+  end
+
+  add_index "organization_units", ["organization_id", "position"], name: "index_organization_units_on_organization_id_and_position", using: :btree
 
   create_table "organization_users", force: :cascade do |t|
     t.integer  "user_id"

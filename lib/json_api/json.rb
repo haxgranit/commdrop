@@ -59,7 +59,12 @@ module JsonApi::Json
         json[:meta][:next_url] += "&#{key.to_s}=#{CGI.escape(val.to_s)}" if val
       end
     end
-    json[self::TYPE_KEY] = where[0, per_page].map{|i| as_json(i, args) }
+    results = where[0, per_page]
+    args[:page_results] = results
+    if self.respond_to?(:page_data)
+      args[:page_data] = self.page_data(results)
+    end
+    json[self::TYPE_KEY] = results.map{|i| as_json(i, args) }
     json
   end
   

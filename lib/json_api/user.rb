@@ -111,6 +111,11 @@ module JsonApi::User
         json['goal'] = user.settings['primary_goal']
       elsif args[:supervisee]
         json['edit_permission'] = user.edit_permission_for?(args[:supervisee])
+        org_unit = user.org_unit_for_supervising(args[:supervisee])
+        if org_unit
+          # json['organization_unit_name'] = org_unit.settings['name']
+          json['organization_unit_id'] = org_unit.global_id
+        end
       end
       if args[:subscription]
         json['subscription'] = user.subscription_hash
