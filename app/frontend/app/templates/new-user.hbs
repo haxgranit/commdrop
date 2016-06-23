@@ -1,0 +1,63 @@
+{{#modal-dialog action="close" opening='opening' closing='closing'}}
+  <div class="modal-header">
+    <button type="button" class="close" {{action 'close'}}>&times;</button>
+    <h3>{{t "New User" key='new_user'}}</h3>
+  </div>
+  <div class="modal-body">
+    <form class="form-horizontal" {{action "add" on="submit"}}>
+      <div class="form-group">
+        <label for="name" class="col-sm-3 control-label">{{t "Full Name" key='full_name'}}</label>
+        <div class="col-sm-6">
+          {{input value=model.user.name class="form-control" id="name" placeholder="Full name"}}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="user_name" class="col-sm-3 control-label">{{t "User Name" key='uesr_name'}}</label>
+        <div class="col-sm-6">
+          {{input value=model.user.user_name class="form-control" placeholder="User name"}}
+          {{#if model.user.user_name_check.checking}}
+          {{else if model.user.user_name_check.exists}}
+            <span class='text-danger'>{{t '"%{user_name}" already exists' user_name=model.user.user_name}}</span>
+          {{/if}}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="email" class="col-sm-3 control-label">{{t "Email" key='email'}}</label>
+        <div class="col-sm-6">
+          {{input value=model.user.email class="form-control" placeholder="Email address"}}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="name" class="col-sm-3 control-label">{{t "Password" key='password'}}</label>
+        <div class="col-sm-6">
+          {{input type='password' value=model.user.password class="form-control" placeholder="Password"}}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="user_type" class="col-sm-3 control-label">{{t "User Type" key='user_type'}}</label>
+        <div class="col-sm-6">
+          {{bound-select select_class="form-control" select_id="user_type" content=user_types selection=model.user.org_management_action action=(action (mut model.user.org_management_action)) }}
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-sm-9 col-sm-offset-3">
+          <button type="submit" class='btn btn-primary' disabled={{linking}}>
+            {{#if linking}}
+              {{t "Creating User..." key='adding_user'}}
+            {{else}}
+              {{#if error}}
+                {{t "Creating User Failed" key='adding_user_failed'}}
+              {{else}}
+                {{t "Create User" key='add_user'}}
+              {{/if}}
+            {{/if}}
+          </button>
+          <a href="#" class="btn btn-default" {{action 'close'}}>{{t "Cancel" key='cancel'}}</a>
+          {{#if error}}
+            <p class="text-danger">{{error}}</p>
+          {{/if}}
+        </div>
+      </div>
+    </form>
+  </div>
+{{/modal-dialog}}

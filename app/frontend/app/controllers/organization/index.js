@@ -121,32 +121,59 @@ export default Ember.Controller.extend({
       _this.set('supervisors.data', null);
     });
   },
+  suggest_creating_manager: function() {
+    return this.get('missing_user_name') && this.get('missing_user_name') == this.get('manager_user_name');
+  }.property('manager_user_name', 'missing_user_name'),
+  suggest_creating_supervisor: function() {
+    return this.get('missing_user_name') && this.get('missing_user_name') == this.get('supervisor_user_name');
+  }.property('supervisor_user_name', 'missing_user_name'),
+  suggest_creating_communicator: function() {
+    return this.get('missing_user_name') && this.get('missing_user_name') == this.get('user_user_name');
+  }.property('user_user_name', 'missing_user_name'),
   actions: {
     pick: function(view) {
       this.set('selected_view', view);
     },
+    new_user: function(attr) {
+      var _this = this;
+      modal.open('new-user', {default_org_management_action: attr, organization_id: this.get('model.id')}).then(function(res) {
+        if(res && res.created) {
+          if(res.user && res.user.get('org_management_action')) {
+            _this.send('management_action', res.user.get('org_management_action'), res.user.get('user_name'));
+          }
+        }
+      });
+    },
     management_action: function(action, user_name) {
       var model = this.get('model');
       var _this = this;
-      if(action == 'add_manager' || action == 'add_assistant') {
-        user_name = this.get('manager_user_name');
-      } else if(action == 'add_supervisor') {
-        user_name = this.get('supervisor_user_name');
-      } else if(action == 'add_user' || action == 'add_unsponsored_user') {
-        user_name = this.get('user_user_name');
+      _this.set('missing_user_name', null);
+      if(!user_name) {
+        if(action == 'add_manager' || action == 'add_assistant') {
+          user_name = this.get('manager_user_name');
+        } else if(action == 'add_supervisor') {
+          user_name = this.get('supervisor_user_name');
+        } else if(action == 'add_user' || action == 'add_unsponsored_user') {
+          user_name = this.get('user_user_name');
+        }
       }
+      if(!user_name) { return; }
       model.set('management_action', action + '-' + user_name);
       model.save().then(function() {
         if(action.match(/user/)) {
           _this.refresh_users();
-        } else if(action.match(/manager/)) {
+        } else if(action.match(/manager/) || action.match(/assistant/)) {
           _this.refresh_managers();
         } else if(action.match(/supervisor/)) {
           _this.refresh_supervisors();
         }
       }, function(err) {
         console.log(err);
-        modal.error(i18n.t('management_action_failed', "Management action failed unexpectedly"));
+        if(err && err.errors && err.errors.length === 1 && err.errors[0].match(/invalid user/)) {
+          _this.set('missing_user_name', user_name);
+        } else {
+          modal.error(i18n.t('management_action_failed', "Management action failed unexpectedly"));
+        }
       });
     },
     update_org: function() {

@@ -7,6 +7,9 @@ module Subscription
     prior_org = self.managing_organization
     if org_id
       new_org = org_id.is_a?(Organization) ? org_id : Organization.find_by_global_id(org_id)
+      if new_org && self.settings['authored_organization_id'] == new_org.global_id && self.created_at > 2.weeks.ago
+        pending = false
+      end
       self.settings['subscription'] ||= {}
       if sponsored
         self.settings['subscription']['started'] = nil

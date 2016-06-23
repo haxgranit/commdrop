@@ -385,6 +385,12 @@ class User < ActiveRecord::Base
     end
     self.settings['referrer'] ||= params['referrer'] if params['referrer']
     self.settings['ad_referrer'] ||= params['ad_referrer'] if params['ad_referrer']
+    if params['authored_organization_id'] && !self.id
+      org = Organization.find_by_global_id(params['authored_organization_id'])
+      if org
+        self.settings['authored_organization_id'] = org.global_id
+      end
+    end
     if params['last_message_read']
       if params['last_message_read'] >= (self.settings['last_message_read'] || 0)
         self.settings['unread_messages'] = 0

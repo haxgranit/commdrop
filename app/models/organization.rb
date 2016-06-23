@@ -69,6 +69,9 @@ class Organization < ActiveRecord::Base
   def add_supervisor(user_key, pending=true)
     user = User.find_by_path(user_key)
     raise "invalid user, #{user_key}" unless user
+    if user.settings['authored_organization_id'] && user.settings['authored_organization_id'] == self.global_id && user.created_at > 2.weeks.ago
+      pending = false
+    end
     user.settings ||= {}
     user.settings['supervisor_for'] ||= {}
     user.settings['supervisor_for'][self.global_id] = {'pending' => pending, 'added' => Time.now.iso8601}

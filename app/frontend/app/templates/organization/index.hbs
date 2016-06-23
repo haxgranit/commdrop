@@ -103,6 +103,12 @@
       {{input value=manager_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
       <button class="btn btn-default btn-sm" {{action "management_action" 'add_manager'}}>{{t "Add Manager" key='add_manager'}}</button>
       <button class="btn btn-default btn-sm" {{action "management_action" 'add_assistant'}}>{{t "Add Assistant" key='add_assistant'}}</button>
+      <a href="#" {{action "new_user" 'add_manager'}} style='padding-left: 10px;'>{{t "New User" key='new_user'}}</a>
+      {{#if suggest_creating_manager}}
+        <p class='text-danger'>
+          {{t "The user name %{user_name} doesn't exist." key='no_user_suggest_create' user_name=manager_user_name}}
+        </p>
+      {{/if}}
     </div>
   {{/if}}
 
@@ -151,6 +157,12 @@
     <div style='margin-top: -15px;'>
       {{input value=supervisor_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
       <button class="btn btn-default btn-sm" {{action "management_action" 'add_supervisor'}}>{{t "Add Supervisor" key='add_supervisor'}}</button>
+      <a href="#" {{action "new_user" 'add_supervisor'}} style='padding-left: 10px;'>{{t "New User" key='new_user'}}</a>
+      {{#if suggest_creating_supervisor}}
+        <p class='text-danger'>
+          {{t "The user name %{user_name} doesn't exist." key='no_user_suggest_create' user_name=supervisor_user_name}}
+        </p>
+      {{/if}}
     </div>
   {{/if}}
 
@@ -200,6 +212,12 @@
       {{input value=user_user_name placeholder="user name" class="form-control inline inline-masquerade input-sm"}}
       <button disabled={{no_licenses}} class="btn btn-default btn-sm" {{action "management_action" 'add_user'}}>{{t "Add Sponsored User" key='add_sponsored_user'}}</button>
       <button class="btn btn-default btn-sm" {{action "management_action" 'add_unsponsored_user'}}>{{t "Add Unsponsored User" key='add_unsponsored_user'}}</button>
+      <a href="#" {{action "new_user" 'add_user'}} style='padding-left: 10px;'>{{t "New User" key='new_user'}}</a>
+      {{#if suggest_creating_communicator}}
+        <p class='text-danger'>
+          {{t "The user name %{user_name} doesn't exist." key='no_user_suggest_create' user_name=user_user_name}}
+        </p>
+      {{/if}}
     </div>
   {{/if}}
 

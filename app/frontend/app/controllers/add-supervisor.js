@@ -13,6 +13,8 @@ export default modal.ModalController.extend({
         registration_type: 'manually-added-supervisor'
       }
     });
+    this.set('linking', false);
+    this.set('error', null);
     sup.set('watch_user_name', true);
     this.set('model.supervisor', sup);
   },
