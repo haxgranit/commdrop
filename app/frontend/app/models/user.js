@@ -57,6 +57,9 @@ CoughDrop.User = DS.Model.extend({
   edit_permission: DS.attr('boolean'),
   cell_phone: DS.attr('string'),
   next_notification_delay: DS.attr('string'),
+  supervisors_or_managing_org: function() {
+    return (this.get('supervisors') || []).length > 0 || this.get('managing_org');
+  }.property('supervisors', 'managing_org'),
   has_management_responsibility: function() {
     return this.get('managed_orgs').length > 0;
   }.property('managed_orgs'),

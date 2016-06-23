@@ -188,7 +188,7 @@
           </div>
           <div class="panel-body">
                 <span {{action "supervision_settings"}}>
-                  {{#if model.supervisors}}
+                  {{#if model.supervisors_or_managing_org}}
                     <span style="cursor: pointer;">{{model.supervisor_names}}</span>
                   {{else}}
                     {{t "none linked" key='none_linked'}}
