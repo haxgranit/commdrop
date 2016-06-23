@@ -1060,6 +1060,15 @@ body.pretty_loader #loading_box {
   overflow: hidden;
   margin: 0;
 }
+.comma_item_list {
+  .comma_item:after {
+    content: ",";
+  }
+  .comma_item:last-of-type:after {
+    content: "";
+  }
+}
+
 .board_with_action {
   .board_action {
     position: absolute; 

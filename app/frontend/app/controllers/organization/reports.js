@@ -79,6 +79,12 @@ export default Ember.Controller.extend({
             _this.set('results.stats', list);
           } else {
             _this.set('results.count', list.length);
+            var two_weeks_ago = window.moment().add(-14, 'day').toISOString();
+            list.forEach(function(u) {
+              if(u && u.goal && u.goal.last_tracked) {
+                u.goal.recently_tracked = u.goal.last_tracked > two_weeks_ago;
+              }
+            });
             _this.set('results.list', list);
           }
         }, function(err) {
