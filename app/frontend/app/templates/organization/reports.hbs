@@ -47,20 +47,32 @@
                 </span>
               {{else}}
                 {{#link-to 'user' item.user_name class='list-group-item'}}
-                  <img src={{item.avatar_url}} style='height: 30px;'/>
-                  {{item.user_name}}
+                  <img src={{item.avatar_url}} style='height: 40px; margin-right: 5px; margin-top: -5px; float: left;'/>
+                  <span style="font-size: 16px;">
+                    {{item.user_name}}
+                  </span>
                   {{#if item.email}}
                     ({{item.email}})
                   {{/if}}
-                  {{#if item.org_pending}}
-                    {{t "(pending)" key='pending_paren'}}
-                  {{/if}}
-                  {{#if item.org_supervision_pending}}
-                    {{t "(pending)" key='pending_paren'}}
-                  {{/if}}
-                  {{#if item.org_sponsored}}
-                    {{t "(sponsored)" key='sponsored_paren'}}
-                  {{/if}}
+                  <span style='font-size: 10px; display: block; margin-top: -3px;' class="comma_item_list">
+                    {{#if item.org_pending}}
+                      <span class="comma_item">{{t "pending" key='pending'}}</span>
+                    {{/if}}
+                    {{#if item.org_supervision_pending}}
+                      <span class="comma_item">{{t "pending" key='pending'}}</span>
+                    {{/if}}
+                    {{#if item.org_sponsored}}
+                      <span class="comma_item">{{t "sponsored" key='sponsored'}}</span>
+                    {{/if}}
+                    {{#if item.goal}}
+                      <span class="comma_item">goal set</span>
+                    {{/if}}
+                    {{#if item.goal.recently_tracked}}
+                      <span class="comma_item">goal recently tracked</span>
+                    {{/if}}
+                    &nbsp;
+                  </span>
+                  <span style='clear: left;'></span>
                 {{/link-to}}
               {{/if}}
             {{/each}}
