@@ -442,6 +442,9 @@ class LogSession < ActiveRecord::Base
     if self.log_type == 'session'
       WeeklyStatsSummary.schedule(:update_for, self.global_id)
     end
+    if self.goal && self.goal.primary && self.ended_at
+      self.goal.schedule(:update_usage, self.ended_at.iso8601)
+    end
     true
   end
   

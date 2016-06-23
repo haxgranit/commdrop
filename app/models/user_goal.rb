@@ -132,15 +132,28 @@ class UserGoal < ActiveRecord::Base
         # TODO: sharding
         UserGoal.where(:user_id => self.user_id).update_all(:primary => false)
         UserGoal.where(:id => self.id).update_all(:primary => true)
-        self.user.settings['primary_goal'] = {
-          'id' => self.global_id,
-          'summary' => self.summary
-        }
-        self.user.save
+        if !self.user.settings || !self.user.settings['primary_goal'] || self.user.settings['primary_goal']['id'] != self.global_id
+          self.user.settings['primary_goal'] = {
+            'id' => self.global_id,
+            'summary' => self.summary
+          }
+          self.user.save
+        end
       end
     end
     true
   end
+
+  def update_usage(iso8601)
+    if self.primary
+      user = self.user
+      if user.settings && user.settings['primary_goal'] && user.settings['primary_goal']['id'] == self.global_id
+        self.user.settings['primary_goal']['last_tracked'] = [self.user.settings['primary_goal']['last_tracked'] || '0', iso8601].max
+        self.user.save
+      end
+    end
+  end
+    
   
   def primary?
     !!(self.user && self.user.settings && self.user.settings['primary_goal'] && self.user.settings['primary_goal']['id'] == self.global_id)
@@ -211,7 +224,7 @@ class UserGoal < ActiveRecord::Base
       nil
     end
   end
-    
+  
   def build_from_template(template, user, set_as_primary=false)
     self.settings ||= {}
     self.settings['template_id'] = template.global_id
