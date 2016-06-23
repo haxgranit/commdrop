@@ -27,6 +27,12 @@
           <p class='text-danger'>{{t "You have one or more supervisors assigned to your account. Supporter accounts aren't allowed to have supervisors, so keep in mind that signing up for this account type will automatically remove your supervisors." key='warning_supervisors_will_be_removed'}}</p>
         </div>
       </div>
+    {{else}}
+      <div class="form_group">
+        <div class="col-sm-9" style="padding-top: 10px;">
+          <p class='text-danger'>{{t "Remember, supervisor accounts are for people supporting a communicator and are limited in their functionality. If this account will be used for speech by a communicator, you should choose that option." key='warning_supervisors_are_limited'}}</p>
+        </div>
+      </div>
     {{/if}}
   {{/unless}}
   {{#if subscription.special_type}}
