@@ -75,7 +75,7 @@ Utils.all_pages = function(type, initial_opts, partial_callback) {
     var result_type = initial_opts.result_type;
     delete initial_opts['result_type'];
     var find_next = function(type, opts) {
-      if(type.match(/^\/api/)) {
+      if(type.match(/\/api\//)) {
 
         persistence.ajax(type, opts).then(function(list) {
           if(result_type) {
