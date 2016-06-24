@@ -45,16 +45,23 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-6">
+      <div class="col-sm-6" style="padding: 0;">
         {{#if weekly_stats.error}}
           {{t "There was a problem loading this report" key='problem_loading_report'}}
         {{else}}
           {{stats/sessions-per-week weekly_stats=weekly_stats}}
         {{/if}}
       </div>
-      <div class="col-sm-6">
+      <div class="col-sm-3" style="padding: 0;">
         {{stats/recent-sessions total=model.total_users recent=model.recent_session_user_count}}
       </div>
+      {{#if app_state.feature_flags.goals}}
+        {{#if user_counts}}
+          <div class="col-sm-3" style="padding: 0;">
+            {{stats/recent-goals total=model.total_users tracked=user_counts.goal_set untracked=user_counts.goal_recently_logged}}
+          </div>
+        {{/if}}
+      {{/if}}
     </div>
   {{/if}}
   <ul class='nav nav-pills' style="margin-bottom: 15px; margin-top: 30px;">

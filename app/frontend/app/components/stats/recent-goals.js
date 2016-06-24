@@ -8,27 +8,30 @@ export default Ember.Component.extend({
   },
   draw: function() {
     var total = this.get('total');
-    var recent = this.get('recent');
-    var elem = this.get('element').getElementsByClassName('recent_sessions')[0];
+    var tracked = this.get('tracked');
+    var untracked = this.get('untracked');
+    var elem = this.get('element').getElementsByClassName('recent_goals')[0];
 
     CoughDrop.Visualizations.wait('pie-chart', function() {
       if(elem && total) {
         var table = [
           ['Type', 'Total']
         ];
-        var not_recent = total - recent;
-        table.push([i18n.t('in_last_2_weeks', "In Last 2 Weeks"), recent]);
-        table.push([i18n.t('none_recent', "None Recent"), not_recent]);
+        var no_goal = total - untracked;
+        table.push([i18n.t('goal_tracked', "Tracked Goal"), tracked]);
+        table.push([i18n.t('untracked_goal', "Untracked Goal"), untracked - tracked]);
+        table.push([i18n.t('no_goal', "No Goal Set"), total - untracked]);
         var data = window.google.visualization.arrayToDataTable(table);
 
         var options = {
-          title: i18n.t('user_sessions', "User With Recent Sessions"),
+          title: i18n.t('user_sessions', "User With Goals Defined"),
           legend: {
             position: 'bottom'
           },
           slices: {
             0: {color: "#49c7e8"},
-            1: {color: "#f7483b"}
+            1: {color: "#f2b367"},
+            2: {color: "#f7483b"}
           }
         };
 
@@ -38,3 +41,4 @@ export default Ember.Component.extend({
     });
   }.observes('total', 'recent')
 });
+

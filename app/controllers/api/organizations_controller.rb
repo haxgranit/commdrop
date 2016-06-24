@@ -50,14 +50,15 @@ class Api::OrganizationsController < ApplicationController
       'weeks' => [],
       'user_counts' => {}
     }
+    approved_users = org.approved_users(false)
     if !org.admin?
-      approved_users = org.approved_users(false)
       # TODO: sharding
       sessions = sessions.where(:user_id => approved_users.map(&:id))
-      res['user_counts']['goal_set'] = approved_users.select{|u| !!u.settings['primary_goal'] }.length
-      two_weeks_ago_iso = 2.weeks.ago.iso8601
-      res['user_counts']['goal_recently_logged'] = approved_users.select{|u| u.settings['primary_goal'] && u.settings['primary_goal']['last_tracked'] && u.settings['primary_goal']['last_tracked'] > two_weeks_ago_iso }.length
     end
+    res['user_counts']['goal_set'] = approved_users.select{|u| !!u.settings['primary_goal'] }.length
+    two_weeks_ago_iso = 2.weeks.ago.iso8601
+    res['user_counts']['goal_recently_logged'] = approved_users.select{|u| u.settings['primary_goal'] && u.settings['primary_goal']['last_tracked'] && u.settings['primary_goal']['last_tracked'] > two_weeks_ago_iso }.length
+    
     sessions.group("date_trunc('week', started_at)").count.sort_by{|d, c| d }.each do |date, count|
       if date && date < Time.now
         res['weeks'] << {

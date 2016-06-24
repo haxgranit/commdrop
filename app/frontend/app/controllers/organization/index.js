@@ -64,8 +64,11 @@ export default Ember.Controller.extend({
   }.property('model.licenses_available'),
   refresh_stats: function() {
     var _this = this;
+    _this.set('weekly_stats', null);
+    _this.set('user_counts', null);
     persistence.ajax('/api/v1/organizations/' + this.get('model.id') + '/stats', {type: 'GET'}).then(function(stats) {
       _this.set('weekly_stats', stats.weeks);
+      _this.set('user_counts', stats.user_counts);
     }, function() {
       _this.set('weekly_stats', {error: true});
     });
