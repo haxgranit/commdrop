@@ -196,8 +196,20 @@ describe Supervising, :type => :model do
       User.link_supervisor_to_user(u2, u3)
       expect(u2.settings['preferences']['role']).to eq('communicator')
     end
+    
+    it "should set the org unit id if defined" do
+      u1 = User.create
+      u2 = User.create
+      User.link_supervisor_to_user(u1, u2, nil, true, '1_1')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_id' => '1_1'
+      }])
+    end
   end
-  
+
   describe "adding and removing" do
     it "should allow adding a supervisor by key when editing" do
       u = User.create
