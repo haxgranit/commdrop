@@ -645,7 +645,7 @@ describe Api::OrganizationsController, :type => :controller do
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json).to eq({'weeks' => []})
+      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0}})
       
       LogSession.process_new({
         :events => [
@@ -663,7 +663,7 @@ describe Api::OrganizationsController, :type => :controller do
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json).to eq({'weeks' => []})
+      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0}})
       
       o.add_user(user.user_name, false, false)
       expect(o.reload.approved_users.length).to eq(1)
@@ -675,6 +675,55 @@ describe Api::OrganizationsController, :type => :controller do
       expect(json[0]['timestamp']).to be > 0
       expect(json[1]['sessions']).to eq(1)
       expect(json[1]['timestamp']).to be > 0
+    end
+    
+    it "should include goal stats" do
+      token_user
+      user = User.create
+      user.settings['primary_goal'] = {
+        'id' => 'asdf',
+        'last_tracked' => Time.now.iso8601
+      }
+      d = Device.create(:user => user)
+      o = Organization.create
+      o.add_manager(@user.user_name, false)
+      o.add_user(user.user_name, true, false)
+      expect(o.reload.approved_users.length).to eq(0)
+      get :stats, :organization_id => o.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0}})
+      
+      LogSession.process_new({
+        :events => [
+          {'timestamp' => 4.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 3.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => user, :device => d, :author => user})
+      LogSession.process_new({
+        :events => [
+          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => user, :device => d, :author => user})
+      Worker.process_queues
+      get :stats, :organization_id => o.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['user_counts']).to eq({
+        'goal_set' => 0,
+        'goal_recently_logged' => 0
+      })
+      
+      o.add_user(user.user_name, false, false)
+      expect(o.reload.approved_users.length).to eq(1)
+      get :stats, :organization_id => o.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['user_counts']).to eq({
+        'goal_set' => 1,
+        'goal_recently_logged' => 1
+      })
     end
   end
   

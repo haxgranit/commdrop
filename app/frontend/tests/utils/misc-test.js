@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } fro
 import { easyPromise, db_wait } from 'frontend/tests/helpers/ember_helper';
 import Utils from '../../utils/misc';
 import modal from '../../utils/modal';
+import persistence from '../../utils/persistence';
 import scanner from '../../utils/scanner';
 import Ember from 'ember';
+import CoughDrop from '../../app';
 
 describe("misc", function() {
   describe("handlebars helpers", function() {
@@ -88,5 +90,550 @@ describe("misc", function() {
         expect(Utils.max_appearance(['a', 'b', 'c', 'a', 'b', 'a'])).toEqual(3);
       });
     });
+
+    describe("all_pages", function() {
+      it("should handle paginated record queries", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(CoughDrop.store, 'query', function(type, opts) {
+          expect(type).toEqual('user');
+          expect(opts.a).toEqual(1);
+          attempt++;
+          if(attempt == 1) {
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '1'}},
+                {record: {id: '2'}}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          } else if(attempt == 2) {
+            expect(opts.offset).toEqual(2);
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '3'}},
+                {record: {id: '4'}}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 4
+              }
+            });
+          } else {
+            expect(opts.offset).toEqual(4);
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '1'}},
+                {record: {id: '2'}}
+              ],
+              meta: {
+                more: false,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          }
+        });
+        var list = null;
+        Utils.all_pages('user', {a: 1}).then(function(res) {
+          list = res;
+        });
+        waitsFor(function() { return list; });
+        runs(function() {
+          expect(attempt).toEqual(3);
+          expect(list.length).toEqual(6);
+          expect(list[0].id).toEqual('1');
+        });
+      });
+
+      it("should handle single-page record queries", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(CoughDrop.store, 'query', function(type, opts) {
+          expect(type).toEqual('user');
+          expect(opts.a).toEqual(1);
+          attempt++;
+          if(attempt == 1) {
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '1'}},
+                {record: {id: '2'}}
+              ],
+              meta: {
+                more: false,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          }
+        });
+        var list = null;
+        Utils.all_pages('user', {a: 1}).then(function(res) {
+          list = res;
+        });
+        waitsFor(function() { return list; });
+        runs(function() {
+          expect(attempt).toEqual(1);
+          expect(list.length).toEqual(2);
+        });
+      });
+
+      it("should handle paginated url queries", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(persistence, 'ajax', function(path, opts) {
+          attempt++;
+          if(attempt == 1) {
+            expect(opts.a).toEqual(1);
+            expect(path).toEqual('/api/v1/more/level/1');
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '1'},
+                {id: '2'}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 2,
+                next_url: '/api/v1/more/level/2'
+              }
+            });
+          } else if(attempt == 2) {
+            expect(opts.a).toEqual(undefined);
+            expect(path).toEqual('/api/v1/more/level/2');
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '3'},
+                {id: '4'}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 4,
+                next_url: '/api/v1/more/level/3'
+              }
+            });
+          } else {
+            expect(opts.a).toEqual(undefined);
+            expect(path).toEqual('/api/v1/more/level/3');
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '1'},
+                {id: '2'}
+              ],
+              meta: {
+                more: false,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          }
+        });
+        var list = null;
+        Utils.all_pages('/api/v1/more/level/1', {a: 1, result_type: 'user'}).then(function(res) {
+          list = res;
+        });
+        waitsFor(function() { return list; });
+        runs(function() {
+          expect(attempt).toEqual(3);
+          expect(list.length).toEqual(6);
+          expect(list[0].id).toEqual('1');
+        });
+      });
+
+      it("should handle single-page url queries", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(persistence, 'ajax', function(path, opts) {
+          attempt++;
+          expect(opts.a).toEqual(1);
+          expect(path).toEqual('/api/v1/more/level/1');
+          return Ember.RSVP.resolve({
+            user: [
+              {id: '1'},
+              {id: '2'}
+            ],
+            meta: {
+              more: false,
+              per_page: 2,
+              offset: 2,
+              next_url: null
+            }
+          });
+        });
+        var list = null;
+        Utils.all_pages('/api/v1/more/level/1', {a: 1, result_type: 'user'}).then(function(res) {
+          list = res;
+        });
+        waitsFor(function() { return list; });
+        runs(function() {
+          expect(attempt).toEqual(1);
+          expect(list.length).toEqual(2);
+          expect(list[0].id).toEqual('1');
+        });
+      });
+
+      it("should handle record query errors gracefully", function() {
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(CoughDrop.store, 'query', function(type, opts) {
+          expect(type).toEqual('user');
+          expect(opts.a).toEqual(1);
+          return Ember.RSVP.reject({error: 'asdf'});
+        });
+        var error = null;
+        Utils.all_pages('user', {a: 1}).then(null, function(res) {
+          error = res;
+        });
+        waitsFor(function() { return error; });
+        runs(function() {
+          expect(error).toEqual({error: 'asdf'});
+        });
+      });
+
+      it("should handle record query errors on subsequent pages", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(CoughDrop.store, 'query', function(type, opts) {
+          expect(type).toEqual('user');
+          expect(opts.a).toEqual(1);
+          attempt++;
+          if(attempt == 1) {
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '1'}},
+                {record: {id: '2'}}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          } else if(attempt == 2) {
+            expect(opts.offset).toEqual(2);
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '3'}},
+                {record: {id: '4'}}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 4
+              }
+            });
+          } else {
+            expect(opts.offset).toEqual(4);
+            return Ember.RSVP.reject({error: 'asdf'});
+          }
+        });
+        var error = null;
+        Utils.all_pages('user', {a: 1}).then(null, function(res) {
+          error = res;
+        });
+        waitsFor(function() { return error; });
+        runs(function() {
+          expect(attempt).toEqual(3);
+          expect(error).toEqual({error: 'asdf'});
+        });
+      });
+
+      it("should call back with preliminary results if a callback is defined on a record query", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        var intermediate = null;
+        stub(CoughDrop.store, 'query', function(type, opts) {
+          expect(type).toEqual('user');
+          expect(opts.a).toEqual(1);
+          attempt++;
+          if(attempt == 1) {
+            expect(intermediate).toEqual(null);
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '1'}},
+                {record: {id: '2'}}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          } else if(attempt == 2) {
+            expect(opts.offset).toEqual(2);
+            expect(intermediate.length).toEqual(2);
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '3'}},
+                {record: {id: '4'}}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 4
+              }
+            });
+          } else {
+            expect(opts.offset).toEqual(4);
+            expect(intermediate.length).toEqual(4);
+            return Ember.RSVP.resolve({
+              content: [
+                {record: {id: '1'}},
+                {record: {id: '2'}}
+              ],
+              meta: {
+                more: false,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          }
+        });
+        var list = null;
+        Utils.all_pages('user', {a: 1}, function(inter) {
+          intermediate = inter;
+        }).then(function(res) {
+          list = res;
+        });
+        waitsFor(function() { return list; });
+        runs(function() {
+          expect(attempt).toEqual(3);
+          expect(list.length).toEqual(6);
+          expect(list[0].id).toEqual('1');
+        });
+      });
+
+      it("should handle url query errors gracefully", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(persistence, 'ajax', function(path, opts) {
+          attempt++;
+          expect(opts.a).toEqual(1);
+          expect(path).toEqual('/api/v1/more/level/1');
+          return Ember.RSVP.reject({error: 'asdf'});
+        });
+        var error = null;
+        Utils.all_pages('/api/v1/more/level/1', {a: 1, result_type: 'user'}).then(null, function(res) {
+          error = res;
+        });
+        waitsFor(function() { return error; });
+        runs(function() {
+          expect(attempt).toEqual(1);
+          expect(error).toEqual({error: 'asdf'});
+        });
+      });
+
+      it("should handle url query errors on subsequent pages", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+
+        stub(persistence, 'ajax', function(path, opts) {
+          attempt++;
+          if(attempt == 1) {
+            expect(opts.a).toEqual(1);
+            expect(path).toEqual('/api/v1/more/level/1');
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '1'},
+                {id: '2'}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 2,
+                next_url: '/api/v1/more/level/2'
+              }
+            });
+          } else if(attempt == 2) {
+            expect(opts.a).toEqual(undefined);
+            expect(path).toEqual('/api/v1/more/level/2');
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '3'},
+                {id: '4'}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 4,
+                next_url: '/api/v1/more/level/3'
+              }
+            });
+          } else {
+            expect(opts.a).toEqual(undefined);
+            expect(path).toEqual('/api/v1/more/level/3');
+            return Ember.RSVP.reject({error: 'asdf'});
+          }
+        });
+        var error = null;
+        Utils.all_pages('/api/v1/more/level/1', {a: 1, result_type: 'user'}).then(null, function(res) {
+          error = res;
+        });
+        waitsFor(function() { return error; });
+        runs(function() {
+          expect(attempt).toEqual(3);
+          expect(error).toEqual({error: 'asdf'});
+        });
+      });
+
+      it("should call back with preliminary results if a callback is defined on a url query", function() {
+        var attempt = 0;
+        stub(persistence, 'meta', function(type, obj) {
+          expect(type).toEqual('user');
+          return obj.meta;
+        });
+        var intermediate = null;
+
+        stub(persistence, 'ajax', function(path, opts) {
+          attempt++;
+          if(attempt == 1) {
+            expect(opts.a).toEqual(1);
+            expect(path).toEqual('/api/v1/more/level/1');
+            expect(intermediate).toEqual(null);
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '1'},
+                {id: '2'}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 2,
+                next_url: '/api/v1/more/level/2'
+              }
+            });
+          } else if(attempt == 2) {
+            expect(opts.a).toEqual(undefined);
+            expect(path).toEqual('/api/v1/more/level/2');
+            expect(intermediate.length).toEqual(2);
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '3'},
+                {id: '4'}
+              ],
+              meta: {
+                more: true,
+                per_page: 2,
+                offset: 4,
+                next_url: '/api/v1/more/level/3'
+              }
+            });
+          } else {
+            expect(opts.a).toEqual(undefined);
+            expect(path).toEqual('/api/v1/more/level/3');
+            expect(intermediate.length).toEqual(4);
+            return Ember.RSVP.resolve({
+              user: [
+                {id: '1'},
+                {id: '2'}
+              ],
+              meta: {
+                more: false,
+                per_page: 2,
+                offset: 2
+              }
+            });
+          }
+        });
+        var list = null;
+        Utils.all_pages('/api/v1/more/level/1', {a: 1, result_type: 'user'}, function(inter) {
+          intermediate = inter;
+        }).then(function(res) {
+          list = res;
+        });
+        waitsFor(function() { return list; });
+        runs(function() {
+          expect(attempt).toEqual(3);
+          expect(list.length).toEqual(6);
+          expect(list[0].id).toEqual('1');
+        });
+      });
+    });
   });
 });
+//
+// Utils.all_pages = function(type, initial_opts, partial_callback) {
+//   return new Ember.RSVP.Promise(function(resolve, reject) {
+//     var all_results = [];
+//     var find_next = function(type, opts) {
+//       if(type.match(/^\/api/)) {
+//         var result_type = opts.result_type;
+//         delete opts['result_type'];
+//
+//         persistence.ajax(type, opts).then(function(list) {
+//           if(result_type) {
+//             all_results = all_results.concat(list[result_type]);
+//           } else {
+//             all_results.push(list);
+//           }
+//           if(list.meta && list.meta.next_url) {
+//             find_next(list.meta.next_url, {result_type: result_type});
+//           } else {
+//             resolve(all_results);
+//           }
+//         }, function(err) {
+//           reject(err);
+//         });
+//       } else {
+//         var args = Ember.$.extend({}, opts);
+//         CoughDrop.store.query(type, opts).then(function(list) {
+//           var meta = persistence.meta(type, list);
+//           all_results = all_results.concat(list.content.mapBy('record'));
+//           if(partial_callback) {
+//             partial_callback(all_results);
+//           }
+//           if(meta && meta.more) {
+//             args.per_page = meta.per_page;
+//             args.offset = meta.offset;
+//             find_next(type, args);
+//           } else {
+//             resolve(all_results);
+//           }
+//         }, function(err) {
+//           reject(err);
+//         });
+//       }
+//     };
+//     find_next(type, initial_opts);
+//   });
+// };

@@ -1,5 +1,7 @@
-require 'rails_helper'
+require 'spec_helper'
 
-RSpec.describe LogSnapshot, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+describe LogSnapshot, :type => :model do
+  it "should have specs" do
+    expect(1).to eq(2)
+  end
 end

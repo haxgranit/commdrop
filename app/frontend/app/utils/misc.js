@@ -72,16 +72,19 @@ Utils.max_appearance = function(list) {
 Utils.all_pages = function(type, initial_opts, partial_callback) {
   return new Ember.RSVP.Promise(function(resolve, reject) {
     var all_results = [];
+    var result_type = initial_opts.result_type;
+    delete initial_opts['result_type'];
     var find_next = function(type, opts) {
       if(type.match(/^\/api/)) {
-        var result_type = opts.result_type;
-        delete opts['result_type'];
 
         persistence.ajax(type, opts).then(function(list) {
           if(result_type) {
             all_results = all_results.concat(list[result_type]);
           } else {
             all_results.push(list);
+          }
+          if(partial_callback) {
+            partial_callback(all_results);
           }
           if(list.meta && list.meta.next_url) {
             find_next(list.meta.next_url, {result_type: result_type});
@@ -93,8 +96,9 @@ Utils.all_pages = function(type, initial_opts, partial_callback) {
         });
       } else {
         var args = Ember.$.extend({}, opts);
+        var meta_check = persistence.meta;
         CoughDrop.store.query(type, opts).then(function(list) {
-          var meta = persistence.meta(type, list);
+          var meta = meta_check(type, list);
           all_results = all_results.concat(list.content.mapBy('record'));
           if(partial_callback) {
             partial_callback(all_results);

@@ -480,4 +480,32 @@ describe UserGoal, type: :model do
     
     it "should notify if no goal to advance to"
   end
+  
+  describe "update_usage" do
+    it "should only update if primary" do
+      u = User.create
+      g = UserGoal.create(:user => u)
+      u.settings['primary_goal'] = {'id' => g.global_id}
+      u.save
+      now = Time.now.iso8601
+      g.update_usage(now)
+      expect(u.reload.settings['primary_goal']['last_tracked']).to eq(nil)
+      
+      g.primary = true
+      g.save
+      g.update_usage(now)
+      expect(u.reload.settings['primary_goal']['last_tracked']).to eq(now)
+    end
+    
+    it "should not update last_tracked if not more recent than the current setting" do
+      u = User.create
+      g = UserGoal.create(:user => u, :primary => true)
+      now = Time.now.iso8601
+      u.settings['primary_goal'] = {'id' => g.global_id, 'last_tracked' => now}
+      u.save
+      two_weeks_ago = 2.weeks.ago.iso8601
+      g.update_usage(two_weeks_ago)
+      expect(u.reload.settings['primary_goal']['last_tracked']).to eq(now)
+    end
+  end
 end

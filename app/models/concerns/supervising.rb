@@ -161,12 +161,13 @@ module Supervising
     def link_supervisor_to_user(supervisor, user, code=nil, editor=true, organization_unit_id=nil)
       # raise "free_premium users can't add supervisors" if user.free_premium?
       user.settings['supervisors'] = (user.settings['supervisors'] || []).select{|s| s['user_id'] != supervisor.global_id }
-      user.settings['supervisors'] << {
+      sup = {
         'user_id' => supervisor.global_id,
         'user_name' => supervisor.user_name,
-        'edit_permission' => editor,
-        'organization_unit_id' => organization_unit_id
+        'edit_permission' => editor
       }
+      sup['organization_unit_id'] = organization_unit_id if organization_unit_id
+      user.settings['supervisors'] << sup
       user.settings['link_codes'] -= [code] if code
       user.save
       # first-time supervisors should automatically be set to the supporter role

@@ -21,7 +21,13 @@ class OrganizationUnit < ActiveRecord::Base
     raise "organization required" unless self.organization
     self.settings ||= {}
     self.settings['name'] = params['name'] if params['name']
-    process_action(params['management_action']) if params['management_action']
+    if params['management_action'] && params['management_action'] != ''
+      process_result = process_action(params['management_action']) 
+      if !process_result
+        add_processing_error("management_action was unsuccessful, #{params['management_action']}")
+        return false
+      end
+    end
     true
   end
   
@@ -37,13 +43,15 @@ class OrganizationUnit < ActiveRecord::Base
       add_communicator(user_name)
     elsif action == 'remove_communicator'
       remove_communicator(user_name)
+    else
+      false
     end
   end
   
   def add_supervisor(user_name, edit_permission=false)
     user = User.find_by_path(user_name)
     org = self.organization
-    return false unless user && org.supervisor?(user)
+    return false unless user && org && org.supervisor?(user)
     assert_list('supervisors', user.global_id)
     self.settings['supervisors'] << {
       'user_id' => user.global_id,
@@ -73,7 +81,7 @@ class OrganizationUnit < ActiveRecord::Base
   def add_communicator(user_name)
     user = User.find_by_path(user_name)
     org = self.organization
-    return false unless user && org.managed_user?(user)
+    return false unless user && org && org.managed_user?(user)
     assert_list('communicators', user.global_id)
     self.settings['communicators'] << {
       'user_id' => user.global_id,

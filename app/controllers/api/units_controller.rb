@@ -8,7 +8,7 @@ class Api::UnitsController < ApplicationController
     
     # TODO: sharding
     @units = OrganizationUnit.where(:organization_id => org.id).order('position, id ASC')
-    @units = @units.to_a.sort_by{|u| u.settings['name'].downcase }
+    @units = @units.to_a.sort_by{|u| (u.settings['name'] || 'Unnamed Room').downcase }
     render json: JsonApi::Unit.paginate(params, @units)
   end
   
@@ -48,13 +48,5 @@ class Api::UnitsController < ApplicationController
     return unless allowed?(@unit, 'delete')
     @unit.destroy
     render json: JsonApi::Unit.as_json(@unit, :wrapper => true, :permissions => @api_user).to_json
-  end
-  
-  def reorder
-    org = Organization.find_by_global_id(params['organization_id'])
-    return unless exists?(org, params['organization_id'])
-    return unless allowed?(org, 'edit')
-    # reorder by params['unit_ids']
-    render json: {:order => order}.to_json
   end
 end

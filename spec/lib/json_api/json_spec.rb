@@ -75,6 +75,15 @@ describe JsonApi::Json do
       expect(res[:meta][:next_url]).to eq("#{JsonApi::Json.current_host}/api/v1/logs?offset=#{JsonApi::Log::MAX_PAGE}&per_page=#{JsonApi::Log::MAX_PAGE}")
     end
     
+    it "should call page_data if defined" do
+      expect(JsonApi::Unit).to receive(:page_data).and_return({:a => 1})
+      ou = OrganizationUnit.create
+      expect(JsonApi::Unit).to receive(:build_json){|unit, args|
+        expect(unit).to eq(ou)
+        expect(args[:page_data]).to eq({:a => 1})
+      }.and_return({})
+      res = JsonApi::Unit.paginate({}, OrganizationUnit.all)
+    end
   end
   
   describe "next_url prefix" do
