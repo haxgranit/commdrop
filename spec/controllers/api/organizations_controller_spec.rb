@@ -684,6 +684,7 @@ describe Api::OrganizationsController, :type => :controller do
         'id' => 'asdf',
         'last_tracked' => Time.now.iso8601
       }
+      user.save
       d = Device.create(:user => user)
       o = Organization.create
       o.add_manager(@user.user_name, false)
@@ -694,19 +695,6 @@ describe Api::OrganizationsController, :type => :controller do
       json = JSON.parse(response.body)
       expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0}})
       
-      LogSession.process_new({
-        :events => [
-          {'timestamp' => 4.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
-          {'timestamp' => 3.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
-        ]
-      }, {:user => user, :device => d, :author => user})
-      LogSession.process_new({
-        :events => [
-          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
-          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
-        ]
-      }, {:user => user, :device => d, :author => user})
-      Worker.process_queues
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
