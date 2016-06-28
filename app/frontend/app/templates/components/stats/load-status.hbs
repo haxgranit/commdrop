@@ -10,4 +10,8 @@
       {{t "Unknown status" key='unknown_status'}}
     {{/if}}
   </div>
+{{else if ref_status}}
+  <div class={{if side_by_side "col-sm-6" "col-sm-12"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+    &nbsp;
+  </div>
 {{/if}}

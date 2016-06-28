@@ -24,7 +24,9 @@ CoughDrop.Stats = Ember.Object.extend({
   },
   check_known_filter: function() {
     var date_strings = this.date_strings();
-    if(this.get('start') && this.get('end')) {
+    if(this.get('snapshot_id')) {
+      this.set('filter', 'snapshot_' + this.get('snapshot_id'));
+    } else if(this.get('start') && this.get('end')) {
       if(!this.get('location_id') && !this.get('device_id')) {
         if(this.get('start') == date_strings.two_months_ago && this.get('end') == date_strings.today) {
           this.set('filter', 'last_2_months');
@@ -36,10 +38,20 @@ CoughDrop.Stats = Ember.Object.extend({
       }
       this.set('filter', 'custom');
     }
-  }.observes('start', 'end', 'started_at', 'ended_at', 'location_id', 'device_id'),
+  }.observes('start', 'end', 'started_at', 'ended_at', 'location_id', 'device_id', 'snapshot_id'),
+  filtered_snapshot_id: function() {
+    var parts = (this.get('filter') || "").split(/_/);
+    if(parts[0] == 'snapshot') {
+      return parts.slice(1).join('_');
+    } else {
+      return null;
+    }
+  }.property('filter'),
   filtered_start_date: function() {
     var date_strings = this.date_strings();
-    if(this.get('filter') == 'last_2_months') {
+    if((this.get('filter') || "").match(/snapshot/)) {
+      return null;
+    } else if(this.get('filter') == 'last_2_months') {
       return date_strings.two_months_ago;
     } else if(this.get('filter') == '2_4_months_ago') {
       return date_strings.four_months_ago;
@@ -49,7 +61,9 @@ CoughDrop.Stats = Ember.Object.extend({
   }.property('start_date_field', 'filter'),
   filtered_end_date: function() {
     var date_strings = this.date_strings();
-    if(this.get('filter') == 'last_2_months') {
+    if((this.get('filter') || "").match(/snapshot/)) {
+      return null;
+    } if(this.get('filter') == 'last_2_months') {
       return date_strings.today;
     } else if(this.get('filter') == '2_4_months_ago') {
       return date_strings.two_months_ago;

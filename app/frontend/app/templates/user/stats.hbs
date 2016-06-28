@@ -1,19 +1,19 @@
 {{#opening-observer done_opening='draw_charts'}}
 {{#if model.full_premium}}
-  {{#if model.preferences.logging}} 
+  {{#if model.preferences.logging}}
     <h2>{{t "Usage Reports" key='usage_reports'}}</h2>
     {{#if usage_stats}}
       <div class="row">
-        {{stats/data-filter usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 app_state=app_state compare_to='compare_to' clear_side='clear_left_side' update_filter='update_left_filter'}}
+        {{stats/data-filter usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 app_state=app_state snapshots=snapshots compare_to='compare_to' clear_side='clear_left_side' update_filter='update_left_filter'}}
         {{#if usage_stats2}}
-          {{stats/data-filter usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true clear_side='clear_right_side' update_filter='update_right_filter'}}
+          {{stats/data-filter usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true snapshots=snapshots right_side=true clear_side='clear_right_side' update_filter='update_right_filter'}}
         {{/if}}
       </div>
     {{/if}}
     <div class="row">
-      {{stats/load-status status=status side_by_side=usage_stats2}}
+      {{stats/load-status status=status ref_status=status2 side_by_side=usage_stats2}}
       {{#if usage_stats2}}
-        {{stats/load-status status=status2 side_by_side=true right_side=true}}
+        {{stats/load-status status=status2 ref_status=status side_by_side=true right_side=true}}
       {{/if}}
       {{#if some_data}}
         {{stats/nums-row1 usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2}}
@@ -75,7 +75,7 @@
       </div>
       <div class="row">
         {{#if model.preferences.geo_logging }}
-          {{stats/geo-locations usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 filter='update_left_filter'}}
+          {{stats/geo-locations usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=usage_stats2 filter='update_left_filter' snapshots=filter_list}}
           {{#if usage_stats2}}
             {{stats/geo-locations usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true filter='update_right_filter'}}
           {{/if}}
@@ -108,7 +108,9 @@
             {{/link-to}}
             {{#if app_state.feature_flags.snapshots}}
               {{#if model.permissions.edit}}
-                <a href="#" {{action 'save_snapshot'}} class='btn btn-default'>{{t "Save Snapshot" key='save_snapshot'}}</a>
+                {{#unless snapshot_id}}
+                  <a href="#" {{action 'save_snapshot'}} class='btn btn-default'>{{t "Create Snapshot" key='create_snapshot'}}</a>
+                {{/unless}}
               {{/if}}
             {{/if}}
           </div>

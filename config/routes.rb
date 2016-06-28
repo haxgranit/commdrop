@@ -162,9 +162,8 @@ Coughdrop::Application.routes.draw do
     end
     
     resources :goals
-    resources :units do
-      post 'reorder', on: :collection
-    end
+    resources :units
+    resources :snapshots
     
     resources :organizations do
       get 'managers'

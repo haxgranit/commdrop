@@ -20,6 +20,23 @@ describe JsonApi::Unit do
       expect(json['id']).to eq(u.global_id)
       expect(json['name']).to eq('Roomy')
     end
+
+    it "should include permissions if requested" do
+      user = User.create
+      o = Organization.create
+      o.add_manager(user.global_id, true)
+      user.reload
+      u = OrganizationUnit.create(:organization => o, :settings => {'name' => 'Roomy', 'bacon' => 'asdf'})
+      json = JsonApi::Unit.as_json(u, {wrapper: true, permissions: user})
+      expect(json['unit']['id']).to eq(u.global_id)
+      expect(json['unit']['name']).to eq('Roomy')
+      expect(json['unit']['permissions']).to eq({
+        'user_id' => user.global_id,
+        'view' => true,
+        'edit' => true,
+        'delete' => true
+      })
+    end
     
     it "should include supervisors and communicators" do
       u1 = User.create

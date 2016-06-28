@@ -7,7 +7,7 @@ module Stats
     if !user || WeeklyStatsSummary.where(:user_id => user.id).count == 0
       return daily_use(user_id, options)
     end
-    sanitize_find_options!(options)
+    sanitize_find_options!(options, user)
     week_start = options[:start_at].utc.beginning_of_week(:sunday)
     week_end = options[:end_at].utc.end_of_week(:sunday)
     start_weekyear = (options[:start_at].utc.to_date.cwyear * 100) + options[:start_at].utc.to_date.cweek
@@ -493,7 +493,16 @@ module Stats
     stats
   end
   
-  def self.sanitize_find_options!(options)
+  def self.sanitize_find_options!(options, user=nil)
+    if options[:snapshot_id] && user
+      snapshot = LogSnapshot.find_by_global_id(options[:snapshot_id])
+      if snapshot && snapshot.user == user
+        options[:start] = snapshot.settings['start']
+        options[:end] = snapshot.settings['end']
+        options[:device_id] = snapshot.settings['device_id']
+        options[:location_id] = snapshot.settings['location_id']
+      end
+    end
     options[:end_at] = options[:end_at] || (Date.parse(options[:end]) rescue nil)
     options[:start_at] = options[:start_at] || (Date.parse(options[:start]) rescue nil)
     options[:end_at] ||= Time.now + 1000

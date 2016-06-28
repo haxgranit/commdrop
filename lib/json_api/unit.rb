@@ -30,6 +30,10 @@ module JsonApi::Unit
       user = users_hash[sup['user_id']]
       json['communicators'] << JsonApi::User.as_json(user, limited_identity: true) if user
     end
+
+    if args.key?(:permissions)
+      json['permissions'] = unit.permissions_for(args[:permissions])
+    end
     
     json
   end

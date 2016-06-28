@@ -55,6 +55,10 @@ RSpec.configure do |config|
   end
 end
 
+def write_this_test
+  expect("test").to eq("needs written")
+end
+
 def assert_broken
   expect('broken').to eq(true)
 end
