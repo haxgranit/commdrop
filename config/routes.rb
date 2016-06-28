@@ -30,6 +30,7 @@ Coughdrop::Application.routes.draw do
   mount protected_resque, :at => "/resque"
 
   root ember_handler
+  get '/goal_status/:goal_id/:goal_code' => 'boards#log_goal_status'
   get '/cache' => 'boards#cache'
   get '/privacy' => 'boards#privacy'
   get '/terms' => 'boards#terms'

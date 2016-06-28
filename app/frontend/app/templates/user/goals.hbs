@@ -11,6 +11,9 @@
         {{partial "goal"}}
       {{/with}}
     {{else}}
+      <p>{{t "Goals are a way to help the communicator and their support team keep current strategies in mind. They can be general like \"Remember to use core words!\" or specific like \"Use two-word phrases instead of single-word utterances\". Goals can be tracked for each communicator using assessments, or when making notes on a user's logs. These status updates are then used to show a general report of how the goal is progessing over time." key='goals_explainer1'}}</p>
+      <p>{{t "You can start using goals at any time by creating a goal for a communicator. Then use notes and assessments to track progress toward the goal over time. Users can have multiple goals, but only one \"primary\" goal at a time." key='goals_explainer_2'}}</p>
+      <!--
       set a goal! what's a goal? well let me tell you something..
       - average number of sessions
       - average session length
@@ -26,26 +29,31 @@
 
       - add comments on a goal (log notes, associated with a goal?)
       - notification when goal is changed/added
+
+      - link to report on goals within reports summary email
+      -->
     {{/if}}
     {{#if model.permissions.edit}}
       <button {{action 'add_goal'}} class='btn btn-default'>{{t "Set a New Goal" key='set_a_new_goal'}}</button>
     {{/if}}
 
-    <h3>{{t "Secondary Goals" key='secondary_goals'}}</h3>
-    {{#if secondary_goals}}
-      {{#each secondary_goals as |goal|}}
-        {{partial "goal"}}
-      {{/each}}
-    {{else}}
-      {{t "None set" key='none_set'}}
-    {{/if}}
-    <h3>{{t "Past Goals" key='past_goals'}}</h3>
-    {{#if past_goals}}
-      {{#each past_goals as |goal|}}
-        {{partial "goal"}}
-      {{/each}}
-    {{else}}
-      {{t "No past goals" key='no_past_goals'}}
+    {{#if any_goal}}
+      <h3>{{t "Secondary Goals" key='secondary_goals'}}</h3>
+      {{#if secondary_goals}}
+        {{#each secondary_goals as |goal|}}
+          {{partial "goal"}}
+        {{/each}}
+      {{else}}
+        {{t "None set" key='none_set'}}
+      {{/if}}
+      <h3>{{t "Past Goals" key='past_goals'}}</h3>
+      {{#if past_goals}}
+        {{#each past_goals as |goal|}}
+          {{partial "goal"}}
+        {{/each}}
+      {{else}}
+        {{t "No past goals" key='no_past_goals'}}
+      {{/if}}
     {{/if}}
   {{/if}}
 {{else}}

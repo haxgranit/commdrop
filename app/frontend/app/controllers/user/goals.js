@@ -13,6 +13,9 @@ export default Ember.Controller.extend({
       controller.set('goals', {error: true});
     });
   },
+  any_goal: function() {
+    return this.get('primary_goal') || this.get('secondary_goals').length > 0 || this.get('past_goals').length > 0;
+  }.property('primary_goal', 'secondary_goals', 'past_goals'),
   primary_goal: function() {
     return (this.get('goals.list') || []).find(function(g) { return g.get('active') && g.get('primary'); });
   }.property('goals.list'),

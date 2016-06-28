@@ -50,7 +50,7 @@ export default modal.ModalController.extend({
     res.push({
       id: '3',
       text: new Ember.Handlebars.SafeString(i18n.t('we_did_good', "We did<br/>good!")),
-      display_class: 'face hapy',
+      display_class: 'face happy',
       button_display_class: 'btn btn-default face_button'
     });
     res.push({

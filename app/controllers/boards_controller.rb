@@ -26,6 +26,21 @@ class BoardsController < ApplicationController
   
   def privacy; end
   
+  def log_goal_status
+    if params['status']
+      goal = UserGoal.find_by_global_id(params['goal_id'])
+      log = goal && goal.process_status_from_code(params['status'], params['goal_code'])
+      if log
+        redirect_to action: 'log_goal_status', result_status: params['status'], log_id: log.global_id
+        return
+      else
+        @error = true
+      end
+    else
+      @log = LogSession.find_by_global_id(params['log_id'])
+    end
+  end
+  
   def board
     board = Board.find_by_possibly_old_path(params['id'])
     if board && board.old_link? && request.path != "/#{board.key}"

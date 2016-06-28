@@ -109,6 +109,34 @@ class UserGoal < ActiveRecord::Base
     self.settings['stats'] = stats
   end
   
+  def goal_code(user)
+    timestamp = Time.now.to_i.to_s
+    rnd = rand(9999999).to_s
+    user_id = user.global_id
+    str = Security.sha512(timestamp + "_" + user_id, rnd)[0, 20]
+    timestamp + "-" + user_id + "-" + rnd + "-" + str
+  end
+  
+  def process_status_from_code(status, code)
+    timestamp, user_id, rnd, hash = code.split(/-/)
+    user = User.find_by_path(user_id)
+    if user && self.user && hash == Security.sha512(timestamp + "_" + user_id, rnd)[0, 20]
+      self.settings['used_codes'] ||= []
+      self.settings['used_codes'] << [code, Time.now.to_i]
+      self.save
+      log = LogSession.process_new({
+        note: {
+          text: ""
+        },
+        goal_id: self.global_id,
+        goal_status: status
+      }, {user: self.user, author: user, device: user.devices.first})
+      log
+    else
+      false
+    end
+  end
+
   def summary
     self.settings['summary']
   end
@@ -123,8 +151,13 @@ class UserGoal < ActiveRecord::Base
   
   def self.primary_goal(user)
     # TODO: sharding
-    UserGoal.where(:user_id => user.id, :primary => true).first
+    UserGoal.where(:user_id => user.id, :primary => true, :active => true).first
   end
+
+  def self.secondary_goals(user)
+    # TODO: sharding
+    UserGoal.where(:user_id => user.id, :primary => false, :active => true)
+  end  
   
   def check_set_as_primary
     if @set_as_primary

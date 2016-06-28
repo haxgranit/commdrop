@@ -106,6 +106,7 @@ class UserMailer < ActionMailer::Base
           # TODO: sharding
           user_report.total_notes = LogSession.where(:user_id => user.id).where(:log_type => ['note', 'assessment']).where(['started_at > ? AND ended_at < ?', pre_start, Time.now]).count
           user_report.primary_goal = UserGoal.primary_goal(user)
+          user_report.secondary_goal_count = UserGoal.secondary_goals(user).length
           user_report.total_sessions_delta = user_report.pre_stats[:total_sessions] == 0 ? nil : (user_report.current_stats[:total_sessions].to_f / user_report.pre_stats[:total_sessions].to_f * 100.0).round(0)
           user_report.total_buttons_delta = user_report.pre_stats[:total_buttons] == 0 ? nil : (user_report.current_stats[:total_buttons].to_f / user_report.pre_stats[:total_buttons].to_f * 100.0).round(0)
           lost_percents = []

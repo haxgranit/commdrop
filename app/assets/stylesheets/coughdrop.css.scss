@@ -716,6 +716,24 @@ footer .wide_links {
     }
   }
 }
+.big_face {
+  .face {
+    display: inline-block;
+    width: 200px;
+    height: 200px;
+    background-image: url(../images/faces.png);
+    background-size: auto 200px;
+    &.happy {
+      background-position-x: -200px;
+    }
+    &.neutral {
+      background-position-x: -398px;
+    }
+    &.sad {
+      background-position-x: -598px;
+    }
+  }
+}
 #content.with_sidebar .board {
   width: -webkit-calc(100% - 60px);
   width: calc(100% - 60px);

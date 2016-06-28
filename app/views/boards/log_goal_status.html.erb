@@ -1,0 +1,35 @@
+<%= render 'shared/static_header' %>
+<div id="content">
+  <% if @error || !@log %>
+    <div style="width: 700px; height: 300px; margin: 100px auto;">
+      <img src="/status/cuttlefish-coughdrop.svg" style="float: left;">
+      <h1 style='padding-top: 40px; margin-bottom: 40px; font-weight: 200; font-size: 2em; margin-left: 0;'>Goal Not Available</h1>
+      <p>
+        Oops! It looks like there was a problem finding the goal you were trying to
+        update. It may have been deleted. Please 
+        <a href="/">find the correct user</a> and update their status from the 
+        "goals" page in their profile.
+    </p>
+    </div>
+  <% else %>
+    <div style="width: 700px; height: 300px; margin: 100px auto;">
+      <h1 style='padding-top: 20px; margin-bottom: 20px; font-weight: 200; font-size: 2em; margin-left: 0;'>Goal Status Saved!</h1>
+      <% status = 'face happy'; status = 'face neutral' if params['result_status'] == '2'; status = 'face sad' if params['result_status'] == '1'; status = 'face laugh' if params['result_status'] == '4' %>
+      <span class='big_face' style="float: left; padding-right: 10px;">
+        <span class='<%= status %>'></span>
+      </span>
+      <p>
+        Thank you for updating the status of the goal 
+        <strong><a href="/<%= @log.user.user_name %>/goals/<%= @log.goal.global_id %>"><%= @log.goal.settings['summary'] %></a></strong>.
+        Keeping goals up-to-date helps show what progress is or isn't being made, and
+        helps everyone stay informed.
+      </p>
+      <p>
+        You can review all of <a href="/<%= @log.user.user_name %>/goals"><%= @log.user.user_name %>'s goals</a> through their profile.
+      </p>
+    </p>
+    </div>
+  <% end %>
+</div>
+<%= render 'shared/footer' %>
+  
