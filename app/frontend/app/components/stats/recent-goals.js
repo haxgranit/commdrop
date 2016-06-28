@@ -26,12 +26,13 @@ export default Ember.Component.extend({
         var options = {
           title: i18n.t('user_sessions', "User With Goals Defined"),
           legend: {
-            position: 'bottom'
+            position: 'top',
+            maxLines: 2
           },
           slices: {
-            0: {color: "#49c7e8"},
-            1: {color: "#f2b367"},
-            2: {color: "#f7483b"}
+            0: {color: "#458c5e"},
+            1: {color: "#F1B366"},
+            2: {color: "#888888"}
           }
         };
 

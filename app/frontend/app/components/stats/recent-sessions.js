@@ -17,14 +17,15 @@ export default Ember.Component.extend({
           ['Type', 'Total']
         ];
         var not_recent = total - recent;
-        table.push([i18n.t('in_last_2_weeks', "In Last 2 Weeks"), recent]);
+        table.push([i18n.t('in_last_2_weeks', "Last 2 Weeks"), recent]);
         table.push([i18n.t('none_recent', "None Recent"), not_recent]);
         var data = window.google.visualization.arrayToDataTable(table);
 
         var options = {
           title: i18n.t('user_sessions', "User With Recent Sessions"),
           legend: {
-            position: 'bottom'
+            position: 'top',
+            maxLines: 2
           },
           slices: {
             0: {color: "#49c7e8"},
