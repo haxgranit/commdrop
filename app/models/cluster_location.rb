@@ -189,7 +189,7 @@ class ClusterLocation < ActiveRecord::Base
     clusters = ClusterLocation.where(:user_id => user.id)
     Rails.logger.info("checking for matches on existing clusters")
     non_geos = non_geos.select{|s| !add_to_geo_cluster(s, clusters) }
-    Rails.logger.info("grouping remaining sessions by geo")
+    Rails.logger.info("grouping remaining sessions by geo #{non_geos.length}")
     biggest_cluster = nil
     # QT clustering algorithm to find geo hotspots
     while !biggest_cluster || biggest_cluster >= self.frequency_tolerance
@@ -218,18 +218,22 @@ class ClusterLocation < ActiveRecord::Base
       end
       biggest_cluster = sessions.length
     end
+    Rails.logger.info("done with geo clusters")
     
     # ip addresses just cluster based on exact match. Easy peasy.
     ips = {}
     non_ips = user.log_sessions.where(:ip_cluster_id => nil).select{|s| s.data['ip_address'] }
+    Rails.logger.info("ips to clusterize: #{non_ips.length}")
     # Time may have passed since this was scheduled, make sure there are no stragglers
     non_ips = non_ips.select{|s| !add_to_ip_cluster(s, clusters) }
+    Rails.logger.info("tracking new ip addresses #{non_ips.length}")
     non_ips.each do |session|
       if session.data['ip_address']
         ips[session.data['ip_address']] ||= []
         ips[session.data['ip_address']] << session
       end
     end
+    Rails.logger.info("generating new ip clusters")
     ips.each do |ip, sessions|
       readable_ip = sessions.first.data['readable_ip_address']
       cluster = ClusterLocation.create(:user => user, :cluster_type => 'ip_address', :data => {'ip_address' => ip, 'readable_ip_address' => readable_ip})
@@ -239,6 +243,7 @@ class ClusterLocation < ActiveRecord::Base
       end
       cluster.save
     end
+    Rails.logger.info("done clustering")
   end
   
   def self.calculate_attributes(session)
