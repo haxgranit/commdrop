@@ -122,10 +122,14 @@ export default Ember.Controller.extend({
       }
     },
     jump: function(path, source, board) {
-      this.jumpToBoard({
-        key: path,
-        home_lock: board.home_lock
-      });
+      if(stashes.get('sticky_board') && app_state.get('speak_mode')) {
+        modal.warning(i18n.t('sticky_board_notice', "Board lock is enabled, disable to leave this board."), true);
+      } else {
+        this.jumpToBoard({
+          key: path,
+          home_lock: board.home_lock
+        });
+      }
     },
     setAsHome: function() {
       var board = this.get('board').get('model');
