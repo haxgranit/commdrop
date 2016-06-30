@@ -104,6 +104,9 @@ var speecher = Ember.Object.extend({
     text = text.toString();
     opts.rate = opts.rate || this.rate || this.default_rate();
     opts.volume = opts.volume || this.volume || 1.0;
+    if(opts.alternate_voice) {
+      opts.volume = opts.volume * 0.75;
+    }
     opts.pitch = opts.pitch || this.pitch || 1.0;
     opts.voiceURI = opts.voiceURI || this.voiceURI;
     // iOS TTS quirk

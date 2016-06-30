@@ -347,10 +347,10 @@ var scanner = Ember.Object.extend({
 
     if(this.options && this.options.audio) {
       if(elem && elem.sound) {
-        speecher.speak_audio(elem.sound, 'text', false, {interrupt: false});
+        speecher.speak_audio(elem.sound, 'text', false, {alternate_voice: true, interrupt: false});
       } else if(elem && elem.label) {
         var clean_label = (elem.label || "").replace(/^[\+\:]/, '');
-        speecher.speak_text(clean_label, false, {interrupt: false});
+        speecher.speak_text(clean_label, false, {alternate_voice: true, interrupt: false});
       }
     }
     if(capabilities.mobile && capabilities.installed_app && app_state.get('speak_mode') && Ember.$("#hidden_input:focus").length === 0) {
