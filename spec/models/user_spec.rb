@@ -144,6 +144,7 @@ describe User, :type => :model do
         'button_spacing' => 'small',
         'button_border' => 'small',
         'button_text' => 'medium',
+        'button_text_position'=> 'bottom',
         'vocalization_height' => 'small',
         'wakelock' => true
       })
@@ -175,6 +176,7 @@ describe User, :type => :model do
         'button_spacing' => 'small',
         'button_border' => 'small',
         'button_text' => 'medium',
+        'button_text_position' => 'bottom',
         'vocalization_height' => 'small',
         'wakelock' => true
       })
@@ -1203,6 +1205,63 @@ describe User, :type => :model do
       u.id = 5
       # one month from today at 22:30
       expect(u.next_notification_schedule).to eq(Time.parse('2016-04-02 22:30 UTC'));
+    end
+  end
+  
+  describe "goal_code" do
+    describe "goal_code" do
+      it "should raise if no user passed" do
+        g = UserGoal.new
+        expect{ g.goal_code(nil) }.to raise_error("user required")
+      end
+      
+      it "should generate a valid code" do
+        u = User.create
+        g = UserGoal.new
+        res = g.goal_code(u)
+        parts = res.split(/-/)
+        expect(parts.length).to eq(4)
+        expect(parts[0]).to be > 5.seconds.ago.to_i.to_s
+        expect(parts[0]).to be < 5.seconds.from_now.to_i.to_s
+        expect(parts[1]).to eq(u.global_id)
+        expect(parts[2].to_i.to_s).to eq(parts[2])
+        expect(parts[3]).to eq(Security.sha512(parts[0] + "_" + parts[1], parts[2])[0, 20])
+      end
+    end
+    
+    describe "process_status_from_code" do
+      it "should return false if attributes not found" do
+        g = UserGoal.new
+        expect(g.process_status_from_code('4', 'asdf')).to eq(false)
+        u = User.create
+        expect(g.process_status_from_code('3', g.goal_code(u) + "x")).to eq(false)
+      end
+      
+      it "should generate unique codes each time" do
+        g = UserGoal.new
+        u = User.create
+        code1 = g.goal_code(u)
+        code2 = g.goal_code(u)
+        code3 = g.goal_code(u)
+        expect(code1).to_not eq(code2)
+        expect(code1).to_not eq(code3)
+        expect(code2).to_not eq(code3)
+      end
+      
+      it "should return the generated log of processed" do
+        u1 = User.create
+        g = UserGoal.create(:user => u1)
+        u2 = User.create
+        d = Device.create(:user => u2)
+        code = g.goal_code(u2)
+        res = g.process_status_from_code('2', code)
+        expect(res).to_not eq(nil)
+        expect(res.user).to eq(u1)
+        expect(res.author).to eq(u2)
+        expect(res.data['goal']['id']).to eq(g.global_id)
+        expect(res.data['goal']['status']).to eq(2)
+        expect(g.settings['used_codes'][0][0]).to eq(code)
+      end
     end
   end
 end

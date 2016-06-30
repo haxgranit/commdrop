@@ -19,12 +19,14 @@ module JsonApi::Goal
     end
     json['started'] = goal.settings['started_at']
     json['ended'] = goal.settings['ended_at']
-    json['stats'] = {}
-    goal.settings['stats'].each do |key, val|
-      if val.respond_to?(:round)
-        json['stats'][key] = val.round(2)
-      else
-        json['stats'][key] = val
+    if goal.settings['stats']
+      json['stats'] = {}
+      goal.settings['stats'].each do |key, val|
+        if val.respond_to?(:round)
+          json['stats'][key] = val.round(2)
+        else
+          json['stats'][key] = val
+        end
       end
     end
 

@@ -87,5 +87,21 @@ describe JsonApi::Goal do
       expect(json['comments'][2]['user']['user_name']).to eq(u2.user_name)
       expect(json['comments'][2]['video']).to eq(v2.summary_hash)
     end
+    
+    it "should round the values for stats" do
+      g = UserGoal.new(settings: {
+        'stats' => {
+          'a' => 1,
+          'b' => 1.2345678,
+          'c' => 9.87654321,
+          'd' => 'bacon'
+        }
+      })
+      json = JsonApi::Goal.build_json(g)
+      expect(json['stats']['a']).to eq(1.0)
+      expect(json['stats']['b']).to eq(1.23)
+      expect(json['stats']['c']).to eq(9.88)
+      expect(json['stats']['d']).to eq('bacon')
+    end
   end
 end

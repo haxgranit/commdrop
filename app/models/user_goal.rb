@@ -110,6 +110,7 @@ class UserGoal < ActiveRecord::Base
   end
   
   def goal_code(user)
+    raise "user required" unless user
     timestamp = Time.now.to_i.to_s
     rnd = rand(9999999).to_s
     user_id = user.global_id

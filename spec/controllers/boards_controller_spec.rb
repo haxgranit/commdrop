@@ -23,6 +23,49 @@ describe BoardsController, :type => :controller do
     end
   end
   
+  describe "log_goal_status" do
+    it "should render if status not set" do
+      ls = LogSession.new
+      expect(LogSession).to receive(:find_by_global_id).with('oho').and_return(ls)
+      get "log_goal_status", :goal_id => 'asdf', :goal_code => 'asdf', :log_id => 'oho'
+      expect(response).to be_success
+      expect(assigns[:log]).to eq(ls)
+    end
+    
+    it "should call process_status_from_code if status set" do
+      u = User.create
+      g = UserGoal.create(:user => u)
+      expect(UserGoal).to receive(:find_by_global_id).with(g.global_id).and_return(g)
+      expect(g).to receive(:process_status_from_code).with('4', 'asdf').and_return(nil)
+      get "log_goal_status", :goal_id => g.global_id, :goal_code => 'asdf', :status => '4'
+      expect(response).to be_success
+      expect(assigns[:error]).to eq(true)
+    end
+    
+    it "should redirect if status successfully set" do
+      u = User.create
+      d = Device.create(:user => u)
+      g = UserGoal.create(:user => u)
+      get "log_goal_status", :goal_id => g.global_id, :goal_code => g.goal_code(u), :status => '3'
+      expect(response).to be_redirect
+      s = LogSession.last
+      expect(s.user).to eq(u)
+      expect(s.data['goal']['id']).to eq(g.global_id)
+      expect(s.data['goal']['status']).to eq(3)
+      expect(response.location).to match(/goal_status\/#{g.global_id}\/.+\?log_id=#{s.global_id}\&result_status=3/)
+    end
+    
+    it "should render with error if status unsuccessfully set" do
+      u = User.create
+      g = UserGoal.create(:user => u)
+      expect(UserGoal).to receive(:find_by_global_id).with(g.global_id).and_return(g)
+      expect(g).to receive(:process_status_from_code).with('4', 'asdf').and_return(nil)
+      get "log_goal_status", :goal_id => g.global_id, :goal_code => 'asdf', :status => '4'
+      expect(response).to be_success
+      expect(assigns[:error]).to eq(true)
+    end
+  end
+  
   describe "board" do
     it "should set a meta attribute if public" do
       u = User.create
