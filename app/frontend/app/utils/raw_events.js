@@ -215,7 +215,7 @@ var buttonTracker = Ember.Object.extend({
               $stash_hover.css({
                 top: offset.top - Ember.$("header").height(),
                 left: offset.left
-              })
+              });
               Ember.$(".board").before($stash_hover);
               Ember.run.later(function() {
                 $stash_hover.addClass('on_button');
@@ -226,7 +226,7 @@ var buttonTracker = Ember.Object.extend({
           }
         }
       } else {
-        if(Ember.$(event.target).closest("#stash_hover").length == 0) {
+        if(Ember.$(event.target).closest("#stash_hover").length === 0) {
           Ember.$("#stash_hover").removeClass('on_button').data('button_id', null);
         }
         app_state.get('board_virtual_dom').clear_hover();

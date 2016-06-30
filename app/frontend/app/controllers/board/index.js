@@ -314,7 +314,7 @@ export default Ember.Controller.extend({
         if(button_width < 50) {
           image_width = image_width + (inner_pad * 2) + (extra_pad * 2);
         }
-        if(currentLabelHeight == 0 || _this.get('text_position') != 'text_position_top') {
+        if(currentLabelHeight === 0 || _this.get('text_position') != 'text_position_top') {
           top_margin = 0;
         }
 
