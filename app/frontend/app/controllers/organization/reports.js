@@ -21,6 +21,7 @@ export default Ember.Controller.extend({
         list.push({id: 'free_supervisor_with_supervisors', name: i18n.t('free_supervisor_with_supervisors', "Free supervisors with their own supervisors")});
         list.push({id: 'multiple_emails', name: i18n.t('multiple_emails', "Emails with multiple signups")});
         list.push({id: 'current_but_expired', name: i18n.t('current_but_expired', "Used currently but now expired")});
+        list.push({id: 'subscriptions', name: i18n.t('subscriptions', "Subscriptions over time") });
         list.push({id: 'missing_words', name: i18n.t('missing_words', "Button labels that don't have matching parts of speech")});
         list.push({id: 'overridden_parts_of_speech', name: i18n.t('overridden_parts_of_speech', "Manually-set parts of speech")});
         list.push({id: 'missing_symbols', name: i18n.t('missing_symbols', "Search terms that don't return any matching symbols")});
@@ -112,19 +113,32 @@ export default Ember.Controller.extend({
     download_list: function() {
       var element = document.createElement('a');
       var rows = [];
-      this.get('results.list').forEach(function(user) {
-        var columns = [];
-        columns.push(user.name);
-        columns.push(user.user_name);
-        columns.push(user.email);
-        columns.push(user.joined);
-        columns.push(user.registration_type);
-        columns.push(user.referrer);
-        columns.push(user.ad_referrer);
-        rows.push(columns.join(','));
-      });
-      element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join("\n")));
-      element.setAttribute('download', 'users.csv');
+      if(this.get('results.list')) {
+        this.get('results.list').forEach(function(user) {
+          var columns = [];
+          columns.push(user.name);
+          columns.push(user.user_name);
+          columns.push(user.email);
+          columns.push(user.joined);
+          columns.push(user.registration_type);
+          columns.push(user.referrer);
+          columns.push(user.ad_referrer);
+          rows.push(columns.join(','));
+        });
+        element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join("\n")));
+        element.setAttribute('download', 'users.csv');
+      } else if(this.get('results.stats')) {
+        var stats = this.get('results.stats').forEach(function(stat) {
+          var columns = [];
+          columns.push(stat.key);
+          columns.push(stat.value);
+          rows.push(columns.join(','));
+        });
+        element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join("\n")));
+        element.setAttribute('download', 'stats.csv');
+      } else {
+        modal.error(i18n.t('no_results', "No results to download"));
+      }
 
       element.style.display = 'none';
       document.body.appendChild(element);

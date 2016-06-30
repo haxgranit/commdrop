@@ -153,6 +153,7 @@ module Subscription
         end
         self.settings['subscription']['token_summary'] = args['token_summary']
         self.settings['subscription']['last_purchase_plan_id'] = args['plan_id']
+        self.settings['subscription']['last_purchased'] = Time.now.iso8601
         self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_long_term_free'
         self.settings['subscription'].delete('never_expires')
         self.settings['subscription']['prior_purchase_ids'] ||= []

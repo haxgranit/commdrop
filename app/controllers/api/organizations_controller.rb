@@ -137,6 +137,28 @@ class Api::OrganizationsController < ApplicationController
       end
       user_ids = sessions.group('id, user_id').count('user_id').map(&:first)
       users = User.where(:id => user_ids)
+    elsif params['report'] == 'subscriptions'
+      stats = {}
+      User.where(:possibly_full_premium => true).each do |user|
+        if user.full_premium?
+          amount = nil
+          ts = nil
+          if user.long_term_purchase?
+            ts = user.settings['subscription']['last_purchased'] || (user.expires_at - 5.years).iso8601
+            match = user.settings['subscription']['last_purchase_plan_id'].match(/long_term_(\d+)/)
+            amount = match && match[1].to_i
+          elsif user.recurring_subscription?
+            ts = user.settings['subscription']['started']
+            match = user.settings['subscription']['plan_id'].match(/monthly_(\d+)/)
+            amount = match && match[1].to_i
+          end
+          if amount && ts && amount > 0
+            key = ts[0, 7] + "_" + amount.to_s
+            stats[key] ||= 0
+            stats[key] += 1
+          end
+        end
+      end
     elsif params['report'].match(/not_logged_/)
       # logins that have generated logs in the last 2 weeks
       x = params['report'].split(/_/)[1].to_i

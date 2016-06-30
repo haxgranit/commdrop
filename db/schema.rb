@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160621174743) do
+ActiveRecord::Schema.define(version: 20160630194809) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -351,12 +351,14 @@ ActiveRecord::Schema.define(version: 20160621174743) do
     t.integer  "managing_organization_id"
     t.integer  "managed_organization_id"
     t.datetime "next_notification_at"
+    t.boolean  "possibly_full_premium"
   end
 
   add_index "users", ["email_hash"], name: "index_users_on_email_hash", using: :btree
   add_index "users", ["managed_organization_id"], name: "index_users_on_managed_organization_id", using: :btree
   add_index "users", ["managing_organization_id"], name: "index_users_on_managing_organization_id", using: :btree
   add_index "users", ["next_notification_at"], name: "index_users_on_next_notification_at", using: :btree
+  add_index "users", ["possibly_full_premium"], name: "index_users_on_possibly_full_premium", using: :btree
   add_index "users", ["user_name"], name: "index_users_on_user_name", unique: true, using: :btree
 
   create_table "utterances", force: :cascade do |t|

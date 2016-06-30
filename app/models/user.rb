@@ -217,6 +217,12 @@ class User < ActiveRecord::Base
     self.expires_at ||= Date.today + 60 if !self.id
     self.user_name ||= self.generate_user_name(self.settings['name'])
     self.email_hash = User.generate_email_hash(self.settings['email'])
+    
+    if self.full_premium? || self.possibly_full_premium == nil
+      self.possibly_full_premium = true if self.full_premium?
+      self.possibly_full_premium ||= rand(10) == 1
+    end
+    
     true
   end
   
