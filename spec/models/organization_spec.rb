@@ -211,6 +211,39 @@ describe Organization, :type => :model do
       expect(u.grace_period?).to eq(false)
       expect(u.settings['subscription']).to eq({'never_expires' => true})
     end
+    
+    it "should remove from any units when removing" do
+      o = Organization.create
+      u1 = User.create
+      u2 = User.create
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      o.add_supervisor(u1.user_name, false)
+      o.add_user(u1.user_name, false, false)
+      o.add_user(u2.user_name, false, false)
+      ou1.add_communicator(u1.user_name)
+      ou1.add_supervisor(u1.user_name, false)
+      ou2.add_communicator(u2.user_name)
+      ou2.add_supervisor(u1.user_name, false)
+      
+      Worker.process_queues
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u1.global_id])
+      expect(u1.reload.supervised_user_ids).to eq([u1.global_id, u2.global_id])
+      expect(u2.reload.supervisor_user_ids).to eq([u1.global_id])
+      expect(u2.reload.supervised_user_ids).to eq([])
+      
+      
+      o.remove_supervisor(u1.user_name)
+      
+      Worker.process_queues
+      Worker.process_queues
+
+      expect(u1.reload.supervisor_user_ids).to eq([])
+      expect(u1.reload.supervised_user_ids).to eq([])
+      expect(u2.reload.supervisor_user_ids).to eq([])
+      expect(u2.reload.supervised_user_ids).to eq([])
+    end
   end
   
   describe "user types" do
@@ -422,6 +455,40 @@ describe Organization, :type => :model do
       o2.add_user(u.user_name, false, true)
       
       expect{ o.remove_user(u.user_name) }.to raise_error("already associated with a different organization")
+    end
+    
+    it "should remove from any units when removing" do
+      o = Organization.create
+      u1 = User.create
+      u2 = User.create
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      o.add_supervisor(u1.user_name, false)
+      o.add_supervisor(u2.user_name, false)
+      o.add_user(u1.user_name, false, false)
+      o.add_user(u2.user_name, false, false)
+      ou1.add_communicator(u1.user_name)
+      ou1.add_supervisor(u1.user_name, false)
+      ou2.add_communicator(u1.user_name)
+      ou2.add_supervisor(u2.user_name, false)
+      
+      Worker.process_queues
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u1.global_id, u2.global_id])
+      expect(u1.reload.supervised_user_ids).to eq([u1.global_id])
+      expect(u2.reload.supervisor_user_ids).to eq([])
+      expect(u2.reload.supervised_user_ids).to eq([u1.global_id])
+      
+      
+      o.remove_supervisor(u2.user_name)
+      
+      Worker.process_queues
+      Worker.process_queues
+
+      expect(u1.reload.supervisor_user_ids).to eq([u1.global_id])
+      expect(u1.reload.supervised_user_ids).to eq([u1.global_id])
+      expect(u2.reload.supervisor_user_ids).to eq([])
+      expect(u2.reload.supervised_user_ids).to eq([])
     end
   end
   

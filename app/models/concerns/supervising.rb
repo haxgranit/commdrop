@@ -141,32 +141,50 @@ module Supervising
   end
   
   module ClassMethods  
-    def unlink_supervisor_from_user(supervisor, user)
+    def unlink_supervisor_from_user(supervisor, user, organization_unit_id=nil)
+      supervisor = user if supervisor.global_id == user.global_id
+      sup = (user.settings['supervisors'] || []).detect{|s| s['user_id'] == supervisor.global_id }
+      org_unit_ids = (sup || {})['organization_unit_ids'] || []
       user.settings['supervisors'] = (user.settings['supervisors'] || []).select{|s| s['user_id'] != supervisor.global_id }
-      user.save
-      supervisor.settings['supervisees'] = (supervisor.settings['supervisees'] || []).select{|s| s['user_id'] != user.global_id }
-      # TODO: force browser refresh for supervisor after an unlink?
-      # If a user was auto-subscribed for being added as a supervisor, un-subscribe them when removed
-      if supervisor.settings['supervisees'].empty? && supervisor.settings && supervisor.settings['subscription'] && supervisor.settings['subscription']['subscription_id'] == 'free_auto_adjusted'
-        supervisor.update_subscription({
-          'unsubscribe' => true,
-          'subscription_id' => 'free_auto_adjusted',
-          'plan_id' => 'slp_monthly_free'
-        })
+      do_unlink = true
+      if organization_unit_id && (org_unit_ids - [organization_unit_id]).length > 0
+        sup['organization_unit_ids'] -= [organization_unit_id]
+        user.settings['supervisors'] << sup
+        do_unlink = false
       end
-      supervisor.schedule_once(:update_available_boards)
-      supervisor.save
+      user.save
+      user.reload
+      if do_unlink
+        supervisor.settings['supervisees'] = (supervisor.settings['supervisees'] || []).select{|s| s['user_id'] != user.global_id }
+        # TODO: force browser refresh for supervisor after an unlink?
+        # If a user was auto-subscribed for being added as a supervisor, un-subscribe them when removed
+        if supervisor.settings['supervisees'].empty? && supervisor.settings && supervisor.settings['subscription'] && supervisor.settings['subscription']['subscription_id'] == 'free_auto_adjusted'
+          supervisor.update_subscription({
+            'unsubscribe' => true,
+            'subscription_id' => 'free_auto_adjusted',
+            'plan_id' => 'slp_monthly_free'
+          })
+        end
+        supervisor.schedule_once(:update_available_boards)
+        supervisor.save
+      end
     end
     
     def link_supervisor_to_user(supervisor, user, code=nil, editor=true, organization_unit_id=nil)
       # raise "free_premium users can't add supervisors" if user.free_premium?
+      supervisor = user if supervisor.global_id == user.global_id
+      org_unit_ids = ((user.settings['supervisors'] || []).detect{|s| s['user_id'] == supervisor.global_id } || {})['organization_unit_ids'] || []
       user.settings['supervisors'] = (user.settings['supervisors'] || []).select{|s| s['user_id'] != supervisor.global_id }
       sup = {
         'user_id' => supervisor.global_id,
         'user_name' => supervisor.user_name,
-        'edit_permission' => editor
+        'edit_permission' => editor,
+        'organization_unit_ids' => org_unit_ids
       }
-      sup['organization_unit_id'] = organization_unit_id if organization_unit_id
+      if organization_unit_id
+        sup['organization_unit_ids'] << organization_unit_id 
+        sup['organization_unit_ids'].uniq!
+      end
       user.settings['supervisors'] << sup
       user.settings['link_codes'] -= [code] if code
       user.save

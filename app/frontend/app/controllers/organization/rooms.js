@@ -19,13 +19,11 @@ export default Ember.Controller.extend({
   load_users: function() {
     var _this = this;
     Utils.all_pages('/api/v1/organizations/' + this.get('model.id') + '/users', {result_type: 'user', type: 'GET', data: {recent: true}}).then(function(data) {
-      console.log(data);
-      _this.set('all_communicators', data);
+      _this.set('all_communicators', data.filter(function(u) { return !u.org_pending; });
     }, function(err) {
       _this.set('user_error', true);
     });
     Utils.all_pages('/api/v1/organizations/' + this.get('model.id') + '/supervisors', {result_type: 'user', type: 'GET', data: {recent: true}}).then(function(data) {
-      console.log(data);
       _this.set('all_supervisors', data);
     }, function(err) {
       _this.set('user_error', true);

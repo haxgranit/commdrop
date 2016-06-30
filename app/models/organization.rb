@@ -118,6 +118,7 @@ class Organization < ActiveRecord::Base
       'user_type' => 'supervisor',
       'removed_at' => Time.now.iso8601
     }) unless pending
+    OrganizationUnit.schedule(:remove_as_member, user_key, 'supervisor', self.global_id)
     true
   end
 
@@ -437,6 +438,7 @@ class Organization < ActiveRecord::Base
       'user_type' => 'user',
       'removed_at' => Time.now.iso8601
     }) unless pending
+    OrganizationUnit.schedule(:remove_as_member, user_key, 'communicator', self.global_id)
     true
   end
 

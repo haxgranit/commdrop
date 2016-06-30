@@ -116,6 +116,26 @@ describe OrganizationUnit, :type => :model do
       opts = {'id' => ou.id, 'method' => 'assert_supervision', 'arguments' => args}
       expect(Worker.scheduled?(OrganizationUnit, :perform_action, opts)).to eq(true)
     end
+    
+    it "should track all org units tying the supervisor to the communicator" do
+      o = Organization.create
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      u1 = User.create
+      u2 = User.create
+      o.add_user(u1.global_id, false, false)
+      o.add_supervisor(u2.global_id, false)
+      ou1.add_communicator(u1.global_id)
+      ou1.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      ou2.add_communicator(u1.global_id)
+      ou2.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      expect(u1.settings['supervisors'].length).to eq(1)
+      expect(u1.settings['supervisors'][0]['organization_unit_ids']).to eq([ou1.global_id, ou2.global_id])
+    end
   end  
   
   describe "all_user_ids" do
@@ -161,6 +181,32 @@ describe OrganizationUnit, :type => :model do
       opts = {'id' => ou.id, 'method' => 'assert_supervision', 'arguments' => args}
       expect(Worker.scheduled?(OrganizationUnit, :perform_action, opts)).to eq(true)
     end
+    
+    it "should not remove the supervisor if there's another connection tying them together" do
+      o = Organization.create
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      u1 = User.create
+      u2 = User.create
+      o.add_user(u1.global_id, false, false)
+      o.add_supervisor(u2.global_id, false)
+      ou1.add_communicator(u1.global_id)
+      ou1.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      ou2.add_communicator(u1.global_id)
+      ou2.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      expect(u1.settings['supervisors'].length).to eq(1)
+      expect(u1.settings['supervisors'][0]['organization_unit_ids']).to eq([ou1.global_id, ou2.global_id])
+
+      ou2.remove_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      expect(u1.settings['supervisors'].length).to eq(1)
+      expect(u1.settings['supervisors'][0]['organization_unit_ids']).to eq([ou1.global_id])
+    end
   end
   
   describe "add_communicator" do
@@ -170,12 +216,20 @@ describe OrganizationUnit, :type => :model do
       u = User.create
       expect(ou.add_communicator(u.user_name)).to eq(false)
     end
+
+    it "should return false if the user is a pending org-managed user" do
+      o = Organization.create
+      ou = OrganizationUnit.create(:organization => o)
+      u = User.create
+      o.add_user(u.user_name, true, false)
+      expect(ou.add_communicator(u.user_name)).to eq(false)
+    end
     
     it "should add to the list of communicators if valid" do
       o = Organization.create
       ou = OrganizationUnit.create(:organization => o)
       u = User.create
-      o.add_user(u.user_name, true, false)
+      o.add_user(u.user_name, false, false)
       expect(ou.add_communicator(u.user_name)).to eq(true)
       expect(ou.settings['communicators'].length).to eq(1)
       expect(ou.settings['communicators'][0]['user_id']).to eq(u.global_id)
@@ -187,7 +241,7 @@ describe OrganizationUnit, :type => :model do
       u = User.create
       ou.settings['communicators'] = [{'user_id' => u.global_id}]
       ou.save
-      o.add_user(u.user_name, true, false)
+      o.add_user(u.user_name, false, false)
       expect(ou.add_communicator(u.user_name)).to eq(true)
       expect(ou.add_communicator(u.user_name)).to eq(true)
       expect(ou.add_communicator(u.user_name)).to eq(true)
@@ -198,11 +252,31 @@ describe OrganizationUnit, :type => :model do
       o = Organization.create
       ou = OrganizationUnit.create(:organization => o)
       u = User.create
-      o.add_user(u.user_name, true, false)
+      o.add_user(u.user_name, false, false)
       expect(ou.add_communicator(u.user_name)).to eq(true)
       args = [{'user_id' => u.global_id, 'add_communicator' => u.user_name}]
       opts = {'id' => ou.id, 'method' => 'assert_supervision', 'arguments' => args}
       expect(Worker.scheduled?(OrganizationUnit, :perform_action, opts)).to eq(true)
+    end
+    
+    it "should track all connections between the supervisor and user" do
+      o = Organization.create
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      u1 = User.create
+      u2 = User.create
+      o.add_user(u1.global_id, false, false)
+      o.add_supervisor(u2.global_id, false)
+      ou1.add_communicator(u1.global_id)
+      ou1.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      ou2.add_communicator(u1.global_id)
+      ou2.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      expect(u1.settings['supervisors'].length).to eq(1)
+      expect(u1.settings['supervisors'][0]['organization_unit_ids']).to eq([ou1.global_id, ou2.global_id])
     end
   end
   
@@ -225,6 +299,32 @@ describe OrganizationUnit, :type => :model do
       args = [{'user_id' => u.global_id, 'remove_communicator' => u.user_name}]
       opts = {'id' => ou.id, 'method' => 'assert_supervision', 'arguments' => args}
       expect(Worker.scheduled?(OrganizationUnit, :perform_action, opts)).to eq(true)
+    end
+    
+    it "should not remove if there are other connections between the pair" do
+      o = Organization.create
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      u1 = User.create
+      u2 = User.create
+      o.add_user(u1.global_id, false, false)
+      o.add_supervisor(u2.global_id, false)
+      ou1.add_communicator(u1.global_id)
+      ou1.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      ou2.add_communicator(u1.global_id)
+      ou2.add_supervisor(u2.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      expect(u1.settings['supervisors'].length).to eq(1)
+      expect(u1.settings['supervisors'][0]['organization_unit_ids']).to eq([ou1.global_id, ou2.global_id])
+
+      ou2.remove_communicator(u1.global_id)
+      Worker.process_queues
+      expect(u1.reload.supervisor_user_ids).to eq([u2.global_id])
+      expect(u1.settings['supervisors'].length).to eq(1)
+      expect(u1.settings['supervisors'][0]['organization_unit_ids']).to eq([ou1.global_id])
     end
   end
   
@@ -261,8 +361,8 @@ describe OrganizationUnit, :type => :model do
         'communicators' => [{'user_id' => u1.global_id}, {'user_id' => u2.global_id}],
         'supervisors' => [{'user_id' => u3.global_id}, {'user_id' => u4.global_id}]
       }
-      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1)
-      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u2)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1, nil)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u2, nil)
       ou.assert_supervision({'user_id' => u4.global_id, 'remove_supervisor' => true})
     end
     
@@ -306,8 +406,8 @@ describe OrganizationUnit, :type => :model do
         'communicators' => [{'user_id' => u1.global_id}, {'user_id' => u2.global_id}],
         'supervisors' => [{'user_id' => u3.global_id}, {'user_id' => u4.global_id}]
       }
-      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1)
-      expect(User).to receive(:unlink_supervisor_from_user).with(u3, u1)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1, nil)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u3, u1, nil)
       ou.assert_supervision({'user_id' => u1.global_id, 'remove_communicator' => true})
     end
     
@@ -323,8 +423,8 @@ describe OrganizationUnit, :type => :model do
         'communicators' => [{'user_id' => u1.global_id}, {'user_id' => u2.global_id}],
         'supervisors' => [{'user_id' => u3.global_id}, {'user_id' => u4.global_id}]
       }
-      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1)
-      expect(User).to receive(:unlink_supervisor_from_user).with(u3, u1)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1, nil)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u3, u1, nil)
       expect(User).to_not receive(:unlink_supervisor_from_user).with(u5, u1)
       ou.assert_supervision({'user_id' => u1.global_id, 'remove_communicator' => true})
     end
@@ -341,10 +441,94 @@ describe OrganizationUnit, :type => :model do
         'communicators' => [{'user_id' => u1.global_id}, {'user_id' => u2.global_id}],
         'supervisors' => [{'user_id' => u3.global_id}, {'user_id' => u4.global_id}]
       }
-      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1)
-      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u2)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u1, nil)
+      expect(User).to receive(:unlink_supervisor_from_user).with(u4, u2, nil)
       expect(User).to_not receive(:unlink_supervisor_from_user).with(u4, u5)
       ou.assert_supervision({'user_id' => u4.global_id, 'remove_supervisor' => true})
+    end
+  end
+  
+  describe "communicator?" do
+    it "should return the correct value" do
+      o = Organization.create
+      ou = OrganizationUnit.create(:organization => o)
+      expect(ou.communicator?(nil)).to eq(false)
+      u = User.create
+      expect(ou.communicator?(u)).to eq(false)
+      ou.add_supervisor(u.user_name)
+      expect(ou.communicator?(u)).to eq(false)
+      o.add_user(u.user_name, false, false)
+      ou.add_communicator(u.user_name)
+      expect(ou.communicator?(u)).to eq(true)
+    end
+  end
+  
+  describe "supervisor?" do
+    it "should return the correct value" do
+      o = Organization.create
+      ou = OrganizationUnit.create(:organization => o)
+      expect(ou.supervisor?(nil)).to eq(false)
+      u = User.create
+      expect(ou.supervisor?(u)).to eq(false)
+      ou.add_communicator(u.user_name)
+      expect(ou.supervisor?(u)).to eq(false)
+      o.add_supervisor(u.user_name, false)
+      ou.add_supervisor(u.user_name)
+      expect(ou.supervisor?(u)).to eq(true)
+    end
+  end
+  
+  describe "remove_as_member" do
+    it "should remove communicators from all org units" do
+      u1 = User.create
+      u2 = User.create
+      u3 = User.create
+      o = Organization.create
+      o.add_user(u1.user_name, false, false)
+      o.add_user(u2.user_name, false, false)
+      o.add_user(u3.user_name, false, false)
+      o.add_supervisor(u2.user_name, false)
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      ou1.add_communicator(u2.global_id)
+      ou1.add_communicator(u1.global_id)
+      ou2.add_communicator(u2.global_id)
+      ou2.add_communicator(u3.global_id)
+      ou2.add_supervisor(u2.global_id)
+      OrganizationUnit.remove_as_member(u2.global_id, 'communicator', o.global_id)
+      ou1.reload
+      ou2.reload
+      expect(ou1.communicator?(u1)).to eq(true)
+      expect(ou1.communicator?(u2)).to eq(false)
+      expect(ou2.communicator?(u2)).to eq(false)
+      expect(ou2.communicator?(u3)).to eq(true)
+      expect(ou2.supervisor?(u2)).to eq(true)
+    end
+    
+    it "should remove supervisors from all org units" do
+      u1 = User.create
+      u2 = User.create
+      u3 = User.create
+      o = Organization.create
+      o.add_user(u2.user_name, false, false)
+      o.add_supervisor(u1.user_name, false)
+      o.add_supervisor(u2.user_name, false)
+      o.add_supervisor(u3.user_name, false)
+      ou1 = OrganizationUnit.create(:organization => o)
+      ou2 = OrganizationUnit.create(:organization => o)
+      ou1.add_supervisor(u2.global_id)
+      ou1.add_supervisor(u1.global_id)
+      ou2.add_supervisor(u2.global_id)
+      ou2.add_supervisor(u3.global_id)
+      ou2.add_communicator(u2.global_id)
+      OrganizationUnit.remove_as_member(u2.global_id, 'supervisor', o.global_id)
+      ou1.reload
+      ou2.reload
+      expect(ou1.supervisor?(u1)).to eq(true)
+      expect(ou1.supervisor?(u2)).to eq(false)
+      expect(ou2.supervisor?(u2)).to eq(false)
+      expect(ou2.supervisor?(u3)).to eq(true)
+      expect(ou2.communicator?(u2)).to eq(true)
     end
   end
 end

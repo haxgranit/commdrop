@@ -69,6 +69,16 @@ class OrganizationUnit < ActiveRecord::Base
     res.uniq
   end
   
+  def supervisor?(user)
+    self.settings ||= {}
+    (self.settings['supervisors'] || []).map{|c| c['user_id'] }.include?(user && user.global_id)
+  end
+  
+  def communicator?(user)
+    self.settings ||= {}
+    (self.settings['communicators'] || []).map{|c| c['user_id'] }.include?(user && user.global_id)
+  end
+  
   def remove_supervisor(user_name)
     user = User.find_by_path(user_name)
     org = self.organization
@@ -81,7 +91,7 @@ class OrganizationUnit < ActiveRecord::Base
   def add_communicator(user_name)
     user = User.find_by_path(user_name)
     org = self.organization
-    return false unless user && org && org.managed_user?(user)
+    return false unless user && org && org.managed_user?(user) && !org.pending_user?(user)
     assert_list('communicators', user.global_id)
     self.settings['communicators'] << {
       'user_id' => user.global_id,
@@ -100,6 +110,18 @@ class OrganizationUnit < ActiveRecord::Base
     self.save
   end
   
+  def self.remove_as_member(user_name, member_type, organization_id)
+    org = Organization.find_by_global_id(organization_id)
+    # TODO: sharding
+    OrganizationUnit.where(:organization_id => org.id).each do |unit|
+      if member_type == 'supervisor'
+        unit.remove_supervisor(user_name)
+      elsif member_type == 'communicator'
+        unit.remove_communicator(user_name)
+      end
+    end
+  end
+  
   def assert_list(list, exclude_user_id)
     self.settings[list] = (self.settings[list] || []).select{|s| s['user_id'] != exclude_user_id }
   end
@@ -111,11 +133,11 @@ class OrganizationUnit < ActiveRecord::Base
     return false unless ref_user
     if opts['remove_supervisor']
       communicators.each do |user|
-        User.unlink_supervisor_from_user(ref_user, user)
+        User.unlink_supervisor_from_user(ref_user, user, self.global_id)
       end
     elsif opts['remove_communicator']
       supervisors.each do |user|
-        User.unlink_supervisor_from_user(user, ref_user)
+        User.unlink_supervisor_from_user(user, ref_user, self.global_id)
       end
     elsif opts['add_supervisor']
       sup = self.settings['supervisors'].detect{|s| s['user_id'] == ref_user.global_id } || {}

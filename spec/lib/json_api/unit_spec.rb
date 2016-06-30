@@ -44,8 +44,8 @@ describe JsonApi::Unit do
       u3 = User.create
       o = Organization.create
       u = OrganizationUnit.create(:settings => {'name' => 'Roomy'}, :organization => o)
-      o.add_user(u1.global_id, true, false)
-      o.add_user(u3.global_id, true, false)
+      o.add_user(u1.global_id, false, false)
+      o.add_user(u3.global_id, false, false)
       o.add_supervisor(u2.global_id, true)
       o.add_supervisor(u3.global_id, true)
       
@@ -68,8 +68,8 @@ describe JsonApi::Unit do
       u3 = User.create
       o = Organization.create
       u = OrganizationUnit.create(:settings => {'name' => 'Roomy'}, :organization => o)
-      o.add_user(u1.global_id, true, false)
-      o.add_user(u3.global_id, true, false)
+      o.add_user(u1.global_id, false, false)
+      o.add_user(u3.global_id, false, false)
       o.add_supervisor(u2.global_id, true)
       o.add_supervisor(u3.global_id, true)
 
@@ -97,8 +97,8 @@ describe JsonApi::Unit do
       u3 = User.create
       o = Organization.create
       u = OrganizationUnit.create(:settings => {'name' => 'Roomy'}, :organization => o)
-      o.add_user(u1.global_id, true, false)
-      o.add_user(u3.global_id, true, false)
+      o.add_user(u1.global_id, false, false)
+      o.add_user(u3.global_id, false, false)
       o.add_supervisor(u2.global_id, true)
       o.add_supervisor(u3.global_id, true)
 

@@ -64,7 +64,7 @@ describe Supervising, :type => :model do
       u2.link_to_supervisee_by_code(code)
       expect(u2.settings['supervisees']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => true}])
       u.reload
-      expect(u.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true}])
+      expect(u.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true, 'organization_unit_ids' => []}])
     end
     
     it "should link to a supervisee by code when editing" do
@@ -75,7 +75,7 @@ describe Supervising, :type => :model do
       u2.process({:supervisee_code => code})
       expect(u2.settings['supervisees']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => true}])
       u.reload
-      expect(u.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true}])
+      expect(u.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true, 'organization_unit_ids' => []}])
     end
     
     it "should error on supervisee failure when editing" do
@@ -112,7 +112,7 @@ describe Supervising, :type => :model do
       code = u.generate_link_code
       expect(u2.link_to_supervisee_by_code(code)).to eq(true)
       u.reload
-      expect(u.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true}])
+      expect(u.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true, 'organization_unit_ids' => []}])
     end
     
     it "should not allow a user to supervise themself" do
@@ -205,8 +205,71 @@ describe Supervising, :type => :model do
         'user_id' => u1.global_id,
         'user_name' => u1.user_name,
         'edit_permission' => true,
-        'organization_unit_id' => '1_1'
+        'organization_unit_ids' => ['1_1']
       }])
+
+      User.link_supervisor_to_user(u1, u2, nil, true, '1_2')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_ids' => ['1_1', '1_2']
+      }])
+    end
+
+    it "should correctly handle multiple org unit ids" do
+      u1 = User.create
+      u2 = User.create
+      User.link_supervisor_to_user(u1, u2, nil, true, '1_1')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_ids' => ['1_1']
+      }])
+
+      User.link_supervisor_to_user(u1, u2, nil, true, '1_2')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_ids' => ['1_1', '1_2']
+      }])
+
+      User.link_supervisor_to_user(u1, u2, nil, true, '1_2')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_ids' => ['1_1', '1_2']
+      }])
+
+      User.link_supervisor_to_user(u1, u2, nil, true, '1_3')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_ids' => ['1_1', '1_2', '1_3']
+      }])
+      
+      User.unlink_supervisor_from_user(u1, u2, '1_2')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_ids' => ['1_1', '1_3']
+      }])
+
+      User.unlink_supervisor_from_user(u1, u2, '1_1')
+      expect(u2.settings['supervisors']).to eq([{
+        'user_id' => u1.global_id,
+        'user_name' => u1.user_name,
+        'edit_permission' => true,
+        'organization_unit_ids' => ['1_3']
+      }])
+
+      User.unlink_supervisor_from_user(u1, u2, '1_3')
+      expect(u2.settings['supervisors']).to eq([])
     end
   end
 
@@ -215,7 +278,7 @@ describe Supervising, :type => :model do
       u = User.create
       u2 = User.create
       u2.process({'supervisor_key' => "add-#{u.global_id}"})
-      expect(u2.reload.settings['supervisors']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => false}])
+      expect(u2.reload.settings['supervisors']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => false, 'organization_unit_ids' => []}])
       expect(u.reload.settings['supervisees']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => false}])
     end
 
@@ -223,7 +286,7 @@ describe Supervising, :type => :model do
       u = User.create
       u2 = User.create
       u2.process({'supervisor_key' => "add_edit-#{u.global_id}"})
-      expect(u2.reload.settings['supervisors']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => true}])
+      expect(u2.reload.settings['supervisors']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => true, 'organization_unit_ids' => []}])
       expect(u.reload.settings['supervisees']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true}])
     end
 
@@ -236,7 +299,7 @@ describe Supervising, :type => :model do
       u = User.create
       u2 = User.create
       User.link_supervisor_to_user(u2, u)
-      expect(u.reload.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true}])
+      expect(u.reload.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true, 'organization_unit_ids' => []}])
       expect(u2.reload.settings['supervisees']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => true}])
       u.process({'supervisor_key' => "remove_supervisor-#{u2.global_id}"})
       expect(u.reload.settings['supervisors']).to eq([])
@@ -252,7 +315,7 @@ describe Supervising, :type => :model do
       u = User.create
       u2 = User.create
       User.link_supervisor_to_user(u2, u)
-      expect(u.reload.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true}])
+      expect(u.reload.settings['supervisors']).to eq([{'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true, 'organization_unit_ids' => []}])
       expect(u2.reload.settings['supervisees']).to eq([{'user_id' => u.global_id, 'user_name' => u.user_name, 'edit_permission' => true}])
       u2.process({'supervisor_key' => "remove_supervisee-#{u.global_id}"})
       expect(u.reload.settings['supervisors']).to eq([])
