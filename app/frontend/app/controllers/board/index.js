@@ -636,8 +636,10 @@ export default Ember.Controller.extend({
       editManager.clear_button(id);
     },
     stash_button: function(id) {
-      editManager.stash_button(id);
+      editManager.stash_button(id || editManager.stashed_button_id);
       modal.success(i18n.t('button_stashed', "Button stashed!"));
+      var $stash_hover = Ember.$("#stash_hover");
+      $stash_hover.removeClass('on_button').data('button_id', null);
     },
     toggleEditMode: function() {
       app_state.toggle_edit_mode();

@@ -205,7 +205,30 @@ var buttonTracker = Ember.Object.extend({
         // TODO: this is not terribly performant, but I guess it doesn't matter
         // since it won't trigger much on mobile
         Ember.$("#board_canvas").css('cursor', 'pointer');
+        if(app_state.get('default_mode') && button_wrap.dom) {
+          var $stash_hover = Ember.$("#stash_hover");
+          if($stash_hover.data('button_id') != button_wrap.id) {
+            var offset = Ember.$(button_wrap.dom).offset();
+            if(offset && offset.left) {
+              $stash_hover.removeClass('on_button');
+              $stash_hover.detach();
+              $stash_hover.css({
+                top: offset.top - Ember.$("header").height(),
+                left: offset.left
+              })
+              Ember.$(".board").before($stash_hover);
+              Ember.run.later(function() {
+                $stash_hover.addClass('on_button');
+                editManager.stashed_button_id = button_wrap.id;
+              });
+            }
+            $stash_hover.data('button_id', button_wrap.id);
+          }
+        }
       } else {
+        if(Ember.$(event.target).closest("#stash_hover").length == 0) {
+          Ember.$("#stash_hover").removeClass('on_button').data('button_id', null);
+        }
         app_state.get('board_virtual_dom').clear_hover();
         Ember.$("#board_canvas").css('cursor', '');
       }
@@ -397,7 +420,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.ignoreUp = false;
     } else if(editManager.finding_target()) {
       // if looking for a target and one is found, hit it
-      if(((elem_wrap && elem_wrap.drom && elem_wrap.dom.className) || "").match(/button/)) {
+      if(((elem_wrap && elem_wrap.dom && elem_wrap.dom.className) || "").match(/button/)) {
         buttonTracker.button_release(elem_wrap, event);
       }
       // TODO: clear finding_target when selecting anywhere else, leaving edit mode, etc.

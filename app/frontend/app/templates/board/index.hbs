@@ -17,6 +17,11 @@
       </span>
     </div>
   {{/if}}
+  <div id="stash_hover" style="position: absolute;" {{action 'stash_button'}}>
+    <span class="glyphicon glyphicon-copy"></span>
+    {{t "Copy to Button Stash" key='copy_to_button_stash'}}
+    <span style="clear: left;"></span>
+  </div>
   {{#if show_word_suggestions}}
     <div id="word_suggestions" class="advanced_selection">
       {{#if suggestions.ready}}

@@ -467,8 +467,39 @@ footer .wide_links {
   text-align: center;
   border-radius: 3px;
   cursor: pointer;
-  overflow: hidden;
   outline: none;
+  overflow: hidden;
+}
+#stash_hover {
+  position: absolute; 
+  cursor: pointer;
+  left: -100px; 
+  z-index: 3; 
+  width: 120px; 
+  height: 45px;
+  font-size: 12px;
+  padding: 5px;
+  margin-top: -47px;
+  margin-left: 10px;
+  background: #fff;
+  visibility: hidden;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  opacity: 0.0;
+  transition: visibility 0s 0.9s linear, opacity 0.15s ease-in 0.9s;
+  -webkit-transition: visibility 0s 0.9s linear, opacity 0.15s ease-in 0.9s;
+  &:hover {
+    background: #fafafa;
+  }
+  &.on_button {
+    visibility: visible;
+    opacity: 1.0;
+  }
+  .glyphicon {
+    float: left;
+    font-size: 30px;
+    margin-right: 5px;
+  }
 }
 
 .button .pending {
@@ -860,6 +891,7 @@ body.pretty_loader #loading_box {
   bottom: -2px;
   left: 0;
   width: 100%;
+  overflow: hidden;
 }
 .button .button-label-holder.no_image {
   display: block;
