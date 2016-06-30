@@ -296,13 +296,16 @@ export default Ember.Controller.extend({
         var image_height = button_height - currentLabelHeight - CoughDrop.boxPad - (inner_pad * 2) + 8;
         var image_width = button_width - CoughDrop.boxPad - (inner_pad * 2) + 8;
 
+        var top_margin = currentLabelHeight + CoughDrop.labelHeight - 8;
         if(_this.get('model.text_size') == 'really_small_text') {
           if(currentLabelHeight > 0) {
             image_height = image_height + currentLabelHeight - CoughDrop.labelHeight + 25;
+            top_margin = 0;
           }
         } else if(_this.get('model.text_size') == 'small_text') {
           if(currentLabelHeight > 0) {
             image_height = image_height + currentLabelHeight - CoughDrop.labelHeight + 10;
+            top_margin = top_margin - 10;
           }
         }
         if(button_height < 50) {
@@ -310,6 +313,9 @@ export default Ember.Controller.extend({
         }
         if(button_width < 50) {
           image_width = image_width + (inner_pad * 2) + (extra_pad * 2);
+        }
+        if(currentLabelHeight == 0 || _this.get('text_position') != 'text_position_top') {
+          top_margin = 0;
         }
 
         button.set('positioning', {
@@ -320,6 +326,7 @@ export default Ember.Controller.extend({
           image_height: image_height,
           image_width: image_width,
           image_square: Math.min(image_height, image_width),
+          image_top_margin: top_margin,
           border: inner_pad
         });
 
@@ -414,7 +421,7 @@ export default Ember.Controller.extend({
       });
     });
     app_state.set('board_virtual_dom.ordered_buttons', ob);
-  }.observes('model.id', 'extra_pad', 'inner_pad', 'base_text_height', 'text_style', 'ordered_buttons', 'border_style', 'height', 'width', 'app_state.edit_mode', 'nothing_visible', 'app_state.currentUser.preferences.stretch_buttons'),
+  }.observes('model.id', 'extra_pad', 'inner_pad', 'base_text_height', 'text_style', 'text_position', 'ordered_buttons', 'border_style', 'height', 'width', 'app_state.edit_mode', 'nothing_visible', 'app_state.currentUser.preferences.stretch_buttons'),
   long_description: function() {
     var desc = "";
     if(this.get('model.name') && this.get('model.name') != 'Unnamed Board') {
@@ -500,9 +507,10 @@ export default Ember.Controller.extend({
   }.property('app_state.currentUser.preferences.device.button_border'),
   base_text_height: function() {
     var spacing = app_state.get('currentUser.preferences.device.button_text') || window.user_preferences.device.button_text;
+    var position = app_state.get('currentUser.preferences.device.button_text_position') || window.user_preferences.device.button_text_position;
     if(spacing == "small") {
       return 14;
-    } else if(spacing == "none") {
+    } else if(spacing == "none" || position == "none") {
       return 0;
     } else if(spacing == "large") {
       return 22;
@@ -511,11 +519,17 @@ export default Ember.Controller.extend({
     } else {
       return 18;
     }
-  }.property('app_state.currentUser.preferences.device.button_text'),
+  }.property('app_state.currentUser.preferences.device.button_text', 'app_state.currentUser.preferences.device.button_text'),
   text_style: function() {
     var spacing = app_state.get('currentUser.preferences.device.button_text') || window.user_preferences.device.button_text;
+    if(app_state.get('currentUser.preferences.device.button_text_position') == 'none') {
+      spacing = 'none';
+    }
     return "text_" + spacing;
-  }.property('app_state.currentUser.preferences.device.button_text'),
+  }.property('app_state.currentUser.preferences.device.button_text', 'app_state.currentUser.preferences.device.button_text_position'),
+  text_position: function() {
+    return "text_position_" + (app_state.get('currentUser.preferences.device.button_text_position') || window.user_preferences.device.button_text_position);
+  }.property('app_state.currentUser.preferences.device.button_text_position'),
   border_style: function() {
     var spacing = app_state.get('currentUser.preferences.device.button_border') || window.user_preferences.device.button_border;
     return "border_" + spacing;
@@ -549,6 +563,9 @@ export default Ember.Controller.extend({
     if(this.get('text_style')) {
       res = res + this.get('text_style') + " ";
     }
+    if(this.get('text_position')) {
+      res = res + this.get('text_position') + " ";
+    }
     if(this.get('button_style')) {
       var style = Button.style(this.get('button_style'));
       if(style.upper) {
@@ -567,8 +584,11 @@ export default Ember.Controller.extend({
     if(this.get('app_state.currentUser.hide_symbols')) {
       res = res + "no_image ";
     }
+    if(this.get('app_state.currentUser.preferences.device.button_text_position') == 'top') {
+      res = res + "top ";
+    }
     return res;
-  }.property('app_state.currentUser.hide_symbols'),
+  }.property('app_state.currentUser.hide_symbols', 'app_state.currentUser.preferences.device.button_text_position'),
   reload_on_connect: function() {
     if(persistence.get('online') && !this.get('model.id')) {
       var _this = this;

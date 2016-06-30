@@ -189,8 +189,8 @@ CoughDrop.User = DS.Model.extend({
     return (device && device.name) || "Unknown device";
   }.property('devices'),
   hide_symbols: function() {
-    return this.get('preferences.device.button_text') == 'text_only';
-  }.property('preferences.device.button_text'),
+    return this.get('preferences.device.button_text') == 'text_only' || this.get('preferences.device.button_text_position') == 'text_only';
+  }.property('preferences.device.button_text', 'preferences.device.button_text_position'),
   remove_device: function(id) {
     var url = '/api/v1/users/' + this.get('user_name') + '/devices/' + id;
     var _this = this;

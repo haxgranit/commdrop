@@ -158,7 +158,7 @@ var Button = Ember.Object.extend({
   image_holder_style: function() {
     var pos = this.get('positioning');
     if(!pos || !pos.image_height) { return ""; }
-    return new Ember.Handlebars.SafeString("vertical-align: top; display: inline-block; width: " + pos.image_square + "px; height: " + pos.image_height + "px; line-height: " + pos.image_height + "px;");
+    return new Ember.Handlebars.SafeString("margin-top: " + pos.image_top_margin + "px; vertical-align: top; display: inline-block; width: " + pos.image_square + "px; height: " + pos.image_height + "px; line-height: " + pos.image_height + "px;");
   }.property('positioning'),
   image_style: function() {
     var pos = this.get('positioning');

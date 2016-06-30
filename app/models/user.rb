@@ -155,6 +155,7 @@ class User < ActiveRecord::Base
         'button_spacing' => 'small',
         'button_border' => 'small',
         'button_text' => 'medium',
+        'button_text_position' => 'bottom',
         'vocalization_height' => 'small',
         'wakelock' => true
       },

@@ -28,7 +28,12 @@ export default Ember.Controller.extend({
     {name: i18n.t('small', "Small (14px)"), id: "small"},
     {name: i18n.t('medium', "Medium (18px)"), id: "medium"},
     {name: i18n.t('large', "Large (22px)"), id: "large"},
-    {name: i18n.t('huge', "Huge (35px)"), id: "huge"},
+    {name: i18n.t('huge', "Huge (35px)"), id: "huge"}
+  ],
+  buttonTextPositionList: [
+    {name: i18n.t('no_text', "No Text (Images Only)"), id: "none"},
+    {name: i18n.t('on_top', "Text Above Images"), id: "top"},
+    {name: i18n.t('on_bottom', "Text Below Images"), id: "bottom"},
     {name: i18n.t('text_only', "Text Only (No Images)"), id: "text_only"}
   ],
   buttonStyleList: [

@@ -901,6 +901,11 @@ body.pretty_loader #loading_box {
   left: 0;
   width: 100%;
 }
+.button .button-label-holder.top {
+  bottom: inherit;
+  top: -2px;
+}
+
 .button span.button-label {
   height: 18px;
   font-family: serif;
