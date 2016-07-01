@@ -10,7 +10,7 @@
 - regular email updates on user usage reports, including goal tracking
 - organizations can organize users into "rooms"
 - extensions for Window-based acapela support (pending)
-- new option to save report views as "snapshots" for side-by-side comparison
+- new option to save report views as "snapshots" for side-by-side comparison (feature flag)
 
 ### 2016-06-06
 - fix external links to open in default browser in the mobile app
