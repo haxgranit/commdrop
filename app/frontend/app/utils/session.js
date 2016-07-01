@@ -116,7 +116,7 @@ var session = Ember.Object.extend({
     stashes.setup();
     session.persist(data);
 
-    session.reload();
+    session.reload('/');
   },
   reload: function(path) {
     if(path) {
