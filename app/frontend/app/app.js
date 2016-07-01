@@ -156,10 +156,11 @@ CoughDrop.licenseOptions = [
   {name: i18n.t('public_domain_license', "Public Domain"), id: 'public domain', url: 'http://creativecommons.org/publicdomain/zero/1.0/'}
 ];
 CoughDrop.registrationTypes = [
-  {name: i18n.t('pick_type', "[ this login is for ]"), id: ''},
+  {name: i18n.t('pick_type', "[ this login is mainly for ]"), id: ''},
   {name: i18n.t('registration_type_communicator', "A communicator"), id: 'communicator'},
+  {name: i18n.t('registration_type_parent_communicator', "A parent and communicator"), id: 'communicator'},
   {name: i18n.t('registration_type_slp', "A therapist"), id: 'therapist'},
-  {name: i18n.t('registration_type_parent', "A parent"), id: 'parent'},
+  {name: i18n.t('registration_type_parent', "A supervising parent"), id: 'parent'},
   {name: i18n.t('registration_type_eval', "An evaluation/assessment device"), id: 'eval'},
   {name: i18n.t('registration_type_other', "An aide, caregiver or other supporter"), id: 'other'}
 ];

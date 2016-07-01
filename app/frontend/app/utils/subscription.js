@@ -61,7 +61,7 @@ var Subscription = Ember.Object.extend({
 
       if(u.get('preferences.role') == 'supporter') {
         this.set('user_type', 'supporter');
-      } else if(['therapist', 'parent'].indexOf(u.get('preferences.registration_type')) >= 0) {
+      } else if(['therapist', 'other'].indexOf(u.get('preferences.registration_type')) >= 0) {
         this.set('user_type', 'supporter');
       }
 
