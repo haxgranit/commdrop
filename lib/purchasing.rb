@@ -93,7 +93,7 @@ module Purchasing
             end
             data = {:unsubscribe => true, :valid => !!valid}
           end
-        elsif object['status'] == 'active'
+        elsif object['status'] == 'active' || object['status'] == 'trialing'
           if valid
             updated = User.subscription_event({
               'subscribe' => true,
@@ -145,7 +145,7 @@ module Purchasing
 
   def self.purchase(user, token, type)
     # TODO: record basic card information ("Visa ending in 4242" for references)
-    user && user.log_subscription_event({:log => 'purchase initiated'})
+    user && user.log_subscription_event({:log => 'purchase initiated', :token => "#{token['id'][0,3]}..#{token['id'][-3,3]}"})
     Stripe.api_key = ENV['STRIPE_SECRET_KEY']
     if type.match(/^slp_/) && type.match(/free/)
       user.update_subscription({
@@ -229,6 +229,7 @@ module Purchasing
             'token_summary' => token['summary'],
             'plan_id' => plan_id
           })
+          user && user.log_subscription_event({:log => 'persisted subscription update', :result => updated})
           Purchasing.cancel_other_subscriptions(user, sub['id']) if updated
         else
           user && user.log_subscription_event({:log => 'creating new customer'})
@@ -239,7 +240,7 @@ module Purchasing
             :plan => plan_id,
             :source => token['id']
           })
-          sub = customer.subscriptions['data'].detect{|s| s['status'] == 'active' }
+          sub = customer.subscriptions['data'].detect{|s| s['status'] == 'active' || s['status'] == 'trialing' }
           user && user.log_subscription_event({:log => 'persisting subscription update'})
           updated = User.subscription_event({
             'subscribe' => true,
@@ -377,13 +378,24 @@ module Purchasing
     return false unless user
     Stripe.api_key = ENV['STRIPE_SECRET_KEY']
     begin
+      user.log_subscription_event({:log => 'subscription canceling', reason: except_subscription_id}) if user
       customer_id = user.settings['subscription']['customer_id']
       customer = Stripe::Customer.retrieve(customer_id) if customer_id
       if customer
-        customer.subscriptions.all.each do |sub|
-          if sub['id'] == except_subscription_id && except_subscription_id != 'all'
-          else
-            sub.delete
+        subs = customer.subscriptions.all
+        do_cancel = (except_subscription_id == 'all')
+        subs.each do |sub|
+          if sub['id'] == except_subscription_id && sub['status'] != 'canceled' && sub['status'] != 'past_due'
+            do_cancel = true
+          end
+        end
+        if do_cancel
+          subs.each do |sub|
+            if sub['id'] == except_subscription_id && except_subscription_id != 'all'
+            else
+              user.log_subscription_event({:log => 'subscription canceled', id: sub['id'], reason: except_subscription_id}) if user
+              sub.delete
+            end
           end
         end
       else

@@ -268,7 +268,7 @@ describe Purchasing do
   describe "purchase" do
     it "should trigger subscription event on free purchases" do
       u = User.create
-      res = Purchasing.purchase(u, 'free', 'slp_monthly_free');
+      res = Purchasing.purchase(u, {'id' => 'free'}, 'slp_monthly_free');
       u.reload
       expect(u.settings['subscription']).not_to eq(nil)
       expect(u.settings['subscription']['started']).not_to eq(nil)
@@ -280,35 +280,35 @@ describe Purchasing do
     it "should error gracefully on invalid purchase amounts" do
       u = User.create
       
-      res = Purchasing.purchase(u, 'token', 'monthly_12')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'monthly_12')
       expect(res).to eq({:success => false, :error => "12 not valid for type monthly_12"});
 
-      res = Purchasing.purchase(u, 'token', 'monthly_2')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'monthly_2')
       expect(res).to eq({:success => false, :error => "2 not valid for type monthly_2"});
 
-      res = Purchasing.purchase(u, 'token', 'slp_long_term_25')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'slp_long_term_25')
       expect(res).to eq({:success => false, :error => "25 not valid for type slp_long_term_25"});
 
-      res = Purchasing.purchase(u, 'token', 'slp_long_term_200')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'slp_long_term_200')
       expect(res).to eq({:success => false, :error => "200 not valid for type slp_long_term_200"});
 
-      res = Purchasing.purchase(u, 'token', 'slp_monthly_1')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'slp_monthly_1')
       expect(res).to eq({:success => false, :error => "1 not valid for type slp_monthly_1"});
 
-      res = Purchasing.purchase(u, 'token', 'slp_monthly_6')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'slp_monthly_6')
       expect(res).to eq({:success => false, :error => "6 not valid for type slp_monthly_6"});
 
-      res = Purchasing.purchase(u, 'token', 'long_term_75')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'long_term_75')
       expect(res).to eq({:success => false, :error => "75 not valid for type long_term_75"});
 
-      res = Purchasing.purchase(u, 'token', 'long_term_350')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'long_term_350')
       expect(res).to eq({:success => false, :error => "350 not valid for type long_term_350"});
     end
     
     it "should error gracefully on invalid purchase types" do
       u = User.create
       
-      res = Purchasing.purchase(u, 'token', 'bacon')
+      res = Purchasing.purchase(u, {'id' => 'token'}, 'bacon')
       expect(res).to eq({:success => false, :error => "unrecognized purchase type, bacon"});
     end
     
@@ -350,7 +350,10 @@ describe Purchasing do
       it "should cancel other subscriptions for an existing customer record" do
         u = User.create
         u.settings['subscription'] = {'customer_id' => '12345'}
-        subs = []
+        subs = [{
+          'id' => '3456',
+          'status' => 'active'
+        }]
         expect(Stripe::Customer).to receive(:retrieve).with('12345').and_return(OpenStruct.new({
           subscriptions: subs
         }))
@@ -364,7 +367,7 @@ describe Purchasing do
         expect(Purchasing).to receive(:cancel_other_subscriptions).with(u, '3456')
         Purchasing.purchase(u, {'id' => 'token'}, 'monthly_6')
       end
-
+      
       it "should trigger a subscription event for an existing customer record" do
         u = User.create
         u.settings['subscription'] = {'customer_id' => '12345'}
@@ -603,10 +606,52 @@ describe Purchasing do
       u.settings['subscription'] = {'customer_id' => '2345'}
       a = {'id' => '3456'}
       b = {'id' => '6789'}
-      c = {'id' => '4567'}
+      c = {'id' => '4567', 'status' => 'active'}
       all = [a, b, c]
       expect(a).to receive(:delete)
       expect(b).to receive(:delete)
+      expect(c).not_to receive(:delete)
+      expect(Stripe::Customer).to receive(:retrieve).with('2345').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: all})
+      }))
+      res = Purchasing.cancel_other_subscriptions(u, '4567')
+      expect(res).to eq(true)
+    end
+
+    it "should log subscription cancellations" do
+      u = User.create
+      u.settings['subscription'] = {'customer_id' => '2345'}
+      a = {'id' => '3456'}
+      b = {'id' => '6789'}
+      c = {'id' => '4567', 'status' => 'active'}
+      all = [a, b, c]
+      expect(a).to receive(:delete)
+      expect(b).to receive(:delete)
+      expect(c).not_to receive(:delete)
+      expect(Stripe::Customer).to receive(:retrieve).with('2345').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: all})
+      }))
+      res = Purchasing.cancel_other_subscriptions(u, '4567')
+      expect(res).to eq(true)
+      u.reload
+      expect(u.settings['subscription_events']).to_not eq(nil)
+      expect(u.settings['subscription_events'][-1]['log']).to eq('subscription canceled')
+      expect(u.settings['subscription_events'][-1]['reason']).to eq('4567')
+      expect(u.settings['subscription_events'][-2]['log']).to eq('subscription canceled')
+      expect(u.settings['subscription_events'][-2]['reason']).to eq('4567')
+      expect(u.settings['subscription_events'][-3]['log']).to eq('subscription canceling')
+      expect(u.settings['subscription_events'][-3]['reason']).to eq('4567')
+    end
+    
+    it "should not cancel other subscriptions if the referenced subscription is inactive" do
+      u = User.create
+      u.settings['subscription'] = {'customer_id' => '2345'}
+      a = {'id' => '3456'}
+      b = {'id' => '6789'}
+      c = {'id' => '4567', 'status' => 'canceled'}
+      all = [a, b, c]
+      expect(a).to_not receive(:delete)
+      expect(b).to_not receive(:delete)
       expect(c).not_to receive(:delete)
       expect(Stripe::Customer).to receive(:retrieve).with('2345').and_return(OpenStruct.new({
         subscriptions: OpenStruct.new({all: all})
@@ -795,8 +840,8 @@ describe Purchasing do
       expect(User).to receive(:subscription_event)
       Purchasing.purchase(u, {'id' => 'token'}, 'long_term_150')
       u.reload
-      expect(u.settings['subscription_events'].length).to eq(4)
-      expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting long-term purchase update'])
+      expect(u.settings['subscription_events'].length).to eq(5)
+      expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting long-term purchase update', 'subscription canceling'])
     end
   end
 end
