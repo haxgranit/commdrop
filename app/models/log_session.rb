@@ -38,7 +38,11 @@ class LogSession < ActiveRecord::Base
     
     attrs = ClusterLocation.calculate_attributes(self)
     self.data['geo'] = attrs['geo']
+    self.geo_cluster_id = -1 if !self.data['geo']
+    self.geo_cluster_id = nil if self.data['geo'] && self.geo_cluster_id == -1
     self.data['ip_address'] = attrs['ip_address']
+    self.ip_cluster_id = -1 if !self.data['ip_address']
+    self.ip_cluster_id = nil if self.data['ip_address'] && self.ip_cluster_id == -1
     self.data['readable_ip_address'] = attrs['readable_ip_address']
     
     self.data['duration'] = last && last['timestamp'] && first && first['timestamp'] && (last['timestamp'] - first['timestamp'])

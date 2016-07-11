@@ -183,7 +183,12 @@ class ClusterLocation < ActiveRecord::Base
     user = User.find_by_global_id(user_id)
     return unless user
     Rails.logger.info("clusterizing #{user_id}")
-    non_geos = user.log_sessions.where(:geo_cluster_id => nil).select{|s| s.data['geo'] }
+    non_geos = []
+    # TODO: memory issues from collecting too many logs, so limiting to only the last month
+    # and adding find_in_batches. That probably won't be enough to completely fix the problem.
+    user.log_sessions.where(:geo_cluster_id => nil).where(['started_at > ?', 1.months.ago]).find_in_batches(batch_size: 100) do |batch|
+      non_geos += batch.select{|s| s.data['geo'] }
+    end
     Rails.logger.info("geos to clusterize: #{non_geos.length}")
     # Time may have passed since this was scheduled, make sure there are no stragglers
     clusters = ClusterLocation.where(:user_id => user.id)
@@ -222,7 +227,10 @@ class ClusterLocation < ActiveRecord::Base
     
     # ip addresses just cluster based on exact match. Easy peasy.
     ips = {}
-    non_ips = user.log_sessions.where(:ip_cluster_id => nil).select{|s| s.data['ip_address'] }
+    non_ips = []
+    user.log_sessions.where(:ip_cluster_id => nil).where(['started_at > ?', 1.month.ago]).find_in_batches(batch_size: 100) do |batch|
+      non_ips += batch.select{|s| s.data['ip_address'] }
+    end
     Rails.logger.info("ips to clusterize: #{non_ips.length}")
     # Time may have passed since this was scheduled, make sure there are no stragglers
     non_ips = non_ips.select{|s| !add_to_ip_cluster(s, clusters) }
