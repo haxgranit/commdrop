@@ -261,6 +261,7 @@ module Subscription
   end
   
   def subscription_event(args)
+    self.log_subscription_event(:log => 'subscription event triggered remotely', :args => args)
     if args['purchase_failed']
       SubscriptionMailer.schedule_delivery(:purchase_bounced, self.global_id)
       return true
@@ -269,17 +270,22 @@ module Subscription
       if is_new
         if args['plan_id'] == 'gift_code'
           SubscriptionMailer.schedule_delivery(:gift_redeemed, args['gift_id'])
+          self.log_subscription_event(:log => 'gift notification triggered')
           SubscriptionMailer.schedule_delivery(:gift_seconds_added, args['gift_id'])
         else
           SubscriptionMailer.schedule_delivery(:purchase_confirmed, self.global_id)
+          self.log_subscription_event(:log => 'purchase notification triggered')
           SubscriptionMailer.schedule_delivery(:new_subscription, self.global_id)
         end
       end
       return is_new
     elsif args['subscribe']
       is_new = update_subscription(args)
-      SubscriptionMailer.schedule_delivery(:purchase_confirmed, self.global_id) if is_new
-      SubscriptionMailer.schedule_delivery(:new_subscription, self.global_id) if is_new
+      if is_new
+        SubscriptionMailer.schedule_delivery(:purchase_confirmed, self.global_id) 
+        self.log_subscription_event(:log => 'subscription notification triggered')
+        SubscriptionMailer.schedule_delivery(:new_subscription, self.global_id) 
+      end
       return is_new
     elsif args['unsubscribe']
       is_new = update_subscription(args)
