@@ -154,7 +154,7 @@ var Subscription = Ember.Object.extend({
           if(this.get('much_cheaper_offer')) {
             this.set('subscription_amount', 'monthly_3');
           } else if(this.get('cheaper_offer')) {
-            this.set('subscription_amount', 'monthly_4');
+            this.set('subscription_amount', 'monthly_6');
           } else {
             this.set('subscription_amount', 'monthly_6');
           }
