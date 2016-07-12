@@ -465,7 +465,7 @@ describe User, :type => :model do
       u = User.create
       b = Board.create(:user => u)
       b2 = Board.create(:user => u)
-      expect(Board).to receive(:replace_board_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :update_inline => true})
+      expect(Board).to receive(:replace_board_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :update_inline => true, :authorized_user => nil})
       u.replace_board(b.global_id, b2.global_id, [], true)
     end
   end
@@ -475,7 +475,7 @@ describe User, :type => :model do
       u = User.create
       b = Board.create(:user => u)
       b2 = Board.create(:user => u)
-      expect(Board).to receive(:copy_board_links_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2})
+      expect(Board).to receive(:copy_board_links_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :authorized_user => nil})
       u.copy_board_links(b.global_id, b2.global_id)
     end
   end

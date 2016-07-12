@@ -278,16 +278,32 @@ class User < ActiveRecord::Base
     # TODO: trigger background process to create user_board_connection records for all boards
     previous_connections = UserBoardConnection.where(:user_id => self.id)
     orphan_board_ids = previous_connections.map(&:board_id)
+    linked_boards = []
     if self.settings['preferences'] && self.settings['preferences']['home_board'] && self.settings['preferences']['home_board']['id']
-      board = Board.find_by_path(self.settings['preferences']['home_board']['id'])
+      linked_boards << {
+        board: Board.find_by_path(self.settings['preferences']['home_board']['id']),
+        home: true
+      }
+    end
+    if self.settings['preferences'] && self.settings['preferences']['sidebar_boards']
+      self.settings['preferences']['sidebar_boards'].each do |brd|
+        linked_boards << {
+          board: Board.find_by_path(brd['key']),
+          home: false
+        }
+      end
+    end
+    linked_boards.each do |hash|
+      board = hash[:board]
       if board
         orphan_board_ids -= [board.id]
-        # TODO: this doesn't shard, and probably other places don't as well
-        UserBoardConnection.find_or_create_by(:board_id => board.id, :user_id => self.id, :home => true)
+        # TODO: sharding
+        UserBoardConnection.find_or_create_by(:board_id => board.id, :user_id => self.id, :home => hash[:home])
         board.instance_variable_set('@skip_update_available_boards', true)
+        # TODO: I *think* this is here because board permissions may change for
+        # supervisors/supervisees when a user's home board changes
         board.track_downstream_boards!
-        board.settings['downstream_board_ids'].each do |global_id|
-          downstream_board = Board.find_by_path(global_id)
+        Board.find_all_by_global_id(board.settings['downstream_board_ids']).each do |downstream_board|
           if downstream_board
             orphan_board_ids -= [downstream_board.id]
             UserBoardConnection.find_or_create_by(:board_id => downstream_board.id, :user_id => self.id)
@@ -297,8 +313,8 @@ class User < ActiveRecord::Base
       end
     end
     UserBoardConnection.delete_all(:user_id => self.id, :board_id => orphan_board_ids)
-    orphan_board_ids.each do |id|
-      board = Board.find_by(:id => id)
+    # TODO: sharding
+    Board.where(:id => orphan_board_ids).each do |board|
       if board
         board.generate_stats
         board.save_without_post_processing
