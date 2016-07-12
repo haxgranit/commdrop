@@ -549,8 +549,8 @@ module Stats
   end
   
   def self.location_use_for_sessions(sessions)
-    geo_ids = sessions.map(&:geo_cluster_id).compact.uniq
-    ip_ids = sessions.map(&:ip_cluster_id).compact.uniq
+    geo_ids = sessions.select{|s| s.geo_cluster_id && s.geo_cluster_id != -1 }.map(&:geo_cluster_id).compact.uniq
+    ip_ids = sessions.select{|s| s.ip_cluster_id && s.ip_cluster_id != -1 }.map(&:ip_cluster_id).compact.uniq
     res = []
     return res unless geo_ids.length > 0 || ip_ids.length > 0
     ClusterLocation.where(:id => (geo_ids + ip_ids)).each do |cluster|

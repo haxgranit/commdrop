@@ -5,11 +5,11 @@ describe ClusterLocation, :type => :model do
     it "should do nothing if user not found" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s5 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s5 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       ClusterLocation.clusterize("a_1")
       expect(ClusterLocation.count).to eq(0)
     end
@@ -17,11 +17,11 @@ describe ClusterLocation, :type => :model do
     it "should create geo and ip clusters" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s5 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s5 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       ClusterLocation.clusterize(u.global_id)
       expect(ClusterLocation.count).to eq(2)
       c1 = ClusterLocation.first
@@ -39,11 +39,11 @@ describe ClusterLocation, :type => :model do
     it "should not create geo clusters without enough data points" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'geo' => ['14', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'geo' => ['14.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s5 = LogSession.process_new({'events' => [{'geo' => ['14.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['14', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['14.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s5 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['14.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       ClusterLocation.clusterize(u.global_id)
       expect(ClusterLocation.count).to eq(1)
       c1 = ClusterLocation.last
@@ -57,10 +57,10 @@ describe ClusterLocation, :type => :model do
       s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s1.geo_cluster_id = 0
       s1.save
-      s2 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s5 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s5 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       ClusterLocation.clusterize(u.global_id)
       expect(ClusterLocation.count).to eq(1)
       c1 = ClusterLocation.last
@@ -70,16 +70,16 @@ describe ClusterLocation, :type => :model do
     it "should find multiple new clusters" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s4 = LogSession.process_new({'events' => [{'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s5 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s6 = LogSession.process_new({'events' => [{'geo' => ['18', '18']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.9'})
-      s7 = LogSession.process_new({'events' => [{'geo' => ['18.0001', '18.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      s8 = LogSession.process_new({'events' => [{'geo' => ['18', '18.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s9 = LogSession.process_new({'events' => [{'geo' => ['18.0003', '18.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s10 = LogSession.process_new({'events' => [{'geo' => ['18.0001', '17.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.9'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s4 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s5 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s6 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['18', '18']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.9'})
+      s7 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['18.0001', '18.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
+      s8 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['18', '18.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s9 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['18.0003', '18.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s10 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['18.0001', '17.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.9'})
       ClusterLocation.clusterize(u.global_id)
       expect(ClusterLocation.count).to eq(5)
       ips = ClusterLocation.all.select{|c| c.ip_address? }
@@ -100,11 +100,11 @@ describe ClusterLocation, :type => :model do
       d = Device.create
       ClusterLocation.create(:user => u, :cluster_type => 'geo', :data => {'geo' => [13, 12, 0]})
       ClusterLocation.create(:user => u, :cluster_type => 'ip_address', :data => {'ip_address' => '0000:0000:0000:0000:0000:ffff:0102:0304'})
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s2 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s3 = LogSession.process_new({'events' => [{'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s4 = LogSession.process_new({'events' => [{'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      s5 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s3 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s4 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0003', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s5 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '11.9999']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       ClusterLocation.clusterize(u.global_id)
       expect(ClusterLocation.count).to eq(2)
       c1 = ClusterLocation.first
@@ -132,7 +132,7 @@ describe ClusterLocation, :type => :model do
       d = Device.create
       c1 = ClusterLocation.create(:user => u, :cluster_type => 'geo', :data => {'geo' => [13.0001, 12.0001, 0]})
       c2 = ClusterLocation.create(:user => u, :cluster_type => 'ip_address', :data => {'ip_address' => '0000:0000:0000:0000:0000:ffff:0102:0304'})
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       expect(ClusterLocation.add_to_cluster(s1.global_id)).to eq(true)
       s1.reload
       expect(s1.ip_cluster_id).to eq(c2.id)
@@ -143,7 +143,7 @@ describe ClusterLocation, :type => :model do
       u = User.create
       d = Device.create
       c1 = ClusterLocation.create(:user => u, :cluster_type => 'geo', :data => {'geo' => [13.0001, 12.0001, 0]})
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       ClusterLocation.add_to_cluster(s1.global_id)
       expect(s1.reload.geo_cluster_id).to eq(c1.id)
       c1.reload
@@ -153,14 +153,14 @@ describe ClusterLocation, :type => :model do
     it "should automatically be scheduled on save for an unassigned log session" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       expect(Worker.scheduled?(ClusterLocation, :perform_action, {'method' => 'add_to_cluster', 'arguments' => [s1.global_id]})).to eq(true)
     end
     
     it "should schedule a call to clusterize if geo or ip cluster not found but data present on session" do
       u = User.create
       d = Device.create
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       expect(ClusterLocation.add_to_cluster(s1.global_id)).to eq(false)
       expect(Worker.scheduled?(ClusterLocation, :perform_action, {'method' => 'clusterize', 'arguments' => [u.global_id]})).to eq(true)
     end
@@ -171,10 +171,10 @@ describe ClusterLocation, :type => :model do
       u = User.create
       d = Device.create
       c = ClusterLocation.create(:user => u, :cluster_type => 'geo')
-      s1 = LogSession.process_new({'events' => [{'utterance' => {'text' => 'hello there', 'buttons' => []}, 'type' => 'utterance', 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'utterance' => {'text' => 'hello there', 'buttons' => []}, 'type' => 'utterance', 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s1.geo_cluster_id = c.id
       s1.save
-      s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '1', 'label' => 'hat', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'type' => 'button', 'button' => {'button_id' => '1', 'label' => 'hat', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2.geo_cluster_id = c.id
       s2.save
       c.reload.generate_stats
@@ -187,10 +187,10 @@ describe ClusterLocation, :type => :model do
       u = User.create
       d = Device.create
       c = ClusterLocation.create(:user => u, :cluster_type => 'geo')
-      s1 = LogSession.process_new({'events' => [{'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s1.geo_cluster_id = c.id
       s1.save
-      s2 = LogSession.process_new({'events' => [{'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2.geo_cluster_id = c.id
       s2.save
       c.reload.generate_stats
@@ -223,7 +223,7 @@ describe ClusterLocation, :type => :model do
     
     it "should compute a session's median geolocation" do
       s = LogSession.create(:data => {'events' => [
-        {'geo' => ['1', '2', '4'], 'timestamp' => 1400104669},
+        {'timestamp' => Time.now.to_i, 'geo' => ['1', '2', '4'], 'timestamp' => 1400104669},
         {'geo' => nil, 'timestamp' => 1400104679},
         {'geo' => ['1', '3', '4.1'], 'timestamp' => 1400104688}
       ]})
@@ -233,7 +233,7 @@ describe ClusterLocation, :type => :model do
     
     it "should compute a session's most-common ip address" do
       s = LogSession.create(:data => {'events' => [
-        {'ip_address' => '1.1.1.1', 'timestamp' => 1400104669},
+        {'timestamp' => Time.now.to_i, 'ip_address' => '1.1.1.1', 'timestamp' => 1400104669},
         {'ip_address' => nil, 'timestamp' => 1400104687},
         {'ip_address' => '2.2.2.2', 'timestamp' => 1400104688},
         {'ip_address' => '2.2.2.2', 'timestamp' => 1400104689}

@@ -8,6 +8,7 @@ describe WeeklyStatsSummary, :type => :model do
   it "should generate cached stats tied to a specific log" do
     u = User.create
     d = Device.create
+    expect(ClusterLocation).to receive(:clusterize_cutoff).and_return(Date.parse('2015-01-01')).at_least(1).times
     s1 = LogSession.process_new({'events' => [
       {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}}, 'geo' => ['13', '12'], 'timestamp' => 1431029747 - 1},
       {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => 1431029747}

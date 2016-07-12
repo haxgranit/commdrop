@@ -179,6 +179,10 @@ class ClusterLocation < ActiveRecord::Base
     Geokit::LatLng.new(record.data['geo'][0], record.data['geo'][1])
   end
   
+  def self.clusterize_cutoff
+    1.month.ago
+  end
+  
   def self.clusterize(user_id)
     user = User.find_by_global_id(user_id)
     return unless user
@@ -186,7 +190,7 @@ class ClusterLocation < ActiveRecord::Base
     non_geos = []
     # TODO: memory issues from collecting too many logs, so limiting to only the last month
     # and adding find_in_batches. That probably won't be enough to completely fix the problem.
-    user.log_sessions.where(:geo_cluster_id => nil).where(['started_at > ?', 1.months.ago]).find_in_batches(batch_size: 100) do |batch|
+    user.log_sessions.where(:geo_cluster_id => nil).where(['started_at > ?', clusterize_cutoff]).find_in_batches(batch_size: 100) do |batch|
       non_geos += batch.select{|s| s.data['geo'] }
     end
     Rails.logger.info("geos to clusterize: #{non_geos.length}")
@@ -228,7 +232,7 @@ class ClusterLocation < ActiveRecord::Base
     # ip addresses just cluster based on exact match. Easy peasy.
     ips = {}
     non_ips = []
-    user.log_sessions.where(:ip_cluster_id => nil).where(['started_at > ?', 1.month.ago]).find_in_batches(batch_size: 100) do |batch|
+    user.log_sessions.where(:ip_cluster_id => nil).where(['started_at > ?', clusterize_cutoff]).find_in_batches(batch_size: 100) do |batch|
       non_ips += batch.select{|s| s.data['ip_address'] }
     end
     Rails.logger.info("ips to clusterize: #{non_ips.length}")

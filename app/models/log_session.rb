@@ -38,10 +38,10 @@ class LogSession < ActiveRecord::Base
     
     attrs = ClusterLocation.calculate_attributes(self)
     self.data['geo'] = attrs['geo']
-    self.geo_cluster_id = -1 if !self.data['geo']
+    self.geo_cluster_id ||= -1 if !self.data['geo']
     self.geo_cluster_id = nil if self.data['geo'] && self.geo_cluster_id == -1
     self.data['ip_address'] = attrs['ip_address']
-    self.ip_cluster_id = -1 if !self.data['ip_address']
+    self.ip_cluster_id ||= -1 if !self.data['ip_address']
     self.ip_cluster_id = nil if self.data['ip_address'] && self.ip_cluster_id == -1
     self.data['readable_ip_address'] = attrs['readable_ip_address']
     
@@ -662,7 +662,7 @@ class LogSession < ActiveRecord::Base
         params['events'].each do |e|
           e['timestamp'] = e['timestamp'].to_f
           e.delete('referenced_user_id') unless valid_ref_user_ids[e['referenced_user_id']]
-          e['ip_address'] = ip_address
+          e['ip_address'] ||= ip_address
           if !e['id']
             ids += 1
             e['id'] = ids
