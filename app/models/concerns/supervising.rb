@@ -86,15 +86,16 @@ module Supervising
     action, key = key.split(/-/, 2)
     if action == 'add' || action == 'add_edit'
       return false unless self.premium? && self.id
+      supervisor = User.find_by_path(key)
       if key.match(/@/)
-        # TODO: implemented email invitation using supervisee_code
-        return false
-      else
-        supervisor = User.find_by_path(key)
-        return false if !supervisor || self == supervisor
-        self.class.link_supervisor_to_user(supervisor, self, nil, action == 'add_edit')
-        return true
+        users = User.find_by_email(key)
+        if users.length == 1
+          supervisor = users[0]
+        end
       end
+      return false if !supervisor || self == supervisor
+      self.class.link_supervisor_to_user(supervisor, self, nil, action == 'add_edit')
+      return true
     elsif action == 'approve' && key == 'org'
       self.settings['pending'] = false
       self.update_subscription_organization(self.managing_organization.global_id, false)
