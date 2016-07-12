@@ -209,6 +209,34 @@ describe Relinking, :type => :model do
       expect(b2a.settings['buttons'][0]['load_board']['key']).to eq(b1b.key)
       b2b = Board.find_by_path(b2a.settings['buttons'][0]['load_board']['key'])
     end    
+
+    it "should copy downstream boards when supervisor is copying with permission" do
+      u1 = User.create
+      u2 = User.create
+      u3 = User.create
+      b1 = Board.create(:user => u1)
+      b1a = Board.create(:user => u1)
+      User.link_supervisor_to_user(u2, u1, nil, true)
+      b1.settings['buttons'] = [{'id' => 1, 'load_board' => {'key' => b1a.key, 'id' => b1a.global_id}}]
+      b1.save!
+      b1.track_downstream_boards!
+      expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id])
+      b2 = b1.copy_for(u3)
+      expect(Board).to receive(:relink_board_for) do |user, opts|
+        boards = opts[:boards]
+        pending_replacements = opts[:pending_replacements]
+        action = opts[:update_preference]
+        expect(opts[:authorized_user]).to eq(u2)
+        expect(user).to eq(u3)
+        expect(boards.length).to eq(2)
+        expect(boards).to eq([b1, b1a])
+        expect(pending_replacements.length).to eq(2)
+        expect(pending_replacements[0]).to eq([b1, b2])
+        expect(pending_replacements[1][0]).to eq(b1a)
+        expect(action).to eq('update_inline')
+      end
+      Board.copy_board_links_for(u3, {:starting_old_board => b1, :starting_new_board => b2, :authorized_user => u2})
+    end
   end
  
   describe "replace_board_for" do

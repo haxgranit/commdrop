@@ -45,6 +45,7 @@ module Relinking
 
   module ClassMethods
     def replace_board_for(user, opts)
+      auth_user = opts[:authorized_user]
       starting_old_board = opts[:starting_old_board] || raise("starting_old_board required")
       starting_new_board = opts[:starting_new_board] || raise("starting_new_board required")
       update_inline = opts[:update_inline] || false
@@ -63,7 +64,7 @@ module Relinking
       boards = Board.find_all_by_path(board_ids)
       pending_replacements = [[starting_old_board, starting_new_board]]
 
-      user_home_changed = relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => (update_inline ? 'update_inline' : nil)})
+      user_home_changed = relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => (update_inline ? 'update_inline' : nil), :authorized_user => auth_user})
       
       # if the user's home board was replaced, update their preferences
       if user_home_changed
@@ -81,6 +82,7 @@ module Relinking
     end
 
     def copy_board_links_for(user, opts)
+      auth_user = opts[:authorized_user]
       starting_old_board = opts[:starting_old_board] || raise("starting_old_board required")
       starting_new_board = opts[:starting_new_board] || raise("starting_new_board required")
       board_ids = starting_old_board.settings['downstream_board_ids']
@@ -90,7 +92,7 @@ module Relinking
       boards = Board.find_all_by_path(board_ids)
       pending_replacements = [[starting_old_board, starting_new_board]]
       boards.each do |orig|
-        if !orig.allows?(user, 'view')
+        if !orig.allows?(user, 'view') && !orig.allows?(auth_user, 'view')
           # TODO: make a note somewhere that a change should have happened but didn't due to permissions
         else
           copy = orig.copy_for(user)
@@ -99,10 +101,11 @@ module Relinking
       end
       boards = [starting_old_board] + boards
 
-      relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => 'update_inline'})
+      relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => 'update_inline', :authorized_user => auth_user})
     end
     
     def relink_board_for(user, opts)
+      auth_user = opts[:authorized_user]
       boards = opts[:boards] || raise("boards required")
       pending_replacements = opts[:pending_replacements] || raise("pending_replacements required")
       update_preference = opts[:update_preference]
@@ -119,7 +122,7 @@ module Relinking
           board = replacement_map[orig.global_id] || orig
           # find all boards in the user's set that point to old_board_id
           if board.links_to?(old_board)
-            if !board.allows?(user, 'view')
+            if !board.allows?(user, 'view') && !board.allows?(auth_user, 'view')
               # TODO: make a note somewhere that a change should have happened but didn't due to permissions
             elsif update_preference == 'update_inline' && board.allows?(user, 'edit')
               # if you explicitly said update instead of replace my boards, then go ahead
