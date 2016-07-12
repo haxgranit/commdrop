@@ -190,6 +190,7 @@ module Purchasing
           :currency => 'usd',
           :source => token['id'],
           :description => description,
+          :receipt_email => (user && user.settings && user.settings['email']),
           :metadata => {
             'user_id' => user.global_id,
             'plan_id' => plan_id
@@ -237,6 +238,7 @@ module Purchasing
             :metadata => {
               'user_id' => user.global_id
             },
+            :email => (user && user.settings && user.settings['email']),
             :plan => plan_id,
             :source => token['id']
           })

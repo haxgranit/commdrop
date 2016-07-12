@@ -399,6 +399,7 @@ describe Purchasing do
         expect(Stripe::Customer).to receive(:create).with({
           :metadata => {'user_id' => u.global_id},
           :plan => 'monthly_6',
+          :email => nil,
           :source => 'token'
         }).and_return(OpenStruct.new({
           subscriptions: {
@@ -417,6 +418,7 @@ describe Purchasing do
         expect(Stripe::Customer).to receive(:create).with({
           :metadata => {'user_id' => u.global_id},
           :plan => 'monthly_6',
+          :email => nil,
           :source => 'token'
         }).and_return(OpenStruct.new({
           id: '9876',
@@ -447,6 +449,7 @@ describe Purchasing do
           :currency => 'usd',
           :source => 'token',
           :description => 'communicator long-term purchase $150',
+          :receipt_email => nil,
           :metadata => {
             'user_id' => u.global_id,
             'plan_id' => 'long_term_150'
@@ -466,6 +469,7 @@ describe Purchasing do
           :currency => 'usd',
           :source => 'token',
           :description => 'communicator long-term purchase $150',
+          :receipt_email => nil,
           :metadata => {
             'user_id' => u.global_id,
             'plan_id' => 'long_term_150'
@@ -493,6 +497,7 @@ describe Purchasing do
           :currency => 'usd',
           :source => 'token',
           :description => 'communicator long-term purchase $150',
+          :receipt_email => nil,
           :metadata => {
             'user_id' => u.global_id,
             'plan_id' => 'long_term_150'
@@ -828,6 +833,7 @@ describe Purchasing do
         :amount => 15000,
         :currency => 'usd',
         :source => 'token',
+        :receipt_email => nil,
         :description => 'communicator long-term purchase $150',
         :metadata => {
           'user_id' => u.global_id,
