@@ -49,7 +49,7 @@ module Flusher
     #    and .destroy them (also note in case consistent leakage)
     # 7. look for any paper trail versions that point to records that
     #    don't exist anymore and .destroy them (also note in case consistent leakage)
-    # TODO: also prune old versions? The list could get huge eventually...
+    # TODO: also prune old versions? The list will get huge soon...
   end
   
   def self.flush_board(board_id, key, aggressive_flush=false)
@@ -98,6 +98,9 @@ module Flusher
       else
         BoardButtonSound.delete_all(:id => bbs.id)
       end
+    end
+    BoardDownstreamButtonSet.where(:board_id => board_db_id).each do |bs|
+      flush_record(bs)
     end
     # remove any user_board_connections
     # remove as the home_board setting for any users

@@ -44,54 +44,168 @@ describe Renaming, :type => :model do
       expect(u.collision_error?).to eq(true)
     end
     
-    it "should fail if trying to change board key's user_name prefix" do
-      u = User.create
-      b = Board.create(:user => u)
-      res = b.rename_to('wilma/flintstone')
-      expect(res).to eq(false)
+    describe "renaming boards" do
+      it "should fail if trying to change board key's user_name prefix" do
+        u = User.create
+        b = Board.create(:user => u)
+        res = b.rename_to('wilma/flintstone')
+        expect(res).to eq(false)
+      end
+    
+      it "should return true on success" do
+        u = User.create
+        b = Board.create(:user => u)
+        res = b.rename_to("#{u.user_name}/wilma")
+        expect(res).to eq(true)
+      end
+    
+      it "should schedule deep_link renaming" do
+        u = User.create
+        b = Board.create(:user => u)
+        old_key = b.key
+        res = b.rename_to("#{u.user_name}/wilma")
+        expect(res).to eq(true)
+        expect(Worker.scheduled?(Board, :perform_action, {'id' => b.id, 'method' => 'rename_deep_links', 'arguments' => [old_key]})).to eq(true)
+      end
+    
+      it "should create an old_key reference if one doesn't already exist" do
+        u = User.create
+        b = Board.create(:user => u)
+        old_key = b.key
+        expect(OldKey.find_by(:type => 'board', :key => old_key)).to eq(nil)
+        res = b.rename_to("#{u.user_name}/wilma")
+        expect(res).to eq(true)
+        k = OldKey.find_by(:type => 'board', :key => old_key)
+        expect(k).not_to eq(nil)
+        expect(k.record).to eq(b)
+      end
+    
+      it "should replace an old_key reference if one already exists" do
+        u = User.create
+        b = Board.create(:user => u)
+        b2 = Board.create(:user => u)
+        old_key = b.key
+        OldKey.create(:type => 'board', :key => old_key, :record_id => b2.global_id)
+        res = b.rename_to("#{u.user_name}/wilma")
+        expect(res).to eq(true)
+        expect(OldKey.where(:type => 'board', :key => old_key).count).to eq(1)
+        k = OldKey.find_by(:type => 'board', :key => old_key)
+        expect(k).not_to eq(nil)
+        expect(k.record).to eq(b)      
+      end
+    
+      it "should allow changing the user_name as long as the rest of the key doesn't change" do
+        u = User.create
+        b = Board.create(:user => u)
+        u2 = User.create
+        old_key = b.key
+        part = old_key.split(/\//)[1]
+        res = b.rename_to("#{u2.user_name}/#{part}")
+        expect(res).to eq(true)
+      end
+    
+      it "should error if you try to change both the user_name and rest of the key" do
+        u = User.create
+        b = Board.create(:user => u)
+        u2 = User.create
+        old_key = b.key
+        part = old_key.split(/\//)[1]
+        res = b.rename_to("#{u2.user_name}/bacon")
+        expect(res).to eq(false)
+      end
+    
+      it "should schedule board_downstream_button_set updates for all upstream boards" do
+        u = User.create
+        b1 = Board.create(:user => u)
+        b2 = Board.create(:user => u)
+        b3 = Board.create(:user => u)
+        b1.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b2.global_id, 'key' => b2.key}}]
+        b1.save
+        b2.settings['buttons'] = [{'id' => 2, 'load_board' => {'id' => b3.global_id, 'key' => b3.key}}]
+        b2.save
+        Worker.process_queues
+        res = b3.reload.rename_to("#{u.user_name}/bestest")
+        expect(res).to eq(true)
+        Worker.process_queues
+        expect(Worker.scheduled?(BoardDownstreamButtonSet, 'perform_action', {'method' => 'update_for', 'arguments' => [b1.global_id]})).to eq(true)
+        expect(Worker.scheduled?(BoardDownstreamButtonSet, 'perform_action', {'method' => 'update_for', 'arguments' => [b2.global_id]})).to eq(true)
+      end
+    
+      it "should update keys for any users this board was shared with" do
+        u = User.create
+        u2 = User.create
+        b = Board.create(:user => u)
+        b.share_with(u2)
+        expect(u2.settings['boards_shared_with_me'].length).to eq(1)
+        expect(u2.settings['boards_shared_with_me'][0]['board_key']).to eq(b.key)
+        b.reload.rename_to("#{u.user_name}/bestest")
+        Worker.process_queues
+        expect(u2.reload.settings['boards_shared_with_me'][0]['board_key']).to eq("#{u.user_name}/bestest")
+      end
+    
+      it "should update any log entries where previous_key or new_id match the old key" do
+        u = User.create
+        d = Device.create(:user => u)
+        b = Board.create(:user => u)
+
+        s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'type' => 'action', 'action' => {'action' => 'open_board', 'previous_key' => {'key' => b.key, 'id' => b.global_id}, 'new_id' => {'key' => 'bacon'}}}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+        s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'type' => 'action', 'action' => {'action' => 'open_board', 'previous_key' => {'key' => 'bacon'}, 'new_id' => {'key' => b.key, 'id' => b.global_id}}}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+        Worker.process_queues
+        
+        b.reload.rename_to("#{u.user_name}/something")
+        Worker.process_queues
+        
+        expect(s1.reload.data['events'][0]['action']['previous_key']['key']).to eq("#{u.user_name}/something")
+        expect(s1.reload.data['events'][0]['action']['new_id']['key']).to eq("bacon")
+        expect(s2.reload.data['events'][0]['action']['previous_key']['key']).to eq("bacon")
+        expect(s2.reload.data['events'][0]['action']['new_id']['key']).to eq("#{u.user_name}/something")
+      end
     end
     
-    it "should return true on success" do
-      u = User.create
-      b = Board.create(:user => u)
-      res = b.rename_to("#{u.user_name}/wilma")
-      expect(res).to eq(true)
+    describe "renaming users" do
+      it "should rename all the user's boards" do
+        u = User.create
+        b = Board.create(:user => u, :key => "#{u.user_name}/alfalfa")
+        b2 = Board.create(:user => u, :key => "#{u.user_name}/sprouts")
+        u.rename_to("fred")
+        Worker.process_queues
+        expect(b.reload.key).to eq("fred/alfalfa")
+        expect(b2.reload.key).to eq("fred/sprouts")
+      end
+      
+      it "should update all users who have shared boards with the user" do
+        u = User.create
+        u2 = User.create
+        b = Board.create(:user => u)
+        b.share_with(u2)
+        expect(u.reload.settings['boards_i_shared'][b.global_id][0]['user_name']).to eq(u2.user_name)
+        u2.rename_to("janice")
+        Worker.process_queues
+        expect(u.reload.settings['boards_i_shared'][b.global_id][0]['user_name']).to eq('janice')
+      end
+      
+      it "should update all supervisors" do
+        u = User.create
+        u2 = User.create
+        User.link_supervisor_to_user(u2, u, nil, true)
+        expect(u2.reload.settings['supervisees'][0]['user_name']).to eq(u.user_name)
+        u.rename_to('joyce')
+        Worker.process_queues
+        expect(u2.reload.settings['supervisees'][0]['user_name']).to eq('joyce')
+      end
+      
+      it "should update all supervisees" do
+        u = User.create
+        u2 = User.create
+        User.link_supervisor_to_user(u2, u, nil, true)
+        expect(u.reload.settings['supervisors'][0]['user_name']).to eq(u2.user_name)
+        u2.rename_to('belinda')
+        Worker.process_queues
+        expect(u.reload.settings['supervisors'][0]['user_name']).to eq('belinda')
+      end
     end
     
-    it "should schedule deep_link renaming" do
-      u = User.create
-      b = Board.create(:user => u)
-      old_key = b.key
-      res = b.rename_to("#{u.user_name}/wilma")
-      expect(res).to eq(true)
-      expect(Worker.scheduled?(Board, :perform_action, {'id' => b.id, 'method' => 'rename_deep_links', 'arguments' => [old_key]})).to eq(true)
-    end
     
-    it "should create an old_key reference if one doesn't already exist" do
-      u = User.create
-      b = Board.create(:user => u)
-      old_key = b.key
-      expect(OldKey.find_by(:type => 'board', :key => old_key)).to eq(nil)
-      res = b.rename_to("#{u.user_name}/wilma")
-      expect(res).to eq(true)
-      k = OldKey.find_by(:type => 'board', :key => old_key)
-      expect(k).not_to eq(nil)
-      expect(k.record).to eq(b)
-    end
-    
-    it "should replace an old_key reference if one already exists" do
-      u = User.create
-      b = Board.create(:user => u)
-      b2 = Board.create(:user => u)
-      old_key = b.key
-      OldKey.create(:type => 'board', :key => old_key, :record_id => b2.global_id)
-      res = b.rename_to("#{u.user_name}/wilma")
-      expect(res).to eq(true)
-      expect(OldKey.where(:type => 'board', :key => old_key).count).to eq(1)
-      k = OldKey.find_by(:type => 'board', :key => old_key)
-      expect(k).not_to eq(nil)
-      expect(k.record).to eq(b)      
-    end
   end
 
   describe "rename_deep_links" do

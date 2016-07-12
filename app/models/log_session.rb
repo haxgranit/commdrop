@@ -459,6 +459,11 @@ class LogSession < ActiveRecord::Base
         self.data['events'].each do |event|
           if event['type'] == 'button' && event['button'] && event['button']['board']
             board_ids << event['button']['board']['id']
+          elsif event['type'] == 'action' && event['action'] && event['action']['action'] == 'open_board'
+            pre = event['action']['previous_key']
+            board_ids << pre['id'] if pre && pre['id']
+            post = event['action']['new_id']
+            board_ids << post['id'] if post && post['id']
           end
         end
       end
