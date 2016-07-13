@@ -73,8 +73,9 @@ module JsonApi::User
       json['subscription'] = user.subscription_hash
       json['organizations'] = user.organization_hash
       json['is_managed'] = !!json['subscription']['is_managed'] # TODO: remove in later API revision, after like July 2016
-      json['pending_board_shares'] = (user.settings['boards_shared_with_me'] || []).select{|s| s['pending'] }
-      
+      json['pending_board_shares'] = (user.settings['boards_shared_with_me'] || []).select{|s| s['pending'] }.each do |share|
+        share['user_name'] ||= (share['board_key'] || '').split(/\//)[0]
+      end
       
       json['has_management_responsibility'] = Organization.manager?(user) # TODO: remove in later API revision, after like July 2016
       
