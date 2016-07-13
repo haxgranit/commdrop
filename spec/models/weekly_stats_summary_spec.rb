@@ -17,7 +17,8 @@ describe WeeklyStatsSummary, :type => :model do
       {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 1430856977}
     ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
     
-    ClusterLocation.clusterize(u.global_id)
+    ClusterLocation.clusterize_ips(u.global_id)
+    ClusterLocation.clusterize_geos(u.global_id)
     ip_cluster = ClusterLocation.where(:cluster_type => 'ip_address').last
     expect(ip_cluster).not_to eq(nil)
     WeeklyStatsSummary.update_for(s2.global_id)

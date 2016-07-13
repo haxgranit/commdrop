@@ -372,7 +372,8 @@ describe UserMailer, :type => :mailer do
         {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 8.days.ago.to_time.to_i}
       ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       WeeklyStatsSummary.update_for(s1.global_id)
       WeeklyStatsSummary.update_for(s2.global_id)
       WeeklyStatsSummary.update_for(s3.global_id)
@@ -415,7 +416,8 @@ describe UserMailer, :type => :mailer do
         {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 8.days.ago.to_time.to_i}
       ]}, {:user => u2, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       WeeklyStatsSummary.update_for(s1.global_id)
       WeeklyStatsSummary.update_for(s2.global_id)
       WeeklyStatsSummary.update_for(s3.global_id)

@@ -71,7 +71,8 @@ describe Stats do
       d = Device.create
       s1 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'ok go', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       res = Stats.daily_use(u.global_id, {:start_at => 2.days.ago, :end_at => Time.now + 100})
       expect(res[:total_utterances]).to eq(2)
       expect(res[:utterances_per_minute]).to eq(12)
@@ -97,7 +98,8 @@ describe Stats do
         {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 2.days.ago.to_time.to_i}
       ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       res = Stats.daily_use(u.global_id, {:start_at => 3.days.ago, :end_at => Time.now + 100})
       expect(res[:total_sessions]).to eq(2)
       expect(res[:total_utterances]).to eq(2)
@@ -153,7 +155,8 @@ describe Stats do
         {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 2.days.ago.to_time.to_i}
       ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       WeeklyStatsSummary.update_for(s1.global_id)
       WeeklyStatsSummary.update_for(s2.global_id)
       
@@ -216,7 +219,8 @@ describe Stats do
         {'type' => 'utterance', 'volume' => 55, 'screen_brightness' => 80, 'ambient_light' => 1100, 'orientation' => {'alpha' => 95, 'beta' => 8, 'gamma' => 50, 'layout' => 'landscape-primary'}, 'utterance' => {'text' => 'never again', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => 2.days.ago.to_time.to_i}
       ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       WeeklyStatsSummary.update_for(s1.global_id)
       WeeklyStatsSummary.update_for(s2.global_id)
       
@@ -317,7 +321,8 @@ describe Stats do
       s6 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'never', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
       s7 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'ice cream', 'buttons' => []}, 'geo' => ['15', '12'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
       s8 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'candy bar', 'buttons' => []}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       res = Stats.daily_use(u.global_id, {:start_at => 2.days.ago, :end_at => Time.now + 100, :location_id => c1.global_id})
       expect(res[:total_utterances]).to eq(6)
       expect(res[:utterances_per_minute]).to eq(12)
@@ -342,7 +347,8 @@ describe Stats do
       s6 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'never', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d2, :ip_address => '1.2.3.6'})
       s7 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'ice cream', 'buttons' => []}, 'geo' => ['15', '12'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d2, :ip_address => '1.2.3.6'})
       s8 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'candy bar', 'buttons' => []}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d3, :ip_address => '1.2.3.6'})
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       res = Stats.daily_use(u.global_id, {:start_at => 2.days.ago, :end_at => Time.now + 100, :device_ids => [d1.global_id]})
       expect(res[:total_utterances]).to eq(5)
       expect(res[:utterances_per_minute]).to eq(12)
@@ -378,7 +384,8 @@ describe Stats do
       s6 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'never', 'buttons' => []}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
       s7 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'ice cream', 'buttons' => []}, 'geo' => ['15', '12'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
       s8 = LogSession.process_new({'events' => [{'type' => 'utterance', 'utterance' => {'text' => 'candy bar', 'buttons' => []}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => Time.now.to_i}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       res = Stats.daily_use(u.global_id, {:start_at => 2.days.ago, :end_at => Time.now + 100})
       expect(res[:total_utterances]).to eq(8)
       
@@ -481,7 +488,8 @@ describe Stats do
       s11 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '6', 'label' => 'never', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => ts - 10808 + 2}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
       s12 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '7', 'label' => 'ice cream', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['15', '12'], 'timestamp' => ts - 10808 + 3}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
       s13 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '8', 'label' => 'candy bar', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['15.0001', '12.0001'], 'timestamp' => ts - 10808 + 4}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.6'})
-      ClusterLocation.clusterize(u.global_id)
+      ClusterLocation.clusterize_ips(u.global_id)
+      ClusterLocation.clusterize_geos(u.global_id)
       start_at = Time.at(ts - 8)
       end_at = Time.at(ts + 13)
 

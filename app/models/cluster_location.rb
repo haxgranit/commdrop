@@ -162,7 +162,7 @@ class ClusterLocation < ActiveRecord::Base
       Rails.logger.info('adding to ip cluster')
       found_geo = add_to_ip_cluster(session, clusters)
       if !found_ip || !found_geo
-        self.schedule(:clusterize, session.user.global_id)
+        self.clusterize(session.user.global_id)
         return false
       else
         return true
@@ -184,9 +184,14 @@ class ClusterLocation < ActiveRecord::Base
   end
   
   def self.clusterize(user_id)
+    self.schedule(:clusterize_geos, user_id)
+    self.schedule(:clusterize_ips, user_id)
+  end
+  
+  def self.clusterize_geos(user_id)
     user = User.find_by_global_id(user_id)
     return unless user
-    Rails.logger.info("clusterizing #{user_id}")
+    Rails.logger.info("clusterizing geos for #{user_id}")
     non_geos = []
     # TODO: memory issues from collecting too many logs, so limiting to only the last month
     # and adding find_in_batches. That probably won't be enough to completely fix the problem.
@@ -195,7 +200,7 @@ class ClusterLocation < ActiveRecord::Base
     end
     Rails.logger.info("geos to clusterize: #{non_geos.length}")
     # Time may have passed since this was scheduled, make sure there are no stragglers
-    clusters = ClusterLocation.where(:user_id => user.id)
+    clusters = ClusterLocation.where(:user_id => user.id, :cluster_type => 'geo')
     Rails.logger.info("checking for matches on existing clusters")
     non_geos = non_geos.select{|s| !add_to_geo_cluster(s, clusters) }
     Rails.logger.info("grouping remaining sessions by geo #{non_geos.length}")
@@ -228,7 +233,12 @@ class ClusterLocation < ActiveRecord::Base
       biggest_cluster = sessions.length
     end
     Rails.logger.info("done with geo clusters")
+  end
     
+  def self.clusterize_ips(user_id)
+    user = User.find_by_global_id(user_id)
+    return unless user
+    Rails.logger.info("clusterizing ips for #{user_id}")
     # ip addresses just cluster based on exact match. Easy peasy.
     ips = {}
     non_ips = []
@@ -236,6 +246,7 @@ class ClusterLocation < ActiveRecord::Base
       non_ips += batch.select{|s| s.data['ip_address'] }
     end
     Rails.logger.info("ips to clusterize: #{non_ips.length}")
+    clusters = ClusterLocation.where(:user_id => user.id, :cluster_type => 'ip_address')
     # Time may have passed since this was scheduled, make sure there are no stragglers
     non_ips = non_ips.select{|s| !add_to_ip_cluster(s, clusters) }
     Rails.logger.info("tracking new ip addresses #{non_ips.length}")
@@ -255,7 +266,7 @@ class ClusterLocation < ActiveRecord::Base
       end
       cluster.save
     end
-    Rails.logger.info("done clustering")
+    Rails.logger.info("done with ip clusters")
   end
   
   def self.calculate_attributes(session)
