@@ -95,6 +95,7 @@ describe BoardCaching, :type => :model do
       b.reload.share_or_unshare(u2, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       b.reload.share_or_unshare(u3, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u3.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -102,6 +103,7 @@ describe BoardCaching, :type => :model do
       b2 = Board.create(:user => u2)
       b.reload.process({'buttons' => [{'id' => 1, 'load_board' => {'id' => b2.global_id, 'key' => b2.key}}]}, {:user => u2})
       RedisInit.permissions.keys.each{|k| RedisInit.permissions.del(k) }
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids.sort).to eq([b.global_id, b2.global_id])
@@ -135,12 +137,14 @@ describe BoardCaching, :type => :model do
       b = Board.create(:user => u1)
       b.reload.share_or_unshare(u2, true, {include_downstream: false, allow_editing: true, pending_allow_editing: false})
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       
       b2 = Board.create(:user => u2)
       b.reload.process({'buttons' => [{'id' => 1, 'load_board' => {'id' => b2.global_id, 'key' => b2.key}}]}, {:user => u2})
       RedisInit.permissions.keys.each{|k| RedisInit.permissions.del(k) }
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids.sort).to eq([b.global_id, b2.global_id])
@@ -154,12 +158,14 @@ describe BoardCaching, :type => :model do
       b = Board.create(:user => u1)
       b.reload.share_or_unshare(u2, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       
       b2 = Board.create(:user => u2)
       b.reload.process({'buttons' => [{'id' => 1, 'load_board' => {'id' => b2.global_id, 'key' => b2.key}}]}, {:user => u2})
       RedisInit.permissions.keys.each{|k| RedisInit.permissions.del(k) }
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids.sort).to eq([b.global_id, b2.global_id])
@@ -175,6 +181,7 @@ describe BoardCaching, :type => :model do
       b.reload.share_or_unshare(u2, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       b.reload.share_or_unshare(u3, true, {include_downstream: true, allow_editing: false, pending_allow_editing: false})
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u3.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -182,6 +189,7 @@ describe BoardCaching, :type => :model do
       b2 = Board.create(:user => u2)
       b.reload.process({'buttons' => [{'id' => 1, 'load_board' => {'id' => b2.global_id, 'key' => b2.key}}]}, {:user => u2})
       RedisInit.permissions.keys.each{|k| RedisInit.permissions.del(k) }
+      Worker.process_queues
       Worker.process_queues
 
       expect(Worker.scheduled?(User, :perform_action, {
@@ -206,6 +214,7 @@ describe BoardCaching, :type => :model do
       b.reload.share_or_unshare(u3, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       Worker.process_queues
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u3.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -219,6 +228,7 @@ describe BoardCaching, :type => :model do
         'method' => 'update_available_boards',
         'arguments' => []
       })).to eq(false)
+      Worker.process_queues
       Worker.process_queues
       expect(Worker.scheduled?(User, :perform_action, {
         'id' => u3.id,
@@ -242,6 +252,7 @@ describe BoardCaching, :type => :model do
       b.reload.share_or_unshare(u2, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       b.reload.share_or_unshare(u3, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u3.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -251,6 +262,7 @@ describe BoardCaching, :type => :model do
       b3 = Board.create(:user => u2)
       b2.reload.process({'buttons' => [{'id' => 1, 'load_board' => {'id' => b3.global_id, 'key' => b3.key}}]}, {:user => u2})
       RedisInit.permissions.keys.each{|k| RedisInit.permissions.del(k) }
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids.sort).to eq([b.global_id, b3.global_id])
@@ -268,6 +280,7 @@ describe BoardCaching, :type => :model do
       b.reload.share_or_unshare(u2, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       b.reload.share_or_unshare(u3, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u3.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -278,6 +291,7 @@ describe BoardCaching, :type => :model do
       b2 = Board.create(:user => u2)
       b.reload.process({'buttons' => [{'id' => 1, 'load_board' => {'id' => b2.global_id, 'key' => b2.key}}]}, {:user => u2})
       RedisInit.permissions.keys.each{|k| RedisInit.permissions.del(k) }
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids.sort).to eq([b.global_id, b2.global_id])
@@ -317,6 +331,7 @@ describe BoardCaching, :type => :model do
         'arguments' => []
       })).to eq(true)
       Worker.process_queues
+      Worker.process_queues
       expect(Worker.scheduled?(User, :perform_action, {
         'id' => u1.id,
         'method' => 'update_available_boards',
@@ -327,6 +342,7 @@ describe BoardCaching, :type => :model do
         'method' => 'update_available_boards',
         'arguments' => []
       })).to eq(false)
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids.sort).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids.sort).to eq([b.global_id])
     end
@@ -390,10 +406,12 @@ describe BoardCaching, :type => :model do
       b = Board.create(:user => u1, :public => false)
       b.share_with(u2)
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       
       b.reload.process({:public => true}, {:user => u1})
+      Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids).to eq([])
       expect(u1.reload.private_viewable_board_ids).to eq([])
@@ -403,6 +421,7 @@ describe BoardCaching, :type => :model do
     it "should update when a private board is created" do
       u1 = User.create(:user_name => "user1")
       b = Board.create(:user => u1)
+      Worker.process_queues
       Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
     end
@@ -431,11 +450,13 @@ describe BoardCaching, :type => :model do
         'arguments' => []
       })).to eq(false)
       Worker.process_queues
+      Worker.process_queues
       expect(Worker.scheduled?(User, :perform_action, {
         'id' => u1.id,
         'method' => 'update_available_boards',
         'arguments' => []
       })).to eq(true)
+      Worker.process_queues
       
       expect(u1.reload.private_viewable_board_ids.sort).to eq([b.global_id, b2.global_id])
     end
@@ -449,6 +470,7 @@ describe BoardCaching, :type => :model do
       b.reload.share_or_unshare(u2, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       b.reload.share_or_unshare(u3, true, {include_downstream: true, allow_editing: true, pending_allow_editing: false})
       Worker.process_queues
+      Worker.process_queues
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u3.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -456,6 +478,7 @@ describe BoardCaching, :type => :model do
       b2 = Board.create(:user => u2)
       b.reload.process({'buttons' => [{'id' => 1, 'load_board' => {'id' => b2.global_id, 'key' => b2.key}}]}, {:user => u2})
       RedisInit.permissions.keys.each{|k| RedisInit.permissions.del(k) }
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids.sort).to eq([b.global_id, b2.global_id])
@@ -473,6 +496,7 @@ describe BoardCaching, :type => :model do
       expect(u1.edit_permission_for?(u2)).to eq(true)
       
       b = Board.create(:user => u2)
+      Worker.process_queues
       Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -504,6 +528,7 @@ describe BoardCaching, :type => :model do
       
       b = Board.create(:user => u2)
       Worker.process_queues
+      Worker.process_queues
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u1.reload.private_viewable_board_ids).to eq([])
     end
@@ -515,6 +540,7 @@ describe BoardCaching, :type => :model do
       
       b = Board.create(:user => u2)
       Worker.process_queues
+      Worker.process_queues
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u1.reload.private_viewable_board_ids).to eq([])
 
@@ -522,6 +548,7 @@ describe BoardCaching, :type => :model do
       u1.reload
       u2.reload
       expect(u1.edit_permission_for?(u2)).to eq(true)
+      Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u1.reload.private_viewable_board_ids).to eq([b.global_id])
@@ -534,6 +561,7 @@ describe BoardCaching, :type => :model do
       
       b = Board.create(:user => u2)
       Worker.process_queues
+      Worker.process_queues
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u1.reload.private_viewable_board_ids).to eq([])
 
@@ -541,6 +569,7 @@ describe BoardCaching, :type => :model do
       u1.reload
       u2.reload
       expect(u1.edit_permission_for?(u2)).to eq(false)
+      Worker.process_queues
       Worker.process_queues
       expect(u2.reload.private_viewable_board_ids).to eq([b.global_id])
       expect(u1.reload.private_viewable_board_ids).to eq([])

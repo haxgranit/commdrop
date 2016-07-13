@@ -98,7 +98,11 @@ module UpstreamDownstream
     true
   end
   
-  def schedule_update_available_boards(breadth='all')
+  def schedule_update_available_boards(breadth='all', frd=false)
+    if !frd
+      self.schedule(:schedule_update_available_boards, breadth, true)
+      return true
+    end
     ids = []
     if breadth == 'all'
       ids = self.share_ids
