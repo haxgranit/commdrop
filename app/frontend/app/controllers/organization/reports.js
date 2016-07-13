@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import i18n from '../../utils/i18n';
 import persistence from '../../utils/persistence';
+import modal from '../../utils/modal';
 
 export default Ember.Controller.extend({
   queryParams: ['current_report'],
