@@ -3,9 +3,9 @@ module UpstreamDownstream
   
   def track_downstream_boards!(already_visited_ids=[], buttons_changed=false)
     @track_downstream_boards = true
-    self.touch_downstreams
+    self.touch_downstreams(already_visited_ids)
     self.track_downstream_boards(already_visited_ids, buttons_changed)
-    self.touch_downstreams
+    self.touch_downstreams(already_visited_ids)
     @track_downstream_boards = false
     true
   end
@@ -15,13 +15,14 @@ module UpstreamDownstream
     return if already_visited_ids.include?(self.global_id)
     already_visited_ids << self.global_id
 
+    top_board = self
     # step 1: travel downstream, for every board id get its immediate children
     boards_with_children = {}
     board_edit_stats = {}
     unfound_boards = ["self"]
     while !unfound_boards.empty?
       id = unfound_boards.shift
-      board = self 
+      board = top_board 
       if id != "self"
         board = Board.find_by_path(id)
         board.reload if board
@@ -51,11 +52,11 @@ module UpstreamDownstream
     boards_with_children.each do |id, children|
       downs += children
     end
-    downs = downs.uniq.sort - [self.global_id]
-    changed = (downs != self.settings['downstream_board_ids'])
+    downs = downs.uniq.sort - [top_board.global_id]
+    changed = (downs != top_board.settings['downstream_board_ids'])
     total_buttons = 0
     unlinked_buttons = 0
-    revision_hashes = [self.current_revision]
+    revision_hashes = [top_board.current_revision]
     # TODO: track last edit date for board and any sub-board (not the same as updated_at)
     downs.each do |id|
       if board_edit_stats[id]
@@ -69,7 +70,7 @@ module UpstreamDownstream
     if self.settings['full_set_revision'] != full_set_revision
       self.settings['full_set_revision'] = full_set_revision
       downstream_boards_changed = true
-      BoardDownstreamButtonSet.schedule(:update_for, self.global_id)
+      BoardDownstreamButtonSet.schedule_once(:update_for, self.global_id)
     end
     downstream_buttons_changed = false
     if self.settings['total_downstream_buttons'] != total_buttons
@@ -100,7 +101,7 @@ module UpstreamDownstream
   
   def schedule_update_available_boards(breadth='all', frd=false)
     if !frd
-      self.schedule(:schedule_update_available_boards, breadth, true)
+      self.schedule_once(:schedule_update_available_boards, breadth, true)
       return true
     end
     ids = []
@@ -151,8 +152,9 @@ module UpstreamDownstream
     self.save_without_post_processing
   end
   
-  def touch_downstreams
+  def touch_downstreams(already_visited_ids=[])
     ids = [self.global_id] + ((self.settings || {})['downstream_board_ids'] || [])
+    ids -= already_visited_ids
     # TODO: sharding
     db_ids = self.class.local_ids(ids)
     Board.where(:id => db_ids).update_all(:updated_at => Time.now)

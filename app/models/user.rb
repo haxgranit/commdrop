@@ -272,7 +272,7 @@ class User < ActiveRecord::Base
       return true
     end
     if !frd
-      self.schedule(:track_boards, true)
+      self.schedule_once(:track_boards, true)
       return true
     end
     # TODO: trigger background process to create user_board_connection records for all boards
