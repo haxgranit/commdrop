@@ -61,6 +61,32 @@ describe Worker do
     end
   end
   
+  describe "perform_at" do
+    it "should not log on short jobs" do
+      expect(Worker).to receive(:ts).and_return(1469141072, 1469141072 + 10)
+      expect(Rails.logger).to_not receive(:error)
+      Worker.perform_at(:normal, 'User', 'count')
+    end
+
+    it "should log on long-running jobs" do
+      expect(Worker).to receive(:ts).and_return(1469141072, 1469141072 + 65)
+      expect(Rails.logger).to receive(:error).with("long-running job, User . count (), 65s")
+      Worker.perform_at(:normal, 'User', 'count')
+    end
+    
+    it "should not log on semi-long jobs for the slow queue" do
+      expect(Worker).to receive(:ts).and_return(1469141072, 1469141072 + (60*2))
+      expect(Rails.logger).to_not receive(:error)
+      Worker.perform_at(:slow, 'User', 'count')
+    end
+    
+    it "should log on really-long jobs for the slow queue" do
+      expect(Worker).to receive(:ts).and_return(1469141072, 1469141072 + (60*11))
+      expect(Rails.logger).to receive(:error).with("long-running job, User . count () (expected slow), 660s")
+      Worker.perform_at(:slow, 'User', 'count')
+    end
+  end
+  
   describe "scheduled_actions" do
     it "should have list actions" do
       Worker.schedule(User, :something)

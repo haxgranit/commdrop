@@ -70,7 +70,7 @@ module UpstreamDownstream
     if self.settings['full_set_revision'] != full_set_revision
       self.settings['full_set_revision'] = full_set_revision
       downstream_boards_changed = true
-      BoardDownstreamButtonSet.schedule_once(:update_for, self.global_id)
+      self.schedule_update_button_set
     end
     downstream_buttons_changed = false
     if self.settings['total_downstream_buttons'] != total_buttons
@@ -99,7 +99,13 @@ module UpstreamDownstream
     true
   end
   
+  def schedule_update_button_set
+    return true if self.class.add_lumped_trigger({'type' => 'update_button_set', 'id' => self.global_id})
+    BoardDownstreamButtonSet.schedule_once(:update_for, self.global_id)
+  end
+  
   def schedule_update_available_boards(breadth='all', frd=false)
+    return true if self.class.add_lumped_trigger({'type' => 'update_available_boards', 'id' => self.global_id, 'breadth' => breadth})
     if !frd
       self.schedule_once(:schedule_update_available_boards, breadth, true)
       return true
@@ -189,6 +195,49 @@ module UpstreamDownstream
   
 
   module ClassMethods
+    def lump_triggers
+      @@lumped_triggers ||= []
+    end
+  
+    def add_lumped_trigger(trigger)
+      @@lumped_triggers ||= nil
+      return false unless @@lumped_triggers
+      @@lumped_triggers << trigger
+      true
+    end
+  
+    def process_lumped_triggers(triggers=nil)
+      # TODO: this should go away eventually. Right now if somebody updated
+      # board that's linked to, say, 300 other boards, then all those boards
+      # needs to have their button_set updated, and available_boards for their
+      # users. If you schedule those all out, it would be 600 jobs to 
+      # munge through all at once. With enough workers I guess that'd be no
+      # big deal, but right now we don't have enough, so those get run
+      # in a single long-running job instead.
+      # TODO: add a third queue for potentially long-running jobs
+      @@lumped_triggers ||= nil
+      if !triggers && @@lumped_triggers
+        if @@lumped_triggers.length > 0
+          Worker.schedule_for(:slow, Board, :perform_action, {
+            'method' => 'process_lumped_triggers',
+            'arguments' => [@@lumped_triggers]
+          })
+        end
+        @@lumped_triggers = nil
+      end
+      if triggers
+        triggers.each do |trigger|
+          if trigger['type'] == 'update_button_set' && trigger['id']
+            BoardDownstreamButtonSet.update_for(trigger['id'])
+          elsif trigger['type'] == 'update_available_boards' && trigger['id']
+            user = User.find_by_path(trigger['id'])
+            if user
+              user.schedule_update_available_boards(trigger['breadth'], true)
+            end
+          end
+        end
+      end
+    end
   end
   
   included do

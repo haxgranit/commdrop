@@ -507,6 +507,7 @@ describe Board, :type => :model do
       b = Board.create(:user => u)
       u.settings['preferences']['home_board'] = {'id' => b.global_id, 'key' => b.key }
       u.save
+      Worker.process_queues
       
       b.settings['buttons'] = [
         {'id' => 1},
@@ -540,6 +541,7 @@ describe Board, :type => :model do
       b = Board.create(:user => u)
       u.settings['preferences']['home_board'] = {'id' => b.global_id, 'key' => b.key }
       u.save
+      Worker.process_queues
       
       b.settings['buttons'] = [
         {'id' => 1},

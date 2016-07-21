@@ -227,7 +227,7 @@ describe User, :type => :model do
     it "should schedule a background job by default" do
       u = User.create
       expect(u.track_boards).to eq(true)
-      expect(Worker.scheduled?(User, :perform_action, {'id' => u.id, 'method' => 'track_boards', 'arguments' => [true]})).to eq(true)
+      expect(Worker.scheduled_for?(:slow, User, :perform_action, {'id' => u.id, 'method' => 'track_boards', 'arguments' => [true]})).to eq(true)
     end
     
     it "should delete orphan connections" do

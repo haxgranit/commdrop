@@ -272,7 +272,11 @@ class User < ActiveRecord::Base
       return true
     end
     if !frd
-      self.schedule_once(:track_boards, true)
+      args = {'id' => self.id, 'method' => 'track_boards', 'arguments' => [true]}
+      if !Worker.scheduled_for?(:slow, self.class, :perform_action, args)
+        Worker.schedule_for(:slow, self.class, :perform_action, args)
+      end
+      
       return true
     end
     # TODO: trigger background process to create user_board_connection records for all boards
@@ -293,6 +297,7 @@ class User < ActiveRecord::Base
         }
       end
     end
+    Board.lump_triggers
     linked_boards.each do |hash|
       board = hash[:board]
       if board
@@ -312,6 +317,8 @@ class User < ActiveRecord::Base
         end
       end
     end
+    Board.process_lumped_triggers
+    
     UserBoardConnection.delete_all(:user_id => self.id, :board_id => orphan_board_ids)
     # TODO: sharding
     Board.where(:id => orphan_board_ids).each do |board|
