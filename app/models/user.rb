@@ -707,10 +707,15 @@ class User < ActiveRecord::Base
       return nil
     elsif self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '1_month'
     else
+      already_friday_or_saturday = res.wday == 5 || res.wday == 6
       # friday or saturday in the US
       friday_or_saturday = (self.id || 0) % 2 == 0 ? 5 : 6
       while res.wday != friday_or_saturday
-        res += 1.day
+        if already_friday_or_saturday
+          res += 1.day
+        else
+          res -= 1.day
+        end
       end
     end
           # 6pm eastern thru 10pm eastern

@@ -1137,26 +1137,74 @@ describe User, :type => :model do
       u = User.new(:settings => {'preferences' => {'notification_frequency' => 'whatever'}})
       u.id = 1
       # a week from saturday at 23:30
-      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 23:30 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-03 23:30 UTC'));
       u.id = 0
       # a week from friday at 22:00
-      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-09 22:00 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-02 22:00 UTC'));
       u.id = 2
       # a week from friday at 0:00 (move to saturday)
-      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 00:00 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-03 00:00 UTC'));
       u.id = 3
       # a week from saturday at 1:30 (move to sunday)
-      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-11 01:30 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-04 01:30 UTC'));
       u.id = 4
       # a week from friday at 2:00 (move to saturday)
-      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 02:00 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-03 02:00 UTC'));
       u.id = 5
       # a week from saturday at 22:30
-      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 22:30 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-03 22:30 UTC'));
       u.settings['preferences']['notification_frequency'] = '1_week'
       u.id = 1
       # a week from saturday at 23:30
-      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-10 23:30 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2015-01-03 23:30 UTC'));
+    end
+
+    it "should generate correct next_notification_schedule for weekly updates" do
+      # 2015-01-01 was a thursday
+      expect(Time).to receive(:now).and_return(Time.parse("2016-07-21")).at_least(1).times
+      u = User.new(:settings => {'preferences' => {'notification_frequency' => '1_week'}})
+      u.id = 1
+      # a week from saturday at 23:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-23 23:30 UTC'));
+      u.id = 0
+      # a week from friday at 22:00
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-22 22:00 UTC'));
+      u.id = 2
+      # a week from friday at 0:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-23 00:00 UTC'));
+      u.id = 3
+      # a week from saturday at 1:30 (move to sunday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-24 01:30 UTC'));
+      u.id = 4
+      # a week from friday at 2:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-23 02:00 UTC'));
+      u.id = 5
+      # a week from saturday at 22:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-23 22:30 UTC'));
+    end
+
+    it "should generate correct next_notification_schedule for weekly updates" do
+      # 2015-01-01 was a thursday
+      expect(Time).to receive(:now).and_return(Time.parse("2016-07-22")).at_least(1).times
+      u = User.new(:settings => {'preferences' => {'notification_frequency' => '1_week'}})
+      u.id = 1
+      # a week from saturday at 23:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 23:30 UTC'));
+      u.id = 0
+      # a week from friday at 22:00
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-29 22:00 UTC'));
+      u.id = 2
+      # a week from friday at 0:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 00:00 UTC'));
+      u.id = 3
+      # a week from saturday at 1:30 (move to sunday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-31 01:30 UTC'));
+      u.id = 4
+      # a week from friday at 2:00 (move to saturday)
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 02:00 UTC'));
+      u.id = 5
+      # a week from saturday at 22:30
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 22:30 UTC'));
     end
     
     it "should generate correct next_notification_schedule for every other week updates" do
