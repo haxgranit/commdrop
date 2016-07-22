@@ -120,15 +120,17 @@ class ClusterLocation < ActiveRecord::Base
   
   def self.add_to_geo_cluster(session, clusters)
     found = false
-    clusters.each do |cluster|
-      if !found && session.data['geo'] && cluster.data['geo']
-        session_geo = session.geo_object
-        cluster_geo = cluster.geo_object
-        if session_geo.distance_to(cluster_geo) < cluster.distance_tolerance
-          session.geo_cluster_id = cluster.id
-          session.save
-          cluster.reload.save
-          found = true
+    clusters.where(:cluster_type => 'geo').find_in_batches(batch_size: 10) do |batch|
+      batch.each do |cluster|
+        if !found && session.data['geo'] && cluster.data['geo']
+          session_geo = session.geo_object
+          cluster_geo = cluster.geo_object
+          if session_geo.distance_to(cluster_geo) < cluster.distance_tolerance
+            session.geo_cluster_id = cluster.id
+            session.save
+            cluster.reload.save
+            found = true
+          end
         end
       end
     end
@@ -137,13 +139,15 @@ class ClusterLocation < ActiveRecord::Base
   
   def self.add_to_ip_cluster(session, clusters)
     found = false
-    clusters.each do |cluster|
-      if !found && session.data['ip_address'] && cluster.data['ip_address']
-        if session.data['ip_address'] == cluster.data['ip_address']
-          session.ip_cluster_id = cluster.id
-          session.save
-          cluster.reload.save
-          found = true
+    clusters.where(:cluster_type => 'ip_address').find_in_batches(batch_size: 10) do |batch|
+      batch.each do |cluster|
+        if !found && session.data['ip_address'] && cluster.data['ip_address']
+          if session.data['ip_address'] == cluster.data['ip_address']
+            session.ip_cluster_id = cluster.id
+            session.save
+            cluster.reload.save
+            found = true
+          end
         end
       end
     end
@@ -156,6 +160,7 @@ class ClusterLocation < ActiveRecord::Base
     # otherwise schedule a call to clusterize
     # iterate through user's ip clusters, add or create
     if session && session.user_id
+      Rails.logger.info("checking clusters for #{session.user_id}")
       clusters = ClusterLocation.where(:user_id => session.user_id)
       Rails.logger.info('adding to geo cluster')
       found_ip = add_to_geo_cluster(session, clusters)
