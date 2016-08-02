@@ -9,6 +9,7 @@ export default DS.Model.extend({
   device: DS.attr('raw'),
   author: DS.attr('raw'),
   user: DS.attr('raw'),
+  imported: DS.attr('boolean'),
   started_at: DS.attr('date'),
   ended_at: DS.attr('date'),
   summary: DS.attr('string'),

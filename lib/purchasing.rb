@@ -12,18 +12,20 @@ module Purchasing
     data = {:valid => false, :type => event['type'], :event_id => event_id}
     object = event['data'] && event['data']['object']
     previous = event['data'] && event['data']['previous_attributes']
+    event_result = nil
     if object
       if event['type'] == 'charge.succeeded'
         valid = object['metadata'] && object['metadata']['user_id'] && object['metadata']['plan_id']
         if valid
           time = 5.years.to_i
-          User.subscription_event({
+          User.schedule(:subscription_event, {
             'purchase' => true,
             'user_id' => object['metadata'] && object['metadata']['user_id'],
             'purchase_id' => object['id'],
             'customer_id' => object['customer'],
             'plan_id' => object['metadata'] && object['metadata']['plan_id'],
-            'seconds_to_add' => time
+            'seconds_to_add' => time,
+            'source' => 'charge.succeeded'
           })
         end
         data = {:purchase => true, :purchase_id => object['id'], :valid => !!valid}
@@ -32,9 +34,10 @@ module Purchasing
         valid = customer && customer['metadata'] && customer['metadata']['user_id']
 
         if valid
-          User.subscription_event({
+          User.schedule(:subscription_event, {
             'user_id' => customer['metadata'] && customer['metadata']['user_id'],
-            'purchase_failed' => true
+            'purchase_failed' => true,
+            'source' => 'charge.failed'
           })
         end
         data = {:purchase => false, :notified => true, :valid => !!valid}
@@ -43,9 +46,10 @@ module Purchasing
         if charge
           valid = charge['metadata'] && charge['metadata']['user_id']
           if valid
-            User.subscription_event({
+            User.schedule(:subscription_event, {
               'user_id' => charge['metadata'] && charge['metadata']['user_id'],
-              'chargeback_created' => true
+              'chargeback_created' => true,
+              'source' => 'charge.dispute.created'
             })
           end
           data = {:dispute => true, :notified => true, :valid => !!valid}
@@ -58,6 +62,7 @@ module Purchasing
           prior_user = User.find_by_global_id(previous)
           new_user = User.find_by_global_id(valid)
           if prior_user && new_user && prior_user.settings['subscription'] && prior_user.settings['subscription']['customer_id'] == object['id']
+            # TODO: move to background job..
             prior_user.transfer_subscription_to(new_user, true)
           end
         end
@@ -65,17 +70,15 @@ module Purchasing
         customer = Stripe::Customer.retrieve(object['customer'])
         valid = customer && customer['metadata'] && customer['metadata']['user_id'] && object['plan'] && object['plan']['id']
         if valid
-          updated = User.subscription_event({
+          User.schedule(:subscription_event, {
             'subscribe' => true,
             'user_id' => customer['metadata'] && customer['metadata']['user_id'],
             'customer_id' => object['customer'],
             'subscription_id' => object['id'],
-            'plan_id' => object['plan'] && object['plan']['id']
+            'plan_id' => object['plan'] && object['plan']['id'],
+            'cancel_others_on_update' => true,
+            'source' => 'customer.subscription.created'
           })
-          if updated
-            user = User.find_by_global_id(customer['metadata'] && customer['metadata']['user_id'])
-            Purchasing.cancel_other_subscriptions(user, object['id']) if user
-          end
         end
         data = {:subscribe => true, :valid => !!valid}
       elsif event['type'] == 'customer.subscription.updated'
@@ -84,28 +87,27 @@ module Purchasing
         if object['status'] == 'unpaid' || object['status'] == 'canceled'
           if previous && previous['status'] && previous['status'] != 'unpaid' && previous['status'] != 'canceled'
             if valid
-              User.subscription_event({
+              User.schedule(:subscription_event, {
                 'unsubscribe' => true,
                 'user_id' => customer['metadata'] && customer['metadata']['user_id'],
                 'customer_id' => object['customer'],
-                'subscription_id' => object['id']
+                'subscription_id' => object['id'],
+                'source' => 'customer.subscription.updated'
               })
             end
             data = {:unsubscribe => true, :valid => !!valid}
           end
         elsif object['status'] == 'active' || object['status'] == 'trialing'
           if valid
-            updated = User.subscription_event({
+            User.schedule(:subscription_event, {
               'subscribe' => true,
               'user_id' => customer['metadata'] && customer['metadata']['user_id'],
               'customer_id' => object['customer'],
               'subscription_id' => object['id'],
-              'plan_id' => object['plan'] && object['plan']['id']
+              'plan_id' => object['plan'] && object['plan']['id'],
+              'cancel_others_on_update' => true,
+              'source' => 'customer.subscription.updated'
             })
-            if updated
-              user = User.find_by_global_id(customer['metadata'] && customer['metadata']['user_id'])
-              Purchasing.cancel_other_subscriptions(user, object['id']) if user
-            end
           end
           data = {:subscribe => true, :valid => !!valid}
         end
@@ -113,11 +115,12 @@ module Purchasing
         customer = Stripe::Customer.retrieve(object['customer'])
         valid = customer && customer['metadata'] && customer['metadata']['user_id']
         if valid
-          User.subscription_event({
+          User.schedule(:subscription_event, {
             'unsubscribe' => true,
             'user_id' => customer['metadata'] && customer['metadata']['user_id'],
             'customer_id' => object['customer'],
-            'subscription_id' => object['id']
+            'subscription_id' => object['id'],
+            'source' => 'customer.subscription.deleted'
           })
         end
         data = {:unsubscribe => true, :valid => !!valid}
@@ -205,7 +208,8 @@ module Purchasing
           'customer_id' => charge['customer'],
           'token_summary' => token['summary'],
           'plan_id' => plan_id,
-          'seconds_to_add' => time
+          'seconds_to_add' => time,
+          'source' => 'new purchase'
         })
         cancel_other_subscriptions(user, 'all')
       else
@@ -228,10 +232,10 @@ module Purchasing
             'subscription_id' => sub['id'],
             'customer_id' => sub['customer'],
             'token_summary' => token['summary'],
-            'plan_id' => plan_id
+            'plan_id' => plan_id,
+            'cancel_others_on_update' => true,
+            'source' => 'new subscription'
           })
-          user && user.log_subscription_event({:log => 'persisted subscription update', :result => updated})
-          Purchasing.cancel_other_subscriptions(user, sub['id']) if updated
         else
           user && user.log_subscription_event({:log => 'creating new customer'})
           customer = Stripe::Customer.create({
@@ -250,9 +254,10 @@ module Purchasing
             'subscription_id' => sub['id'],
             'customer_id' => customer['id'],
             'token_summary' => token['summary'],
-            'plan_id' => plan_id
+            'plan_id' => plan_id,
+            'cancel_others_on_update' => true,
+            'source' => 'new subscription'
           })
-          Purchasing.cancel_other_subscriptions(user, sub['id']) if updated
         end
       end
     rescue Stripe::CardError => err

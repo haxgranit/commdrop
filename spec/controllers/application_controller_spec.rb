@@ -93,6 +93,18 @@ describe ApplicationController, :type => :controller do
       expect(assigns[:true_user]).to eq(u)
       expect(response).to be_success
     end
+    
+    it "should not allow disabled tokens" do
+      u = User.create
+      d = Device.create(:user => u, :settings => {'disabled' => true})
+      request.headers['Authorization'] = "Bearer #{d.token}"
+      get :index, :check_token => true
+      expect(assigns[:api_device]).to eq(nil)
+      expect(assigns[:api_user]).to eq(nil)
+      expect(response).to_not be_success
+      json = JSON.parse(response.body)
+      expect(json['error']).to eq('Invalid token')
+    end
   end
   
   describe "log_api_call" do
@@ -259,6 +271,23 @@ describe ApplicationController, :type => :controller do
       d = Device.create(:user => u)
       get :index, :id => u.id + 1, :access_token => d.token, :check_token => true
       assert_unauthorized
+    end
+    
+    it "should honor scope permissions" do
+      u = User.create
+      d = Device.create(:user => u, :user_integration_id => 1, :settings => {'permission_scopes' => ['read_profile']})
+      get :index, :id => u.id, :access_token => d.token, :check_token => true
+      assert_unauthorized
+    end
+    
+    it "should notify the user if permission rejected due to api token scope" do
+      u = User.create
+      d = Device.create(:user => u, :user_integration_id => 1, :settings => {'permission_scopes' => ['read_profile']})
+      get :index, :id => u.id, :access_token => d.token, :check_token => true
+      expect(response).to_not be_success
+      json = JSON.parse(response.body)
+      expect(json['error']).to eq('Not authorized')
+      expect(json['scope_limited']).to eq(true)
     end
   end
 

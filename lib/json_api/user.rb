@@ -41,7 +41,7 @@ module JsonApi::User
       user.settings['preferences']['devices'] ||= {}
       nearest_device = nil
       if user.settings['preferences']['devices'].keys.length > 0
-        devices = ::Device.where(:user_id => user.id).sort_by{|d| (d.settings['token_history'] || [])[-1] || 0 }.reverse
+        devices = ::Device.where(:user_id => user.id, :user_integration_id => nil).sort_by{|d| (d.settings['token_history'] || [])[-1] || 0 }.reverse
         last_access = devices.map(&:last_used_at).compact.max
         json['last_access'] = last_access && last_access.iso8601
         if args[:device]

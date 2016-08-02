@@ -1,0 +1,129 @@
+require 'spec_helper'
+
+describe Api::IntegrationsController, :type => :controller do
+  describe "get 'index'" do
+    it "should require an api token" do
+      get 'index', 'user_id' => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should error if the user doesn't exist" do
+      token_user
+      get 'index', 'user_id' => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should error if not authorized" do
+      token_user
+      u = User.create
+      get 'index', 'user_id' => u.global_id
+      assert_unauthorized
+    end
+    
+    it "should return a paginated list" do
+      token_user
+      ui = UserIntegration.create(:user_id => @user.id)
+      get 'index', 'user_id' => @user.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to_not eq(nil)
+      expect(json['integration']).to_not eq(nil)
+      expect(json['integration'].length).to eq(1)
+      expect(json['integration'][0]['id']).to eq(ui.global_id)
+      expect(json['meta']).to_not eq(nil)
+    end
+  end
+  
+  describe "post 'create'" do
+    it "should require an api token" do
+      post 'create'
+      assert_missing_token
+    end
+    
+    it "should error if the user doesn't exist" do
+      token_user
+      post 'create', 'integration' => {'user_id' => 'asdf'}
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      post 'create', 'integration' => {'user_id' => u.global_id}
+      assert_unauthorized
+    end
+    
+    it "should create the record" do
+      token_user
+      post 'create', 'integration' => {'user_id' => @user.global_id, 'name' => 'test integration'}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to_not eq(nil)
+      expect(json['integration']['id']).to_not eq(nil)
+      expect(json['integration']['name']).to eq('test integration')
+    end
+  end
+  
+  describe "put 'update'" do
+    it "should require an api token" do
+      put 'update', 'id' => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should error if the record doesn't exist" do
+      token_user
+      put 'update', 'id' => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      ui = UserIntegration.create(:user_id => u.id)
+      put 'update', 'id' => ui.global_id
+      assert_unauthorized
+    end
+    
+    it "should update the record" do
+      token_user
+      ui = UserIntegration.create(:user_id => @user.id)
+      put 'update', 'id' => ui.global_id, 'integration' => {'name' => 'new name'}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to_not eq(nil)
+      expect(json['integration']['id']).to eq(ui.global_id)
+      expect(json['integration']['name']).to eq('new name')
+    end
+  end
+  
+  describe "delete 'destroy'" do
+    it "should require an api token" do
+      delete 'destroy', 'id' => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should error if the record doesn't exist" do
+      token_user
+      delete 'destroy', 'id' => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      ui = UserIntegration.create(:user_id => u.id)
+      delete 'destroy', 'id' => ui.global_id
+      assert_unauthorized
+    end
+    
+    it "should delete the record" do
+      token_user
+      ui = UserIntegration.create(:user_id => @user.id)
+      delete 'destroy', 'id' => ui.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to_not eq(nil)
+      expect(json['integration']['id']).to eq(ui.global_id)
+    end
+  end
+end

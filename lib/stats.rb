@@ -684,6 +684,77 @@ module Stats
     lines.join("\n")
   end
   
+  def self.process_lam(str, user)
+    lines = str.split(/\n/)
+    date = Date.today
+    events = []
+    lines.each do |line|
+      line = line.strip
+      parts = line.split(/\s+/, 3)
+      time = parts[0]
+      action = parts[1]
+      data = parts[2]
+      text_match = data && data.match(/^\"(.+)\"$/)
+      text = text_match && text_match[1]
+      time_parts = time && time.split(/\:/)
+      ts = date.to_time.to_i
+      if time_parts && time_parts.length >= 3
+        hr, min, sec = time_parts.map(&:to_i)
+        ts = date.to_time.change(:hour => hr, :min => min, :sec => sec).to_i
+      end
+      if action == 'CTL'
+        match = data && data.match(/\*\[YY-MM-DD=(.+)\]\*/)
+        date_string = match && match[1]
+        if date_string
+          date = Date.parse(date_string)
+        end
+      elsif action == 'SPE'
+        if ts && text
+          events << {
+            'type' => 'button',
+            'timestamp' => ts,
+            'user_id' => user.global_id,
+            'button' => {
+              'vocalization' => text,
+              'type' => 'speak',
+              'label' => text,
+              'spoken' => true
+            }
+          }
+        end
+      elsif action == 'SMP'
+        if ts && text
+          events << {
+            'type' => 'button',
+            'timestamp' => ts,
+            'user_id' => user.global_id,
+            'button' => {
+              'type' => 'speak',
+              'label' => text,
+              'spoken' => true
+            }
+          
+          }
+        end
+      elsif action == 'WPR'
+        if ts && text
+          events << {
+            'type' => 'button',
+            'timestamp' => ts,
+            'user_id' => user.global_id,
+            'button' => {
+              'completion' => text,
+              'type' => 'speak',
+              'label' => text,
+              'spoken' => true
+            }
+          }
+        end
+      end
+    end
+    events
+  end
+
   def self.lam_entries(session)
     lines = []
     date = nil

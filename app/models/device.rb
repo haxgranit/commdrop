@@ -4,6 +4,7 @@ class Device < ActiveRecord::Base
   secure_serialize :settings
   belongs_to :user
   belongs_to :developer_key
+  belongs_to :user_integration
   before_save :generate_defaults
   after_save :update_user_device_name
 
@@ -24,6 +25,20 @@ class Device < ActiveRecord::Base
   
   def hidden?
     !!self.settings['hidden']
+  end
+  
+  def disabled?
+    !!(self.settings && self.settings['disabled'])
+  end
+  
+  def permission_scopes
+    if disabled?
+      []
+    elsif self.user_integration_id
+      (self.settings && self.settings['permission_scopes']) || []
+    else
+      ['full']
+    end
   end
   
   def last_used_at
@@ -72,7 +87,13 @@ class Device < ActiveRecord::Base
   end
   
   def inactivity_timeout(force_long_timeout=false)
-    force_long_timeout ? 28.days.to_i : 24.hours.to_i
+    if self.user_integration_id
+      6.months.to_i
+    elsif force_long_timeout
+      28.days.to_i
+    else
+      24.hours.to_i
+    end
   end
   
   def clean_old_keys
@@ -84,6 +105,7 @@ class Device < ActiveRecord::Base
   
   def valid_token?(token, app_version=nil)
     clean_old_keys
+    return false if self.disabled?
     keys = (self.settings && self.settings['keys']) || []
     key = keys.detect{|k| k['value'] == token }
     do_save = false

@@ -15,12 +15,14 @@ class User < ActiveRecord::Base
   has_many :log_sessions
   has_many :boards
   has_many :devices
+  has_many :user_integrations
   before_save :generate_defaults
   after_save :track_boards
   after_save :notify_of_changes
 
   has_paper_trail :only => [:settings, :user_name]
   secure_serialize :settings
+  attr_accessor :permission_scopes_device
 
   # TODO: callback to update board names if username changes
   # ...I guess should do something about old links as well. Github
@@ -29,9 +31,10 @@ class User < ActiveRecord::Base
 
   # cache should be invalidated if:
   # - a supervisor is added or removed
-  add_permissions('view_existence') { true } # anyone can get basic information
+  add_permissions('view_existence', ['*']) { true } # anyone can get basic information
+  add_permissions('view_existence', 'view_detailed', 'view_deleted_boards', ['*']) {|user| user.id == self.id }
   add_permissions('view_existence', 'view_detailed', 'supervise', 'edit', 'manage_supervision', 'delete', 'view_deleted_boards') {|user| user.id == self.id }
-  add_permissions('view_existence', 'view_detailed') { self.settings && self.settings['public'] == true }
+  add_permissions('view_existence', 'view_detailed', ['*']) { self.settings && self.settings['public'] == true }
   add_permissions('edit', 'manage_supervision', 'view_deleted_boards') {|user| user.edit_permission_for?(self) }
   add_permissions('view_existence', 'view_detailed', 'supervise', 'view_deleted_boards') {|user| user.supervisor_for?(self) }
   add_permissions('manage_supervision', 'support_actions') {|user| Organization.manager_for?(user, self) }
@@ -782,6 +785,14 @@ class User < ActiveRecord::Base
     {'affected_board_ids' => ids.uniq}
   ensure
     PaperTrail.whodunnit = prior
+  end
+  
+  def permission_scopes
+    if self.permission_scopes_device
+      self.permission_scopes_device.permission_scopes
+    else
+      []
+    end
   end
   
   def notify_on(attributes, notification_type)

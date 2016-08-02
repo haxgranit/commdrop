@@ -347,7 +347,27 @@ describe Subscription, :type => :model do
       res = u.update_subscription({'jump' => true})
       expect(res).to eq(false)
     end
+    
+    it "should be idempotent" do
+      u = User.create
+      res = u.update_subscription({
+        'subscribe' => true,
+        'subscription_id' => '12345',
+        'plan_id' => 'monthly_6'
+      })
+      expect(res).to eq(true)
+      expect(u.settings['subscription']['started']).to be > (Time.now - 5).iso8601
+      u.settings['subscription']['started'] = (Time.now - 1000).iso8601
 
+      res = u.update_subscription({
+        'subscribe' => true,
+        'subscription_id' => '12345',
+        'plan_id' => 'monthly_6'
+      })
+      expect(res).to eq(false)
+      expect(u.settings['subscription']['started']).to be < 5.seconds.ago.iso8601
+    end
+    
     describe "subscribe" do    
       it "should parse subscribe events" do
         u = User.create

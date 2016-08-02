@@ -13,8 +13,11 @@ class UserGoal < ActiveRecord::Base
 
   secure_serialize :settings
 
+  add_permissions('view', ['read_profile']) {|user| self.user && self.user == user }
   add_permissions('view', 'comment', 'edit') {|user| self.user && self.user == user }
+  add_permissions('view', ['read_profile']) {|user| self.user && self.user.allows?(user, 'supervise') }
   add_permissions('view', 'comment') {|user| self.user && self.user.allows?(user, 'supervise') }
+  add_permissions('view', ['read_profile']) {|user| self.user && self.user.allows?(user, 'edit') }
   add_permissions('view', 'comment', 'edit') {|user| self.user && self.user.allows?(user, 'edit') }
   cache_permissions
   

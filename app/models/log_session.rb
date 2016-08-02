@@ -207,6 +207,7 @@ class LogSession < ActiveRecord::Base
     end
     
     self.processed ||= false
+    self.needs_remote_push = !!(self.log_type == 'session' && self.user_id) if self.needs_remote_push == nil
     return false unless self.user_id && self.author_id && self.device_id
     true
   end
@@ -581,7 +582,7 @@ class LogSession < ActiveRecord::Base
     
     active_session = LogSession.all.where(['log_type = ? AND device_id = ? AND author_id = ? AND user_id = ? AND ended_at > ?', 'session', non_user_params[:device].id, non_user_params[:author].id, non_user_params[:user].id, 1.hour.ago]).order('ended_at DESC').first
     if params['events']
-      if active_session
+      if active_session && !non_user_params['imported']
         active_session.process(params, non_user_params)
         active_session.schedule(:check_for_merger)
       else
@@ -612,6 +613,7 @@ class LogSession < ActiveRecord::Base
     # TODO: respect logging settings server-side in addition to client-side
     # TODO: mark ip address as potentially inaccurate when log event is much after last event timestamp (i.e. catching up after offline)
     self.data ||= {}
+    self.data['imported'] = true if non_user_params[:imported]
     if non_user_params[:update_only]
       if params['events']
         self.data_will_change!
@@ -735,9 +737,30 @@ class LogSession < ActiveRecord::Base
   end
   
   def self.push_logs_remotely
-    remotes = LogSession.where(:needs_remote_push => true).where(['ended_at < ?', 2.hours.ago])
+    remotes = LogSession.where(:needs_remote_push => true).where(['ended_at < ?', 2.hours.ago]).where(['ended_at > ?', 2.days.ago])
     remotes.each do |session|
       session.notify('new_session')
+    end
+    remotes.update_all(:needs_remote_push => false)
+  end
+  
+  def additional_webhook_record_codes(notification_type)
+    res = []
+    if notification_type == 'new_session'
+      if self.user && self.user.record_code
+        res << "#{self.user.record_code}::*"
+        res << "#{self.user.record_code}::log_session:*"
+      end
+    end
+    res
+  end
+  
+  def webhook_content(content_type)
+    content_type ||= 'lam'
+    if content_type == 'lam'
+      Stats.lam([self])
+    else
+      nil
     end
   end
   

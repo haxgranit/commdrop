@@ -1127,8 +1127,8 @@ describe User, :type => :model do
       u.next_notification_at = nil
       u.save
       expect(u.next_notification_at).to be > Time.now
-      expect(u.next_notification_at).to be > Time.now + 2.weeks
-      expect(u.next_notification_at).to be < Time.now + 3.weeks
+      expect(u.next_notification_at).to be > Time.now + 1.week
+      expect(u.next_notification_at).to be < Time.now + 2.weeks
     end
     
     it "should generate correct next_notification_schedule for weekly updates" do

@@ -82,6 +82,29 @@ class Api::LogsController < ApplicationController
     end
   end
   
+  def import
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    return unless allowed?(user, 'supervise')
+    if !params['lam'] && !params['content']
+      api_error(400, {error: 'missing content for import'})
+      return
+    end
+    
+    events = Stats.process_lam(params['lam'] || params['content'], user)
+    log = LogSession.process_as_follow_on({'events' => events}, {
+      :imported => true,
+      :author => @api_user,
+      :user => user,
+      :device => @api_device
+    })
+    if !log || log.errored?
+      api_error(400, {error: "log import failed", errors: log && log.processing_errors})
+    else
+      render json: JsonApi::Log.as_json(log, :wrapper => true).to_json
+    end
+  end
+  
   def update
     log = LogSession.find_by_global_id(params['id'])
     user = log && log.user

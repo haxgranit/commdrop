@@ -122,4 +122,47 @@ describe Permissions, :type => :model do
       expect(u.cache_key).to eq("Usernil-#{u.updated_at.to_f}:#{RedisInit.cache_token}")
     end
   end
+  
+  describe "scopes" do
+    it "should limit allows? permissions based on scopes" do
+      u = User.create
+      g = UserGoal.create(:user => u)
+      edit = 'edit'
+      view = 'view'
+      expect(u.allows?(u, 'edit')).to eq(true)
+      expect(u.allows?(u, 'edit', ['*'])).to eq(false)
+      expect(u.allows?(u, 'view_detailed', ['*'])).to eq(true)
+      expect(u.allows?(u, 'edit', ['read_profile'])).to eq(false)
+      expect(u.allows?(u, 'view_detailed', ['read_profile'])).to eq(true)
+      expect(u.allows?(u, 'edit', ['full'])).to eq(true)
+      
+      expect(g.allows?(u, view)).to eq(true)
+      expect(view.instance_variable_get('@scope_rejected')).to eq(false)
+      expect(g.allows?(u, edit)).to eq(true)
+      expect(edit.instance_variable_get('@scope_rejected')).to eq(false)
+      expect(g.allows?(u, view, ['read_profile'])).to eq(true)
+      expect(view.instance_variable_get('@scope_rejected')).to eq(false)
+      expect(g.allows?(u, edit, ['read_profile'])).to eq(false)
+      expect(edit.instance_variable_get('@scope_rejected')).to eq(true)
+      expect(g.allows?(u, view, ['full'])).to eq(true)
+      expect(view.instance_variable_get('@scope_rejected')).to eq(false)
+      expect(g.allows?(u, edit, ['full'])).to eq(true)
+      expect(edit.instance_variable_get('@scope_rejected')).to eq(false)
+    end
+    
+    it "should limit permissions_for permissions based on scopes" do
+      u = User.create
+      g = UserGoal.create(:user => u)
+      u2 = User.create
+      expect(u.permissions_for(u)).to eq({'user_id' => u.global_id, 'view_existence' => true, 'view_detailed' => true, 'view_deleted_boards' => true, 'supervise' => true, 'edit' => true, 'manage_supervision' => true, 'delete' => true})
+      expect(u.permissions_for(u, ['*'])).to eq({'user_id' => u.global_id, 'view_existence' => true, 'view_detailed' => true, 'view_deleted_boards' => true, 'supervise' => false, 'edit' => false, 'manage_supervision' => false, 'delete' => false})
+      expect(u.permissions_for(u, ['*', 'read_profile'])).to eq({'user_id' => u.global_id, 'view_existence' => true, 'view_detailed' => true, 'view_deleted_boards' => true, 'supervise' => false, 'edit' => false, 'manage_supervision' => false, 'delete' => false})
+      expect(u.permissions_for(u, ['*', 'read_profile', 'full'])).to eq({'user_id' => u.global_id, 'view_existence' => true, 'view_detailed' => true, 'view_deleted_boards' => true, 'supervise' => true, 'edit' => true, 'manage_supervision' => true, 'delete' => true})
+      
+      expect(g.permissions_for(u)).to eq({'user_id' => u.global_id, 'view' => true, 'edit' => true, 'comment' => true})
+      expect(g.permissions_for(u2)).to eq({'user_id' => u2.global_id})
+      expect(g.permissions_for(u, ['read_profile', '*'])).to eq({'user_id' => u.global_id, 'view' => true, 'edit' => false, 'comment' => false})
+      expect(g.permissions_for(u, ['full'])).to eq({'user_id' => u.global_id, 'view' => true, 'edit' => true, 'comment' => true})
+    end
+  end
 end

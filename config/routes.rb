@@ -188,7 +188,12 @@ Coughdrop::Application.routes.draw do
     
     resources :logs do
       get 'lam'
+      post 'import' => 'logs#import', on: :collection
     end
+    resources :webhooks do
+      post 'test'
+    end
+    resources :integrations
     
     post 'purchasing_event' => 'purchasing#event'
     post 'purchase_gift' => 'purchasing#purchase_gift'

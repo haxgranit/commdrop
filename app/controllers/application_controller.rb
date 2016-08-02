@@ -40,6 +40,11 @@ class ApplicationController < ActionController::Base
           set_browser_token_header
           api_error 400, {error: (@api_device ? "Expired token" : "Invalid token"), token: token}
           return false
+        elsif @api_device && @api_device.disabled?
+          @api_device = nil
+          set_browser_token_header
+          api_error 400, {error: 'Disabled token', token: token}
+          return false
         end
       end
       @api_user = @api_device && @api_device.user
@@ -86,8 +91,17 @@ class ApplicationController < ActionController::Base
   end
   
   def allowed?(obj, permission)
-    if !obj || !obj.allows?(@api_user, permission)
-      api_error 400, {error: "Not authorized"}
+    scopes = ['*']
+    if @api_user && @api_device
+      @api_user.permission_scopes_device = @api_device
+      scopes = @api_user.permission_scopes
+    end
+    if !obj || !obj.allows?(@api_user, permission, scopes)
+      res = {error: "Not authorized"}
+      if permission.instance_variable_get('@scope_rejected')
+        res[:scope_limited] = true
+      end
+      api_error 400, res
       false
     else
       true

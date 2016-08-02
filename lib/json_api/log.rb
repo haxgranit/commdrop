@@ -14,6 +14,7 @@ module JsonApi::Log
     json['started_at'] = log.started_at.iso8601 if log.started_at
     json['ended_at'] = log.ended_at.iso8601 if log.ended_at
     json['time_id'] = (log.started_at || 0).to_i
+    json['imported'] = !!log.data['imported']
     if log.author
       json['author'] = {
         'id' => log.author.global_id,

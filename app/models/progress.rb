@@ -6,7 +6,7 @@ class Progress < ActiveRecord::Base
   before_save :generate_defaults
   
   include Permissions
-  add_permissions('view') { true }
+  add_permissions('view' ,['*']) { true }
   
   
   def generate_defaults

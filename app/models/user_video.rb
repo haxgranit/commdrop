@@ -13,7 +13,7 @@ class UserVideo < ActiveRecord::Base
 
   secure_serialize :settings
 
-  add_permissions('view') { true }
+  add_permissions('view', ['*']) { true }
   add_permissions('view', 'edit') {|user| self.user_id == user.id || (self.user && self.user.allows?(user, 'edit')) }
   cache_permissions
   

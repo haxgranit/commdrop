@@ -856,4 +856,75 @@ describe Stats do
       expect(res[:parts_of_speech_combinations]).to eq({'noun,noun' => 1, 'verb,noun,adjective' => 1, 'noun,adjective' => 1})
     end
   end
+
+  describe "process_lam" do
+    it "should not error on bad data" do
+      res = Stats.process_lam("", nil)
+      expect(res).to eq([])
+      res = Stats.process_lam("asdf\n12345", nil)
+      expect(res).to eq([])
+    end
+    
+    it "should process valid data" do
+      u = User.create
+      res = Stats.process_lam(%{
+      EXTRA JUNK
+SOME SILLY GARBAGE
+11:00:00 SPE "something cool"
+15:11:22 WPR "something else"
+18:01:55 SMP "something again"
+19:00:00 CTL *[YY-MM-DD=16-07-13]*
+02:01:05 SMP "somebody else"
+      }, u)
+      expect(res.length).to eq(4)
+    end
+    
+    it "should return an events list" do
+      u = User.create
+      res = Stats.process_lam(%{
+      EXTRA JUNK
+SOME SILLY GARBAGE
+11:00:00 SPE "something cool"
+15:11:22 WPR "something else"
+18:01:55 SMP "something again"
+19:00:00 CTL *[YY-MM-DD=16-07-13]*
+02:01:05 SMP "somebody else"
+      }, u)
+      expect(res.length).to eq(4)
+      expect(res[0]['type']).to eq('button')
+      expect(res[0]['button']['label']).to eq('something cool')
+      expect(res[1]['type']).to eq('button')
+      expect(res[1]['button']['label']).to eq('something else')
+      expect(res[2]['type']).to eq('button')
+      expect(res[2]['button']['label']).to eq('something again')
+      expect(res[3]['type']).to eq('button')
+      expect(res[3]['button']['label']).to eq('somebody else')
+    end
+    
+    it "should use the date information provided" do
+      u = User.create
+      res = Stats.process_lam(%{
+      EXTRA JUNK
+SOME SILLY GARBAGE
+11:00:00 SPE "something cool"
+15:11:22 WPR "something else"
+18:01:55 SMP "something again"
+19:00:00 CTL *[YY-MM-DD=16-07-13]*
+02:01:05 SMP "somebody else"
+      }, u)
+      expect(res.length).to eq(4)
+      expect(res[0]['type']).to eq('button')
+      expect(res[0]['button']['label']).to eq('something cool')
+      expect(res[0]['timestamp']).to eq(Time.now.change(:hour => 11, :min => 0, :sec => 0).to_i)
+      expect(res[1]['type']).to eq('button')
+      expect(res[1]['button']['label']).to eq('something else')
+      expect(res[1]['timestamp']).to eq(Time.now.change(:hour => 15, :min => 11, :sec => 22).to_i)
+      expect(res[2]['type']).to eq('button')
+      expect(res[2]['button']['label']).to eq('something again')
+      expect(res[2]['timestamp']).to eq(Time.now.change(:hour => 18, :min => 1, :sec => 55).to_i)
+      expect(res[3]['type']).to eq('button')
+      expect(res[3]['button']['label']).to eq('somebody else')
+      expect(res[3]['timestamp']).to eq(1468396865)
+    end
+  end
 end

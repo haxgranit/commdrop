@@ -10,8 +10,10 @@ class LogSnapshot < ActiveRecord::Base
 
   belongs_to :user
   
-  add_permissions('view') {|user| self.user && self.user.allows?(user, 'supervise') }
+  add_permissions('view', ['read_logs']) {|user| self.user && self.user.allows?(user, 'supervise') }
+  add_permissions('view', ['read_logs']) {|user| self.user && self.user == user }
   add_permissions('view', 'edit', 'delete') {|user| self.user && self.user == user }
+  add_permissions('view', ['read_logs']) {|user| self.user && self.user.allows?(user, 'edit') }
   add_permissions('view', 'edit', 'delete') {|user| self.user && self.user.allows?(user, 'edit') }
   
   def generate_defaults

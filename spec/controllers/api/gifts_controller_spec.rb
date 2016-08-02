@@ -31,6 +31,7 @@ describe Api::GiftsController, :type => :controller do
     end
     
     it "should return a gift record" do
+      token_user
       g = GiftPurchase.create
       get :show, :id => g.code
       expect(response.success?).to eq(true)
@@ -40,6 +41,7 @@ describe Api::GiftsController, :type => :controller do
     end
     
     it "should be forgiving on capitalization and o's for 0's" do
+      token_user
       g = GiftPurchase.new
       g.code = 'abcd000'
       g.save
@@ -48,7 +50,6 @@ describe Api::GiftsController, :type => :controller do
       json = JSON.parse(response.body)
       expect(response.code).to eq("200")
       expect(json['gift']['id']).to eq(g.code)
-      
     end
   end
 end

@@ -385,4 +385,41 @@ describe Api::LogsController, :type => :controller do
       expect(response.body).to match(/LAM Version 2\.00/)
     end
   end
+
+  describe "import" do
+    it "should require an api token" do
+      post 'import', :user_id => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should error if the user doesn't exist" do
+      token_user
+      post 'import', :user_id => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      post 'import', :user_id => u.global_id
+      assert_unauthorized
+    end
+    
+    it "should error if no content provided" do
+      token_user
+      post 'import', :user_id => @user.global_id
+      expect(response).to_not be_success
+      json = JSON.parse(response.body)
+      expect(json['error']).to eq('missing content for import')
+    end
+    
+    it "should process the data" do
+      token_user
+      expect(Stats).to receive(:process_lam).with('some content', @user).and_return([{}])
+      post 'import', :user_id => @user.global_id, :content => "some content"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['log']).to_not eq(nil)
+    end
+  end
 end

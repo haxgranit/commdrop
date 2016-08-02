@@ -16,7 +16,7 @@ class ButtonImage < ActiveRecord::Base
   has_paper_trail :only => [:settings, :board_id, :user_id, :public, :path, :url, :data]
   secure_serialize :settings
   
-  add_permissions('view') { true }
+  add_permissions('view', ['*']) { true }
   add_permissions('view', 'edit') {|user| self.user_id == user.id || (self.user && self.user.allows?(user, 'edit')) }
   cache_permissions
 

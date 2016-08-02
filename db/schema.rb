@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160630194809) do
+ActiveRecord::Schema.define(version: 20160725225533) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -173,11 +173,12 @@ ActiveRecord::Schema.define(version: 20160630194809) do
 
   create_table "devices", force: :cascade do |t|
     t.integer  "user_id"
-    t.string   "device_key",       limit: 255
+    t.string   "device_key",          limit: 255
     t.text     "settings"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "developer_key_id"
+    t.integer  "user_integration_id"
   end
 
   add_index "devices", ["user_id"], name: "index_devices_on_user_id", using: :btree
@@ -215,11 +216,13 @@ ActiveRecord::Schema.define(version: 20160630194809) do
     t.boolean  "has_notes"
     t.datetime "last_cluster_attempt_at"
     t.integer  "goal_id"
+    t.boolean  "needs_remote_push"
   end
 
   add_index "log_sessions", ["device_id", "ended_at"], name: "index_log_sessions_on_device_id_and_ended_at", using: :btree
   add_index "log_sessions", ["geo_cluster_id", "user_id"], name: "index_log_sessions_on_geo_cluster_id_and_user_id", using: :btree
   add_index "log_sessions", ["ip_cluster_id", "user_id"], name: "index_log_sessions_on_ip_cluster_id_and_user_id", using: :btree
+  add_index "log_sessions", ["needs_remote_push"], name: "index_log_sessions_on_needs_remote_push", using: :btree
   add_index "log_sessions", ["user_id", "goal_id"], name: "index_log_sessions_on_user_id_and_goal_id", using: :btree
   add_index "log_sessions", ["user_id", "log_type", "has_notes", "started_at"], name: "log_sessions_noted_index", using: :btree
   add_index "log_sessions", ["user_id", "log_type", "started_at"], name: "index_log_sessions_on_user_id_and_log_type_and_started_at", using: :btree
@@ -320,6 +323,18 @@ ActiveRecord::Schema.define(version: 20160630194809) do
   add_index "user_goals", ["template_header"], name: "index_user_goals_on_template_header", using: :btree
   add_index "user_goals", ["user_id", "active"], name: "index_user_goals_on_user_id_and_active", using: :btree
 
+  create_table "user_integrations", force: :cascade do |t|
+    t.integer  "user_id"
+    t.integer  "device_id"
+    t.boolean  "template"
+    t.text     "settings"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  add_index "user_integrations", ["template"], name: "index_user_integrations_on_template", using: :btree
+  add_index "user_integrations", ["user_id", "created_at"], name: "index_user_integrations_on_user_id_and_created_at", using: :btree
+
   create_table "user_link_codes", force: :cascade do |t|
     t.integer  "user_id"
     t.string   "user_global_id", limit: 255
@@ -382,10 +397,11 @@ ActiveRecord::Schema.define(version: 20160630194809) do
 
   create_table "webhooks", force: :cascade do |t|
     t.integer  "user_id"
-    t.string   "record_code", limit: 255
+    t.string   "record_code",         limit: 255
     t.text     "settings"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "user_integration_id"
   end
 
   add_index "webhooks", ["record_code", "user_id"], name: "index_webhooks_on_record_code_and_user_id", using: :btree

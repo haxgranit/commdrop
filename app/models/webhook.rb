@@ -1,13 +1,29 @@
 class Webhook < ActiveRecord::Base
   include Async
   include SecureSerialize
+  include Processable
+  include Permissions
+  include GlobalId
+
   secure_serialize :settings
   belongs_to :user
+  belongs_to :user_integration
   before_save :generate_defaults
   
+  USER_WEBHOOKS = [
+    'new_session', 'new_utterance'
+  ]
+
+  add_permissions('view', ['read_profile']) {|user| self.user_id == user.id }
+  add_permissions('view', 'edit', 'delete') {|user| self.user_id == user.id }
+  add_permissions('view', ['read_profile']) {|user| self.user && self.user.allows?(user, 'edit') }
+  add_permissions('view', 'edit', 'delete') {|user| self.user && self.user.allows?(user, 'edit') }
+  cache_permissions
+
   def generate_defaults
     self.settings ||= {}
     self.settings['notifications'] ||= {}
+    self.settings['callback_token'] ||= UserIntegration.security_token
     true
   end
     
@@ -27,20 +43,18 @@ class Webhook < ActiveRecord::Base
   def self.register_internal(user, record, options)
     record_code = get_record_code(record)
     webhook = Webhook.find_or_initialize_by(:user_id => user.id, :record_code => record_code)
-    webhook.settings ||= {}
-    webhook.settings['notifications'] ||= {}
+    webhook.generate_defaults
     notifications = webhook.settings['notifications'][options[:notification_type]] || []
     callback = notifications.detect{|n| n['callback'] == options[:callback] }
     if !callback
       callback = {
-        'token' => Security.nonce("confirmation code for #{record_code}"),
         'callback' => options[:callback]
       }
       notifications << callback
     end
     webhook.settings['notifications'][options[:notification_type]] = notifications
     webhook.save
-    callback['token']
+    webhook.settings['callback_token']
   end
   
   def self.notify_all(record, notification_type, additional_args=nil)
@@ -50,31 +64,101 @@ class Webhook < ActiveRecord::Base
   
   def self.notify_all_with_code(record_code, notification_type, additional_args)
     record = find_record(record_code)
+    res = []
     if record
       record.default_listeners(notification_type).each do |notifiable_code|
         notifiable = find_record(notifiable_code)
-        notifiable.handle_notification(notification_type, record, additional_args) if notifiable && notifiable.respond_to?(:handle_notification)
+        if notifiable && notifiable.respond_to?(:handle_notification)
+          notifiable.handle_notification(notification_type, record, additional_args) 
+          res << {'default' => true, 'code' => notifiable_code}
+        end
       end
       if record.respond_to?(:additional_listeners)
         record.additional_listeners(notification_type, additional_args).each do |notifiable_code|
           notifiable = find_record(notifiable_code)
-          notifiable.handle_notification(notification_type, record, additional_args) if notifiable && notifiable.respond_to?(:handle_notification)
+          if notifiable && notifiable.respond_to?(:handle_notification)
+            notifiable.handle_notification(notification_type, record, additional_args) 
+            res << {'additional' => true, 'code' => notifiable_code}
+          end
         end
       end
     end
-    Webhook.where(:record_code => record_code).each{|h| h.notify(notification_type) }
+    Webhook.for_record(notification_type, record_code, record).each do |h|
+      res += h.notify(notification_type, record)
+    end
+    res
   end
   
-  def notify(notification_type)
+  def self.for_record(notification_type, record_code, record)
+    res = Webhook.where(:record_code => record_code)
+    if record && record.respond_to?(:additional_webhook_record_codes)
+      res = res.to_a
+      record.additional_webhook_record_codes(notification_type).each do |code|
+        res += Webhook.where(:record_code => code).to_a
+      end
+      res = res.uniq
+    end
+    res
+  end
+  
+  def test_notification
+    notify('test', self)
+  end
+  
+  def webhook_content(content_type)
+    {
+      id: self.global_id
+    }.to_json
+  end
+  
+  def notify(notification_type, record)
+    results = []
     callbacks = self.settings['notifications'][notification_type] || []
+    callbacks += self.settings['notifications']['*'] || []
+    if notification_type == 'test'
+      callbacks = []
+      self.settings['notifications'].each do |key, list|
+        callbacks += list
+      end
+    end
     callbacks.each do |callback|
-      if callback['callback'].match(/^http/)
+      if (callback['callback'] || "").match(/^http/)
         url = callback['callback'].split(/#/)[0]
-        Typhoeus.post(url, body: {webhook_token: callback['token']})
-      else
+        body = {
+          token: self.settings['callback_token'],
+          notification: notification_type,
+          record: record.record_code
+        }
+        if record.respond_to?(:api_url)
+          body[:url] = record.api_url
+        end
+        if self.user_integration
+          body[:token] = self.user_integration.settings['token']
+        end
+        if callback['include_content'] && record && record.respond_to?(:webhook_content)
+          body[:content] = record.webhook_content(callback['content_type'])
+        end
+        res = Typhoeus.post(url, body: body)
+        results << {
+          url: url,
+          response_code: res.code,
+          response_body: res.body
+        }
+        self.settings['callback_attempts'] ||= []
+        self.settings['callback_attempts'] << {
+          'timestamp' => Time.now.to_i,
+          'code' => res.code,
+          'url' => url
+        }
+        self.save
+      elsif callback['callback']
+        results << {
+          internal: true
+        }
         self.internal_notify(callback['callback'], notification_type)
       end
     end
+    results
     # if matching notification_type, then notify
     # if callback_url, post to it
     # if internal callback, send method
@@ -113,5 +197,52 @@ class Webhook < ActiveRecord::Base
         #end
       end
     end
+  end
+  
+  def process_params(params, non_user_params)
+    raise "user required" unless self.user || non_user_params['user']
+    self.user = non_user_params['user']
+    self.settings ||= {}
+    self.settings['notifications'] ||= {}
+    if params['user_integration_id']
+      ui = UserIntegration.where(:user_id => self.user_id).find_by_global_id(params['user_integration_id'])
+    end
+    self.settings['name'] = params['name'] if params['name']
+    self.settings['include_content'] = params['include_content'] if params['include_content'] != nil
+    self.settings['content_types'] = params['content_types'] if params['content_types']
+    self.settings['url'] = params['url'] if params['url'] && params['url'].match(/^http/)
+    self.settings['webhook_type'] = params['webhook_type'] if params['webhook_type']
+
+    if params['webhook_type'] == 'user'
+      if non_user_params['notifications']
+        self.settings['advanced_configuration'] = true
+        non_user_params['notifications'].each do |key, opts|
+          if key == '*' || USER_WEBHOOKS.include?(key)
+            self.settings['notifications'][key] ||= []
+            if opts['callback'] && opts['callback'].match(/^http/)
+              self.settings['notifications'][key] = self.settings['notifications'][key].select{|n| n['callback'] != opts['callback'] }
+              self.settings['notifications'][key] << {
+                'callback' => opts['callback'],
+                'include_content' => opts['include_content'],
+                'content_type' => opts['content_type']
+              }
+            end
+          end
+        end
+      elsif params['webhooks']
+        self.settings['advanced_configuration'] = false
+        params['webhooks'].each do |webhook|
+          if webhook == '*' || USER_WEBHOOKS.include?(webhook)
+            self.settings['notifications'][webhook] = [{
+              'callback' => self.settings['url'],
+              'include_content' => self.settings['include_content'],
+              'content_type' => (self.settings['content_types'] || {})[webhook]
+            }]
+          end
+        end
+      end
+      self.record_code = "User:#{self.user.global_id}::*"
+    end
+    true
   end
 end

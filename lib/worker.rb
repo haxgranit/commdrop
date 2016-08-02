@@ -38,7 +38,7 @@ module Worker
     start = self.ts
     klass.send(method_name, *args_copy)
     diff = self.ts - start
-    Rails.logger.info("done performing #{action}")
+    Rails.logger.info("done performing #{action}, finished in #{diff}s")
     # TODO: way to track what queue a job is coming from
     if diff > 60 && speed == :normal
       Rails.logger.error("long-running job, #{action}, #{diff}s")

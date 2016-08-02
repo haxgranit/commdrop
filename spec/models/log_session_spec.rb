@@ -152,6 +152,24 @@ describe LogSession, :type => :model do
     it "should schedule log session tracking if goal attached" do
     end
     
+    it "should mark as needing push if that's true" do
+      s = LogSession.new
+      s.user_id = 123
+      s.data = {}
+      time1 = 10.minutes.ago
+      time2 = 8.minutes.ago
+      time3 = 2.minutes.ago
+      s.data['events'] = [
+        {'geo' => ['1', '2'], 'timestamp' => time1.to_i, 'type' => 'button', 'button' => {'label' => 'hat', 'board' => {'id' => '1_1'}}},
+        {'geo' => ['1', '2'], 'timestamp' => time2.to_i, 'type' => 'button', 'button' => {'label' => 'cow', 'board' => {'id' => '1_1'}}},
+        {'action' => {'action' => 'auto_home'}, 'timestamp' => time3.to_i, 'type' => 'action'},
+        {'action' => {'action' => 'home'}, 'timestamp' => time3.to_i, 'type' => 'action'}
+      ]
+      expect(s.needs_remote_push).to eq(nil)
+      s.generate_defaults
+      expect(s.needs_remote_push).to eq(true)
+    end
+    
     it "should not include auto_home events in the summary" do
       s = LogSession.new
       s.data = {}
@@ -1118,6 +1136,22 @@ describe LogSession, :type => :model do
       expect(s.data['note']['text']).to eq('ahem')
       expect(s.data['goal']).to eq(nil)
     end
+    
+    it "should mark as imported if specified" do
+      u = User.create
+      u2 = User.create
+      g = UserGoal.create(:user => u2)
+      d = Device.create
+      s = LogSession.process_new({
+        'note' => {
+          'text' => 'ahem',
+          'timestamp' => 1431461182
+        },
+        'goal_id' => g.global_id,
+        'goal_status' => 3,
+      }, {'user' => u, 'author' => u, 'device' => d, 'ip_address' => '1.2.3.4', 'imported' => true})
+      expect(s.data['imported']).to eq(true)
+    end
   end
 
   describe "process_raw_log" do
@@ -1599,7 +1633,48 @@ describe LogSession, :type => :model do
   
   describe "push_logs_remotely" do
     it "should only notify applicable logs" do
-      expect(1).to eq(2)
+      u = User.create
+      d = Device.create
+      s1 = LogSession.create!(:needs_remote_push => true, :ended_at => 12.days.ago, :user => u, :device => d, :author => u)
+      LogSession.where(:id => s1.id).update_all(:ended_at => 12.days.ago)
+      s2 = LogSession.create!(:needs_remote_push => true, :ended_at => 1.day.ago, :user => u, :device => d, :author => u)
+      LogSession.where(:id => s2.id).update_all(:ended_at => 1.days.ago)
+      s3 = LogSession.create!(:needs_remote_push => true, :ended_at => Time.now, :user => u, :device => d, :author => u)
+      LogSession.where(:id => s3.id).update_all(:ended_at => Time.now)
+      s4 = LogSession.create!(:needs_remote_push => nil, :ended_at => 6.hours.ago, :user => u, :device => d, :author => u)
+      LogSession.where(:id => s4.id).update_all(:ended_at => 6.hours.ago, :needs_remote_push => nil)
+      expect(LogSession.where(:needs_remote_push => true).count).to eq(3)
+      LogSession.push_logs_remotely
+      expect(Worker.scheduled?(Webhook, 'notify_all_with_code', s1.record_code, 'new_session', nil)).to eq(false)
+      expect(Worker.scheduled?(Webhook, 'notify_all_with_code', s2.record_code, 'new_session', nil)).to eq(true)
+      expect(Worker.scheduled?(Webhook, 'notify_all_with_code', s3.record_code, 'new_session', nil)).to eq(false)
+      expect(Worker.scheduled?(Webhook, 'notify_all_with_code', s4.record_code, 'new_session', nil)).to eq(false)
+      expect(s1.reload.needs_remote_push).to eq(true)
+      expect(s2.reload.needs_remote_push).to eq(false)
+      expect(s3.reload.needs_remote_push).to eq(true)
+      expect(s4.reload.needs_remote_push).to eq(nil)
+    end
+    
+    it "should notify a listener of a new session" do
+      u = User.create
+      d = Device.create
+      h = Webhook.process_new({
+        'webhooks' => ['new_session', 'new_board'],
+        'url' => 'http://www.example.com/callback',
+        'include_content' => true,
+        'webhook_type' => 'user'
+      }, {'user' => u})
+      s = LogSession.create(:user => u, :device => d, :author => u, :log_type => 'session')
+      LogSession.where(:id => s.id).update_all(:needs_remote_push => true, :ended_at => 6.hours.ago)
+      LogSession.push_logs_remotely
+
+      expect(Typhoeus).to receive(:post){|url, args|
+        expect(url).to eq('http://www.example.com/callback')
+        expect(args[:body][:content]).to_not eq(nil)
+        expect(args[:body][:notification]).to eq('new_session')
+        expect(args[:body][:record]).to eq(s.record_code)
+      }.and_return(OpenStruct.new(code: 200))
+      Worker.process_queues
     end
   end
   
@@ -1792,6 +1867,28 @@ describe LogSession, :type => :model do
       expect(u.premium?).to eq(true)
       LogSession.generate_log_summaries
       expect(Worker.scheduled?(Webhook, :notify_all_with_code, u.record_code, 'log_summary', nil)).to eq(true)
+    end
+  end
+  
+  describe "additional_webhook_record_codes" do
+    it "should return correct values" do
+      u = User.create
+      s = LogSession.new
+      expect(s.additional_webhook_record_codes('bacon')).to eq([])
+      expect(s.additional_webhook_record_codes('something')).to eq([])
+      expect(s.additional_webhook_record_codes('new_session')).to eq([])
+      s.user = u
+      expect(s.additional_webhook_record_codes('new_session')).to eq(["#{u.record_code}::*", "#{u.record_code}::log_session:*"])
+    end
+  end
+
+  describe "webhook_content" do
+    it "should return the correct content" do
+      s = LogSession.new
+      expect(s.webhook_content('bacon')).to eq(nil)
+      expect(s.webhook_content('new_utterance')).to eq(nil)
+      expect(Stats).to receive(:lam).with([s]).and_return("asdf")
+      expect(s.webhook_content('lam')).to eq('asdf')
     end
   end
 end

@@ -234,6 +234,19 @@ describe Device, :type => :model do
       expect(d.settings['app_versions'][1][1]).to be > Time.now.to_i - 5
       expect(d.settings['app_versions'][1][1]).to be < Time.now.to_i + 5
     end
+    
+    it "should always return false for disabled tokens" do
+      d = Device.new
+      expect(d.valid_token?('bob')).to eq(false)
+      d.settings = {}
+      d.settings['keys'] = [{'value' => 'bob', 'last_timestamp' => 1.second.ago.to_i}]
+      expect(d.valid_token?('bob')).to eq(true)
+      d.settings['disabled'] = true
+      expect(d.valid_token?('bob')).to eq(false)
+      d.settings['keys'] = [{'value' => 'bob', 'last_timestamp' => 1.second.ago.to_i}, {'value' => 'fred', 'last_timestamp' => 1.second.ago.to_i}]
+      expect(d.valid_token?('bob')).to eq(false)
+      expect(d.valid_token?('fred')).to eq(false)
+    end
   end
 
   describe "token" do
@@ -272,5 +285,53 @@ describe Device, :type => :model do
     settings = d.settings
     expect(SecureJson).to receive(:dump).with(d.settings)
     d.save
+  end
+  
+
+  describe "disabled?" do
+    it "should return the correct value" do
+      d = Device.new
+      expect(d.disabled?).to eq(false)
+      d.settings = {}
+      expect(d.disabled?).to eq(false)
+      d.settings['disabled'] = false
+      expect(d.disabled?).to eq(false)
+      d.settings['disabled'] = true
+      expect(d.disabled?).to eq(true)
+    end
+  end
+  
+  describe "permission_scopes" do
+    it "should return nothing if disabled" do
+      d = Device.new
+      d.settings = {'disabled' => true}
+      expect(d.permission_scopes).to eq([])
+      d.settings['permission_scopes'] = ['a', 'b', 'c']
+      expect(d.permission_scopes).to eq([])
+    end
+    
+    it "should return 'full' if not an integration" do
+      d = Device.new
+      expect(d.permission_scopes).to eq(['full'])
+    end
+    
+    it "should return defined scopes if for an integration" do
+      d = Device.new
+      d.user_integration_id = 1
+      expect(d.permission_scopes).to eq([])
+      d.settings = {'permission_scopes' => ['a', 'b']}
+      expect(d.permission_scopes).to eq(['a', 'b'])
+    end
+  end
+  
+  describe "inactivity_timeout" do
+    it "should return the correct value" do
+      d = Device.new
+      expect(d.inactivity_timeout).to eq(24.hours.to_i)
+      expect(d.inactivity_timeout(true)).to eq(28.days.to_i)
+      d.user_integration_id = 1
+      expect(d.inactivity_timeout).to eq(6.months.to_i)
+      expect(d.inactivity_timeout(true)).to eq(6.months.to_i)
+    end
   end
 end
