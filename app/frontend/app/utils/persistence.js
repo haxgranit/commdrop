@@ -1075,12 +1075,13 @@ var persistence = Ember.Object.extend({
         if(user.get('preferences.home_board.id')) {
           var board = user.get('preferences.home_board');
           board.depth = 0;
+          board.visit_source = "home board";
           to_visit_boards.push(board);
         }
         if(user.get('preferences.sidebar_boards')) {
           user.get('preferences.sidebar_boards').forEach(function(b) {
             if(b.key) {
-              to_visit_boards.push({key: b.key, depth: 1, image: b.image});
+              to_visit_boards.push({key: b.key, depth: 1, image: b.image, visit_source: "sidebar board"});
             }
           });
         }
@@ -1113,6 +1114,7 @@ var persistence = Ember.Object.extend({
           var next = to_visit_boards.shift();
           var id = next && (next.id || next.key);
           var key = next && next.key;
+          var source = next && next.visit_source;
           if(next && next.depth < 20 && id && !visited_boards.find(function(i) { return i == id; })) {
             var local_full_set_revision = null;
             var peeked = CoughDrop.store.peekRecord('board', id);
@@ -1193,7 +1195,7 @@ var persistence = Ember.Object.extend({
                 var already_going_to_visit = to_visit_boards.find(function(b) { return (b.id == board.id || b.key == board.key) && (!board.link_disabled || board.link_disabled == b.link_disabled); });
 
                 if(!already_visited && !already_going_to_visit) {
-                  to_visit_boards.push({id: board.id, key: board.key, depth: next.depth + 1, link_disabled: board.link_disabled});
+                  to_visit_boards.push({id: board.id, key: board.key, depth: next.depth + 1, link_disabled: board.link_disabled, visit_source: (board.key || board.id)});
                 }
                 if(safely_cached) {
                   // (this check is hypothesizing it's possible to lose some data via leakage
@@ -1239,6 +1241,9 @@ var persistence = Ember.Object.extend({
                 } else if(err && err.error) {
                   msg = msg + ": " + err.error;
                 }
+                if(source) {
+                   msg = msg + ", linked from " + source;
+                }
                 defer.reject({error: msg});
               });
             }, function(err) {
@@ -1250,7 +1255,7 @@ var persistence = Ember.Object.extend({
                   nextBoard(defer);
                 }, 150);
               } else {
-                defer.reject({error: "board " + (key || id) + " failed retrieval for syncing", board_unauthorized: board_unauthorized});
+                defer.reject({error: "board " + (key || id) + " failed retrieval for syncing, linked from " + source, board_unauthorized: board_unauthorized});
               }
             });
           } else if(!next) {

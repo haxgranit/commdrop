@@ -478,6 +478,104 @@ describe Subscription, :type => :model do
         expect(u.settings['subscription']['seconds_left']).to be < (time_diff + 100)
         expect(u.expires_at).to eq(nil)        
       end
+      
+      it "should not update anything on a repeat update" do
+        u = User.create
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '12345',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']['started']).to be > (Time.now - 5).iso8601
+        u.settings['subscription']['started'] = (Time.now - 1000).iso8601
+
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '12345',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(false)
+        expect(u.settings['subscription']['started']).to be < 5.seconds.ago.iso8601
+      end
+      
+      it "should not update for an old update" do
+        u = User.create
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '12345',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']['subscription_id']).to eq('12345')
+        expect(u.settings['subscription']['prior_subscription_ids']).to eq(['12345'])
+
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '123456',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']['subscription_id']).to eq('123456')
+        expect(u.settings['subscription']['prior_subscription_ids']).to eq(['12345', '123456'])
+        
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '12345',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(false)
+        expect(u.settings['subscription']['subscription_id']).to eq('123456')
+        expect(u.settings['subscription']['prior_subscription_ids']).to eq(['12345', '123456'])
+      end
+      
+      it "should not update for an old update when a purchase happened" do
+        u = User.create
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '12345',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']['started']).to_not eq(nil)
+        expect(u.settings['subscription']['subscription_id']).to eq('12345')
+        expect(u.settings['subscription']['prior_subscription_ids']).to eq(['12345'])
+
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '123456',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']['started']).to_not eq(nil)
+        expect(u.settings['subscription']['subscription_id']).to eq('123456')
+        expect(u.settings['subscription']['prior_subscription_ids']).to eq(['12345', '123456'])
+
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '23456',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']).not_to eq(nil)
+        expect(u.settings['subscription']['started']).to eq(nil)
+        expect(u.settings['subscription']['last_purchase_id']).to eq('23456')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
+        expect(u.expires_at).to_not eq(nil)
+        
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '12345',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(false)
+        expect(u.expires_at).to_not eq(nil)
+        expect(u.settings['subscription']['started']).to eq(nil)
+        expect(u.settings['subscription']['subscription_id']).to eq('123456')
+        expect(u.settings['subscription']['prior_subscription_ids']).to eq(['12345', '123456'])
+      end
     end
     
     describe "unsubscribe" do
@@ -602,7 +700,8 @@ describe Subscription, :type => :model do
         expect(u.settings['subscription']['started']).to eq(nil)
         expect(u.settings['subscription']['customer_id']).to eq('12345')
         expect(u.settings['subscription']['last_purchase_plan_id']).to eq('long_term_150')
-        expect(u.settings['subscription']['prior_purchase_ids']).to eq(['23456'])
+        expect(u.settings['subscription']['last_purchase_id']).to eq('23456')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
         expect(u.expires_at.to_i).to eq(8.weeks.from_now.to_i)
       end
       
@@ -662,6 +761,120 @@ describe Subscription, :type => :model do
         })
         expect(res).to eq(true)
         expect(u.settings['subscription']['prior_customer_ids']).to eq(['54321'])
+      end
+
+      it "should not update anything on a repeat update" do
+        u = User.create
+        u.expires_at = nil
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '23456',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']).not_to eq(nil)
+        expect(u.settings['subscription']['last_purchase_id']).to eq('23456')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
+        expect(u.expires_at).to_not eq(nil)
+
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '23456',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(false)
+      end
+      
+      it "should not update for an old update" do
+        u = User.create
+        u.expires_at = nil
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '23456',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']).not_to eq(nil)
+        expect(u.settings['subscription']['last_purchase_id']).to eq('23456')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
+        expect(u.expires_at).to_not eq(nil)
+
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '234567',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']).not_to eq(nil)
+        expect(u.settings['subscription']['last_purchase_id']).to eq('234567')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq(['23456'])
+        expect(u.expires_at).to_not eq(nil)
+
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '23456',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(false)
+        expect(u.settings['subscription']).not_to eq(nil)
+        expect(u.settings['subscription']['last_purchase_id']).to eq('234567')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq(['23456'])
+        expect(u.expires_at).to_not eq(nil)
+      end
+
+      it "should not update for an old update after switching to recurring" do
+        u = User.create
+        u.expires_at = nil
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '23456',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']).not_to eq(nil)
+        expect(u.settings['subscription']['started']).to eq(nil)
+        expect(u.settings['subscription']['last_purchase_id']).to eq('23456')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
+        expect(u.expires_at).to_not eq(nil)
+
+        res = u.update_subscription({
+          'subscribe' => true,
+          'subscription_id' => '12345',
+          'plan_id' => 'monthly_6'
+        })
+        expect(res).to eq(true)
+        expect(u.settings['subscription']['started']).to_not eq(nil)
+        expect(u.settings['subscription']['subscription_id']).to eq('12345')
+        expect(u.settings['subscription']['prior_subscription_ids']).to eq(['12345'])
+        expect(u.settings['subscription']['last_purchase_id']).to eq('23456')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
+        expect(u.expires_at).to eq(nil)
+
+        res = u.update_subscription({
+          'purchase' => true,
+          'customer_id' => '12345',
+          'plan_id' => 'long_term_150',
+          'purchase_id' => '23456',
+          'seconds_to_add' => 8.weeks.to_i
+        })
+        expect(res).to eq(false)
+        expect(u.settings['subscription']).not_to eq(nil)
+        expect(u.settings['subscription']['started']).to_not eq(nil)
+        expect(u.settings['subscription']['last_purchase_id']).to eq('23456')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
+        expect(u.expires_at).to eq(nil)
       end
     end
   end

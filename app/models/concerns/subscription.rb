@@ -92,33 +92,38 @@ module Subscription
     if args['subscribe']
       if !args['subscription_id'] || self.settings['subscription']['subscription_id'] == args['subscription_id']
         res = false
-        # Not sure why changing customer_id should cause it to fail..
-#       elsif self.settings['subscription']['customer_id'] && self.settings['subscription']['customer_id'] != args['customer_id']
-#         res = false
       else
         role = (args['plan_id'] && args['plan_id'].match(/^slp/)) ? 'supporter' : 'communicator'
-        self.settings['subscription']['subscription_id'] = args['subscription_id']
-        if args['customer_id']
-          if self.settings['subscription']['customer_id'] && self.settings['subscription']['customer_id'] != args['customer_id']
-            self.settings['subscription']['prior_customer_ids'] ||= []
-            self.settings['subscription']['prior_customer_ids'] << self.settings['subscription']['customer_id']
+        self.settings['subscription']['prior_subscription_ids'] ||= []
+        if self.settings['subscription']['prior_subscription_ids'].include?(args['subscription_id'])
+          res = false
+        else
+          self.settings['subscription']['subscription_id'] = args['subscription_id']
+          if self.settings['subscription']['subscription_id'] && !self.settings['subscription']['subscription_id'].match(/free/)
+            self.settings['subscription']['prior_subscription_ids'] << self.settings['subscription']['subscription_id']
           end
-          self.settings['subscription']['customer_id'] = args['customer_id']
+          if args['customer_id']
+            if self.settings['subscription']['customer_id'] && self.settings['subscription']['customer_id'] != args['customer_id']
+              self.settings['subscription']['prior_customer_ids'] ||= []
+              self.settings['subscription']['prior_customer_ids'] << self.settings['subscription']['customer_id']
+            end
+            self.settings['subscription']['customer_id'] = args['customer_id']
+          end
+          self.settings['subscription']['started'] = Time.now.iso8601 
+          self.settings['subscription']['started'] = nil if args['plan_id'] == 'monthly_free'
+          self.settings['subscription']['token_summary'] = args['token_summary']
+          self.settings['subscription']['plan_id'] = args['plan_id']
+          self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_monthly_free'
+          self.settings['subscription'].delete('never_expires')
+          self.settings['preferences']['role'] = role
+          if self.expires_at && self.expires_at > Time.now
+            self.settings['subscription']['seconds_left'] = self.expires_at.to_i - Time.now.to_i
+          end
+          self.settings['pending'] = false unless self.settings['subscription']['free_premium']
+          self.expires_at = nil
+          self.save
+          self.schedule(:remove_supervisors!) if self.free_premium?
         end
-        self.settings['subscription']['started'] = Time.now.iso8601 
-        self.settings['subscription']['started'] = nil if args['plan_id'] == 'monthly_free'
-        self.settings['subscription']['token_summary'] = args['token_summary']
-        self.settings['subscription']['plan_id'] = args['plan_id']
-        self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_monthly_free'
-        self.settings['subscription'].delete('never_expires')
-        self.settings['preferences']['role'] = role
-        if self.expires_at && self.expires_at > Time.now
-          self.settings['subscription']['seconds_left'] = self.expires_at.to_i - Time.now.to_i
-        end
-        self.settings['pending'] = false unless self.settings['subscription']['free_premium']
-        self.expires_at = nil
-        self.save
-        self.schedule(:remove_supervisors!) if self.free_premium?
       end
     elsif args['unsubscribe']
       if (args['subscription_id'] && self.settings['subscription']['subscription_id'] == args['subscription_id']) || args['subscription_id'] == 'all'
@@ -138,7 +143,9 @@ module Subscription
         res = false
       end
     elsif args['purchase']
-      if true
+      if args['purchase_id'] && self.settings['subscription']['last_purchase_id'] == args['purchase_id']
+        res = false
+      else
         self.settings['subscription'].delete('started')
         if args['customer_id']
           if self.settings['subscription']['customer_id'] && self.settings['subscription']['customer_id'] != args['customer_id']
@@ -151,18 +158,23 @@ module Subscription
           self.settings['subscription']['gift_ids'] ||= []
           self.settings['subscription']['gift_ids'] << args['gift_id']
         end
-        self.settings['subscription']['token_summary'] = args['token_summary']
-        self.settings['subscription']['last_purchase_plan_id'] = args['plan_id']
-        self.settings['subscription']['last_purchased'] = Time.now.iso8601
-        self.settings['subscription']['free_premium'] = args['plan_id'] == 'slp_long_term_free'
+        self.settings['subscription']['free_premium'] = (args['plan_id'] == 'slp_long_term_free')
         self.settings['subscription'].delete('never_expires')
         self.settings['subscription']['prior_purchase_ids'] ||= []
         self.settings['pending'] = false
-        if self.settings['subscription']['prior_purchase_ids'].include?(args['purchase_id'])
+        if args['purchase_id'] && self.settings['subscription']['prior_purchase_ids'].include?(args['purchase_id'])
           res = false
         else
           role = (args['plan_id'] && args['plan_id'].match(/^slp/)) ? 'supporter' : 'communicator'
-          self.settings['subscription']['prior_purchase_ids'] << args['purchase_id']
+          self.settings['subscription'].delete('started')
+          self.settings['subscription'].delete('never_expires')
+          self.settings['subscription']['token_summary'] = args['token_summary']
+          self.settings['subscription']['last_purchase_plan_id'] = args['plan_id']
+          self.settings['subscription']['last_purchased'] = Time.now.iso8601
+          if self.settings['subscription']['last_purchase_id'] && !args['plan_id'].match(/free/)
+            self.settings['subscription']['prior_purchase_ids'] << self.settings['subscription']['last_purchase_id']
+          end
+          self.settings['subscription']['last_purchase_id'] = args['purchase_id']
           self.settings['preferences']['role'] = role
           self.expires_at = [self.expires_at, Time.now].compact.max
           self.expires_at += args['seconds_to_add']
@@ -365,11 +377,17 @@ module Subscription
     json
   end
   
-  def log_subscription_event(hash)
+  def log_subscription_event(hash, frd=false)
+    if !frd
+      hash[:time] = Time.now.to_i
+      schedule(:log_subscription_event, hash, true)
+      return true
+    end
     self.settings ||= {}
     hash[:time] = Time.now.to_i
     self.settings['subscription_events'] ||= []
     self.settings['subscription_events'] << hash
+    self.settings['subscription_events'].sort_by!{|e| e['time'] || Time.now.to_i }
     self.save
   end
       
@@ -453,7 +471,11 @@ module Subscription
       # ping from purchasing system, find the appropriate user and pass it along
       user = User.find_by_path(args['user_id'])
       return false unless user
-      user.subscription_event(args)
+      res = user.subscription_event(args)
+      if args['cancel_others_on_update'] && res
+        Purchasing.cancel_other_subscriptions(user, args['subscription_id'])
+      end
+      res
     end
   end
 end

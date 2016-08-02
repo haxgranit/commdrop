@@ -16,6 +16,7 @@ describe Purchasing do
     })
     res = Purchasing.subscription_event(req)
     expect(res[:status]).to eq(200)
+    Worker.process_queues
     res
   end
   
@@ -109,7 +110,8 @@ describe Purchasing do
         u.reload
         expect(u.settings['subscription']['last_purchase_plan_id']).to eq('long_term_100')
         expect(u.settings['subscription']['customer_id']).to eq('23456')
-        expect(u.settings['subscription']['prior_purchase_ids']).to eq(['12345'])
+        expect(u.settings['subscription']['last_purchase_id']).to eq('12345')
+        expect(u.settings['subscription']['prior_purchase_ids']).to eq([])
         expect(u.expires_at).to eq(exp + 5.years.to_i)
         expect(res[:data]).to eq({:purchase => true, :purchase_id => '12345', :valid => true})
       end
@@ -388,7 +390,9 @@ describe Purchasing do
           'subscription_id' => '3456',
           'customer_id' => '12345',
           'token_summary' => 'Unknown Card',
-          'plan_id' => 'monthly_6'
+          'plan_id' => 'monthly_6',
+          'source' => 'new subscription',
+          'cancel_others_on_update' => true
         })
         Purchasing.purchase(u, {'id' => 'token'}, 'monthly_6')
       end
@@ -435,7 +439,9 @@ describe Purchasing do
           'subscription_id' => 'sub2',
           'customer_id' => '9876',
           'token_summary' => 'Unknown Card',
-          'plan_id' => 'monthly_6'
+          'plan_id' => 'monthly_6',
+          'source' => 'new subscription',
+          'cancel_others_on_update' => true
         })
         Purchasing.purchase(u, {'id' => 'token'}, 'monthly_6')
       end
@@ -485,7 +491,8 @@ describe Purchasing do
           'customer_id' => '45678',
           'plan_id' => 'long_term_150',
           'token_summary' => 'Unknown Card',
-          'seconds_to_add' => 5.years.to_i
+          'seconds_to_add' => 5.years.to_i,
+          'source' => 'new purchase'
         })
         Purchasing.purchase(u, {'id' => 'token'}, 'long_term_150')
       end
@@ -513,7 +520,8 @@ describe Purchasing do
           'customer_id' => '45678',
           'plan_id' => 'long_term_150',
           'token_summary' => 'Unknown Card',
-          'seconds_to_add' => 5.years.to_i
+          'seconds_to_add' => 5.years.to_i,
+          'source' => 'new purchase'
         })
         expect(Purchasing).to receive(:cancel_other_subscriptions).with(u, 'all')
         Purchasing.purchase(u, {'id' => 'token'}, 'long_term_150')
@@ -638,6 +646,7 @@ describe Purchasing do
       }))
       res = Purchasing.cancel_other_subscriptions(u, '4567')
       expect(res).to eq(true)
+      Worker.process_queues
       u.reload
       expect(u.settings['subscription_events']).to_not eq(nil)
       expect(u.settings['subscription_events'][-1]['log']).to eq('subscription canceled')
@@ -845,6 +854,7 @@ describe Purchasing do
       })
       expect(User).to receive(:subscription_event)
       Purchasing.purchase(u, {'id' => 'token'}, 'long_term_150')
+      Worker.process_queues
       u.reload
       expect(u.settings['subscription_events'].length).to eq(5)
       expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting long-term purchase update', 'subscription canceling'])
