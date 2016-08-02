@@ -13,6 +13,12 @@ task :generate_log_summaries => :environment do
   puts "done. found #{res[:found]}, notified #{res[:notified]}"
 end
 
+task :push_remote_logs => :environment do
+  puts "Finding and pushing remote logs..."
+  res = LogSession.push_logs_remotely
+  puts "done. updated #{res} logs"
+end
+
 task :clean_old_deleted_boards => :environment do
   puts "Cleaning old deleted boards..."
   count = DeletedBoard.flush_old_records
