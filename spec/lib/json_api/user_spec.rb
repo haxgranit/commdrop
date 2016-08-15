@@ -606,6 +606,12 @@ describe JsonApi::User do
       u.reload
       hash = JsonApi::User.build_json(u, permissions: u)
       expect(hash['subscription']['free_premium']).to eq(true)
+      expect(hash['subscription']['limited_supervisor']).to eq(false)
+      
+      User.where(:id => u).update_all(:created_at => 3.months.ago)
+      u.reload
+      hash = JsonApi::User.build_json(u, permissions: u)
+      expect(hash['subscription']['free_premium']).to eq(true)
       expect(hash['subscription']['limited_supervisor']).to eq(true)
       
       o = Organization.create
