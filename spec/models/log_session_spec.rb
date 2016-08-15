@@ -1874,21 +1874,21 @@ describe LogSession, :type => :model do
     it "should return correct values" do
       u = User.create
       s = LogSession.new
-      expect(s.additional_webhook_record_codes('bacon')).to eq([])
-      expect(s.additional_webhook_record_codes('something')).to eq([])
-      expect(s.additional_webhook_record_codes('new_session')).to eq([])
+      expect(s.additional_webhook_record_codes('bacon', nil)).to eq([])
+      expect(s.additional_webhook_record_codes('something', nil)).to eq([])
+      expect(s.additional_webhook_record_codes('new_session', nil)).to eq([])
       s.user = u
-      expect(s.additional_webhook_record_codes('new_session')).to eq(["#{u.record_code}::*", "#{u.record_code}::log_session:*"])
+      expect(s.additional_webhook_record_codes('new_session', nil)).to eq(["#{u.record_code}::*", "#{u.record_code}::log_session:*"])
     end
   end
 
   describe "webhook_content" do
     it "should return the correct content" do
       s = LogSession.new
-      expect(s.webhook_content('bacon')).to eq(nil)
-      expect(s.webhook_content('new_utterance')).to eq(nil)
+      expect(s.webhook_content(nil, 'bacon', nil)).to eq(nil)
+      expect(s.webhook_content(nil, 'new_utterance', nil)).to eq(nil)
       expect(Stats).to receive(:lam).with([s]).and_return("asdf")
-      expect(s.webhook_content('lam')).to eq('asdf')
+      expect(s.webhook_content(nil, 'lam', nil)).to eq('asdf')
     end
   end
 end

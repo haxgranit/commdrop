@@ -908,7 +908,7 @@ describe Api::UsersController, :type => :controller do
     it "should error on not found" do
       token_user
       post :claim_voice, :user_id => 'abcdef'
-      assert_not_found
+      assert_not_found('abcdef')
     end
     
     it "should require edit permissions" do
@@ -1004,6 +1004,147 @@ describe Api::UsersController, :type => :controller do
       expect(json).not_to eq(nil)
       expect(json['error']).to eq('user rename failed')
       expect(json['collision']).to eq(true)
+    end
+  end
+  # 
+#   def activate_button
+#     user = User.find_by_path(params['user_id'])
+#     return unless exists?(user, params['user_id'])
+#     return unless allowed?(user, 'supervise')
+#     board = Board.find_by_path(params['board_id'])
+#     return unless exists?(board, params['board_id'])
+#     return unless allowed?(board, 'view')
+#     button = params['button_id'] && board.settings['buttons'].detect{|b| b['id'].to_s == params['button_id'].to_s }
+#     if !button
+#       return api_error(400, {error: 'button not found'})
+#     elsif !button['integration'] || !button['integration']['user_integration_id']
+#       return api_error(400, {error: 'button integration not configured'})
+#     end
+#     associated_user = nil
+#     if params['associated_user_id']
+#       supervisee = User.find_by_path(params['associated_user_id'])
+#       if supervisee && supervisee.allows?(user, 'supervise')
+#         associated_user = supervisee
+#       end
+#     end
+#     progress = Progress.schedule(board, :notify, 'button_action', {
+#       'user_id' => user.global_id,
+#       'immediate' => true,
+#       'associated_user_id' => (associated_user && associated_user.global_id),
+#       'button_id' => params['button_id']
+#     })
+#     render json: JsonApi::Progress.as_json(progress, :wrapper => true)
+#   end
+  describe "activate_button" do
+    it "should require an api token" do
+      post :activate_button, :user_id => 'asdf', :board_id => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should require a valid user" do
+      token_user
+      post :activate_button, :user_id => 'asdf', :board_id => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require an authorized user" do
+      token_user
+      u = User.create
+      post :activate_button, :user_id => u.global_id, :board_id => 'asdf'
+      assert_unauthorized
+    end
+    
+    it "should require a valid board" do
+      token_user
+      post :activate_button, :user_id => @user.global_id, :board_id => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require an authorized board" do
+      token_user
+      u = User.create
+      b = Board.create(:user => u)
+      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id
+      assert_unauthorized
+    end
+    
+    it "should require a valid button" do
+      token_user
+      b = Board.create(:user => @user)
+      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id
+      assert_error('button not found')
+    end
+    
+    it "should require an integration button" do
+      token_user
+      b = Board.create(:user => @user)
+      b.settings['buttons'] = [{
+        'id' => '1'
+      }]
+      b.save
+      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1'
+      assert_error('button integration not configured')
+    end
+    
+    it "should return a progress record" do
+      token_user
+      ui = UserIntegration.create(:user => @user)
+      b = Board.create(:user => @user)
+      b.settings['buttons'] = [{
+        'id' => '1',
+        'integration' => {'user_integration_id' => ui.global_id}
+      }]
+      b.save
+      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['progress']['id']).to_not eq(nil)
+      id = json['progress']['id']
+      progress = Progress.find_by_path(id)
+      expect(progress.settings['arguments']).to eq(['button_action', {'user_id' => @user.global_id, 'immediate' => true, 'associated_user_id' => nil, 'button_id' => '1'}])
+      expect(progress.settings['class']).to eq('Board')
+      expect(progress.settings['method']).to eq('notify')
+    end
+    
+    it "should attach an associated user if specified and authorized" do
+      token_user
+      ui = UserIntegration.create(:user => @user)
+      b = Board.create(:user => @user)
+      b.settings['buttons'] = [{
+        'id' => '1',
+        'integration' => {'user_integration_id' => ui.global_id}
+      }]
+      b.save
+      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1', :associated_user_id => @user.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['progress']['id']).to_not eq(nil)
+      id = json['progress']['id']
+      progress = Progress.find_by_path(id)
+      expect(progress.settings['arguments']).to eq(['button_action', {'user_id' => @user.global_id, 'immediate' => true, 'associated_user_id' => @user.global_id, 'button_id' => '1'}])
+      expect(progress.settings['class']).to eq('Board')
+      expect(progress.settings['method']).to eq('notify')
+    end
+    
+    it "should not attach an associated user if specified but not authorized" do
+      token_user
+      u = User.create
+      ui = UserIntegration.create(:user => @user)
+      b = Board.create(:user => @user)
+      b.settings['buttons'] = [{
+        'id' => '1',
+        'integration' => {'user_integration_id' => ui.global_id}
+      }]
+      b.save
+      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1', :associated_user_id => u.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['progress']['id']).to_not eq(nil)
+      id = json['progress']['id']
+      progress = Progress.find_by_path(id)
+      expect(progress.settings['arguments']).to eq(['button_action', {'user_id' => @user.global_id, 'immediate' => true, 'associated_user_id' => nil, 'button_id' => '1'}])
+      expect(progress.settings['class']).to eq('Board')
+      expect(progress.settings['method']).to eq('notify')
     end
   end
 end

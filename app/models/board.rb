@@ -466,7 +466,7 @@ class Board < ActiveRecord::Base
       end
     end
     self.settings['buttons'] = buttons.map do |button|
-      button = button.slice('id', 'hidden', 'link_disabled', 'image_id', 'sound_id', 'label', 'vocalization', 'background_color', 'border_color', 'load_board', 'hide_label', 'url', 'apps', 'video', 'part_of_speech', 'suggested_part_of_speech', 'painted_part_of_speech', 'add_to_vocalization', 'home_lock');
+      button = button.slice('id', 'hidden', 'link_disabled', 'image_id', 'sound_id', 'label', 'vocalization', 'background_color', 'border_color', 'load_board', 'hide_label', 'url', 'apps', 'integration', 'video', 'part_of_speech', 'suggested_part_of_speech', 'painted_part_of_speech', 'add_to_vocalization', 'home_lock');
       if button['load_board']
         if !approved_link_ids.include?(button['load_board']['id']) && !approved_link_ids.include?(button['load_board']['key'])
           link = Board.find_by_path(button['load_board']['id']) || Board.find_by_path(button['load_board']['key'])
@@ -539,6 +539,53 @@ class Board < ActiveRecord::Base
       (direct_users + supervisors).uniq.map(&:record_code)
     else
       []
+    end
+  end
+  
+  def additional_webhook_record_codes(notification_type, additional_args)
+    if notification_type == 'button_action' && additional_args && additional_args['button_id']
+      button = self.settings['buttons'].detect{|b| b['id'].to_s == additional_args['button_id'].to_s }
+      user = additional_args && User.find_by_path(additional_args['user_id'])
+      res = []
+      if button && button['integration'] && button['integration']['user_integration_id'] && user && self.allows?(user, 'view')
+        ui = UserIntegration.find_by_path(button['integration']['user_integration_id'])
+        res << ui.record_code if ui
+      end
+      res
+    else
+      []
+    end
+  end
+  
+  def webhook_content(notification_type, content_type, additional_args)
+    if notification_type == 'button_action' && additional_args && additional_args['button_id']
+      button = self.settings['buttons'].detect{|b| b['id'].to_s == additional_args['button_id'].to_s }
+      res = {}
+      user = additional_args && User.find_by_path(additional_args['user_id'])
+      if button && button['integration'] && button['integration']['user_integration_id'] && user && self.allows?(user, 'view')
+        ui = UserIntegration.find_by_path(button['integration']['user_integration_id'])
+        associated_user = additional_args && User.find_by_path(additional_args['associated_user_id'])
+        associated_user = nil if associated_user && !associated_user.allows?(user, 'supervise')
+        if ui && user
+          placement_code = ui.placement_code(self.global_id, button['id'].to_s)
+          ref_user = associated_user || user
+          user_code = ui.placement_code(ref_user.global_id)
+          res = {
+            'action' => button['integration']['action'],
+            'placement_code' => placement_code,
+            'user_code' => user_code
+          }
+          if ui.allow_private_information?
+            res['user_id'] = user.global_id
+            res['board_id'] = board.global_id
+            res['button_id'] = button['id']
+            res['associated_user_id'] = associated_user.global_id if associated_user
+          end
+        end
+      end
+      res.to_json
+    else
+      {}.to_json
     end
   end
 end

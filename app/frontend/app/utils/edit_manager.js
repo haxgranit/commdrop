@@ -604,9 +604,11 @@ var editManager = Ember.Object.extend({
             delete newButton['load_board'];
             delete newButton['apps'];
             delete newButton['url'];
+            delete newButton['integration'];
           } else if(currentButton.get('buttonAction') == 'link') {
             delete newButton['load_board'];
             delete newButton['apps'];
+            delete newButton['integration'];
             newButton.url = currentButton.get('fixed_url');
             if(currentButton.get('video')) {
               newButton.video = currentButton.get('video');
@@ -614,13 +616,20 @@ var editManager = Ember.Object.extend({
           } else if(currentButton.get('buttonAction') == 'app') {
             delete newButton['load_board'];
             delete newButton['url'];
+            delete newButton['integration'];
             newButton.apps = currentButton.get('apps');
             if(newButton.apps.web && newButton.apps.web.launch_url) {
               newButton.apps.web.launch_url = currentButton.get('fixed_app_url');
             }
+          } else if(currentButton.get('buttonAction') == 'integration') {
+            delete newButton['load_board'];
+            delete newButton['apps'];
+            delete newButton['url'];
+            newButton.integration = currentButton.get('integration');
           } else {
             delete newButton['url'];
             delete newButton['apps'];
+            delete newButton['integration'];
             newButton.load_board = currentButton.load_board;
           }
           // newButton.top = ...

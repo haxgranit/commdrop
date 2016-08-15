@@ -9,6 +9,7 @@ import utterance from '../utils/utterance';
 import app_state from '../utils/app_state';
 import boundClasses from '../utils/bound_classes';
 import Button from '../utils/button';
+import Utils from '../utils/misc';
 
 export default modal.ModalController.extend({
   opening: function() {
@@ -55,12 +56,33 @@ export default modal.ModalController.extend({
       label: this.get('model.label')
     });
   }.observes('model.label'),
-  buttonActions: [
-    {name: i18n.t('talk', "Add button to the vocalization window"), id: "talk"},
-    {name: i18n.t('folder', "Open/Link to another board"), id: "folder"},
-    {name: i18n.t('link', "Open a web site in a browser tab"), id: "link"},
-    {name: i18n.t('app', "Launch an application"), id: "app"}
-  ],
+  buttonActions: function() {
+    var res = [
+      {name: i18n.t('talk', "Add button to the vocalization window"), id: "talk"},
+      {name: i18n.t('folder', "Open/Link to another board"), id: "folder"},
+      {name: i18n.t('link', "Open a web site in a browser tab"), id: "link"},
+      {name: i18n.t('app', "Launch an application"), id: "app"}
+    ];
+    if(app_state.get('feature_flags.app_connections')) {
+      res.push({name: i18n.t('integration', "Activate a connected tool"), id: "integration"});
+    }
+    return res;
+  }.property('app_state.feature_flags.app_connections'),
+  load_user_integrations: function() {
+    var user_id = this.get('model.integration_user_id') || 'self';
+    var _this = this;
+    if(this.get('model.integrationAction')) {
+      _this.set('user_integrations', {loading: true});
+      Utils.all_pages('integration', {user_id: user_id, for_button: true}, function() {
+      }).then(function(res) {
+        _this.set('user_integrations', res);
+      }, function(err) {
+        _this.set('user_integrations', {error: true});
+      });
+    } else {
+      _this.set('user_integrations', []);
+    }
+  }.observes('model.integrationAction', 'model.integration_user_id'),
   parts_of_speech: function() {
     return CoughDrop.parts_of_speech;
   }.property(),
@@ -363,6 +385,15 @@ export default modal.ModalController.extend({
         'video.start': '',
         'video.end': ''
       });
+    },
+    select_integration: function(tool) {
+      (this.get('user_integrations') || []).forEach(function(i) {
+        Ember.set(i, 'selected', false);
+      });
+      this.set('model.integration', {
+        user_integration_id: tool.id
+      });
+      Ember.set(tool, 'selected', true);
     }
   }
 });

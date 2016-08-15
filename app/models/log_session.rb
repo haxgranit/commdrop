@@ -744,7 +744,7 @@ class LogSession < ActiveRecord::Base
     remotes.update_all(:needs_remote_push => false)
   end
   
-  def additional_webhook_record_codes(notification_type)
+  def additional_webhook_record_codes(notification_type, additional_args)
     res = []
     if notification_type == 'new_session'
       if self.user && self.user.record_code
@@ -755,7 +755,7 @@ class LogSession < ActiveRecord::Base
     res
   end
   
-  def webhook_content(content_type)
+  def webhook_content(notification_type, content_type, args)
     content_type ||= 'lam'
     if content_type == 'lam'
       Stats.lam([self])

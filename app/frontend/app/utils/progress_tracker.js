@@ -5,7 +5,7 @@ import persistence from './persistence';
 var progress_tracker = Ember.Object.extend({
   success_wait: 2500,
   error_wait: 1500,
-  track: function(progress, status_callback) {
+  track: function(progress, status_callback, opts) {
     this.track_ids = this.track_ids || {};
     var id = null;
     while(!id || this.track_ids[id]) {
@@ -16,7 +16,7 @@ var progress_tracker = Ember.Object.extend({
       if(_this.track_ids[id]) {
         status_callback(data);
       }
-    }, 0, id);
+    }, 0, id, opts);
     this.track_ids[id] = true;
     return id;
   },
@@ -26,18 +26,24 @@ var progress_tracker = Ember.Object.extend({
       this.track_ids[track_id] = false;
     }
   },
-  check: function(url, status_callback, error_count, track_id) {
+  run_later: function(_this, cb, delay) {
+    Ember.run.later(_this, cb, delay);
+  },
+  check: function(url, status_callback, error_count, track_id, opts) {
+    opts = opts || {};
+    opts.success_wait = opts.success_wait || progress_tracker.success_wait;
+    opts.error_wait = opts.error_wait || progress_tracker.error_wait;
     error_count = error_count || 0;
     var _this = this;
     persistence.ajax(url, {type: 'GET'}).then(function(data) {
       data.progress.still_working = false;
       if(!data.progress.finished_at) {
         data.progress.still_working = true;
-        Ember.run.later(_this, function() {
+        progress_tracker.run_later(_this, function() {
           if(this.track_ids[track_id]) {
-            this.check(url, status_callback, 0, track_id);
+            this.check(url, status_callback, 0, track_id, opts);
           }
-        }, progress_tracker.success_wait);
+        }, opts.success_wait);
       }
       status_callback(data.progress);
 //       Example progress object:
@@ -53,11 +59,11 @@ var progress_tracker = Ember.Object.extend({
           sub_status: 'server_unresponsive'
         });
       } else {
-        Ember.run.later(_this, function() {
+        progress_tracker.run_later(_this, function() {
           if(this.track_ids[track_id]) {
-            this.check(url, status_callback, error_count + 1, track_id);
+            this.check(url, status_callback, error_count + 1, track_id, opts);
           }
-        }, progress_tracker.error_wait);
+        }, opts.error_wait);
       }
     });
   },

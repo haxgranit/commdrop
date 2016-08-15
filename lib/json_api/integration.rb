@@ -11,6 +11,7 @@ module JsonApi::Integration
     
     json['id'] = obj.global_id
     json['name'] = obj.settings['name']
+    json['custom_integration'] = !!obj.settings['custom_integration']
     
     if obj.settings['custom_integration']
       device_token = obj.device.token

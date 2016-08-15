@@ -90,7 +90,7 @@ class Api::UsersController < ApplicationController
   
   def claim_voice
     user = User.find_by_path(params['user_id'])
-    return unless exists?(user)
+    return unless exists?(user, params['user_id'])
     return unless allowed?(user, 'edit')
     if user.add_premium_voice(params['voice_id'], params['system'])
       res = {voice_added: true, voice_id: params['voice_id']}
@@ -101,6 +101,35 @@ class Api::UsersController < ApplicationController
     else
       api_error(400, {error: "no more voices available"})
     end
+  end
+  
+  def activate_button
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    return unless allowed?(user, 'supervise')
+    board = Board.find_by_path(params['board_id'])
+    return unless exists?(board, params['board_id'])
+    return unless allowed?(board, 'view')
+    button = params['button_id'] && board.settings['buttons'].detect{|b| b['id'].to_s == params['button_id'].to_s }
+    if !button
+      return api_error(400, {error: 'button not found'})
+    elsif !button['integration'] || !button['integration']['user_integration_id']
+      return api_error(400, {error: 'button integration not configured'})
+    end
+    associated_user = nil
+    if params['associated_user_id']
+      supervisee = User.find_by_path(params['associated_user_id'])
+      if supervisee && supervisee.allows?(user, 'supervise')
+        associated_user = supervisee
+      end
+    end
+    progress = Progress.schedule(board, :notify, 'button_action', {
+      'user_id' => user.global_id,
+      'immediate' => true,
+      'associated_user_id' => (associated_user && associated_user.global_id),
+      'button_id' => params['button_id']
+    })
+    render json: JsonApi::Progress.as_json(progress, :wrapper => true)
   end
   
   def rename

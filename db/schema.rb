@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160725225533) do
+ActiveRecord::Schema.define(version: 20160808224634) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -293,6 +293,7 @@ ActiveRecord::Schema.define(version: 20160725225533) do
     t.string   "value",      limit: 255
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.text     "data"
   end
 
   add_index "settings", ["key"], name: "index_settings_on_key", unique: true, using: :btree
@@ -330,10 +331,12 @@ ActiveRecord::Schema.define(version: 20160725225533) do
     t.text     "settings"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean  "for_button"
   end
 
   add_index "user_integrations", ["template"], name: "index_user_integrations_on_template", using: :btree
   add_index "user_integrations", ["user_id", "created_at"], name: "index_user_integrations_on_user_id_and_created_at", using: :btree
+  add_index "user_integrations", ["user_id", "for_button"], name: "index_user_integrations_on_user_id_and_for_button", using: :btree
 
   create_table "user_link_codes", force: :cascade do |t|
     t.integer  "user_id"

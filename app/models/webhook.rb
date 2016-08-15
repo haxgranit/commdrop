@@ -9,6 +9,7 @@ class Webhook < ActiveRecord::Base
   belongs_to :user
   belongs_to :user_integration
   before_save :generate_defaults
+  after_destroy :delete_user_integration
   
   USER_WEBHOOKS = [
     'new_session', 'new_utterance'
@@ -83,17 +84,17 @@ class Webhook < ActiveRecord::Base
         end
       end
     end
-    Webhook.for_record(notification_type, record_code, record).each do |h|
-      res += h.notify(notification_type, record)
+    Webhook.for_record(notification_type, record_code, record, additional_args).each do |h|
+      res += h.notify(notification_type, record, additional_args)
     end
     res
   end
   
-  def self.for_record(notification_type, record_code, record)
+  def self.for_record(notification_type, record_code, record, additional_args)
     res = Webhook.where(:record_code => record_code)
     if record && record.respond_to?(:additional_webhook_record_codes)
       res = res.to_a
-      record.additional_webhook_record_codes(notification_type).each do |code|
+      record.additional_webhook_record_codes(notification_type, additional_args).each do |code|
         res += Webhook.where(:record_code => code).to_a
       end
       res = res.uniq
@@ -105,13 +106,13 @@ class Webhook < ActiveRecord::Base
     notify('test', self)
   end
   
-  def webhook_content(content_type)
+  def webhook_content(notification_type, content_type, args)
     {
       id: self.global_id
     }.to_json
   end
   
-  def notify(notification_type, record)
+  def notify(notification_type, record, additional_args)
     results = []
     callbacks = self.settings['notifications'][notification_type] || []
     callbacks += self.settings['notifications']['*'] || []
@@ -136,7 +137,7 @@ class Webhook < ActiveRecord::Base
           body[:token] = self.user_integration.settings['token']
         end
         if callback['include_content'] && record && record.respond_to?(:webhook_content)
-          body[:content] = record.webhook_content(callback['content_type'])
+          body[:content] = record.webhook_content(notification_type, callback['content_type'], additional_args)
         end
         res = Typhoeus.post(url, body: body)
         results << {
@@ -242,6 +243,13 @@ class Webhook < ActiveRecord::Base
         end
       end
       self.record_code = "User:#{self.user.global_id}::*"
+    end
+    true
+  end
+  
+  def delete_user_integration
+    if self.user_integration
+      self.user_integration.destroy
     end
     true
   end

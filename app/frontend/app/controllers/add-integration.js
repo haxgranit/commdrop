@@ -16,6 +16,9 @@ export default modal.ModalController.extend({
       var _this = this;
       _this.set('status', {saving: true});
       var integration = this.get('integration');
+      if(!integration.get('with_button_url')) {
+        integration.set('button_webhook_url', null);
+      }
       var hooks = [];
       integration.save().then(function(res) {
         modal.close({created: true});

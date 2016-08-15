@@ -90,6 +90,7 @@ export default Ember.Controller.extend({
       var _this = this;
       modal.open('confirm-delete-webhook', {user: this.get('model'), webhook: webhook}).then(function(res) {
         if(res && res.deleted) {
+          _this.load_integrations();
           _this.load_webhooks();
         }
       });
@@ -102,6 +103,7 @@ export default Ember.Controller.extend({
       modal.open('add-integration', {user: this.get('model')}).then(function(res) {
         if(res && res.created) {
           _this.load_integrations();
+          _this.load_webhooks();
         }
       });
     },
@@ -110,6 +112,7 @@ export default Ember.Controller.extend({
       modal.open('confirm-delete-integration', {user: this.get('model'), integration: integration}).then(function(res) {
         if(res && res.deleted) {
           _this.load_integrations();
+          _this.load_webhooks();
         }
       });
     }

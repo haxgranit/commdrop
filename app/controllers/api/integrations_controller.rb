@@ -7,6 +7,9 @@ class Api::IntegrationsController < ApplicationController
     return unless allowed?(user, 'supervise')
     # TODO: sharding
     integrations = UserIntegration.where(:user_id => user.id).order('id DESC')
+    if params['for_button']
+      integrations = integrations.where(:for_button => true)
+    end
     render json: JsonApi::Integration.paginate(params, integrations)
   end
   

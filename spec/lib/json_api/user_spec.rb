@@ -591,12 +591,6 @@ describe JsonApi::User do
       end
     end
     
-#       if json['subscription'] && json['subscription']['free_premium']
-#         json['subscription']['limited_supervisor'] = true
-#         json['subscription']['limited_supervisor'] = false if Organization.supervisor?(user)
-#         json['subscription']['limited_supervisor'] = false if supervisees.any?{|u| u.premium? }
-#       end
-
     it "should mark the subscription as limited_supervisor if appropriate" do
       u = User.create
       hash = JsonApi::User.build_json(u, permissions: u)

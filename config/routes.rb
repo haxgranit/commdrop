@@ -77,6 +77,10 @@ Coughdrop::Application.routes.draw do
       cache "/images/google_play.png"
       cache "/images/amazon.png"
       cache "/images/faces.png"
+      cache "/images/clock.png"
+      cache "/images/error.png"
+      cache "/images/check.png"
+      cache "/images/action.png"
       cache "/offline"
       # cache other assets
 
@@ -142,6 +146,7 @@ Coughdrop::Application.routes.draw do
       put 'devices/:device_id' => 'users#rename_device'
       post 'claim_voice' => 'users#claim_voice'
       post 'rename' => 'users#rename'
+      post 'activate_button' => 'users#activate_button'
     end
     
     resources :images do

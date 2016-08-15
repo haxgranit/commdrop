@@ -164,6 +164,43 @@
         </div>
       </div>
     {{/if}}
+  {{else if model.integrationAction}}
+    {{#if supervisees}}
+      <div class="form-group">
+        <label for="for_user_id" class="col-sm-2 control-label">{{t "For" key='for'}}</label>
+        <div class="col-sm-10">
+          {{user-select select_id="for_user_id" users=supervisees selection=model.integration_user_id action=(action (mut model.integration_user_id)) }}
+        </div>
+      </div>
+    {{/if}}
+    <div class="form-group">
+      <label class="col-sm-2 control-label">{{t "Tool" key='tool'}}</label>
+      <div class="col-sm-10">
+        {{#if user_integrations.loading}}
+          <p class='form-control-static'>{{t "Loading tools..." key='loading_tools'}}</p>
+        {{else if user_integrations.error}}
+          <p class='form-control-static'>{{t "Error loading tools" key='error_loading_tools'}}</p>
+        {{else if user_integrations}}
+          {{#each user_integrations as |tool|}}
+            <a href="#" class={{if tool.selected 'active' ''}} {{action 'select_integration' tool}}>
+              {{tool.name}}{{#if tool.selected}}*{{/if}}
+            </a>
+          {{/each}}
+        {{else}}
+          <p class="form-control-static">
+            {{t "No connected tools available" key='no_tools'}}
+          </p>
+        {{/if}}
+      </div>
+    </div>
+    {{#if model.integration}}
+      <div class="form-group">
+        <label for="tool_action" class="col-sm-2 control-label">{{t "Code" key='code'}}</label>
+        <div class="col-sm-10">
+          {{input value=model.integration.action id="tool_action" class="form-control" placeholder="Action code"}}
+        </div>
+      </div>
+    {{/if}}
   {{else}}
     {{#if model.linkAction}}
       <div class="form-group">

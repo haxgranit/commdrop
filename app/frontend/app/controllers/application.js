@@ -11,6 +11,7 @@ import buttonTracker from '../utils/raw_events';
 import capabilities from '../utils/capabilities';
 import speecher from '../utils/speecher';
 import session from '../utils/session';
+import Button from '../utils/button';
 
 export default Ember.Controller.extend({
   board: Ember.inject.controller('board.index'),
@@ -430,6 +431,7 @@ export default Ember.Controller.extend({
       button.url = null;
       button.video = null;
       button.load_board = null;
+      button.user_integration = null;
     }
     if(button.apps) {
       obj.type = 'app';
@@ -554,6 +556,9 @@ export default Ember.Controller.extend({
         }
       }
     } else {
+      if(button.integration) {
+        Button.extra_actions(button);
+      }
       if(app_state.get('speak_mode') && ((!app_state.get('currentUser') && window.user_preferences.any_user.auto_home_return) || app_state.get('currentUser.preferences.auto_home_return'))) {
         if(stashes.get('sticky_board') && app_state.get('speak_mode')) {
           var state = stashes.get('temporary_root_board_state') || stashes.get('root_board_state');

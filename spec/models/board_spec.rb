@@ -1119,4 +1119,62 @@ describe Board, :type => :model do
       expect(res[1]['id']).to eq(b2.global_id)
     end
   end
+  
+  describe "additional_webhook_codes" do
+    it "should return empty list by default" do
+      u = User.create
+      b = Board.create(:user => u)
+      expect(b.additional_webhook_record_codes('asdf', nil)).to eq([])
+      expect(b.additional_webhook_record_codes('button_action', nil)).to eq([])
+      expect(b.additional_webhook_record_codes('something', {'button_id' => 'asdf', 'user_id' => u.global_id})).to eq([])
+      b.settings['buttons'] = [{
+        'id' => '123'
+      }]
+      expect(b.additional_webhook_record_codes('button_action', {'button_id' => '123', 'user_id' => u.global_id})).to eq([])
+    end
+    
+    it "should return the connect user_integration only if allowed" do
+      u = User.create
+      u2 = User.create
+      u3 = User.create
+      b = Board.create(:user => u)
+      ui = UserIntegration.create(:user => u3)
+      b.settings['buttons'] = [{}, {
+        'id' => 'hat',
+        'integration' => {'user_integration_id' => ui.global_id}
+      }]
+      expect(b.additional_webhook_record_codes('button_action', {'button_id' => 'hat', 'user_id' => u.global_id})).to eq([ui.record_code])
+    end
+  end
+  
+  describe "webhook_content" do
+    it "should return nothing by default" do
+      u = User.create
+      b = Board.create(:user => u)
+      expect(b.webhook_content(nil, nil, nil)).to eq("{}")
+      expect(b.webhook_content('button_action', nil, nil)).to eq("{}")
+      expect(b.webhook_content(nil, nil, {'button_id' => '123'})).to eq("{}")
+      expect(b.webhook_content('button_action', nil, {'button_id' => '123', 'user_id' => u.global_id})).to eq("{}")
+      b.settings['buttons'] = [{
+        'id' => '123'
+      }]
+      expect(b.webhook_content('button_action', nil, {'button_id' => '123'})).to eq("{}")
+    end
+    
+    it "should return button action information for a valid, authorized integration button" do
+      u = User.create
+      b = Board.create(:user => u)
+      ui = UserIntegration.create(:user => u)
+      b.settings['buttons'] = [{}, {
+        'id' => '123',
+        'integration' => {'user_integration_id' => ui.global_id}
+      }]
+      str = b.webhook_content('button_action', nil, {'button_id' => '123', 'user_id' => u.global_id})
+      json = JSON.parse(str)
+      expect(json['action']).to eq(nil)
+      expect(json['placement_code']).to_not eq(nil)
+      expect(json['user_code']).to_not eq(nil)
+      expect(json['user_id']).to eq(nil)
+    end
+  end
 end

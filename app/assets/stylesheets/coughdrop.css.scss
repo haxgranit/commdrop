@@ -1012,10 +1012,10 @@ body.pretty_loader #loading_box {
 .hidden_button .action_container .action {
   display: none;
 }
-.button .action_container.folder, .button .action_container.app, .button .action_container.link {
+.button .action_container.folder, .button .action_container.app, .button .action_container.link, .button .action_container.integration {
   visibility: visible;
 }
-.button.link_disabled .action_container.folder, .button.link_disabled .action_container.app, .button.link_disabled .action_container.link {
+.button.link_disabled .action_container.folder, .button.link_disabled .action_container.app, .button.link_disabled .action_container.link, .button.link_disabled .action_container.integration {
   visibility: hidden;
 }
 .board.edit .button .action_container {

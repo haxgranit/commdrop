@@ -5,6 +5,7 @@ import app_state from './app_state';
 import persistence from './persistence';
 import i18n from './i18n';
 import stashes from './_stashes';
+import progress_tracker from './progress_tracker';
 
 var Button = Ember.Object.extend({
   init: function() {
@@ -22,15 +23,20 @@ var Button = Ember.Object.extend({
       this.set('buttonAction', 'link');
     } else if(this.get('apps') != null) {
       this.set('buttonAction', 'app');
+    } else if(this.get('integration') != null) {
+      this.set('buttonAction', 'integration');
     } else {
       this.set('buttonAction', 'talk');
     }
-  }.observes('load_board', 'url', 'apps', 'video', 'link_disabled'),
+  }.observes('load_board', 'url', 'apps', 'integration', 'video', 'link_disabled'),
   talkAction: function() {
     return this.get('buttonAction') == 'talk';
   }.property('buttonAction'),
   folderAction: function() {
     return this.get('buttonAction') == 'folder';
+  }.property('buttonAction'),
+  integrationAction: function() {
+    return this.get('buttonAction') == 'integration';
   }.property('buttonAction'),
   action_image: function() {
     var path = Ember.templateHelpers.path;
@@ -40,6 +46,17 @@ var Button = Ember.Object.extend({
         return path('images/folder_home.png');
       } else {
         return path('images/folder.png');
+      }
+    } else if(action == 'integration') {
+      var state = this.get('action_status') || {};
+      if(state.pending) {
+        return path('images/clock.png');
+      } else if(state.errored) {
+        return path('images/error.png');
+      } else if(state.completed) {
+        return path('images/check.png');
+      } else {
+        return path('images/action.png');
       }
     } else if(action == 'talk') {
       return path('images/talk.png');
@@ -54,7 +71,7 @@ var Button = Ember.Object.extend({
     } else {
       return path('images/unknown_action.png');
     }
-  }.property('buttonAction', 'video.popup', 'home_lock'),
+  }.property('buttonAction', 'video.popup', 'home_lock', 'action_status', 'action_status.pending', 'action_status.errored', 'action_status.completed'),
   action_alt: function() {
     var path = Ember.templateHelpers.path;
     var action = this.get('buttonAction');
@@ -363,6 +380,87 @@ Button.broken_image = function(image) {
     }, function() { });
   }
 };
+
+Button.extra_actions = function(button) {
+  if(button && button.integration) {
+    var user_id = app_state.get('currentUser.id');
+    var board_id = app_state.get('currentBoardState.id');
+    if(user_id && board_id) {
+      var action_state_id = Math.random();
+      var update_state = function(obj) {
+       if(!button.get('action_status') || button.get('action_status.state') == action_state_id) {
+          if(obj) {
+            obj.state = action_state_id;
+          }
+          button.set('action_status', obj);
+          if(obj && (obj.errored || obj.completed)) {
+            Ember.run.later(function() {
+              update_state(null);
+            }, 10000);
+          }
+       }
+      };
+      if(!persistence.get('online')) {
+        console.log("button failed because offline");
+        update_state({errored: true});
+      } else {
+        update_state(null);
+        update_state({pending: true});
+        Ember.run.later(function() {
+          persistence.ajax('/api/v1/users/' + user_id + '/activate_button', {
+            type: 'POST',
+            data: {
+              board_id: board_id,
+              button_id: button.get('id'),
+              associated_user_id: app_state.get('referenced_speak_mode_user.id')
+            }
+          }).then(function(res) {
+            if(!res.progress) {
+              console.log("button failed because didn't get a progress object");
+              update_state({errored: true});
+            } else {
+              progress_tracker.track(res.progress, function(event) {
+                if(event.status == 'errored') {
+                  console.log("button failed because of progress result error");
+                  update_state({errored: true});
+                } else if(event.status == 'finished') {
+                  if(event.result && event.result.length > 0) {
+                    var all_valid = true;
+                    var any_code = false;
+                    event.result.forEach(function(result) {
+                      if(result && result.response_code) {
+                        any_code = true;
+                        if(result.response_code < 200 || result.response_code >= 300) {
+                          all_valid = false;
+                        }
+                      }
+                    });
+                    if(!all_valid) {
+                      console.log("button failed with error response from notification");
+                      update_state({errored: true});
+                    } else if(!any_code) {
+                      console.log("button failed with no webhook responses recorded");
+                      update_state({errored: true});
+                    } else {
+                      update_state({completed: true});
+                    }
+                  } else {
+                    console.log("button failed with notification failure");
+                    update_state({errored: true});
+                  }
+                }
+              }, {success_wait: 500, error_wait: 1000});
+            }
+          }, function(err) {
+            console.log("button failed because of ajax error");
+            update_state({errored: true});
+          });
+        });
+      }
+    }
+  }
+};
+
 window.button_broken_image = Button.broken_image;
 
 export default Button;

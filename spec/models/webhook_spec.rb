@@ -49,8 +49,8 @@ describe Webhook, :type => :model do
     it "should find all associated webhooks and call notify" do
       hook1 = {id: '1234'}
       hook2 = {id: '2345'}
-      expect(hook1).to receive(:notify).with('bacon', nil).and_return([])
-      expect(hook2).to receive(:notify).with('bacon', nil).and_return([])
+      expect(hook1).to receive(:notify).with('bacon', nil, nil).and_return([])
+      expect(hook2).to receive(:notify).with('bacon', nil, nil).and_return([])
       expect(Webhook).to receive(:where).with(:record_code => 'OpenStruct:abcdefg').and_return([hook1, hook2])
       expect(OpenStruct).to receive(:find_by).with(:id => 'abcdefg').and_return(nil)
       r = OpenStruct.new(:id => "abcdefg")
@@ -127,9 +127,9 @@ describe Webhook, :type => :model do
       w1 = Webhook.new
       w2 = Webhook.new
       expect(Webhook).to receive(:find_record).with('r').and_return(r)
-      expect(w1).to receive(:notify).with('bacon', r).and_return([{'ok' => true}])
-      expect(w2).to receive(:notify).with('bacon', r).and_return([{'ok' => false}])
-      expect(Webhook).to receive(:for_record).with('bacon', 'r', r).and_return([w1, w2])
+      expect(w1).to receive(:notify).with('bacon', r, {'a' => 1}).and_return([{'ok' => true}])
+      expect(w2).to receive(:notify).with('bacon', r, {'a' => 1}).and_return([{'ok' => false}])
+      expect(Webhook).to receive(:for_record).with('bacon', 'r', r, {'a' => 1}).and_return([w1, w2])
       res = Webhook.notify_all_with_code('r', 'bacon', {'a' => 1})
       expect(res).to eq([
         {'ok' => true},
@@ -143,7 +143,7 @@ describe Webhook, :type => :model do
       h = Webhook.create(:record_code => 'asdf')
       h2 = Webhook.create(:record_code => 'asdf2')
       h3 = Webhook.create(:record_code => 'asdf')
-      res = Webhook.for_record('something', 'asdf', nil)
+      res = Webhook.for_record('something', 'asdf', nil, {})
       expect(res.length).to eq(2)
       expect(res).to be_include(h)
       expect(res).to be_include(h3)
@@ -156,7 +156,7 @@ describe Webhook, :type => :model do
       h3 = Webhook.create(:record_code => 'wert')
       r = User.new
       expect(r).to receive(:additional_webhook_record_codes).and_return(['jkl', 'jkl', 'wert'])
-      res = Webhook.for_record('something', 'asdf', r)
+      res = Webhook.for_record('something', 'asdf', r, {})
       expect(res.length).to eq(3)
       expect(res).to be_include(h)
       expect(res).to be_include(h2)
@@ -181,7 +181,7 @@ describe Webhook, :type => :model do
         expect(url).to eq('http://www.example.com/ping')
         expect(args[:body][:token]).to eq(token)
       }.and_return(OpenStruct.new(code: 200))
-      w.notify('swinging', w)
+      w.notify('swinging', w, {})
     end
     
     it "should handle internal service callbacks as well" do
@@ -190,7 +190,7 @@ describe Webhook, :type => :model do
       w = Webhook.last
       expect(Typhoeus).not_to receive(:post)
       expect(w).to receive(:internal_notify).with('push_notification', 'swinging')
-      w.notify('swinging', w)
+      w.notify('swinging', w, {})
     end
 
     it "should post information to all matching webhooks" do 
@@ -217,7 +217,7 @@ describe Webhook, :type => :model do
       expect(Typhoeus).to receive(:post).with('http://www.example.com/2', body: {token: token, notification: 'friend', record: h.record_code}).and_return(res)
       expect(Typhoeus).to receive(:post).with('http://www.example.com/4', body: {token: token, notification: 'friend', record: h.record_code}).and_return(res)
       expect(Typhoeus).to_not receive(:post).with('http://www.example.com/3', body: {token: token, notification: 'friend', record: h.record_code})
-      res = h.notify('friend', h)
+      res = h.notify('friend', h, {})
       expect(res.length).to eq(3)
       expect(res[0]).to eq({:url => 'http://www.example.com/4', :response_code => 200, :response_body => 'asdf'})
       expect(res[1]).to eq({:url => 'http://www.example.com/1', :response_code => 200, :response_body => 'asdf'})
@@ -249,8 +249,8 @@ describe Webhook, :type => :model do
       
       token = 'abcdefg'
       res = OpenStruct.new
-      expect(Typhoeus).to receive(:post).with('http://www.example.com/3', body: {token: token, notification: 'bacon', record: h.record_code, content: h.webhook_content(nil)}).and_return(res)
-      h.notify('bacon', h)
+      expect(Typhoeus).to receive(:post).with('http://www.example.com/3', body: {token: token, notification: 'bacon', record: h.record_code, content: h.webhook_content(nil, nil, nil)}).and_return(res)
+      h.notify('bacon', h, {})
     end
     
     it "should include api_url if defined" do
@@ -268,7 +268,7 @@ describe Webhook, :type => :model do
       token = 'abcdefg'
       res = OpenStruct.new
       expect(Typhoeus).to receive(:post).with('http://www.example.com/4', body: {token: token, notification: 'friend', record: h.record_code, url: "http://www.example.com/record/1"}).and_return(res)
-      h.notify('friend', h)
+      h.notify('friend', h, {})
     end
     
     it "should run all listeners for a test notification" do
@@ -294,8 +294,8 @@ describe Webhook, :type => :model do
       expect(Typhoeus).to receive(:post).with('http://www.example.com/1', body: {token: token, notification: 'test', record: h.record_code}).and_return(res)
       expect(Typhoeus).to receive(:post).with('http://www.example.com/2', body: {token: token, notification: 'test', record: h.record_code}).and_return(res)
       expect(Typhoeus).to receive(:post).with('http://www.example.com/4', body: {token: token, notification: 'test', record: h.record_code}).and_return(res)
-      expect(Typhoeus).to receive(:post).with('http://www.example.com/3', body: {token: token, notification: 'test', record: h.record_code, content: h.webhook_content(nil)}).and_return(res)
-      h.notify('test', h)
+      expect(Typhoeus).to receive(:post).with('http://www.example.com/3', body: {token: token, notification: 'test', record: h.record_code, content: h.webhook_content(nil, nil, nil)}).and_return(res)
+      h.notify('test', h, {})
     end
   end
   
@@ -376,6 +376,18 @@ describe Webhook, :type => :model do
       h = Webhook.create
       expect(h.settings).to_not eq(nil)
       expect(h.settings['callback_token']).to_not eq(nil)
+    end
+  end
+  
+  describe "delete_user_integration" do
+    it "should delete the user integration on destroy" do
+      u = User.create
+      ui = UserIntegration.create(:user => u)
+      wh = Webhook.create(:user_integration => ui)
+      expect(ui.id).to_not eq(nil)
+      expect(wh.user_integration_id).to eq(ui.id)
+      wh.destroy
+      expect(UserIntegration.find_by(:id => ui.id)).to eq(nil)
     end
   end
 end

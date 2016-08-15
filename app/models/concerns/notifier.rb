@@ -9,7 +9,11 @@ module Notifier
   # TODO: while linked to a user, auto-register linker
   
   def notify(notification_type, additional_args=nil)
-    Worker.schedule(Webhook, :notify_all_with_code, self.record_code, notification_type, additional_args)
+    if additional_args && additional_args['immediate']
+      Webhook.notify_all_with_code(self.record_code, notification_type, additional_args)
+    else
+      Worker.schedule(Webhook, :notify_all_with_code, self.record_code, notification_type, additional_args)
+    end
   end
   
   def default_listeners(notification_type)

@@ -1735,6 +1735,74 @@ describe('editManager', function() {
         home_lock: false
       });
     });
+
+//           if(currentButton.get('buttonAction') == 'talk') {
+//             delete newButton['load_board'];
+//             delete newButton['apps'];
+//             delete newButton['url'];
+//             delete newButton['integration'];
+//           } else if(currentButton.get('buttonAction') == 'link') {
+//             delete newButton['load_board'];
+//             delete newButton['apps'];
+//             delete newButton['integration'];
+//             newButton.url = currentButton.get('fixed_url');
+//             if(currentButton.get('video')) {
+//               newButton.video = currentButton.get('video');
+//             }
+//           } else if(currentButton.get('buttonAction') == 'app') {
+//             delete newButton['load_board'];
+//             delete newButton['url'];
+//             delete newButton['integration'];
+//             newButton.apps = currentButton.get('apps');
+//             if(newButton.apps.web && newButton.apps.web.launch_url) {
+//               newButton.apps.web.launch_url = currentButton.get('fixed_app_url');
+//             }
+//           } else if(currentButton.get('buttonAction') == 'integration') {
+//             delete newButton['load_board'];
+//             delete newButton['apps'];
+//             delete newButton['url'];
+//             newButton.integration = currentButton.get('integration');
+//           } else {
+//             delete newButton['url'];
+//             delete newButton['apps'];
+//             delete newButton['integration'];
+//             newButton.load_board = currentButton.load_board;
+//           }
+    it("should handle integration buttons", function() {
+      editManager.setup(board);
+      var button = Button.create({
+        label: 'okay hat',
+        vocalization: 'hat',
+        integration: {okay: true},
+        background_color: 'mahogany',
+        border_color: '#88aabbff',
+        id: 245
+      });
+      var button2 = editManager.fake_button();
+      var button3 = editManager.fake_button();
+      var button4 = editManager.fake_button();
+      board.set('ordered_buttons', [[button, button2],[button3, button4]]);
+      board.set('model.buttons', []);
+      var state = editManager.process_for_saving();
+
+      expect(state.buttons.length).toEqual(1);
+      expect(state.grid).toEqual({
+        rows: 2,
+        columns: 2,
+        order: [[1, null],[null, null]]
+      });
+      expect(state.buttons[0]).toEqual({
+        id: 1,
+        label: 'okay hat',
+        integration: {okay: true},
+        vocalization: 'hat',
+        link_disabled: false,
+        border_color: 'rgba(170, 187, 255, 0.53)',
+        hidden: false,
+        add_to_vocalization: false,
+        home_lock: false
+      });
+    });
   });
 
   describe("process_for_displaying", function() {

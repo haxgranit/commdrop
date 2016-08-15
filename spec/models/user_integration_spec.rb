@@ -69,6 +69,61 @@ describe UserIntegration, :type => :model do
       ui.assert_webhooks
       expect(Worker.scheduled?(UserIntegration, 'perform_action', {'id' => ui.id, 'method' => 'assert_webhooks', 'arguments' => [true]})).to eq(true)
     end
+
+    it "should install button action wehooks" do
+      u = User.create
+      ui = UserIntegration.create(:user => u, :settings => {
+        'button_webhook_url' => 'http://www.example.com'
+      })
+      ui.assert_webhooks(true)
+      expect(ui.settings['button_webhook_id']).to_not eq(nil)
+      wh = Webhook.find_by_path(ui.settings['button_webhook_id'])
+      expect(wh).to_not eq(nil)
+      expect(wh.record_code).to eq(ui.record_code)
+      expect(wh.user_id).to eq(ui.user_id)
+      expect(wh.settings['notifications']).to eq({'button_action' => [
+        {
+          'callback' => 'http://www.example.com',
+          'include_content' => true,
+          'content_type' => 'button'
+        }
+      ]})
+      ui.settings
+    end
+    
+    it "should not install button action webhook if already installed" do
+      u = User.create
+      wh = Webhook.create
+      ui = UserIntegration.create(:user => u, :settings => {
+        'button_webhook_url' => 'http://www.example.com',
+        'button_webhook_id' => wh.global_id
+      })
+      ui.assert_webhooks(true)
+      expect(ui.settings['button_webhook_id']).to_not eq(nil)
+      wh = Webhook.find_by_path(ui.settings['button_webhook_id'])
+      expect(wh).to_not eq(nil)
+      expect(wh.record_code).to eq(ui.record_code)
+      expect(wh.user_id).to eq(ui.user_id)
+      expect(wh.settings['notifications']).to eq({'button_action' => [
+        {
+          'callback' => 'http://www.example.com',
+          'include_content' => true,
+          'content_type' => 'button'
+        }
+      ]})
+      ui.settings
+    end
+    
+    it "should do nothing if the webhook was manually deleted" do
+      u = User.create
+      ui = UserIntegration.create(:user => u, :settings => {
+        'button_webhook_url' => 'http://www.example.com',
+        'button_webhook_id' => 'abcd'
+      })
+      ui.assert_webhooks(true)
+      expect(ui.settings['button_webhook_id']).to eq('abcd')
+      expect(Webhook.count).to eq(0)
+    end
   end 
   
   describe "process_params" do
@@ -127,4 +182,32 @@ describe UserIntegration, :type => :model do
       expect(device.settings['disabled']).to eq(true)
     end
   end 
+
+  describe "placement_code" do
+    it "should generate correct values" do
+      u = User.create
+      ui = UserIntegration.create
+      expect { ui.placement_code() }.to raise_error("needs at least one arg")
+      expect { ui.placement_code("asdf", 5) }.to raise_error("strings only")
+      expect(ui.settings['static_token']).to_not eq(nil)
+      expect(ui.placement_code("asdf")).to eq(Security.sha512("asdf,#{ui.settings['static_token']}", 'user integration placement code'))
+      expect(ui.placement_code("asdf", 'jkl')).to eq(Security.sha512("asdf,jkl,#{ui.settings['static_token']}", 'user integration placement code'))
+      expect(ui.placement_code("asdf", 'bob', 'fred', 'ok')).to eq(Security.sha512("asdf,bob,fred,ok,#{ui.settings['static_token']}", 'user integration placement code'))
+    end
+  end
+  
+  describe "delete_webhooks" do
+    it "should delete related webhooks on destroy" do
+      u = User.create
+      ui = UserIntegration.create(:user => u)
+      wh1 = Webhook.create(:user_integration => ui)
+      wh2 = Webhook.create(:user_integration => ui)
+      wh3 = Webhook.create
+      expect(wh1.user_integration_id).to eq(ui.id)
+      ui.destroy
+      expect(Webhook.find_by(:id => wh1.id)).to eq(nil)
+      expect(Webhook.find_by(:id => wh2.id)).to eq(nil)
+      expect(Webhook.find_by(:id => wh3.id)).to eq(wh3)
+    end
+  end
 end

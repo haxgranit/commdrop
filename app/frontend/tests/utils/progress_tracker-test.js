@@ -11,7 +11,7 @@ describe('progress_tracker', function() {
     progress_tracker.success_wait = 1;
     progress_tracker.error_wait = 1;
   });
-  
+
   afterEach(function() {
     progress_tracker.success_wait = old_success_wait;
     progress_tracker.error_wait = old_error_wait;
@@ -27,7 +27,7 @@ describe('progress_tracker', function() {
       expect(called).toEqual(true);
     });
   });
-  
+
   describe("check", function() {
     it("should make a progress check call", function() {
       var called = false;
@@ -160,7 +160,7 @@ describe('progress_tracker', function() {
       });
     });
   });
-  
+
   describe("status_text", function() {
     it("should return correct text for each status", function() {
       expect(progress_tracker.status_text("pending")).toEqual("Initializing...");
@@ -172,6 +172,49 @@ describe('progress_tracker', function() {
       expect(progress_tracker.status_text("started", "generating_files")).toEqual("Generating file(s)...");
       expect(progress_tracker.status_text("started", "converting_files")).toEqual("Converting file(s)");
       expect(progress_tracker.status_text("started", "uploading_files")).toEqual("Finalizing file(s)");
+    });
+  });
+
+  it("should allow overriding timing with options", function() {
+    var attempt = 0;
+    stub(persistence, 'ajax', function(url, opts) {
+      if(url == 'abc') {
+        attempt++;
+        if(attempt == 1) {
+          return Ember.RSVP.reject('asdf');
+        } else if(attempt == 2) {
+          return Ember.RSVP.resolve({
+            progress: {
+            }
+          });
+        } else {
+          return Ember.RSVP.resolve({
+            progress: {
+              finished_at: 123,
+              status: 'finished'
+            }
+          });
+        }
+      }
+    });
+    var laters = 0;
+    stub(progress_tracker, 'run_later', function(_this, cb, delay) {
+      laters++;
+      if(attempt == 1) {
+        expect(delay).toEqual(234);
+      } else if(attempt == 2) {
+        expect(delay).toEqual(123);
+      } else {
+        expect(delay).toEqual(500);
+      }
+      cb.call(_this);
+    });
+    progress_tracker.track_ids = {'456': true};
+    progress_tracker.check('abc', function(event) {
+    }, 0, '456', {success_wait: 123, error_wait: 234});
+    waitsFor(function() { return attempt > 2; });
+    runs(function() {
+      expect(laters).toEqual(2);
     });
   });
 });
