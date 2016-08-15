@@ -193,7 +193,9 @@ export default Ember.Controller.extend({
         var org = this.store.createRecord('organization');
         org.set('name', this.get('org_org_name'));
         org.save().then(function() {
-          org.set('management_action', 'add_manager-' + user_name);
+          if(user_name) {
+            org.set('management_action', 'add_manager-' + user_name);
+          }
           org.save().then(function() {
             _this.refresh_orgs();
           }, function(err) {
