@@ -31,6 +31,9 @@ export default Ember.Route.extend({
     if(CoughDrop.embedded && !app_state.get('speak_mode')) {
       var state = app_state.get('currentBoardState');
       app_state.toggle_mode('speak', {override_state: state});
+      if(app_state.get('currentUser.preferences.home_board')) {
+        app_state.toggle_home_lock(true);
+      }
       stashes.persist('root_board_state', state);
     }
     editManager.setup(controller);
