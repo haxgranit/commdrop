@@ -3,8 +3,10 @@ module UpstreamDownstream
   
   def track_downstream_boards!(already_visited_ids=[], buttons_changed=false)
     @track_downstream_boards = true
+    Rails.logger.info('touching downstreams')
     self.touch_downstreams(already_visited_ids)
     self.track_downstream_boards(already_visited_ids, buttons_changed)
+    Rails.logger.info('touching downstreams again')
     self.touch_downstreams(already_visited_ids)
     @track_downstream_boards = false
     true
@@ -17,6 +19,7 @@ module UpstreamDownstream
 
     top_board = self
     # step 1: travel downstream, for every board id get its immediate children
+    Rails.logger.info('getting all children')
     boards_with_children = {}
     board_edit_stats = {}
     unfound_boards = ["self"]
@@ -48,6 +51,7 @@ module UpstreamDownstream
     
     
     # step 2: the complete downstream list is a collection of all these ids
+    Rails.logger.info('generating stats and revision keys')
     downs = []
     boards_with_children.each do |id, children|
       downs += children
@@ -84,6 +88,7 @@ module UpstreamDownstream
     self.settings['downstream_board_ids'] = downs
 
     # step 3: notify upstream if there was a change
+    Rails.logger.info('saving if changed')
     if changed || buttons_changed || downstream_buttons_changed || downstream_boards_changed
       @track_downstream_boards = false
       self.save_without_post_processing
@@ -91,11 +96,13 @@ module UpstreamDownstream
     end
     
     # step 4: update any authors whose list of visible/editable private boards may have changed
+    Rails.logger.info('scheduling downstream update')
     if !@skip_update_available_boards
       self.schedule_update_available_boards('downstream')
     end
     @skip_update_available_boards = false
     
+    Rails.logger.info('done tracking!')
     true
   end
   
@@ -228,11 +235,20 @@ module UpstreamDownstream
       if triggers
         triggers.each do |trigger|
           if trigger['type'] == 'update_button_set' && trigger['id']
-            BoardDownstreamButtonSet.update_for(trigger['id'])
+            Worker.schedule_for(:slow, BoardDownstreamButtonSet, :perform_action, {
+              'method' => 'update_for',
+              'arguments' => [trigger['id']]
+            })
+#            BoardDownstreamButtonSet.update_for(trigger['id'])
           elsif trigger['type'] == 'update_available_boards' && trigger['id']
             user = User.find_by_path(trigger['id'])
             if user
-              user.schedule_update_available_boards(trigger['breadth'], true)
+#              user.schedule_update_available_boards(trigger['breadth'], true)
+              Worker.schedule_for(:slow, User, :perform_action, {
+                'id' => user.id,
+                'method' => 'schedule_update_available_boards',
+                'arguments' => [trigger['breadth'], true]
+              })
             end
           end
         end

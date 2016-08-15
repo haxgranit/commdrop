@@ -10,7 +10,7 @@ class ClusterLocation < ActiveRecord::Base
   include Async
   include SecureSerialize
   belongs_to :user
-  before_save :generate_stats
+  after_save :generate_stats
   has_many :ip_sessions, :class_name => 'LogSession', :foreign_key => 'ip_cluster_id'
   has_many :geo_sessions, :class_name => 'LogSession', :foreign_key => 'geo_cluster_id'
   replicated_model  
@@ -39,7 +39,13 @@ class ClusterLocation < ActiveRecord::Base
     self.cluster_type == 'ip_address'
   end
   
-  def generate_stats
+  def generate_stats(frd=false)
+    return if @already_generating_stats
+    @already_generating_stats = true
+    if !frd
+      schedule(:generate_stats, true)
+      return true
+    end
     self.data ||= {}
     self.cluster_type ||= 'ip_address'
     if self.user_id && self.ip_address? && self.data['ip_address']
@@ -60,27 +66,29 @@ class ClusterLocation < ActiveRecord::Base
     board_counts = {}
     total_events = 0
     geos = []
-    sessions.each do |session|
-      if session.data['stats']
-        total_utterances += session.data['stats']['utterances']
-        session.data['stats']['all_button_counts'].each do |ref, button|
-          if button_counts[ref]
-            button_counts[ref]['count'] += button['count']
-          else
-            button_counts[ref] = button.merge({})
+    sessions.find_in_batches(batch_size: 30) do |batch|
+      batch.each do |session|
+        if session.data['stats']
+          total_utterances += session.data['stats']['utterances']
+          session.data['stats']['all_button_counts'].each do |ref, button|
+            if button_counts[ref]
+              button_counts[ref]['count'] += button['count']
+            else
+              button_counts[ref] = button.merge({})
+            end
+          end
+          session.data['stats']['all_board_counts'].each do |ref, board|
+            if board_counts[ref]
+              board_counts[ref]['count'] += board['count']
+            else
+              board_counts[ref] = board.merge({})
+            end
           end
         end
-        session.data['stats']['all_board_counts'].each do |ref, board|
-          if board_counts[ref]
-            board_counts[ref]['count'] += board['count']
-          else
-            board_counts[ref] = board.merge({})
+        if self.geo?
+          if session.data['geo']
+            geos << session.data['geo']
           end
-        end
-      end
-      if self.geo?
-        if session.data['geo']
-          geos << session.data['geo']
         end
       end
     end
@@ -92,6 +100,7 @@ class ClusterLocation < ActiveRecord::Base
     self.data['total_utterances'] = total_utterances
     self.data['total_buttons'] = button_counts.map{|k, v| v['count'] }.sum
     self.data['total_boards'] = board_counts.map{|k, v| v['count'] }.sum
+    self.save
   end
   
   def name_suggestions
@@ -200,7 +209,7 @@ class ClusterLocation < ActiveRecord::Base
     non_geos = []
     # TODO: memory issues from collecting too many logs, so limiting to only the last month
     # and adding find_in_batches. That probably won't be enough to completely fix the problem.
-    user.log_sessions.where(:geo_cluster_id => nil).where(['started_at > ?', clusterize_cutoff]).find_in_batches(batch_size: 100) do |batch|
+    user.log_sessions.where(:geo_cluster_id => nil).where(['started_at > ?', clusterize_cutoff]).find_in_batches(batch_size: 30) do |batch|
       non_geos += batch.select{|s| s.data['geo'] }
     end
     Rails.logger.info("geos to clusterize: #{non_geos.length}")
@@ -247,7 +256,7 @@ class ClusterLocation < ActiveRecord::Base
     # ip addresses just cluster based on exact match. Easy peasy.
     ips = {}
     non_ips = []
-    user.log_sessions.where(:ip_cluster_id => nil).where(['started_at > ?', clusterize_cutoff]).find_in_batches(batch_size: 100) do |batch|
+    user.log_sessions.where(:ip_cluster_id => nil).where(['started_at > ?', clusterize_cutoff]).find_in_batches(batch_size: 30) do |batch|
       non_ips += batch.select{|s| s.data['ip_address'] }
     end
     Rails.logger.info("ips to clusterize: #{non_ips.length}")

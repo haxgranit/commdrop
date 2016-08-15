@@ -26,6 +26,7 @@ describe ClusterLocation, :type => :model do
       ClusterLocation.clusterize_ips(u.global_id)
       ClusterLocation.clusterize_geos(u.global_id)
       expect(ClusterLocation.count).to eq(2)
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
       c1 = ClusterLocation.where(:cluster_type => 'geo').first
       expect(c1.cluster_type).to eq('geo')
       expect(c1.data['geo']).to eq([13.0001, 12.0001, 0])
@@ -49,6 +50,7 @@ describe ClusterLocation, :type => :model do
       ClusterLocation.clusterize_ips(u.global_id)
       ClusterLocation.clusterize_geos(u.global_id)
       expect(ClusterLocation.count).to eq(1)
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
       c1 = ClusterLocation.last
       expect(c1.cluster_type).to eq('ip_address')
       expect(c1.data['ip_address']).to eq('0000:0000:0000:0000:0000:ffff:0102:0304')
@@ -67,6 +69,7 @@ describe ClusterLocation, :type => :model do
       ClusterLocation.clusterize_ips(u.global_id)
       ClusterLocation.clusterize_geos(u.global_id)
       expect(ClusterLocation.count).to eq(1)
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
       c1 = ClusterLocation.last
       expect(c1.cluster_type).to eq('ip_address')
     end
@@ -87,6 +90,7 @@ describe ClusterLocation, :type => :model do
       ClusterLocation.clusterize_ips(u.global_id)
       ClusterLocation.clusterize_geos(u.global_id)
       expect(ClusterLocation.count).to eq(5)
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
       ips = ClusterLocation.all.select{|c| c.ip_address? }
       expect(ips.length).to eq(3)
       ips = ips.sort_by{|i| i.data['ip_address'] }
@@ -113,6 +117,7 @@ describe ClusterLocation, :type => :model do
       ClusterLocation.clusterize_ips(u.global_id)
       ClusterLocation.clusterize_geos(u.global_id)
       expect(ClusterLocation.count).to eq(2)
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
       c1 = ClusterLocation.first
       expect(c1.cluster_type).to eq('geo')
       expect(c1.data['geo']).to eq([13.0001, 12.0001, 0])
@@ -152,6 +157,7 @@ describe ClusterLocation, :type => :model do
       s1 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13', '12']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       ClusterLocation.add_to_cluster(s1.global_id)
       expect(s1.reload.geo_cluster_id).to eq(c1.id)
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
       c1.reload
       expect(c1.data['geo']).to eq([13.0, 12.0, 0.0])
     end
@@ -184,7 +190,8 @@ describe ClusterLocation, :type => :model do
       s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'type' => 'button', 'button' => {'button_id' => '1', 'label' => 'hat', 'board' => {'id' => '1_1'}}, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2.geo_cluster_id = c.id
       s2.save
-      c.reload.generate_stats
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
+      c.reload
       expect(c.data['total_utterances']).to eq(1)
       expect(c.data['total_buttons']).to eq(1)
       expect(c.data['total_boards']).to eq(1)
@@ -200,7 +207,8 @@ describe ClusterLocation, :type => :model do
       s2 = LogSession.process_new({'events' => [{'timestamp' => Time.now.to_i, 'geo' => ['13.0001', '12.0001']}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2.geo_cluster_id = c.id
       s2.save
-      c.reload.generate_stats
+      ClusterLocation.all.each{|c| c.generate_stats(true) }
+      c.reload
       expect(c.data['geo']).to eq([13.00005, 12.00005, 0.0])
     end
   end
