@@ -432,7 +432,7 @@ var buttonTracker = Ember.Object.extend({
       event.preventDefault();
       var ts = (new Date()).getTime();
 
-      if(event.type != 'gazelinger') {
+      if(event.type != 'gazelinger' && !event.dwell_linger) {
         // Use start, end or average pointer location for selection
         buttonTracker.activation_location = buttonTracker.activation_location || window.user_preferences.any_user.activation_location;
         if(buttonTracker.activation_location == 'start') {
@@ -636,6 +636,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.last_dwell_linger.events.push(event);
       // trigger selection if dwell has been for long enough
       if(now - buttonTracker.last_dwell_linger.started > buttonTracker.dwell_timeout) {
+        event.dwell_linger = true;
         buttonTracker.element_release(buttonTracker.last_dwell_linger, event);
         buttonTracker.last_dwell_linger = null;
         if(buttonTracker.dwell_delay) {
