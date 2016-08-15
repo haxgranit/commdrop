@@ -913,16 +913,26 @@ body.pretty_loader #loading_box {
   vertical-align: top;
   white-space: nowrap;
 }
-.board.text_huge .button .button-label {
-  font-size: 35px;
-  height: 35px;
+.board.text_huge .button {
+  .button-label-holder.top {
+    top: -10px;
+  }
+  .button-label {
+    font-size: 35px;
+    height: 35px;
+  }
 }
 .board.text_huge .button input.button-label {
   height: 42px;
 }
-.board.text_large .button .button-label {
-  font-size: 25px;
-  height: 25px;
+.board.text_large .button {
+  .button-label-holder.top {
+    top: -7px;
+  }
+  .button-label {
+    font-size: 25px;
+    height: 25px;
+  }
 }
 .board.text_large .button input.button-label {
   height: 33px;

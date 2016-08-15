@@ -24,7 +24,6 @@ export default Ember.Controller.extend({
     {name: i18n.t('huge', "Huge (10px)"), id: "huge"}
   ],
   buttonTextList: [
-    {name: i18n.t('none', "None"), id: "none"},
     {name: i18n.t('small', "Small (14px)"), id: "small"},
     {name: i18n.t('medium', "Medium (18px)"), id: "medium"},
     {name: i18n.t('large', "Large (22px)"), id: "large"},
