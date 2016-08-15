@@ -19,4 +19,28 @@ describe Setting, :type => :model do
     end
   end
   
+  describe "blocked emails" do
+    it "should remember blocked emails" do
+      expect(Setting.get('blocked_emails')).to eq(nil)
+      Setting.block_email!('Bob@Yahoo.COM')
+      expect(Setting.get('blocked_emails')).to eq({'bob@yahoo.com' => true})
+      Setting.block_email!('Sue@Hotmail.com')
+      expect(Setting.get('blocked_emails')).to eq({'bob@yahoo.com' => true, 'sue@hotmail.com' => true})
+      Setting.block_email!('sue@hotmail.com')
+      expect(Setting.get('blocked_emails')).to eq({'bob@yahoo.com' => true, 'sue@hotmail.com' => true})
+    end
+    
+    it "should return correct values for blocked_email?" do
+      expect(Setting.blocked_email?('bob@yahoo.com')).to eq(false)
+      Setting.block_email!('BOB@yahoo.com')
+      expect(Setting.blocked_email?('bob@yahoo.COM')).to eq(true)
+      expect(Setting.blocked_email?('bob@yahoo.com')).to eq(true)
+      expect(Setting.blocked_email?('suE@hoTmAiL.com')).to eq(false)
+      Setting.block_email!('sue@HOTmail.com')
+      expect(Setting.blocked_email?('bob@yahoo.COM')).to eq(true)
+      expect(Setting.blocked_email?('bob@yahoo.com')).to eq(true)
+      expect(Setting.blocked_email?('suE@hoTmAiL.com')).to eq(true)
+      expect(Setting.blocked_email?('fido@juno.com')).to eq(false)
+    end
+  end
 end

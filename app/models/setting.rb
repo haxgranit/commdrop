@@ -1,4 +1,7 @@
 class Setting < ActiveRecord::Base
+  include SecureSerialize
+  secure_serialize :data
+
   replicated_model  
 
   def self.set(key, value)
@@ -10,6 +13,20 @@ class Setting < ActiveRecord::Base
   
   def self.get(key)
     setting = self.find_by(:key => key)
-    setting && setting.value
+    setting && (setting.data || setting.value)
+  end
+  
+  def self.blocked_email?(email)
+    email = email.downcase
+    hash = self.get('blocked_emails') || {}
+    hash[email] == true
+  end
+  
+  def self.block_email!(email)
+    email = email.downcase
+    setting = self.find_or_create_by(:key => 'blocked_emails')
+    setting.data ||= {}
+    setting.data[email] = true
+    setting.save!
   end
 end

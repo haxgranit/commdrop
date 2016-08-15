@@ -1312,4 +1312,14 @@ describe User, :type => :model do
       end
     end
   end
+  
+  describe "blocked email" do
+    it "should not allow setting email to a blocked address" do
+      Setting.block_email!('bob@yahoo.com')
+      u = User.process_new({'email' => 'Bob@yahoo.com'})
+      expect(u.id).to eq(nil)
+      expect(u.errored?).to eq(true)
+      expect(u.processing_errors).to eq(['blocked email address'])
+    end
+  end
 end

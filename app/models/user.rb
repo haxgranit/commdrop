@@ -414,6 +414,10 @@ class User < ActiveRecord::Base
         self.settings['old_emails'] << self.settings['email']
         @email_changed = true
       end
+      if Setting.blocked_email?(params['email'])
+        add_processing_error("blocked email address")
+        return false
+      end
       self.settings['email'] = params['email']
     end
     self.settings['referrer'] ||= params['referrer'] if params['referrer']
