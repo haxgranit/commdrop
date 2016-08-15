@@ -108,5 +108,30 @@ var BoardHierarchy = Ember.Object.extend({
     });
   }
 });
+BoardHierarchy.load_with_button_set = function(board) {
+  var reload_board = board.reload().then(null, function() {
+  }, function(err) {
+    return Ember.RSVP.reject(i18n.t('loading_board_failed', "Failed loading board for copying"));
+  });
+
+  var downstream = reload_board.then(function() {
+    if(board.get('downstream_boards') > 0) {
+      return board.load_button_set();
+    } else {
+      return Ember.RSVP.resolve();
+    }
+  });
+
+  var load_hierarchy = downstream.then(function(button_set) {
+    if(!button_set) {
+      return Ember.RSVP.resolve(null);
+    }
+    return Ember.RSVP.resolve(BoardHierarchy.create({board: board, button_set: button_set}));
+  }, function() {
+    return Ember.RSVP.reject(i18n.t('loading_board_failed', "Failed loading board links for copying"));
+  });
+
+  return load_hierarchy;
+};
 
 export default BoardHierarchy;

@@ -11,29 +11,7 @@ export default modal.ModalController.extend({
     _this.set('loading', true);
     _this.set('error', null);
     var board = _this.get('model.board');
-    var reload_board = board.reload().then(null, function() {
-    }, function(err) {
-      return Ember.RSVP.reject(i18n.t('loading_board_failed', "Failed loading board for copying"));
-    });
-
-    var downstream = reload_board.then(function() {
-      if(board.get('downstream_boards') > 0) {
-        return board.load_button_set();
-      } else {
-        return Ember.RSVP.resolve();
-      }
-    });
-
-    var load_hierarchy = downstream.then(function(button_set) {
-      if(!button_set) {
-        return Ember.RSVP.resolve(null);
-      }
-      return Ember.RSVP.resolve(BoardHierarchy.create({board: board, button_set: button_set}));
-    }, function() {
-      return Ember.RSVP.reject(i18n.t('loading_board_failed', "Failed loading board links for copying"));
-    });
-
-    load_hierarchy.then(function(hierarchy) {
+    BoardHierarchy.load_with_button_set(board).then(function(hierarchy) {
       _this.set('loading', false);
       if(hierarchy && hierarchy.get('root')) {
         _this.set('hierarchy', hierarchy);
@@ -98,12 +76,6 @@ export default modal.ModalController.extend({
   actions: {
     confirm_hierarchy: function() {
       this.start_copying();
-    },
-    toggle_board_hierarchy: function(board_id, state) {
-      this.get('hierarchy').toggle(board_id, state);
-    },
-    select_all: function(state) {
-      this.get('hierarchy').set_downstream(null, 'selected', true);
     },
     start_copying: function() {
       this.start_copying();

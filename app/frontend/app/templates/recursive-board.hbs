@@ -1,5 +1,7 @@
 <li class={{if board.selected 'selected'}}>
-  {{input type='checkbox' checked=board.selected disabled=board.already_linked}}
+  {{#if selectable}}
+    {{input type='checkbox' checked=board.selected disabled=board.already_linked}}
+  {{/if}}
   {{#if board.children}}
     <a href="#" {{action 'toggle_board_hierarchy' board.id}}>
       {{#if board.open}}

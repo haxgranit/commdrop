@@ -59,6 +59,22 @@
           {{model.stars}}
         </dd>
     </dl>
+    {{#if hierarchy}}
+      <dl class="dl-horizontal" style="margin-top: 20px;">
+        <dt>{{t "Linked Boards" key='linked_boards'}}</dt>
+        <dd>
+          {{#if hierarchy.loading}}
+            {{t "Loading linked boards..." key='loading_linked_boards'}}
+          {{else if hierarchy.error}}
+            {{t "There was an error trying to retrieve linked boards" key='error_getting_linked_boards'}}
+          {{else}}
+            <div style='margin-top: -15px;'>
+              {{board-hierarchy hierarchy=hierarchy}}
+            </div>
+          {{/if}}
+        </dd>
+      </dl>
+    {{/if}}
     <dl class="dl-horizontal" style="margin-top: 50px;">
       <dt>{{t "Additional Licenses" key='additional_license'}}</dt>
         <dd>

@@ -12,18 +12,7 @@
       <p>{{t "Loading..." key='loading'}}</p>
     {{else if hierarchy}}
       <p>{{t "Please choose the boards you would like copied. By default all are copied." key='choose_boards_to_copy'}}</p>
-      <div style='width: 100%; overflow-x: auto;'>
-        <a href="#" {{action 'select_all'}}>{{t "Select All" key='select_all'}}</a> |
-        <a href="#" {{action 'toggle_board_hierarchy' 'all' true}}>{{t "Expand All" key='expand_all'}}</a> |
-        <a href="#" {{action 'toggle_board_hierarchy' 'all' false}}>{{t "Collapse All" key='collapse_all'}}</a>
-        {{#with hierarchy.root as |board|}}
-          <div class="board_hierarchy" style='margin-top: 10px;'>
-            <ul>
-              {{partial "recursive-board"}}
-            </ul>
-          </div>
-        {{/with}}
-      </div>
+      {{board-hierarchy selectable=true hierarchy=hierarchy}}
       <button class='btn btn-primary' {{action 'start_copying'}} disabled={{hierarchy.root_deselected}}>{{t "Copy Selected Boards" key='copy_selected_boards'}}</button>
     {{else}}
       {{#with model.board.key as |bk|}}
