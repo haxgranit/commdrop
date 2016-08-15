@@ -89,9 +89,30 @@
             {{input type="checkbox" checked=model.terms_agree}}
             By registering or using the product, you are agreeing that you have read and understood the <a href="/terms">Terms of Use and License Agreement</a>, and are capable of binding to a legal contract.
           </label></p>
-          <button type="submit" class="btn btn-primary">{{t "Sign Up" key='sign_up'}}</button>
+          {{#if persistence.online}}
+            <button type="submit" disabled={{registering.saving}} class="btn btn-primary">
+              {{#if registering.saving}}
+                {{t "Signing Up..." key='signing_up'}}
+              {{else}}
+                {{t "Sign Up" key='sign_up'}}
+              {{/if}}
+            </button>
+          {{else}}
+            <button type='submit' disabled='true'>
+              {{t "Not Online" key='not_online'}}
+            </button>
+          {{/if}}
+          {{#if registering.error}}
+            <p class='text-danger'>
+              {{#if registering.error.email_blocked}}
+                {{t "The email address provided has been blocked, please try a different address" key='email_blocked'}}
+              {{else}}
+                {{t "There was an unexpected error while registering" key='error_registering'}}
+              {{/if}}
+            </p>
+          {{/if}}
         </div>
-      </div>    
+      </div>
       </form>
     {{else}}
       <h2>Can't Register</h2>

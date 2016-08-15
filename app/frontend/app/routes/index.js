@@ -97,18 +97,27 @@ export default Ember.Route.extend({
       var user = controller.get('user');
       controller.set('triedToSave', true);
       if(!user.get('terms_agree')) { return; }
+      if(!persistence.get('online')) { return; }
       if(controller.get('badEmail') || controller.get('shortPassword') || controller.get('noName') || controller.get('noSpacesName')) {
         return;
       }
+      controller.set('registering', {saving: true});
       var _this = this;
       user.save().then(function(user) {
+        controller.set('registering', null);
         var meta = persistence.meta('user', null);
+        controller.set('triedToSave', false);
         user.set('password', null);
         _this.transitionTo('index');
         if(meta && meta.access_token) {
           session.override(meta);
         }
-      }, function() { });
+      }, function(err) {
+        controller.set('registering', {error: true});
+        if(err.errors && err.errors[0] == 'blocked email address') {
+          controller.set('registering', {error: {email_blocked: true}});
+        }
+      });
     }
   }
 });
