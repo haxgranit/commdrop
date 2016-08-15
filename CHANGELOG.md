@@ -2,6 +2,14 @@
 
 ## Master
 
+### 2016-08-15
+- user-level integrations that can be triggered by board button presses (feature flag)
+- setting to block emails from future registrations
+- fixed dwell tracking to work regardless of touch/click settings
+- show board hierarchy on "Board Details" modal
+- better consistency for subscription notifications
+- enable snapshots, side-by-side reports for all users
+
 ### 2016-06-30
 - lower volume for auditory scanning read-aloud
 - user preference for text-above-images on buttons
