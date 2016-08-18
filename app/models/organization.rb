@@ -373,40 +373,46 @@ class Organization < ActiveRecord::Base
     end
     (user.settings['managed_by'] || {}).each do |org_id, opts|
       org = orgs[org_id]
-      e = {
-        'id' => org_id,
-        'name' => org.settings['name'],
-        'type' => 'user',
-        'added' => opts['added'],
-        'pending' => opts['pending'],
-        'sponsored' => opts['sponsored']
-      }
-      e['org'] = org if include_org
-      res << e if org
+      if org
+        e = {
+          'id' => org_id,
+          'name' => org.settings['name'],
+          'type' => 'user',
+          'added' => opts['added'],
+          'pending' => opts['pending'],
+          'sponsored' => opts['sponsored']
+        }
+        e['org'] = org if include_org
+        res << e if org
+      end
     end
     (user.settings['manager_for'] || {}).each do |org_id, opts|
       org = orgs[org_id]
-      e = {
-        'id' => org_id,
-        'name' => org.settings['name'],
-        'type' => 'manager',
-        'added' => opts['added'],
-        'full_manager' => !!opts['full_manager']
-      }
-      e['org'] = org if include_org
-      res << e if org
+      if org
+        e = {
+          'id' => org_id,
+          'name' => org.settings['name'],
+          'type' => 'manager',
+          'added' => opts['added'],
+          'full_manager' => !!opts['full_manager']
+        }
+        e['org'] = org if include_org
+        res << e if org
+      end
     end
     (user.settings['supervisor_for'] || {}).each do |org_id, opts|
       org = orgs[org_id]
-      e = {
-        'id' => org_id,
-        'name' => org.settings['name'],
-        'type' => 'supervisor',
-        'added' => opts['added'],
-        'pending' => !!opts['pending']
-      }
-      e['org'] = org if include_org
-      res << e if org
+      if org
+        e = {
+          'id' => org_id,
+          'name' => org.settings['name'],
+          'type' => 'supervisor',
+          'added' => opts['added'],
+          'pending' => !!opts['pending']
+        }
+        e['org'] = org if include_org
+        res << e if org
+      end
     end
     res
   end
