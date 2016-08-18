@@ -691,7 +691,11 @@ class User < ActiveRecord::Base
           'to' => self.settings['email']
         })
       elsif pref == 'text'
-        # TODO: twilio or something
+        from = args['sharer']['user_name']
+        text = args['text']
+        if self.settings && self.settings['cell_phone']
+          Worker.schedule_for(:priority, Pusher, :sms, self.settings['cell_phone'], "from #{from} - #{text}")
+        end
       elsif pref == 'none'
         return
       end
