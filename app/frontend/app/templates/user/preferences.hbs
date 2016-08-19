@@ -559,7 +559,7 @@
             {{t "Enable dwell/eye-tracking" key='eyegaze'}}
           </label>
         {{else}}
-          <em>{{t "Eye-gaze or dwell tracking is a beta feature on Windows or other mouse-based system, please contact support for more information" key='eye_tracking_beta'}}</em>
+          <em>{{t "Eye-gaze or dwell tracking is a beta feature on Windows or other cursor-based system, please contact support for more information" key='eye_tracking_beta'}}</em>
         {{/if}}
       </div>
     </div>
@@ -588,10 +588,21 @@
     {{#if eyegaze_type}}
       <div class="form-group">
         <div class="col-sm-5 col-sm-offset-3">
-          <p class="form-control-static"><em>{{t "CoughDrop eye tracking currently works with EyeX and EyeTribe eye trackers. We hope to add more devices soon." key='supported_eye_trackers'}}</em></p>
+          <p class="form-control-static"><em>{{t "CoughDrop eye tracking currently works with EyeX and EyeTribe eye trackers. We hope to add more devices soon, but in the mean time you can try cursor-based tracking." key='supported_eye_trackers'}}</em></p>
         </div>
       </div>
     {{/if}}
+    <div class="form-group">
+      <label for="dwell_no_cutoff" class="col-sm-3 control-label">{{t "Dwell Cutoff" key='dwell_no_cutoff'}}</label>
+      <div class="col-sm-5">
+        <div class="checkbox">
+          <label>
+            {{input type="checkbox" checked=model.preferences.device.dwell_no_cutoff id="dwell_no_cutoff"}}
+            {{t "Keep dwell targeting even if cursor stops moving" key='dwell_no_cutoff'}}
+          </label>
+        </div>
+      </div>
+    </div>
     <div class="form-group">
       <label for="dwell_duration" class="col-sm-3 control-label">{{t "Dwell Time" key='dwell_duration'}}</label>
       <div class="col-sm-3">

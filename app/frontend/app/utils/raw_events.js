@@ -557,9 +557,9 @@ var buttonTracker = Ember.Object.extend({
     Ember.run.cancel(buttonTracker.linger_close_enough_later);
     buttonTracker.dwell_timeout = buttonTracker.dwell_timeout || 1000;
     buttonTracker.dwell_animation = buttonTracker.dwell_animation || 'pie';
-    var allowed_delay_between_events = 500;
+    var allowed_delay_between_events = Math.max(300, buttonTracker.dwell_timeout / 2);
     var minimum_interaction_window = 50;
-    if(event.type == 'mousemove') {
+    if(event.type == 'mousemove' && buttonTracker.dwell_no_cutoff) {
       allowed_delay_between_events = buttonTracker.dwell_timeout - minimum_interaction_window;
     }
     if(!buttonTracker.dwell_delay && buttonTracker.dwell_delay !== 0) {
@@ -596,14 +596,18 @@ var buttonTracker = Ember.Object.extend({
       // if there's a valid existing linger for a different element, decide between it and the new linger
       var old_bounds = buttonTracker.last_dwell_linger.loose_bounds();
       var new_bounds = elem_wrap.loose_bounds();
-      var avg_x = event.clientX, avg_y = event.clientY;
-      // TODO: need to better factor in gravity of almost-done linger
-      buttonTracker.last_dwell_linger.events.forEach(function(e) {
-        avg_x = avg_x + e.clientX;
-        avg_y = avg_y + e.clientY;
+      var avg_x = event.clientX * 3, avg_y = event.clientY * 3;
+      var tally = 3;
+      buttonTracker.last_dwell_linger.events.forEach(function(e, idx, list) {
+        var weight = 1.0;
+        // weight later events slightly more, otherwise it gets impossible to break out
+        if(idx > (list.length / 2)) { weight = 2.0; }
+        avg_x = avg_x + (e.clientX * weight);
+        avg_y = avg_y + (e.clientY * weight);
+        tally = tally + (1 * weight);
       });
-      avg_x = avg_x / (buttonTracker.last_dwell_linger.events.length + 1);
-      avg_y = avg_y / (buttonTracker.last_dwell_linger.events.length + 1);
+      avg_x = avg_x / tally;
+      avg_y = avg_y / tally;
       // cheap but less-accurate comparison
       var old_dist = (Math.abs(old_bounds.left + (old_bounds.width / 2) - avg_x) + Math.abs(old_bounds.top + (old_bounds.height / 2) - avg_y)) / 2;
       var new_dist = (Math.abs(new_bounds.left + (new_bounds.width / 2) - avg_x) + Math.abs(new_bounds.top + (new_bounds.height / 2) - avg_y)) / 2;
@@ -698,7 +702,7 @@ var buttonTracker = Ember.Object.extend({
       } else if(region.id == 'sidebar') {
         return buttonTracker.element_wrap($target.closest(".btn,a")[0]);
       } else if(region.tagName == 'HEADER') {
-        return buttonTracker.element_wrap($target.closest(".btn,#button_list")[0]);
+        return buttonTracker.element_wrap($target.closest(".btn:not(#speak_options),#button_list")[0]);
       } else if((region.className || "").match(/board/) || region.id == 'board_canvas') {
         return buttonTracker.button_from_point(event.clientX, event.clientY);
       }
