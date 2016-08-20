@@ -530,6 +530,17 @@ var buttonTracker = Ember.Object.extend({
   },
   dwell_linger: function(event) {
     if(buttonTracker.dwell_wait) { return; }
+    if(buttonTracker.last_triggering_dwell_event) {
+      // after a selection, require a little bit of movement before recognizing input
+      var last = buttonTracker.last_triggering_dwell_event;
+      var needed_distance = 10;
+      var diffX = Math.abs(event.clientX - last.clientX);
+      var diffY = Math.abs(event.clientY - last.clientY);
+      if(diffX < needed_distance && diffY < needed_distance) {
+        return;
+      }
+    }
+    buttonTracker.last_triggering_dwell_event = null;
     // - find the nearest selectable, with some liberal tolerance
     // - if we're already lingering
     //   - if we're outside the tolerance, start a new linger
@@ -642,6 +653,7 @@ var buttonTracker = Ember.Object.extend({
       if(now - buttonTracker.last_dwell_linger.started > buttonTracker.dwell_timeout) {
         event.dwell_linger = true;
         buttonTracker.element_release(buttonTracker.last_dwell_linger, event);
+        buttonTracker.last_triggering_dwell_event = event;
         buttonTracker.last_dwell_linger = null;
         if(buttonTracker.dwell_delay) {
           buttonTracker.dwell_wait = true;
