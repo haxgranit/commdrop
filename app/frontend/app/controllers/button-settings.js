@@ -25,6 +25,7 @@ export default modal.ModalController.extend({
     this.set('original_image_license', Ember.$.extend({}, button.get('image.license')));
     this.set('original_sound_license', Ember.$.extend({}, button.get('sound.license')));
     this.set('board_search_type', stashes.get('last_board_search_type') || "personal");
+    this.set('image_library', null);
 
     var supervisees = [];
     if(app_state.get('sessionUser.supervisees')) {
@@ -68,6 +69,19 @@ export default modal.ModalController.extend({
     }
     return res;
   }.property('app_state.feature_flags.app_connections'),
+  image_libraries: function() {
+    var res = [
+      {name: i18n.t('open_symbols', "opensymbols.org (default)"), id: 'opensymbols'}
+    ];
+    if(window.flickr_key) {
+      res.push({name: i18n.t('flickr', "Flickr Creative Commons"), id: 'flickr'});
+    }
+    if(window.custom_search_key) {
+      res.push({name: i18n.t('public_domain', "Public Domain Images"), id: 'public_domain'});
+    }
+    if(res.length == 1) { return []; }
+    return res;
+  }.property(),
   load_user_integrations: function() {
     var user_id = this.get('model.integration_user_id') || 'self';
     var _this = this;

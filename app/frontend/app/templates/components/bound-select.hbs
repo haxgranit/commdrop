@@ -1,4 +1,4 @@
-<select {{action 'change' on='change'}} class={{select_class}} id={{select_id}}>
+<select {{action 'change' on='change'}} class={{select_class}} id={{select_id}} style={{if short 'height: 25px;'}}>
   {{#each content as |item|}}
     <option value="{{item.id}}"
             selected={{is_equal item.id selection}} disabled={{item.disabled}}>

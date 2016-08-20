@@ -474,18 +474,131 @@ var pictureGrabber = Ember.Object.extend({
       this.controller.set('image_preview', null);
       this.controller.set('image_search', {term: text});
       var _this = this;
-      persistence.ajax('/api/v1/search/symbols?q=' + encodeURIComponent(text), { type: 'GET'
-      }).then(function(data) {
+      if(!persistence.get('online')) {
+        _this.controller.set('image_search.error', i18n.t('not_online_image_search', "Cannot search, please connect to the Internet first."));
+        return;
+      }
+
+      var search = _this.open_symbols_search;
+      if(this.controller.get('image_library') == 'flickr') {
+        search = _this.flickr_search;
+      } else if(this.controller.get('image_library') == 'public_domain') {
+        search = _this.public_domain_image_search;
+      }
+      search(text).then(function(data) {
         _this.controller.set('image_search.previews', data);
         _this.controller.set('image_search.previews_loaded', true);
-      }, function(xhr, message) {
-        var error = i18n.t('not_available', "Image retrieval failed unexpectedly.");
-        if(message && message.error == "not online") {
-          error = i18n.t('not_online_image_search', "Cannot search, please connect to the Internet first.");
-        }
-        _this.controller.set('image_search.error', error);
+      }, function(err) {
+        _this.controller.set('image_search.error', err);
       });
     }
+  },
+  open_symbols_search: function(text) {
+    return persistence.ajax('/api/v1/search/symbols?q=' + encodeURIComponent(text), { type: 'GET'
+    }).then(function(data) {
+      return data;
+    }, function(xhr, message) {
+      var error = i18n.t('not_available', "Image retrieval failed unexpectedly.");
+      if(message && message.error == "not online") {
+        error = i18n.t('not_online_image_search', "Cannot search, please connect to the Internet first.");
+      }
+      return Ember.RSVP.reject(error);
+    });
+  },
+  flickr_search: function(text) {
+    if(!window.flickr_key) {
+      return Ember.RSVP.reject(i18n.t('flickr_not_configured', "Flickr hasn't been properly configured for CoughDrop"));
+    }
+    // https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=5b397c920edee06dafeb630957e0a99e&text=cat&safe_search=2&media=photos&extras=license%2C+owner_name&format=json&nojsoncallback=1
+    return persistence.ajax('https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=' + flickr_key + '&text=' + text + '&safe_search=2&media=photos&license=2%2C3%2C4%2C5%2C6%2C7&extras=license%2C+owner_name&format=json&nojsoncallback=1', { type: 'GET'
+    }).then(function(data) {
+      var res = [];
+
+      var licenses = {
+        '1': {name: 'CC By_NC-SA', url: 'http://creativecommons.org/licenses/by-nc-sa/2.0/'},
+        '2': {name: 'CC By_NC', url: 'http://creativecommons.org/licenses/by-nc/2.0/'},
+        '3': {name: 'CC By_NC-ND', url: 'http://creativecommons.org/licenses/by-nc-nd/2.0/'},
+        '4': {name: 'CC By', url: 'http://creativecommons.org/licenses/by/2.0/'},
+        '5': {name: 'CC By-SA', url: 'http://creativecommons.org/licenses/by-sa/2.0/'},
+        '6': {name: 'CC By-ND', url: 'http://creativecommons.org/licenses/by-nd/2.0/'},
+        '7': {name: 'public domain', url: 'https://www.flickr.com/commons/usage/'}
+      };
+
+      (((data || {}).photos || {}).photo || []).forEach(function(photo) {
+        var license = licenses[photo.license];
+        if(license) {
+          res.push({
+            image_url: "https://farm" + photo.farm + ".staticflickr.com/" + photo.server + "/" + photo.id + "_" + photo.secret + "_n.jpg",
+            content_type: 'image/jpeg',
+            license: license.name,
+            author: photo.ownername,
+            author_url: "https://www.flickr.com/people/" + photo.owner + "/",
+            license_url: license.url,
+            source_url: "https://www.flickr.com/photos/" + photo.id + "/",
+            extension: 'jpg'
+          });
+        }
+      });
+      return res.slice(0, 20);
+    }, function(xhr, message) {
+      return i18n.t('not_available', "Image retrieval failed unexpectedly.");
+    });
+  },
+  pixabay_search: function(text) {
+    if(!window.pixabay_key) {
+      return Ember.RSVP.reject(i18n.t('pixabay_not_configured', "Pixabay hasn't been properly configured for CoughDrop"));
+    }
+    return persistence.ajax('https://pixabay.com/api/?key=' + window.pixabay_key + '&q=' + text + '&image_type=photo&per_page=30&safesearch=true', { type: 'GET'
+    }).then(function(data) {
+      var res = [];
+      ((data || {}).hits || []).forEach(function(hit) {
+        res.push({
+          image_url: hit.webformatURL,
+          content_type: 'image/jpeg',
+          width: hit.webformatWidth,
+          height: hit.webformatHeight,
+          license: 'public domain',
+          author: 'unknown',
+          author_url: 'https://creativecommons.org/publicdomain/zero/1.0/',
+          license_url: 'https://creativecommons.org/publicdomain/zero/1.0/',
+          source_url: hit.webformatURL,
+          extension: 'jpg'
+        });
+      });
+      console.log(res);
+      return res;
+    }, function(xhr, message) {
+      return i18n.t('not_available', "Image retrieval failed unexpectedly.");
+    });
+  },
+  public_domain_image_search: function(text) {
+    // https://en.wikipedia.org/w/api.php?action=query&titles=Albert%20Einstein&prop=images&format=json
+    // https://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=extmetadata&titles=File:Albert%20Einstein%20(Nobel).png|File:Albert%20Einstein%27s%20exam%20of%20maturity%20grades%20(color2).jpg&format=json
+    // https://www.googleapis.com/customsearch/v1?q=cat&cx=014949904870326116447%3Awlqrabmc6cu&rights=cc_publicdomain&safe=medium&searchType=image&key={YOUR_API_KEY}
+    return persistence.ajax('https://www.googleapis.com/customsearch/v1?q=' + text + '&cx=014949904870326116447%3Awlqrabmc6cu&rights=cc_publicdomain&safe=medium&key=' + window.custom_search_key, { type: 'GET'
+    }).then(function(data) {
+      var res = [];
+      console.log(data);
+      (data.items || []).forEach(function(item) {
+        console.log(item);
+        var img = item.image || {};
+        var cse = ((item.pagemap || {}).cse_image || [])[0] || {}
+        res.push({
+          image_url: cse.src || item.link,
+          license: 'public domain',
+          content_type: item.mime,
+          width: img.width,
+          height: img.height,
+          author: item.displayLink,
+          author_url: item.formattedUrl || img.contextLink,
+          license_url: 'https://creativecommons.org/publicdomain/zero/1.0/',
+          source_url: item.formattedUrl || img.contextLink
+        });
+      });
+      return res;
+    }, function(xhr, message) {
+        return i18n.t('not_available', "Image retrieval failed unexpectedly.");
+    });
   },
   edit_image_preview: function() {
     var preview = this.controller.get('image_preview');

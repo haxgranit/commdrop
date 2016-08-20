@@ -81,8 +81,10 @@
   </script>
   <% if ENV['TRACK_JS_TOKEN'] %>
     <script type="text/javascript">window._trackJs = { token: "<%= ENV['TRACK_JS_TOKEN'] %>" };</script>
-    <script type="text/javascript">window.sale = "<%= ENV['CURRENT_SALE'] %>";</script>
     <script type="text/javascript" async src="https://d2zah9y47r7bi2.cloudfront.net/releases/current/tracker.js"></script>
+  <% end %>
+  <% if ENV['CURRENT_SALE'] %>
+    <script type="text/javascript">window.sale = "<%= ENV['CURRENT_SALE'] %>";</script>
   <% end %>
 <% else %>
   <%= javascript_include_tag "application", :defer => true %>
