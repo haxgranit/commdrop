@@ -774,13 +774,17 @@ var capabilities;
       fullscreen_capable: function() {
         return (window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) ||
                 document.body.requestFullscreen || document.body.msRequestFullscreen ||
-                document.body.mozRequestFullScreen || document.body.webkitRequestFullscreen;
+                document.body.mozRequestFullScreen || document.body.webkitRequestFullscreen ||
+                window.full_screen;
       },
       fullscreen: function(enable) {
         var res = capabilities.mini_promise();
+        var full_screened = null;
         if(enable) {
           if(window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) {
             window.AndroidFullScreen.immersiveMode(function() { }, function() { });
+          } else if(window.full_screen) {
+            full_screened = window.full_screen(true);
           } else if (document.body.requestFullscreen) {
             document.body.requestFullscreen();
           } else if (document.body.msRequestFullscreen) {
@@ -791,7 +795,7 @@ var capabilities;
             document.body.webkitRequestFullscreen();
           }
           setTimeout(function() {
-            if(document.fullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+            if(full_screened || document.fullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
               res.resolve();
             } else {
               res.reject();
@@ -800,6 +804,8 @@ var capabilities;
         } else {
           if(window.AndroidFullScreen && window.AndroidFullScreen.isSupported()) {
             window.AndroidFullScreen.showSystemUI(function() { }, function() { });
+          } else if(window.full_screen) {
+            full_screened = window.full_screen(false);
           } else if (document.exitFullscreen) {
             document.exitFullscreen();
           } else if (document.msExitFullscreen) {
@@ -810,7 +816,7 @@ var capabilities;
             document.webkitExitFullscreen();
           }
           setTimeout(function() {
-            if(document.fullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+            if(full_screened || document.fullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
               res.reject();
             } else {
               res.resolve();
