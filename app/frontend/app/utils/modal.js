@@ -41,6 +41,13 @@ var modal = Ember.Object.extend({
       return !!this.last_template;
     }
   },
+  queue: function(template) {
+    if(this.is_open()) {
+      this.queued_template = template;
+    } else {
+      this.open(template);
+    }
+  },
   highlight: function($elems, options) {
     var minX, minY, maxX, maxY;
     $elems.each(function() {
@@ -125,6 +132,14 @@ var modal = Ember.Object.extend({
         outlet: 'modal',
         parentView: 'application'
       });
+    }
+    if(this.queued_template) {
+      Ember.run.later(function() {
+        if(!modal.is_open()) {
+          modal.open(modal.queued_template);
+          modal.queued_template = null;
+        }
+      }, 2000);
     }
   },
   flash: function(text, type, below_header) {
