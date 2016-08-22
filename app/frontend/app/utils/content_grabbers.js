@@ -582,7 +582,7 @@ var pictureGrabber = Ember.Object.extend({
       (data.items || []).forEach(function(item) {
         console.log(item);
         var img = item.image || {};
-        var cse = ((item.pagemap || {}).cse_image || [])[0] || {}
+        var cse = ((item.pagemap || {}).cse_image || [])[0] || {};
         res.push({
           image_url: cse.src || item.link,
           license: 'public domain',
