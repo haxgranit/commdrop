@@ -191,15 +191,40 @@ var contentGrabbers = Ember.Object.extend({
       }
     } else if(dataTransfer.items && dataTransfer.items.length > 0) {
       var found = false;
-      var callback = function(url) {
-        contentGrabbers.file_dropped(button_id, 'image', {url: url});
+      var promises = [];
+      var results = {};
+      var lookup_promise = function(type, item) {
+        return new Ember.RSVP.Promise(function(res, rej) {
+          item.getAsString(function(str) {
+            results[type] = str;
+            res();
+          });
+        });
       };
       for(var idx = 0; idx < dataTransfer.types.length; idx++) {
         if(!found && dataTransfer.types[idx] == 'text/uri-list') {
           found = true;
-          dataTransfer.items[idx].getAsString(callback);
+          promises.push(lookup_promise('url', dataTransfer.items[idx]));
+        }
+        if(dataTransfer.types[idx] == 'text/html') {
+          found = true;
+          promises.push(lookup_promise('html', dataTransfer.items[idx]));
         }
       }
+      Ember.RSVP.all_wait(promises).then(function(res) {
+        if(results.html) {
+          var pieces = results.html.split(/<\s*img/);
+          if(pieces.length > 1) {
+            var match = pieces[1].match(/src\s*=\s*['"]([^'"]+)/);
+            if(match && match[1]) {
+              results.url = match[1];
+            }
+          }
+        }
+        if(results.url) {
+          contentGrabbers.file_dropped(button_id, 'image', {url: results.url});
+        }
+      });
       if(!found) {
         alert(i18n.t('unrecognized_drop_type', "Unrecognized drop type"));
       }

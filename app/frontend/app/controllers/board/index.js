@@ -610,7 +610,7 @@ export default Ember.Controller.extend({
           editManager.apply_to_target(id);
         } else {
           var button = editManager.find_button(id);
-          button.state = 'general';
+          button.state = event || 'general';
           modal.open('button-settings', {button: button, board: board});
         }
       } else {
