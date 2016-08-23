@@ -555,6 +555,10 @@ var buttonTracker = Ember.Object.extend({
     // - persist the current linger, record the starting timestamp
     // - if we've been lingering on the element for more than the cutoff, call element_release
     var elem_wrap = buttonTracker.find_selectable_under_event(event, true, false);
+    if(elem_wrap && buttonTracker.dwell_ignore == elem_wrap.dom) {
+      buttonTracker.dwell_ignore = null;
+      return;
+    }
     if(!buttonTracker.dwell_elem) {
       var elem = document.createElement('div');
       elem.id = 'linger';
@@ -584,7 +588,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.dwell_delay = 100;
     }
     buttonTracker.linger_clear_later = Ember.run.later(function() {
-      buttonTracker.clear_dwell();
+      buttonTracker.clear_dwell(elem_wrap && elem_wrap.dom);
       // clear the dwell icon
     }, allowed_delay_between_events);
 
@@ -731,11 +735,21 @@ var buttonTracker = Ember.Object.extend({
   },
   button_from_point: function(x, y) {
     // TODO: support virtual board dom
+    var elem_left = null
+    if(buttonTracker.dwell_elem) {
+      elem_left = buttonTracker.dwell_elem.style.left;
+      buttonTracker.dwell_elem.style.left = '-1000px';
+    }
     var elem = document.elementFromPoint(x, y);
+    if(buttonTracker.dwell_elem) {
+      buttonTracker.dwell_elem.style.left = elem_left;
+    }
+
     var $target = Ember.$(elem).closest('.button');
     if($target.length > 0) {
       return buttonTracker.element_wrap($target[0]);
     } else if(app_state.get('speak_mode')) {
+      // used for finding via the virtual dom
       var $board = Ember.$(".board");
       if($board.length === 0) { return null; }
       var offset = $board.offset() || {};
@@ -899,8 +913,17 @@ var buttonTracker = Ember.Object.extend({
     }
     return elem_wrap;
   },
-  clear_dwell: function() {
+  clear_dwell: function(elem) {
     if(buttonTracker.dwell_elem) {
+      if(elem) {
+        buttonTracker.dwell_ignore = elem;
+        Ember.run.later(function() {
+          if(buttonTracker.dwell_ignore == elem) {
+            buttonTracker.dwell_ignore = null;
+          }
+        }, 500);
+      }
+
       buttonTracker.dwell_elem.classList.remove('targeting');
       buttonTracker.dwell_elem.style.left = '-1000px';
       buttonTracker.last_dwell_linger = null;
