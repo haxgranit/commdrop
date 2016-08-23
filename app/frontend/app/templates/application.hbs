@@ -55,7 +55,7 @@
           {{partial "button-list"}}
         {{/with}}
       </div>
-      <button class="btn btn-default" {{action "speakOptions"}} id="speak_options"><span class="sr-only">{{t "speak options" key='speak_options'}}</span><span class="glyphicon glyphicon-chevron-down"></span></button>
+      <button class="btn btn-default undwellable" {{action "speakOptions"}} id="speak_options"><span class="sr-only">{{t "speak options" key='speak_options'}}</span><span class="glyphicon glyphicon-chevron-down"></span></button>
       <button class="btn btn-default access skinnier" id="backspace_button" {{action "backspace"}}>
         <span class="sr-only">{{t "backspace" key='backspace'}}</span>
         <img src="{{path "images/delete.svg"}}"/>
@@ -359,7 +359,7 @@
     {{/if}}
     </span>
   {{/if}}
-    <span id="identity" class={{if app_state.speak_mode 'xadvanced_selection'}}>
+    <span id="identity" class={{if app_state.speak_mode 'advanced_selection undwellable'}}>
       <span class="dropdown" style="display: inline-block;">
         <a class='btn btn-default' id='identity_button' href="#" data-toggle="dropdown">
           {{#if app_state.currentUser}}

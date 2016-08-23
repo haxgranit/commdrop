@@ -138,7 +138,7 @@ export default Ember.Controller.extend({
     });
   }.observes('app_state.speak_mode', 'app_state.edit_mode', 'model.description', 'app_state.sidebar_pinned'),
   board_style: function() {
-    return new Ember.Handlebars.SafeString("position: relative; height: " + (this.get('height') + 6) + "px");
+    return new Ember.Handlebars.SafeString("position: relative; height: " + (this.get('height') + 5) + "px");
   }.property('height'),
   redraw_if_needed: function() {
     var now = (new Date()).getTime();

@@ -26,6 +26,10 @@ import stashes from './_stashes';
 var $board_canvas = null;
 
 Ember.$(document).on('mousedown touchstart', function(event) {
+  if(buttonTracker.dwell_elem) {
+    buttonTracker.clear_dwell();
+    event.target = document.elementFromPoint(event.clientX, event.clientY);
+  }
   buttonTracker.touch_start(event)  ;
   if(capabilities.mobile && event.type == 'touchstart' && app_state.get('speak_mode') && scanner.scanning) {
     Ember.$("#hidden_input").select().focus();
@@ -36,6 +40,9 @@ Ember.$(document).on('mousedown touchstart', function(event) {
   }
   buttonTracker.touch_continue(event);
 }).on('mouseup touchend touchcancel blur', function(event) {
+  if((event.type == 'mouseup' || event.type == 'touchend' || event.type == 'touchcancel') && buttonTracker.dwell_elem) {
+    buttonTracker.clear_dwell();
+  }
   buttonTracker.touch_release(event);
 }).on('keypress', '.button', function(event) {
   // basic keyboard navigation
@@ -547,7 +554,7 @@ var buttonTracker = Ember.Object.extend({
     //   - otherwise average the linger's history and decide on the best candidate
     // - persist the current linger, record the starting timestamp
     // - if we've been lingering on the element for more than the cutoff, call element_release
-    var elem_wrap = buttonTracker.find_selectable_under_event(event, true);
+    var elem_wrap = buttonTracker.find_selectable_under_event(event, true, false);
     if(!buttonTracker.dwell_elem) {
       var elem = document.createElement('div');
       elem.id = 'linger';
@@ -577,9 +584,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.dwell_delay = 100;
     }
     buttonTracker.linger_clear_later = Ember.run.later(function() {
-      buttonTracker.dwell_elem.classList.remove('targeting');
-      buttonTracker.dwell_elem.style.left = '-1000px';
-      buttonTracker.last_dwell_linger = null;
+      buttonTracker.clear_dwell();
       // clear the dwell icon
     }, allowed_delay_between_events);
 
@@ -681,7 +686,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.dwell_elem.style.top = (event.clientY - 25) + "px";
     }
   },
-  find_selectable_under_event: function(event, loose) {
+  find_selectable_under_event: function(event, loose, allow_dwell) {
     event = buttonTracker.normalize_event(event);
     if(event.clientX === undefined || event.clientY === undefined) { return null; }
     var left = 0;
@@ -699,6 +704,9 @@ var buttonTracker = Ember.Object.extend({
       // you're close to anything selectable
     }
     if(region) {
+      if(allow_dwell === false && $target.closest('.undwellable').length > 0) {
+        return null;
+      }
       if(region.id == 'pin') {
         return buttonTracker.element_wrap($target.closest("a")[0]);
       } else if(region.id == 'word_suggestions') {
@@ -714,7 +722,7 @@ var buttonTracker = Ember.Object.extend({
       } else if(region.id == 'sidebar') {
         return buttonTracker.element_wrap($target.closest(".btn,a")[0]);
       } else if(region.tagName == 'HEADER') {
-        return buttonTracker.element_wrap($target.closest(".btn:not(#speak_options),#button_list")[0]);
+        return buttonTracker.element_wrap($target.closest(".btn,#button_list")[0]);
       } else if((region.className || "").match(/board/) || region.id == 'board_canvas') {
         return buttonTracker.button_from_point(event.clientX, event.clientY);
       }
@@ -890,6 +898,13 @@ var buttonTracker = Ember.Object.extend({
       elem_wrap = this.find_button_under_event(event);
     }
     return elem_wrap;
+  },
+  clear_dwell: function() {
+    if(buttonTracker.dwell_elem) {
+      buttonTracker.dwell_elem.classList.remove('targeting');
+      buttonTracker.dwell_elem.style.left = '-1000px';
+      buttonTracker.last_dwell_linger = null;
+    }
   },
   start_dragging: function($elem, event) {
     // create drag element

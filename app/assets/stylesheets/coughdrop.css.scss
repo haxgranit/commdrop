@@ -1556,6 +1556,10 @@ video.button_image {
   z-index: 999999;
   border-radius: 100px;
   animation-duration: 2000ms;
+  &.temp_hide {
+    display: none;
+    left: -100px;
+  }
   &.targeting.shrink {
     -webkit-animation-name: target;
     -webkit-animation-iteration-count: 1;
