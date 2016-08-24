@@ -656,7 +656,7 @@ var app_state = Ember.Object.extend({
           noticed = true;
           modal.notice(i18n.t('logging_enabled', "Logging is enabled"), true);
         }
-        if(!capabilities.installed_app && !capabilities.mobile && this.get('currentUser.preferences.device.fullscreen')) {
+        if(!capabilities.mobile && this.get('currentUser.preferences.device.fullscreen')) {
           capabilities.fullscreen(true).then(null, function() {
             if(!noticed) {
               modal.warning(i18n.t('fullscreen_failed', "Full Screen Mode failed to load"), true);
