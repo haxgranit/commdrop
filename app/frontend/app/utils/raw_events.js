@@ -540,7 +540,7 @@ var buttonTracker = Ember.Object.extend({
     if(buttonTracker.last_triggering_dwell_event) {
       // after a selection, require a little bit of movement before recognizing input
       var last = buttonTracker.last_triggering_dwell_event;
-      var needed_distance = 10;
+      var needed_distance = 30;
       var diffX = Math.abs(event.clientX - last.clientX);
       var diffY = Math.abs(event.clientY - last.clientY);
       if(diffX < needed_distance && diffY < needed_distance) {
