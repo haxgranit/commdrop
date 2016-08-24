@@ -637,6 +637,13 @@ var capabilities;
           return promise;
         }
       },
+      debugging: {
+        available: function() {
+          return false;
+        },
+        show: function() {
+        }
+      },
       battery: {
         listen: function(callback) {
           capabilities.battery_callbacks = capabilities.battery_callbacks || [];

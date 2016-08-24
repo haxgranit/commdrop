@@ -309,6 +309,9 @@ export default Ember.Controller.extend({
       Ember.set(test, 'results', {passed: false});
     }
   },
+  has_debugging: function() {
+    return capabilities.debugging.available();
+  }.property(),
   check_persistence_data: function() {
     var _this = this;
     _this.set('storage', {pending: true});
@@ -339,6 +342,11 @@ export default Ember.Controller.extend({
   actions: {
     reload: function() {
       location.reload();
+    },
+    show_debugging: function() {
+      if(capabilities.debugging.available()) {
+        capabilities.debugging.show();
+      }
     },
     clear_file_storage: function() {
       var _this = this;

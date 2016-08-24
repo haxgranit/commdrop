@@ -141,6 +141,12 @@
             <td>{{t "Recognized Device" key='version'}}</td>
             <td colspan='2'>{{app_state.device_name}}</td>
           </tr>
+          {{#if has_debugging}}
+            <tr class='text-muted'>
+              <td>{{t "Debugging" key='debugging'}}</td>
+              <td colspan='2'><a href="#" {{action 'show_debugging'}}>{{t "Available" key='available'}}</a></td>
+            </tr>
+          {{/if}}
         </tbody>
       </table>
     {{/unless}}
