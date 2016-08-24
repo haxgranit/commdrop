@@ -735,7 +735,7 @@ var buttonTracker = Ember.Object.extend({
   },
   button_from_point: function(x, y) {
     // TODO: support virtual board dom
-    var elem_left = null
+    var elem_left = null;
     if(buttonTracker.dwell_elem) {
       elem_left = buttonTracker.dwell_elem.style.left;
       buttonTracker.dwell_elem.style.left = '-1000px';
