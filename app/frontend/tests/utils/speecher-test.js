@@ -11,25 +11,30 @@ describe('speecher', function() {
     speecher.audio = {};
     speecher.scope = window;
   });
-  
+
   afterEach(function() {
     speecher.scope = window;
   });
-  
+
   describe("speak_text", function() {
     it("should not error unexpectedly on bad input", function() {
       var spoken = false;
       stub(window.speechSynthesis, 'speak', function() { spoken = true; });
+      window.speechSynthesis.bacon = 'asdf';
       expect(function() { speecher.speak_text(null); }).not.toThrow();
       expect(spoken).toEqual(false);
       expect(function() { speecher.speak_text(1234); }).not.toThrow();
-      expect(spoken).toEqual(true);
+      waitsFor(function() { return spoken; })
+      runs();
     });
     it("should trigger speech synthesis", function() {
       var spoken = null;
       stub(window.speechSynthesis, 'speak', function(u) { spoken = u.text; });
       expect(function() { speecher.speak_text("hippo"); }).not.toThrow();
-      expect(spoken).toEqual("hippo");
+      waitsFor(function() { return spoken; });
+      runs(function() {
+        expect(spoken).toEqual("hippo");
+      });
     });
     it("should cancel any existing text utterances", function() {
       var spoken = null;
@@ -37,17 +42,20 @@ describe('speecher', function() {
       stub(window.speechSynthesis, 'speak', function(u) { spoken = u.text; });
       stub(window.speechSynthesis, 'cancel', function() { cancelled = true; });
       speecher.speak_text("hippo");
-      expect(cancelled).toEqual(true);
-      expect(spoken).toEqual("hippo");
+      waitsFor(function() { return cancelled && spoken; });
+      runs(function() {
+        expect(cancelled).toEqual(true);
+        expect(spoken).toEqual("hippo");
+      });
     });
   });
-  
+
   describe("default_rate", function() {
     it("should have reasonable default rates based on device", function() {
       var orig_s = capabilities.system;
       var orig_b = capabilities.browser;
       var orig_v = capabilities.system_version;
-      
+
       capabilities.system = 'Android';
       expect(speecher.default_rate()).toEqual(1.0);
       capabilities.browser = 'Safari';
@@ -58,17 +66,17 @@ describe('speecher', function() {
       expect(speecher.default_rate()).toEqual(0.2);
       capabilities.system_version = 9.1;
       expect(speecher.default_rate()).toEqual(1.0);
-      capabilities.system_version = 8.0;      
+      capabilities.system_version = 8.0;
       expect(speecher.default_rate()).toEqual(0.2);
       capabilities.browser = 'Web Browser';
       expect(speecher.default_rate()).toEqual(1.0);
-      
+
       capabilities.system = orig_s;
       capabilities.browser = orig_b;
       capabilities.system_version = orig_v;
     });
   });
-  
+
   describe("set_voice", function() {
     it("should not error if set_voice has not been called", function() {
       stub(window.speechSynthesis, 'speak', function() { });
@@ -80,7 +88,7 @@ describe('speecher', function() {
       expect(speecher.pitch).toEqual(2.0);
     });
   });
-  
+
   describe("speak_audio", function() {
     var audio = null;
     beforeEach(function() {
@@ -143,7 +151,7 @@ describe('speecher', function() {
       expect(audio3.listenersRemoved).not.toEqual(true);
     });
   });
-  
+
   describe("speak_background_audio", function() {
     var audio = null;
     beforeEach(function() {
@@ -194,9 +202,9 @@ describe('speecher', function() {
       expect(cancelled).toEqual(false);
       expect(audio3.pauseCalled).toEqual(true);
       expect(audio3.listenersRemoved).toEqual(true);
-    }); 
+    });
   });
-  
+
   describe("speak_collection", function() {
     it("should queue list of foreground audio or text events", function() {
       var called = false;
@@ -229,9 +237,9 @@ describe('speecher', function() {
       var scope = {};
       window.polyfillSpeechSynthesis(scope);
       speecher.scope = scope;
-      stub(scope.speechSynthesis, 'speak', function(u) { 
-        words.push(u.text); 
-        u.trigger('end'); 
+      stub(scope.speechSynthesis, 'speak', function(u) {
+        words.push(u.text);
+        u.trigger('end');
       });
       speecher.speak_collection([{text: "halo"}, {sound: "http://sounds.com/cookie.mp3"}, {text: "snow"}]);
       waitsFor(function() { return audio.playCalled; });
@@ -257,7 +265,7 @@ describe('speecher', function() {
       waitsFor(function() { return failed; });
       runs();
     });
-    
+
     it("should perform a lookup if the beep element is found", function() {
       stub(speecher, 'beep_url', 'http://www.pic.com/pic.png');
       stub(persistence, 'find_url', function(url) {

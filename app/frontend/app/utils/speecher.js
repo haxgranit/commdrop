@@ -173,10 +173,11 @@ var speecher = Ember.Object.extend({
         });
       } else {
         var delay = (capabilities.installed_app && capabilities.system == 'Windows') ? 300 : 0;
+        var _this = this;
         // TODO: this delay may no longer be needed when we update chromium/electron, but right
         // now it only speaks every other text string unless you wait an extra half-second or so.
         Ember.run.later(function() {
-          speak_utterance();
+          speak_utterance.call(_this);
         }, delay);
       }
     } else {

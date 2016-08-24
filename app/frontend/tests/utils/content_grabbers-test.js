@@ -13,7 +13,7 @@ describe("contentGrabbers", function() {
   var soundGrabber = contentGrabbers.soundGrabber;
   var boardGrabber = contentGrabbers.boardGrabber;
   var linkGrabber = contentGrabbers.linkGrabber;
-  
+
   beforeEach(function() {
     stashes.flush();
     var obj = Ember.Object.create({
@@ -44,7 +44,7 @@ describe("contentGrabbers", function() {
     contentGrabbers.setup(button, controller);
     contentGrabbers.board_controller = controller.get('board');
   });
-  
+
   describe("setup", function() {
     it("should setup all three sub-grabbers", function() {
       expect(pictureGrabber.controller).toEqual(controller);
@@ -54,9 +54,9 @@ describe("contentGrabbers", function() {
       expect(soundGrabber.button).toEqual(button);
       expect(boardGrabber.button).toEqual(button);
     });
-    
+
   });
-  
+
   describe("clear", function() {
     it("should clear all three sub-grabbers", function() {
       controller.set('image_search', {});
@@ -68,7 +68,7 @@ describe("contentGrabbers", function() {
       expect(controller.get('foundBoards')).toEqual(null);
     });
   });
-  
+
   describe("unlink", function() {
     it("should unlink all three sub-grabbers", function() {
       contentGrabbers.unlink();
@@ -80,7 +80,7 @@ describe("contentGrabbers", function() {
       expect(boardGrabber.button).toEqual(null);
     });
   });
-  
+
   describe("save_record", function() {
     it("should return a promise", function() {
       var obj = Ember.Object.extend({
@@ -90,7 +90,7 @@ describe("contentGrabbers", function() {
       expect(res.then).not.toEqual(null);
       res.then(null, function() {});
     });
-    
+
     it("should save a data-uri attribute for later processing if set", function() {
       var obj = Ember.Object.extend({
         save: function() { return Ember.RSVP.defer().promise; }
@@ -101,7 +101,7 @@ describe("contentGrabbers", function() {
       expect(obj.get('url')).toEqual(null);
       expect(obj.get('data_url')).toEqual("data:image/png;...");
     });
-    
+
     it("should save the record", function() {
       var defer = Ember.RSVP.defer();
       var save_called = false;
@@ -118,14 +118,14 @@ describe("contentGrabbers", function() {
       res.then(function(result) {
         expect(result).toEqual(obj);
       });
-      
+
       waitsFor(function() { return obj.get('url'); });
       runs(function() {
         expect(obj.get('data_url')).toEqual("data:image/png;...");
         expect(obj.get('url')).toEqual("data:image/png;...");
       });
     });
-    
+
     it("should call upload_to_remote if returned result is pending", function() {
       var defer = Ember.RSVP.defer();
       var save_called = false;
@@ -138,7 +138,7 @@ describe("contentGrabbers", function() {
       stub(persistence, 'meta', function(model, obj) {
         return {remote_upload: {a: 2}};
       });
-      
+
       var uploadArgs = null;
       stub(contentGrabbers, 'upload_to_remote', function(args) {
         uploadArgs = args;
@@ -146,14 +146,14 @@ describe("contentGrabbers", function() {
       });
       var res = contentGrabbers.save_record(obj);
       defer.resolve(obj);
-      
+
       waitsFor(function() { return uploadArgs; });
       runs(function() {
         expect(uploadArgs.data_url).toEqual("data:image/png;...");
         expect(uploadArgs.a).toEqual(2);
       });
     });
-    
+
     it("should error if no metadata (remote upload parameters) are provided", function() {
       var defer = Ember.RSVP.defer();
       var save_called = false;
@@ -167,7 +167,7 @@ describe("contentGrabbers", function() {
       stub(persistence, 'meta', function(model, obj) {
         return null;
       });
-      
+
       var uploadArgs = null;
       stub(contentGrabbers, 'upload_to_remote', function(args) {
         uploadArgs = args;
@@ -178,11 +178,11 @@ describe("contentGrabbers", function() {
       res.then(null, function() {
         rejected = true;
       });
-      
+
       waitsFor(function() { return rejected; });
       runs();
     });
-    
+
     it("should error on failed save", function() {
       var defer = Ember.RSVP.defer();
       var obj = Ember.Object.extend({
@@ -191,19 +191,19 @@ describe("contentGrabbers", function() {
         url: "data:image/png;...",
         pending: true
       });
-      
+
       var res = contentGrabbers.save_record(obj);
       defer.reject({'123': 'abc'});
-      
+
       var rejection = null;
       res.then(null, function(arg) { rejection = arg; });
-      
+
       waitsFor(function() { return rejection; });
       runs(function() {
         expect(rejection).toEqual({'error': 'record failed to save', 'ref': {'123': "abc"}});
       });
     });
-    
+
     it("should error or failed remote upload", function() {
       var defer = Ember.RSVP.defer();
       var defer2 = Ember.RSVP.defer();
@@ -222,20 +222,20 @@ describe("contentGrabbers", function() {
       });
       var res = contentGrabbers.save_record(obj);
       defer.resolve(obj);
-      
+
       defer2.reject({
         abc: "123"
       });
-      
+
       var rejection = null;
       res.then(null, function(arg) { rejection = arg; });
-      
+
       waitsFor(function() { return rejection; });
       runs(function() {
         expect(rejection).toEqual({abc: "123"});
       });
     });
-    
+
     it("should resolve on successful pending upload process, returning the original object", function() {
       var defer = Ember.RSVP.defer();
       var defer2 = Ember.RSVP.defer();
@@ -249,18 +249,18 @@ describe("contentGrabbers", function() {
       stub(persistence, 'meta', function(model, obj) {
         return {remote_upload: {a: 2}};
       });
-      
+
       stub(contentGrabbers, 'upload_to_remote', function(args) {
         return defer2.promise;
       });
       var res = contentGrabbers.save_record(obj);
       defer.resolve(obj);
-      
+
       defer2.resolve({
         confirmed: true,
         url: "http://pics.example.com/pic.png"
       });
-      
+
       waitsFor(function() { return obj.get('pending') === false; });
       runs(function() {
         expect(obj.get('pending')).toEqual(false);
@@ -295,7 +295,7 @@ describe("contentGrabbers", function() {
       };
       var res = contentGrabbers.upload_to_remote(params);
       res.then(null, function() { });
-      
+
       waitsFor(function() { return upload_args; });
       runs(function() {
         expect(upload_args.url).toEqual("/upload");
@@ -325,7 +325,7 @@ describe("contentGrabbers", function() {
       var res = contentGrabbers.upload_to_remote(params);
       var resolution = null;
       res.then(function(data) { resolution = data; }, function() { });
-      
+
       waitsFor(function() { return resolution; });
       runs(function() {
         expect(success_args.type).toEqual('GET');
@@ -349,7 +349,7 @@ describe("contentGrabbers", function() {
       var res = contentGrabbers.upload_to_remote(params);
       var failed = null;
       res.then(function(data) { }, function() { failed = true; });
-      
+
       waitsFor(function() { return failed; });
       runs();
     });
@@ -373,16 +373,16 @@ describe("contentGrabbers", function() {
       var res = contentGrabbers.upload_to_remote(params);
       var failed = null;
       res.then(function(data) { }, function() { failed = true; });
-      
+
       waitsFor(function() { return failed; });
       runs();
     });
   });
-  
+
   describe("file_dropped", function() {
     it("should set droppedFile", function() {
       var file = {a: 1};
-      
+
       contentGrabbers.file_dropped('abc', 'image', file);
       expect(contentGrabbers.droppedFile.type).toEqual('image');
       expect(contentGrabbers.droppedFile.file).toEqual(file);
@@ -393,7 +393,7 @@ describe("contentGrabbers", function() {
       expect(controller.get('board').sentMessages['buttonSelect']).not.toEqual(null);
     });
   });
-  
+
   describe("check_for_dropped_file", function() {
     it("should call the correct handler for the dropped file/link type", function() {
       contentGrabbers.droppedFile = {
@@ -411,7 +411,7 @@ describe("contentGrabbers", function() {
       });
       contentGrabbers.check_for_dropped_file();
       expect(callee).toEqual('pictureGrabber.web_image_dropped');
-      
+
       contentGrabbers.droppedFile = {
         type: 'image',
         file: {}
@@ -427,7 +427,7 @@ describe("contentGrabbers", function() {
       expect(callee).toEqual('soundGrabber.file_selected');
     });
   });
-  
+
   describe("file_selected", function() {
     var files = [{
         type: 'image/png'
@@ -484,7 +484,10 @@ describe("contentGrabbers", function() {
         }],
         types: ["", "text/uri-list"]
       });
-      expect(args).toEqual(['abc', 'image', {url: 'bob'}]);
+      waitsFor(function() { return args; });
+      runs(function() {
+        expect(args).toEqual(['abc', 'image', {url: 'bob'}]);
+      });
     });
     it("should call file_dropped for image or audio file objects", function() {
       stashes.set('current_mode', 'edit');
@@ -535,12 +538,12 @@ describe("contentGrabbers", function() {
       expect(app_state.get('edit_mode')).toEqual(true);
       contentGrabbers.content_dropped('abc', {files: [], items: []});
       expect(message).toEqual("Unrecognized drop type");
-      
+
       contentGrabbers.content_dropped('abc', {
         files: [{type: ""}]
       });
       expect(message).toEqual("No valid images or sounds found");
-      
+
       contentGrabbers.content_dropped('abc', {
         files: [],
         items: [{}],
