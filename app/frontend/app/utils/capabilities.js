@@ -169,6 +169,11 @@ var capabilities;
             promise.resolve(res);
           });
         },
+        reload: function() {
+          return capabilities.tts.tts_exec('reload', null, function(promise, res) {
+            promise.resolve(res);
+          });
+        },
         status: function() {
           return capabilities.tts.tts_exec('status', null, function(promise, res) {
             promise.resolve(res);

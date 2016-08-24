@@ -165,6 +165,8 @@ var speecher = Ember.Object.extend({
             // method won't be called until the text is done being spoken or was interrupted
             _this.speak_end_handler(speak_id);
           }, function(err) {
+            console.log("system speak error");
+            console.log(err);
             // method call returns error, fallback to speechSynthesis
             speak_utterance();
           });

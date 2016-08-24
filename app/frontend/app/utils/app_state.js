@@ -663,6 +663,10 @@ var app_state = Ember.Object.extend({
             }
           });
         }
+        capabilities.tts.reload().then(function(res) {
+          console.log("tts reload status");
+          console.log(res);
+        });
         capabilities.volume_check().then(function(level) {
           console.log("volume is " + level);
           if(level === 0) {
