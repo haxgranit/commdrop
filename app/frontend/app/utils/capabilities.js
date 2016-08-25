@@ -339,6 +339,8 @@ var capabilities;
           var promise = capabilities.mini_promise();
           if(window.resolveLocalFileSystemURL && window.cordova && window.cordova.file && window.cordova.file.dataDirectory) {
             promise.resolve({available: true, requires_confirmation: false});
+          } else if(window.file_storage) {
+            promise.resolve({available: true, requires_confirmation: false});
           } else if(window.cd_request_file_system && window.cd_persistent_storage && window.cd_persistent_storage.requestQuota) {
             // Chrome won't allow storing to the file system in incognito, but still
             // acts like it will. This is the only check I can find that correctly
@@ -603,6 +605,17 @@ var capabilities;
               promise.resolve(capabilities.root_dir_entry);
             } else {
               window.resolveLocalFileSystemURL(window.cordova.file.dataDirectory, function(e) {
+                capabilities.root_dir_entry = e;
+                promise.resolve(e);
+              }, function(e) {
+                promise.reject(e);
+              });
+            }
+          } else if(window.file_storage) {
+            if(capabilities.root_dir_entry) {
+              promise.resolve(capabilities.root_dir_entry);
+            } else {
+              window.file_storage.root(function(e) {
                 capabilities.root_dir_entry = e;
                 promise.resolve(e);
               }, function(e) {
