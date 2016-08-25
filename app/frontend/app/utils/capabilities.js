@@ -335,6 +335,7 @@ var capabilities;
       },
       storage: {
         status: function() {
+          // uses native calls
           var promise = capabilities.mini_promise();
           if(window.resolveLocalFileSystemURL && window.cordova && window.cordova.file && window.cordova.file.dataDirectory) {
             promise.resolve({available: true, requires_confirmation: false});
@@ -382,6 +383,7 @@ var capabilities;
           return promise;
         },
         all_files: function() {
+          // uses native calls
           var promise = capabilities.mini_promise();
           var all_files = [];
           var size = 0;
@@ -422,6 +424,7 @@ var capabilities;
           return promise;
         },
         assert_directory: function(key, filename) {
+          // uses native calls
           var promise = capabilities.mini_promise();
           var sub_key = filename ? filename.substring(0, 4) : null;
           var path = filename ? (key + '/' + sub_key) : key;
@@ -457,6 +460,7 @@ var capabilities;
           return promise;
         },
         list_files: function(dirname, include_size) {
+          // uses native calls
           var promise = capabilities.mini_promise();
             if(window.cordova && window.cordova.exec) {
               var dir = window.cordova.file.dataDirectory.replace(/file:\/\//, '') + dirname + '/';
@@ -512,6 +516,7 @@ var capabilities;
           return promise;
         },
         fix_url: function(url) {
+          // uses native calls
           if(!window.resolveLocalFileSystemURL) {
             return url;
           }
@@ -527,6 +532,7 @@ var capabilities;
           return url;
         },
         get_file_url: function(dirname, filename) {
+          // uses native calls
           var promise = capabilities.mini_promise();
           capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
             dir.getFile(filename, {create: false}, function(file) {
@@ -540,6 +546,7 @@ var capabilities;
           return promise;
         },
         write_file: function(dirname, filename, blob) {
+          // uses native calls
           var promise = capabilities.mini_promise();
           capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
             dir.getFile(filename, {create: true}, function(file) {
@@ -571,6 +578,7 @@ var capabilities;
           return promise;
         },
         remove_file: function(dirname, filename) {
+          // uses native calls
           var promise = capabilities.mini_promise();
           capabilities.storage.assert_directory(dirname, filename).then(function(dir) {
             dir.getFile(filename, {}, function(file) {
@@ -588,6 +596,7 @@ var capabilities;
           return promise;
         },
         root_entry: function(size) {
+          // uses native calls
           var promise = capabilities.mini_promise();
           if(window.resolveLocalFileSystemURL && window.cordova && window.cordova.file && window.cordova.file.dataDirectory) {
             if (capabilities.root_dir_entry) {
@@ -646,8 +655,7 @@ var capabilities;
         available: function() {
           return false;
         },
-        show: function() {
-        }
+        show: function() { }
       },
       battery: {
         listen: function(callback) {
