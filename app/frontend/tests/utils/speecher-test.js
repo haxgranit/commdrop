@@ -24,7 +24,7 @@ describe('speecher', function() {
       expect(function() { speecher.speak_text(null); }).not.toThrow();
       expect(spoken).toEqual(false);
       expect(function() { speecher.speak_text(1234); }).not.toThrow();
-      waitsFor(function() { return spoken; })
+      waitsFor(function() { return spoken; });
       runs();
     });
     it("should trigger speech synthesis", function() {

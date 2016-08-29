@@ -81,6 +81,7 @@ describe('subscription', function() {
       expect(s.get('subscription_amount')).toEqual('monthly_6');
       expect(s.get('valid')).toEqual(true);
       s.set('user_type', 'supporter');
+      expect(s.get('subscription_type')).toEqual('long_term');
       expect(s.get('subscription_amount')).toEqual('slp_long_term_free');
       s.set('subscription_type', 'monthly');
       s.set('subscription_amount', 'slp_monthly_3');

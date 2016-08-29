@@ -59,11 +59,15 @@ export default Ember.Component.extend({
           stashes.setup();
           _this.set('logging_in', false);
           _this.set('logged_in', true);
-          if(capabilities.installed_app) {
-            location.href = '#/';
-            location.reload();
+          if(Ember.testing) {
+            console.error("would have redirected to home");
           } else {
-            location.href = '/';
+            if(capabilities.installed_app) {
+              location.href = '#/';
+              location.reload();
+            } else {
+              location.href = '/';
+            }
           }
         }, function(err) {
           err = err || {};

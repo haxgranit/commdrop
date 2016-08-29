@@ -120,11 +120,15 @@ var session = Ember.Object.extend({
   },
   reload: function(path) {
     if(path) {
-      if(capabilities.installed_app) {
-        location.href = '#' + path;
-        location.reload();
+      if(Ember.testing) {
+        console.error("would have redirected off the page");
       } else {
-        location.href = path;
+        if(capabilities.installed_app) {
+          location.href = '#' + path;
+          location.reload();
+        } else {
+          location.href = path;
+        }
       }
     } else {
       location.reload();

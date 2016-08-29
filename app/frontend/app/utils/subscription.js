@@ -144,7 +144,7 @@ var Subscription = Ember.Object.extend({
   cheaper_offer: function() {
     return !!(this.get('sale') || this.get('discount_period') || (this.get('user.subscription.plan_id') || '').match(/monthly_4/) || (this.get('user.subscription.plan_id') || '').match(/monthly_3/));
   }.property('sale', 'discount_period', 'user.subscription.plan_id'),
-  set_default_subscription_amount: function() {
+  set_default_subscription_amount: function(obj, changes) {
     if(this.get('user_type') == 'communicator') {
       if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^(monthly_|long_term_)/)) {
         this.set('subscription_type', 'monthly');
@@ -171,7 +171,9 @@ var Subscription = Ember.Object.extend({
         }
       }
     } else {
-      this.set('subscription_type', 'long_term');
+      if(changes == 'user_type') {
+        this.set('subscription_type', 'long_term');
+      }
       if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^slp_/)) {
         this.set('subscription_amount', 'slp_long_term_free');
       }
