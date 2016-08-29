@@ -352,10 +352,13 @@ describe Purchasing do
       it "should cancel other subscriptions for an existing customer record" do
         u = User.create
         u.settings['subscription'] = {'customer_id' => '12345'}
-        subs = [{
-          'id' => '3456',
-          'status' => 'active'
-        }]
+        subs = OpenStruct.new({
+          data: [OpenStruct.new({
+            'id' => '3456',
+            'status' => 'canceled'
+          })],
+          count: 1
+        })
         expect(Stripe::Customer).to receive(:retrieve).with('12345').and_return(OpenStruct.new({
           subscriptions: subs
         }))
@@ -363,10 +366,10 @@ describe Purchasing do
           :plan => 'monthly_6',
           :source => 'token'
         }).and_return({
-          'id' => '3456',
+          'id' => '3457',
           'customer' => '12345'
         })
-        expect(Purchasing).to receive(:cancel_other_subscriptions).with(u, '3456')
+        expect(Purchasing).to receive(:cancel_other_subscriptions).with(u, '3457')
         Purchasing.purchase(u, {'id' => 'token'}, 'monthly_6')
       end
       
@@ -445,8 +448,31 @@ describe Purchasing do
         })
         Purchasing.purchase(u, {'id' => 'token'}, 'monthly_6')
       end
+      
+      it "should update subscription information if an existing subscription record is updated and the plan changes" do
+        u = User.create
+        u.settings['subscription'] = {'customer_id' => '12345'}
+        sub1 = OpenStruct.new({
+          'id' => '3456',
+          'status' => 'active'
+        })
+        subs = [sub1]
+        expect(Stripe::Customer).to receive(:retrieve).with('12345').and_return(OpenStruct.new({
+          subscriptions: OpenStruct.new({
+            data: subs,
+            count: 1
+          })
+        }))
+        expect(sub1).to receive(:save).and_return(true)
+        
+        expect(Purchasing).to receive(:cancel_other_subscriptions).with(u, '3456')
+        Purchasing.purchase(u, {'id' => 'token'}, 'monthly_6')
+        expect(sub1.prorate).to eq(true)
+        expect(sub1.plan).to eq('monthly_6')
+        expect(sub1.source).to eq('token')
+      end
     end
-    
+
     describe "long-term purchase" do
       it "should create a charge record" do
         u = User.create

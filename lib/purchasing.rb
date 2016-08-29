@@ -221,10 +221,21 @@ module Purchasing
         end
         if customer
           user && user.log_subscription_event({:log => 'new subscription for existing customer'})
-          sub = customer.subscriptions.create({
-            :plan => plan_id,
-            :source => token['id']
-          })
+          sub = nil
+          if customer.subscriptions.count > 0
+            sub = customer.subscriptions.data.detect{|s| s.status == 'active' }
+          end
+          if sub
+            sub.source = token['id']
+            sub.plan = plan_id
+            sub.prorate = true
+            sub.save
+          else
+            sub = customer.subscriptions.create({
+              :plan => plan_id,
+              :source => token['id']
+            })
+          end
           user && user.log_subscription_event({:log => 'persisting subscription update'})
           updated = User.subscription_event({
             'subscribe' => true,
@@ -266,6 +277,7 @@ module Purchasing
       user && user.log_subscription_event({:error => 'stripe card_exception', :json => json})
       return {success: false, error: err[:code]}
     rescue => err
+    puts err.message
       type = (err.respond_to?('[]') && err[:type])
       code = (err.respond_to?('[]') && err[:code]) || 'unknown'
       user && user.log_subscription_event({:error => 'other_exception', :err => err.to_s + err.backtrace[0].to_s })
