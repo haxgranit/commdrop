@@ -1154,7 +1154,8 @@ var persistence = Ember.Object.extend({
               // possibly-changing URLs
               if(board.get('icon_url_with_fallback').match(/^http/)) {
                 visited_board_promises.push(persistence.store_url(board.get('icon_url_with_fallback'), 'image', false, force).then(null, function() {
-                  return Ember.RSVP.reject({error: "icon url failed to sync, " + board.get('icon_url_with_fallback')});
+                  console.log("icon url failed to sync, " + board.get('icon_url_with_fallback'));
+                  return Ember.RSVP.resolve();
                 }));
                 importantIds.push("dataCache_" + board.get('icon_url_with_fallback'));
               }
