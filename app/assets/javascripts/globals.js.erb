@@ -1,18 +1,15 @@
 window.enabled_frontend_features = <%= FeatureFlags::ENABLED_FRONTEND_FEATURES.to_json %>;
 window.user_preferences = <%= User.preference_defaults.to_json %>;
-
+<% require('dotenv'); Dotenv.load %>
 <% if ENV['SYMBOL_PROXY_KEY'] %>
   window.symbol_proxy_key = "<%= ENV['SYMBOL_PROXY_KEY'] %>";
 <% end %>
-
 <% if ENV['PIXABAY_KEY'] %>
   window.pixabay_key = "<%= ENV['PIXABAY_KEY'] %>";
 <% end %>
-
 <% if ENV['FLICKR_KEY'] %>
   window.flickr_key = "<%= ENV['FLICKR_KEY'] %>";
 <% end %>
-
 <% if ENV['GCSE_KEY'] %>
   window.custom_search_key = "<%= ENV['GCSE_KEY'] %>";
 <% end %>
