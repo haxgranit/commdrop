@@ -105,7 +105,7 @@
                   {{t "Sync Done!" key='sync_done'}}
                 {{else}}
                   {{#if persistence.sync_failed}}
-                    {{t "Sync Failed" key='sync_failed'}}
+                    {{t "Sync Failed, see details below" key='sync_failed'}}
                     {{#if persistence.sync_status_error}}
                       <span title={{persistence.sync_status_error}}>{{persistence.sync_status_error}}</span>
                     {{/if}}
@@ -156,7 +156,7 @@
                   {{t "Sync Done!" key='sync_done'}}
                 {{else}}
                   {{#if persistence.sync_failed}}
-                    {{t "Sync Failed" key='sync_failed'}}
+                    {{t "Sync Failed, see details below" key='sync_failed'}}
                   {{else}}
                     {{#if persistence.syncing}}
                       {{t "Syncing..." key='syncing'}}
@@ -242,6 +242,9 @@
             {{t "disabled" key='logging_is_disabled'}}
           {{/if}}
         </a>
+      {{/if}}
+      {{#if persistence.sync_log}}
+        <br/><a href="#" {{action 'sync_details'}}>{{t "recent sync details" key='sync_details'}}</a>
       {{/if}}
       <div style="clear: right;"></div>
       </div>

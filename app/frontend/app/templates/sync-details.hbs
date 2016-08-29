@@ -1,0 +1,27 @@
+{{#modal-dialog action="close" opening='opening' closing='closing'}}
+  <div class="modal-header">
+    <button type="button" class="close" {{action 'close'}}>&times;</button>
+    <h3>{{t "Sync Details" key='sync_details'}}</h3>
+  </div>
+  <div class="modal-body">
+    {{#if model.details}}
+      {{#each model.details as |sync|}}
+        <h3>
+          {{#if sync.errored}}
+            <span class='text-danger'>{{date_ago sync.finished}}</span>
+          {{else}}
+            <span class='text-success'>{{date_ago sync.finished}}</span>
+          {{/if}}
+        </h3>
+        {{#if sync.manual}}{{t "Manual sync. " key='manual_sync'}}{{/if}}
+        {{sync.summary}}
+      {{/each}}
+    {{else}}
+      <p>{{t "No sync details to show" key='no_sync_details'}}</p>
+    {{/if}}
+  </div>
+  <div class="modal-footer">
+    <button class='btn btn-default' {{action 'close'}}>{{t "Close" key='close'}}</button>
+  </div>
+{{/modal-dialog}}
+

@@ -688,6 +688,213 @@ describe("persistence-sync", function() {
     });
   });
 
+  it("should append to the sync log on success", function() {
+    db_wait(function() {
+      persistence.set('sync_log', [{a: 1}]);
+      var stores = [];
+      stub(persistence, 'store_url', function(url, type) {
+        stores.push(url);
+        console.log(url);
+        return Ember.RSVP.resolve({url: url});
+      });
+      stub(persistence, 'find_changed', function() { return Ember.RSVP.resolve([]); });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'user',
+        response: Ember.RSVP.resolve({user: {
+          id: '1340',
+          user_name: 'fred',
+          avatar_url: 'http://example.com/pic.png',
+          preferences: {home_board: {id: '145'}}
+        }}),
+        id: "1340"
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '145',
+          image_url: 'http://example.com/board.png',
+          buttons: [
+            {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
+          ],
+          grid: {
+            rows: 1,
+            columns: 1,
+            order: [['1']]
+          }
+        },
+          image: [
+            {id: '2', url: 'http://example.com/image.png'}
+          ],
+          sound: [
+            {id: '3', url: 'http://example.com/sound.mp3'}
+          ]
+        }),
+        id: '145'
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '167',
+          image_url: 'http://example.com/board.png',
+          buttons: [
+            {id: '1', image_id: '2', load_board: {id: '145'}},
+            {id: '2', image_id: '2', load_board: {id: '178'}}
+          ],
+          grid: {
+            rows: 1,
+            columns: 1,
+            order: [['1']]
+          }
+        },
+          image: [
+            {id: '2', url: 'http://example.com/image2.png'}
+          ]
+        }),
+        id: '167'
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '178',
+          image_url: 'http://example.com/board.png',
+          buttons: [
+            {id: '1', image_id: '2', load_board: {id: '145'}},
+            {id: '2', image_id: '2', load_board: {id: '167'}},
+            {id: '3', image_id: '2', load_board: {id: '178'}}
+          ],
+          grid: {
+            rows: 1,
+            columns: 1,
+            order: [['1']]
+          }
+        },
+          image: [
+            {id: '2', url: 'http://example.com/image2.png'}
+          ]
+        }),
+        id: '178'
+      });
+      var done = false;
+      persistence.sync(1340).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        var logs = queryLog;
+        expect(logs.findBy('id', '1340')).toNotEqual(undefined);
+        expect(logs.findBy('id', '145')).toNotEqual(undefined);
+        expect(logs.findBy('id', '167')).toNotEqual(undefined);
+        expect(logs.findBy('id', '178')).toNotEqual(undefined);
+        var log = persistence.get('sync_log');
+        expect(log.length).toEqual(2);
+        expect(log[0].a).toEqual(1);
+        expect(log[1].user_id).toEqual('fred');
+      });
+    });
+  });
+
+  it("should append to the sync log on failure", function() {
+    db_wait(function() {
+      persistence.set('sync_log', null);
+      var stores = [];
+      stub(persistence, 'store_url', function(url, type) {
+        stores.push(url);
+        console.log(url);
+        return Ember.RSVP.resolve({url: url});
+      });
+      stub(modal, 'error', function() { });
+      stub(persistence, 'find_changed', function() { return Ember.RSVP.resolve([]); });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'user',
+        response: Ember.RSVP.resolve({user: {
+          id: '1340',
+          user_name: 'fred',
+          avatar_url: 'http://example.com/pic.png',
+          preferences: {home_board: {id: '145'}}
+        }}),
+        id: "1340"
+      });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '145',
+          image_url: 'http://example.com/board.png',
+          buttons: [
+            {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
+          ],
+          grid: {
+            rows: 1,
+            columns: 1,
+            order: [['1']]
+          }
+        },
+          image: [
+            {id: '2', url: 'http://example.com/image.png'}
+          ],
+          sound: [
+            {id: '3', url: 'http://example.com/sound.mp3'}
+          ]
+        }),
+        id: '145'
+      });
+
+      var r = Ember.RSVP.reject({error: "Not authorized"});
+      r.then(null, function() { });
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'board',
+        response: r,
+        id: '167'
+      });
+
+      queryLog.defineFixture({
+        method: 'GET',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '178',
+          image_url: 'http://example.com/board.png',
+          buttons: [
+            {id: '1', image_id: '2', load_board: {id: '145'}},
+            {id: '2', image_id: '2', load_board: {id: '167'}},
+            {id: '3', image_id: '2', load_board: {id: '178'}}
+          ],
+          grid: {
+            rows: 1,
+            columns: 1,
+            order: [['1']]
+          }
+        },
+          image: [
+            {id: '2', url: 'http://example.com/image2.png'}
+          ]
+        }),
+        id: '178'
+      });
+      var error = null;
+      persistence.sync(1340).then(null, function(err) {
+        error = err;
+      });
+      waitsFor(function() { return error; });
+      runs(function() {
+        var logs = queryLog;
+        expect(error.board_unauthorized).toEqual(true);
+        expect(logs.findBy('id', '1340')).toNotEqual(undefined);
+        expect(logs.findBy('id', '145')).toNotEqual(undefined);
+        expect(logs.findBy('id', '167')).toNotEqual(undefined);
+
+        var log = persistence.get('sync_log');
+        expect(log.length).toEqual(1);
+        expect(log[0].user_id).toEqual('fred');
+      });
+    });
+  });
+
  it("should skip board lookups that are already cached locally", function() {
     db_wait(function() {
       var stores = [];

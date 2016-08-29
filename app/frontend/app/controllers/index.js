@@ -293,6 +293,9 @@ export default Ember.Controller.extend({
     },
     manage_supervisors: function() {
       modal.open('supervision-settings', {user: app_state.get('currentUser')});
+    },
+    sync_details: function() {
+      modal.open('sync-details', {details: (persistence.get('sync_log') || []).reverse()});
     }
   }
 });

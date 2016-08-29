@@ -845,6 +845,7 @@ var persistence = Ember.Object.extend({
     }
 
     console.log('syncing for ' + user_id);
+    var user_name = user_id;
     if(this.get('online')) {
       stashes.push_log();
     }
@@ -870,8 +871,10 @@ var persistence = Ember.Object.extend({
         });
       });
 
+
       var confirm_quota_for_user = find_user.then(function(user) {
         if(user) {
+          user_name = user.get('user_name') || user_id;
           if(persistence.get('local_system.available') && user.get('preferences.home_board') &&
                     !persistence.get('local_system.allowed') && persistence.get('local_system.requires_confirmation') &&
                     stashes.get('allow_local_filesystem_request')) {
@@ -975,6 +978,14 @@ var persistence = Ember.Object.extend({
           }, function() {
             debugger;
           });
+          var log = persistence.get('sync_log') || [];
+          log.push({
+            user_id: user_name,
+            manual: force,
+            finished: new Date(),
+            summary: i18n.t('finised_without_errors', "Finished syncing %{user_id} without errors", {user_id: user_name})
+          });
+          persistence.set('sync_log', log);
         }
         return Ember.RSVP.resolve(last_sync);
       });
@@ -989,6 +1000,16 @@ var persistence = Ember.Object.extend({
         } else if(!persistence.get('online')) {
           persistence.set('sync_status_error', i18n.t('not_online', "Must be online to sync"));
         }
+        var message = (err && err.error) || "unspecified sync error";
+        var log = persistence.get('sync_log') || [];
+        log.push({
+          user_id: user_name,
+          manual: force,
+          errored: true,
+          finished: new Date(),
+          summary: i18n.t('finised_without_errors', "Error syncing %{user_id}: ", {user_id: user_name}) + message
+        });
+        persistence.set('sync_log', log);
         if(err && err.error) {
           modal.error(err.error);
         }
