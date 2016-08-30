@@ -295,7 +295,8 @@ export default Ember.Controller.extend({
       modal.open('supervision-settings', {user: app_state.get('currentUser')});
     },
     sync_details: function() {
-      modal.open('sync-details', {details: (persistence.get('sync_log') || []).reverse()});
+      var list = ([].concat(persistence.get('sync_log') || [])).reverse();
+      modal.open('sync-details', {details: list});
     }
   }
 });
