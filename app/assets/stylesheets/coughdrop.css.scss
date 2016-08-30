@@ -13,9 +13,8 @@
 
 #within_ember {
   position: relative;
-}
-#within_ember {
   background: #fff;
+  overflow: hidden; /* Windows-only quirk causes extra scrollbars without this */
 }
 #within_ember.color_black {
   background: #000;
