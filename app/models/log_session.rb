@@ -125,11 +125,11 @@ class LogSession < ActiveRecord::Base
       else
         stamp ||= last_stamp + max_diff
         diff = [0.0, [stamp - last_stamp, max_diff].min].max
-        dots = "."
-        dots += "." if diff >= max_diff
-        dots += "." if diff > (60.0 * 5.0)
-        dots += "." if diff > (60.0 * 1.0)
-        dots += "." if diff > 10
+        dots = " "
+        dots = "." + dots if diff >= max_diff
+        dots = "." + dots if diff > (60.0 * 5.0)
+        dots = "." + dots if diff > (60.0 * 1.0)
+        dots = "." + dots if diff > 10
         str += dots + event_string
       end
       last_stamp = stamp
