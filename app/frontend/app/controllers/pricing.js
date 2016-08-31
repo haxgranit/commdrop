@@ -23,6 +23,9 @@ export default Ember.Controller.extend({
     show_bulk_purchase: function() {
       this.set('show_bulk_purchase', !this.get('show_bulk_purchase'));
     },
+    show_alternative_pricing: function() {
+      this.set('show_alternative_pricing', !this.get('show_alternative_pricing'));
+    },
     set_subscription: function(amount) {
      this.set('subscription.subscription_amount', amount);
     }

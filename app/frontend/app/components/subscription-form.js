@@ -21,6 +21,9 @@ export default Ember.Component.extend({
     show_expiration_notes: function() {
       this.set('show_expiration_notes', true);
     },
+    show_alternative_pricing: function() {
+      this.set('show_alternative_pricing', !this.get('show_alternative_pricing'));
+    },
     skip_subscription: function() {
       var role = this.get('subscription.user_type');
       var user = this.get('user');

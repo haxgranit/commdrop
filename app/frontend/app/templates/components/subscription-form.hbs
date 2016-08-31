@@ -140,6 +140,17 @@
             {{t "CoughDrop is priced per-communicator. Supporting parents and therapists can create free logins to use while working with communicators, or donate to help give access to those in need." key='which_user_type'}}
             <a href="#" {{action "set_special_subscription"}} style="color: #fff;">{{t "More pricing options." key='more_pricing_options'}}</a>
           </p>
+        {{else}}
+          <div>
+            <a href="#" {{action 'show_alternative_pricing'}}>{{t "working with insurance or grant funding?" key='insurance_funding'}}</a>
+            {{#if show_alternative_pricing}}
+              <p class='explanation' style='max-width: 600px; margin-top: 15px;'>
+                {{t "Sometimes insurance providers or grant issuers require one-time or longer-term purchasing for software and hardware. If this is your situation please " key='alternative_pricing_1'}}
+                {{#link-to 'contact' (query-params to='sales')}}{{t "reach out to us" key='reach_out_to_us'}}{{/link-to}}
+                {{t "and we can help get things figured out." key='alternative_pricing_2'}}
+              </p>
+            {{/if}}
+          </div>
         {{/if}}
       </div>
     </div>
@@ -262,7 +273,7 @@
       <div class="col-sm-9" style="padding-bottom: 20px;">
         <p style="font-size: 18px;"><strong>{{t "Or start with a 2-month free trial and make sure it works for you." key='after_free_trial'}}</strong></p>
         <p style="margin-top: 10px;">
-          <a href="#" {{action 'show_expiration_notes'}}>{{t "what happens if my subscription expires?" key='what_happens_expires'}}</a>
+          <a href="#" {{action 'show_expiration_notes'}}>{{t "What happens if my subscription expires?" key='what_happens_expires'}}</a>
         </p>
         {{#if show_expiration_notes}}
           <p class="explanation" style="margin-top: 10px;">
