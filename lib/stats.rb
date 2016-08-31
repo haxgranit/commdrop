@@ -10,8 +10,8 @@ module Stats
     sanitize_find_options!(options, user)
     week_start = options[:start_at].utc.beginning_of_week(:sunday)
     week_end = options[:end_at].utc.end_of_week(:sunday)
-    start_weekyear = (options[:start_at].utc.to_date.cwyear * 100) + options[:start_at].utc.to_date.cweek
-    end_weekyear = (options[:end_at].utc.to_date.cwyear * 100) + options[:end_at].utc.to_date.cweek
+    start_weekyear = (week_start.to_date.cwyear * 100) + week_start.to_date.cweek
+    end_weekyear = (week_end.to_date.cwyear * 100) + week_end.to_date.cweek
     summaries = WeeklyStatsSummary.where(['user_id = ? AND weekyear >= ? AND weekyear <= ?', user.id, start_weekyear, end_weekyear])
     summary_lookups = {}
     summaries.each{|s| summary_lookups[s.weekyear] = s }
@@ -19,7 +19,7 @@ module Stats
     days = {}
     all_stats = []
     options[:start_at].to_date.upto(options[:end_at].to_date) do |date|
-      weekyear = (date.cwyear * 100) + date.cweek
+      weekyear = (date.beginning_of_week(:sunday).cwyear * 100) + date.beginning_of_week(:sunday).cweek
       summary = summary_lookups[weekyear]
       day = summary && summary.data && summary.data['stats']['days'][date.to_s]
       filtered_day_stats = nil

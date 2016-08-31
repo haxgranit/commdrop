@@ -162,6 +162,7 @@ describe Stats do
       ClusterLocation.all.each{|c| c.generate_stats(true) }
       WeeklyStatsSummary.update_for(s1.global_id)
       WeeklyStatsSummary.update_for(s2.global_id)
+      sum = WeeklyStatsSummary.last
       
       starty = 3.days.ago
       endy = Time.now + 100

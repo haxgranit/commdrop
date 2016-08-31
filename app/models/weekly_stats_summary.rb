@@ -18,10 +18,10 @@ class WeeklyStatsSummary < ActiveRecord::Base
     return unless log_session.user_id && log_session.started_at && log_session.data && log_session.data['stats']
     # TODO: if log_session.started_at ever gets updated in a way that changes cweek then
     # multiple weeks need to be updated 
-    cweek = log_session.started_at.utc.to_date.cweek
-    cwyear = log_session.started_at.utc.to_date.cwyear
     start_at = log_session.started_at.utc.beginning_of_week(:sunday)
     end_at = log_session.started_at.utc.end_of_week(:sunday)
+    cweek = start_at.to_date.cweek
+    cwyear = start_at.to_date.cwyear
     weekyear = (cwyear * 100) + cweek
 
     summary = WeeklyStatsSummary.find_or_create_by(:weekyear => weekyear, :user_id => log_session.user_id)
@@ -74,6 +74,7 @@ class WeeklyStatsSummary < ActiveRecord::Base
     
     summary.data ||= {}
     summary.data['stats'] = total_stats
+    summary.data['session_ids'] = sessions.map(&:global_id)
     summary.save
     
     # TODO: create board-aligned stat summaries as well

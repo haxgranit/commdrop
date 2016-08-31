@@ -45,7 +45,7 @@ describe LogSession, :type => :model do
       expect(s.data['event_count']).to eq(2)
       expect(s.started_at.to_i).to eq(time1.to_i)
       expect(s.ended_at.to_i).to eq(time2.to_i)
-      expect(s.data['event_summary']).to eq('hat...cow')
+      expect(s.data['event_summary']).to eq('hat.. cow')
       
       u = User.new(:user_name => "fred")
       s = LogSession.new(:author => u)
@@ -190,7 +190,7 @@ describe LogSession, :type => :model do
       expect(s.data['event_count']).to eq(4)
       expect(s.started_at.to_i).to eq(time1.to_i)
       expect(s.ended_at.to_i).to eq(time3.to_i)
-      expect(s.data['event_summary']).to eq('hat...cow....[home]')
+      expect(s.data['event_summary']).to eq('hat.. cow... [home]')
     end
     
     it "should mark buttons as modified_by_next" do
