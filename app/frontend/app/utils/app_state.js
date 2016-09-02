@@ -462,6 +462,7 @@ var app_state = Ember.Object.extend({
         buttonTracker.dwell_delay = _this.get('currentUser.preferences.device.dwell_delay');
         buttonTracker.dwell_type = _this.get('currentUser.preferences.device.dwell_type');
         buttonTracker.dwell_animation = _this.get('currentUser.preferences.device.dwell_targeting');
+        buttonTracker.dwell_release_distance = _this.get('currentUser.preferences.device.dwell_release_distance');
         buttonTracker.dwell_no_cutoff = _this.get('currentUser.preferences.device.dwell_no_cutoff');
         if(buttonTracker.dwell_type == 'eyegaze') {
           capabilities.eye_gaze.listen();

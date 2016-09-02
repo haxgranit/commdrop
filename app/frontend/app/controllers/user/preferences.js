@@ -90,6 +90,11 @@ export default Ember.Controller.extend({
     {name: i18n.t('eye_gaze', "Eye Gaze Tracking"), id: 'eyegaze'},
     {name: i18n.t('mouse_dwell', "Cursor-Based Dwell Tracking"), id: 'mouse_dwell'}
   ],
+  dwellReleaseDistanceList: [
+    {name: i18n.t('small', "Small (10px)"), id: 10},
+    {name: i18n.t('medium', "Medium (30px)"), id: 30},
+    {name: i18n.t('large', "Large (50px)"), id: 50}
+  ],
   targetingList: [
     {name: i18n.t('spinning_pie', "Spinning-Pie Animation"), id: 'pie'},
     {name: i18n.t('shrinking_dot', "Shrinking-Dot Animation"), id: 'shrink'}

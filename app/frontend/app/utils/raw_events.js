@@ -540,7 +540,7 @@ var buttonTracker = Ember.Object.extend({
     if(buttonTracker.last_triggering_dwell_event) {
       // after a selection, require a little bit of movement before recognizing input
       var last = buttonTracker.last_triggering_dwell_event;
-      var needed_distance = 30;
+      var needed_distance = buttonTracker.dwell_release_distance || 30;
       var diffX = Math.abs(event.clientX - last.clientX);
       var diffY = Math.abs(event.clientY - last.clientY);
       if(diffX < needed_distance && diffY < needed_distance) {
@@ -579,7 +579,7 @@ var buttonTracker = Ember.Object.extend({
     Ember.run.cancel(buttonTracker.linger_close_enough_later);
     buttonTracker.dwell_timeout = buttonTracker.dwell_timeout || 1000;
     buttonTracker.dwell_animation = buttonTracker.dwell_animation || 'pie';
-    var allowed_delay_between_events = Math.max(300, buttonTracker.dwell_timeout / 2);
+    var allowed_delay_between_events = Math.max(300, buttonTracker.dwell_timeout / 4);
     var minimum_interaction_window = 50;
     if(event.type == 'mousemove' && buttonTracker.dwell_no_cutoff) {
       allowed_delay_between_events = buttonTracker.dwell_timeout - minimum_interaction_window;
@@ -588,8 +588,8 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.dwell_delay = 100;
     }
     buttonTracker.linger_clear_later = Ember.run.later(function() {
+      // clear the dwell icon if not dwell activity for a period of time
       buttonTracker.clear_dwell(elem_wrap && elem_wrap.dom);
-      // clear the dwell icon
     }, allowed_delay_between_events);
 
     var now = (new Date()).getTime();
@@ -598,10 +598,13 @@ var buttonTracker = Ember.Object.extend({
       // check if we're outside the screen bounds, or the timestamp bounds.
       // if so clear the object
       if(now - buttonTracker.last_dwell_linger.started > buttonTracker.dwell_timeout + 1000 - duration) {
+        // if it's been too long since starting to track the dwell, start over
         buttonTracker.last_dwell_linger = null;
       } else if(now - buttonTracker.last_dwell_linger.updated > allowed_delay_between_events - duration) {
+        // if it's been too long since the last dwell event, start over
         buttonTracker.last_dwell_linger = null;
       } else {
+        // if it's outside the loose bounds to the last target, start over
         var bounds = buttonTracker.last_dwell_linger.loose_bounds();
         if(event.clientX < bounds.left || event.clientX > bounds.left + bounds.width ||
               event.clientY < bounds.top || event.clientY > bounds.top + bounds.height) {
@@ -670,14 +673,13 @@ var buttonTracker = Ember.Object.extend({
             buttonTracker.dwell_wait = false;
           }, buttonTracker.dwell_delay);
         }
-        // TODO: timeout before starting next selection
       } else {
         // if we're getting close to the dwell timeout, schedule a listener to trigger
         // it in case we don't get a follow-on event in time
         var will_trigger_at = buttonTracker.last_dwell_linger.started + buttonTracker.dwell_timeout;
         var ms_since_start = now - buttonTracker.last_dwell_linger.started;
         var ms_until_trigger = will_trigger_at - now;
-        if((event.type == 'mousemove' && ms_since_start > minimum_interaction_window) || ms_until_trigger < allowed_delay_between_events / 3) {
+        if((event.type == 'mousemove' && buttonTracker.dwell_no_cutoff && ms_since_start > minimum_interaction_window) || (ms_until_trigger < allowed_delay_between_events * 3 / 4)) {
           buttonTracker.linger_close_enough_later = Ember.run.later(function() {
             buttonTracker.dwell_linger(event);
           }, ms_until_trigger - 50);
