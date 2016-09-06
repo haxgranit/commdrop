@@ -105,7 +105,7 @@ Utils.all_pages = function(type, initial_opts, partial_callback) {
           }
           if(meta && meta.more) {
             args.per_page = meta.per_page;
-            args.offset = meta.offset;
+            args.offset = meta.next_offset;
             find_next(type, args);
           } else {
             resolve(all_results);
