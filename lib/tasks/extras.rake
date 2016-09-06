@@ -133,7 +133,7 @@ task "extras:mobile" => :environment do
   
   str = File.read("../#{folder}/config.xml")
   date_version = Date.today.strftime('%Y.%m.%d')
-  str = str.sub(/version\s*=s*\"[^\"]+\"/, "version=\"#{date_version}\"")
+  str = str.sub(/version\s*=s*\"\d+\.\d+\.\d+\"/, "version=\"#{date_version}\"")
   File.write("../#{folder}/config.xml", str)
 
   puts "building for android"
