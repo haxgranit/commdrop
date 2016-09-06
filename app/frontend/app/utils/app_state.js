@@ -890,6 +890,11 @@ var app_state = Ember.Object.extend({
 if(!app_state.get('testing')) {
   setInterval(function() {
     app_state.set('refresh_stamp', new Date());
+    if(window.persistence) {
+      window.persistence.set('refresh_stamp', (new Date()).getTime());
+    } else {
+      console.error('persistence needed for setting refresh stamp');
+    }
   }, 5*60*1000);
   setInterval(function() {
     app_state.set('short_refresh_stamp', new Date());
