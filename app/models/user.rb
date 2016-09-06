@@ -769,7 +769,7 @@ class User < ActiveRecord::Base
       valid_ids = ids_to_copy.split(/,/)
       valid_ids = nil if valid_ids.length == 0
     end
-    Board.replace_board_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :update_inline => update_inline, :authorized_user => whodunnit})
+    Board.replace_board_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :update_inline => update_inline, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)})
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
@@ -787,12 +787,20 @@ class User < ActiveRecord::Base
       valid_ids = ids_to_copy.split(/,/)
       valid_ids = nil if valid_ids.length == 0
     end
-    Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :authorized_user => whodunnit})
+    Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)})
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
   ensure
     PaperTrail.whodunnit = prior
+  end
+
+  def self.whodunnit_user(whodunnit)
+    if whodunnit && whodunnit.match(/^user:/)
+      User.find_by_path(whodunnit.split(/:/)[1])
+    else
+      nil
+    end
   end
   
   def permission_scopes

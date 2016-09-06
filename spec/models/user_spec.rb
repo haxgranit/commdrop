@@ -478,6 +478,34 @@ describe User, :type => :model do
       expect(Board).to receive(:copy_board_links_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :authorized_user => nil})
       u.copy_board_links(b.global_id, b2.global_id)
     end
+    
+    it "should use correct whodunnit user" do
+      u1 = User.create
+      u2 = User.create
+      u3 = User.create
+      b1 = Board.create(:user => u1)
+      b1a = Board.create(:user => u1)
+      User.link_supervisor_to_user(u2, u1, nil, true)
+      b1.settings['buttons'] = [{'id' => 1, 'load_board' => {'key' => b1a.key, 'id' => b1a.global_id}}]
+      b1.save!
+      b1.track_downstream_boards!
+      expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id])
+      b2 = b1.copy_for(u3)
+      expect(Board).to receive(:relink_board_for) do |user, opts|
+        boards = opts[:boards]
+        pending_replacements = opts[:pending_replacements]
+        action = opts[:update_preference]
+        expect(opts[:authorized_user]).to eq(u2)
+        expect(user).to eq(u3)
+        expect(boards.length).to eq(2)
+        expect(boards).to eq([b1, b1a])
+        expect(pending_replacements.length).to eq(2)
+        expect(pending_replacements[0]).to eq([b1, b2])
+        expect(pending_replacements[1][0]).to eq(b1a)
+        expect(action).to eq('update_inline')
+      end
+      u3.copy_board_links(b1.global_id, b2.global_id, [], "user:#{u2.global_id}")
+    end
   end
  
   describe "notify_of_changes" do
