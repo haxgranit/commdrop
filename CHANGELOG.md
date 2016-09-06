@@ -2,6 +2,11 @@
 
 ## Master
 
+### 2016-09-03
+- support for Windows-based electron install
+- more configuration options for dwell tracking
+- support for searching multiple symbol/image libraries
+
 ### 2016-08-15
 - user-level integrations that can be triggered by board button presses (feature flag)
 - setting to block emails from future registrations
