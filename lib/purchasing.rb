@@ -92,6 +92,7 @@ module Purchasing
                 'user_id' => customer['metadata'] && customer['metadata']['user_id'],
                 'customer_id' => object['customer'],
                 'subscription_id' => object['id'],
+                'cancel_others_on_update' => false,
                 'source' => 'customer.subscription.updated'
               })
             end
