@@ -22,7 +22,7 @@ class UserMailer < ActionMailer::Base
       begin
         res = Typhoeus.get(url)
         json = JSON.parse(res.body)
-        @location = json && "#{json['city']}, #{json['region_name']}, #{json['county_code']}"
+        @location = json && "#{json['city']}, #{json['region_name']}, #{json['country_code']}"
       rescue => e
       end
     end
