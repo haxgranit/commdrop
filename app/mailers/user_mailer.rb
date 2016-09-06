@@ -14,6 +14,18 @@ class UserMailer < ActionMailer::Base
   
   def new_user_registration(user_id)
     @user = User.find_by_global_id(user_id)
+    d = @user.devices[0]
+    ip = d && d.settings['ip_address']
+    @location = nil
+    if ip
+      url = "http://freegeoip.net/json/#{ip}"
+      begin
+        res = Typhoeus.get(url)
+        json = JSON.parse(res.body)
+        @location = json && "#{json['city']}, #{json['region_name']}, #{json['county_code']}"
+      rescue => e
+      end
+    end
     if ENV['NEW_REGISTRATION_EMAIL']
       mail(to: ENV['NEW_REGISTRATION_EMAIL'], subject: "CoughDrop - New User Registration", reply_to: @user.settings['email'])
     end

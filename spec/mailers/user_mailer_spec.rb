@@ -163,16 +163,38 @@ describe UserMailer, :type => :mailer do
     
     it "should generate a message" do
       u = User.create
+      d = Device.create(:user => u, :settings => {'ip_address' => '1.2.3.4'})
       ENV['NEW_REGISTRATION_EMAIL'] = 'asdf@example.com'
+      expect(Typhoeus).to receive(:get).and_raise("no worky")
       m = UserMailer.new_user_registration(u.global_id)
       expect(m.subject).to eq('CoughDrop - New User Registration')
       html = message_body(m, :html)
       expect(html).to match(/just signed up/)
       expect(html).to match(/#{u.user_name}/)
+      expect(html).to_not match(/Location:/)
       
       text = message_body(m, :text)
       expect(text).to match(/just signed up/)
+      expect(text).to match(/#{u.user_name}/)
+      expect(text).to_not match(/Location:/)
+    end
+    
+    it "should include location data if available" do
+      u = User.create
+      d = Device.create(:user => u, :settings => {'ip_address' => '1.2.3.4'})
+      ENV['NEW_REGISTRATION_EMAIL'] = 'asdf@example.com'
+      expect(Typhoeus).to receive(:get).with("http://freegeoip.net/json/1.2.3.4").and_return(OpenStruct.new(body: {city: 'Paris', region_name: 'Texas', county_code: 'US'}.to_json))
+      m = UserMailer.new_user_registration(u.global_id)
+      expect(m.subject).to eq('CoughDrop - New User Registration')
+      html = message_body(m, :html)
+      expect(html).to match(/just signed up/)
       expect(html).to match(/#{u.user_name}/)
+      expect(html).to match(/Location: Paris, Texas, US/)
+      
+      text = message_body(m, :text)
+      expect(text).to match(/just signed up/)
+      expect(text).to match(/#{u.user_name}/)
+      expect(text).to match(/Location: Paris, Texas, US/)
     end
   end
   
