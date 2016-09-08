@@ -190,7 +190,7 @@ class Api::UsersController < ApplicationController
     return unless exists?(user, params['user_id'])
     return unless allowed?(user, 'supervise')
     supervisors = user.supervisors
-    render json: JsonApi::User.paginate(params, supervisors, limited_identity: true, supervisee: user, prefix: "users/#{user.global_id}/supervisors")
+    render json: JsonApi::User.paginate(params, supervisors, limited_identity: true, supervisee: user, prefix: "/users/#{user.global_id}/supervisors")
   end
   
   def supervisees
@@ -198,7 +198,7 @@ class Api::UsersController < ApplicationController
     return unless exists?(user, params['user_id'])
     return unless allowed?(user, 'supervise')
     supervisees = user.supervisees
-    render json: JsonApi::User.paginate(params, supervisees, limited_identity: true, supervisor: user, prefix: "users/#{user.global_id}/supervisees")
+    render json: JsonApi::User.paginate(params, supervisees, limited_identity: true, supervisor: user, prefix: "/users/#{user.global_id}/supervisees")
   end
   
   def subscribe
