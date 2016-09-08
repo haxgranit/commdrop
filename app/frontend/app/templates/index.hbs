@@ -81,6 +81,11 @@
                     </div>
                   </li>
                 {{/each}}
+                {{#if app_state.currentUser.all_connections.loading}}
+                  <li>{{t "Loading more..." key='loading_more'}}</li>
+                {{else if app_state.currentUser.all_connections.error}}
+                  <li class='text-danger'>{{t "There was an error loading supervision users" key='error_loading_connections'}}</li>
+                {{/if}}
               {{else}}
                 <li>
                   {{t "None found" key='none_found'}}

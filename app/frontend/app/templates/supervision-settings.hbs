@@ -94,6 +94,11 @@
     {{else}}
       <p>{{t "None found" key='none_found'}}</p>
     {{/if}}
+    {{#if app_state.currentUser.all_connections.loading}}
+      <p>{{t "Loading more..." key='loading_more'}}</p>
+    {{else if app_state.currentUser.all_connections.error}}
+      <p class='text-danger'>{{t "There was an error loading supervision users" key='error_loading_connections'}}</p>
+    {{/if}}
   </div>
   <div class="modal-footer">
     <a href="#" class="btn" {{action 'close'}}>{{t "Close" key='close'}}</a>
