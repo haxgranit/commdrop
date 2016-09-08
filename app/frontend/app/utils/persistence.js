@@ -874,6 +874,9 @@ var persistence = Ember.Object.extend({
 
       var confirm_quota_for_user = find_user.then(function(user) {
         if(user) {
+          if(user.get('preferences.skip_supervisee_sync')) {
+            ignore_supervisees = true;
+          }
           user_name = user.get('user_name') || user_id;
           if(persistence.get('local_system.available') && user.get('preferences.home_board') &&
                     !persistence.get('local_system.allowed') && persistence.get('local_system.requires_confirmation') &&
