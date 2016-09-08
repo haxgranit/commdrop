@@ -102,6 +102,35 @@ var speecher = Ember.Object.extend({
     this.stop('text');
     if(!text) { return; }
     text = text.toString();
+    text = text.replace(/…/, '...');
+    // iOS TTS quirk
+    if(text.replace(/\s+/g, '') == "I") { text = "eye"; }
+    if(text.replace(/\s+/g, '') == "went") { text = "wend"; }
+    var _this = this;
+    var speak_id = this.speak_id++;
+    this.last_speak_id = speak_id;
+    var pieces = text.split(/\.\.\./);
+    var next_piece = function() {
+      var piece_text = pieces.shift();
+      if(piece_text.length == 0 || piece_text.match(/^\s+$/)) {
+        Ember.run.later(function() {
+          next_piece();
+        }, 500);
+      } else {
+        _this.speak_raw_text(piece_text, from_collection, opts, function() {
+          if(pieces.length > 0) {
+            Ember.run.later(function() {
+              next_piece();
+            }, 500);
+          } else {
+            _this.speak_end_handler(speak_id);
+          }
+        });
+      }
+    };
+    next_piece();
+  },
+  speak_raw_text: function(text, from_collection, opts, callback) {
     opts.rate = opts.rate || this.rate || this.default_rate();
     opts.volume = opts.volume || this.volume || 1.0;
     if(opts.alternate_voice) {
@@ -109,12 +138,7 @@ var speecher = Ember.Object.extend({
     }
     opts.pitch = opts.pitch || this.pitch || 1.0;
     opts.voiceURI = opts.voiceURI || this.voiceURI;
-    // iOS TTS quirk
-    if(text.replace(/\s+/g, '') == "I") { text = "eye"; }
-    if(text.replace(/\s+/g, '') == "went") { text = "wend"; }
     var _this = this;
-    var speak_id = this.speak_id++;
-    this.last_speak_id = speak_id;
     if(speecher.scope.speechSynthesis) {
       if(opts.interrupt !== false) {
         this.speaking = true;
@@ -143,11 +167,11 @@ var speecher = Ember.Object.extend({
         }
         if(utterance.addEventListener) {
           utterance.addEventListener('end', function() {
-            _this.speak_end_handler(speak_id);
+            callback();
           });
         } else {
           utterance.onend = function() {
-            _this.speak_end_handler(speak_id);
+            callback();
           };
         }
         speecher.scope.speechSynthesis.speak(utterance);
@@ -163,7 +187,7 @@ var speecher = Ember.Object.extend({
             rate: utterance.rate
           }).then(function() {
             // method won't be called until the text is done being spoken or was interrupted
-            _this.speak_end_handler(speak_id);
+            callback();
           }, function(err) {
             console.log("system speak error");
             console.log(err);
