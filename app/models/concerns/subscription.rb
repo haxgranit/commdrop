@@ -377,18 +377,17 @@ module Subscription
     json
   end
   
-  def log_subscription_event(hash, frd=false)
-    if !frd
-      hash[:time] = Time.now.to_i
-      schedule(:log_subscription_event, hash, true)
-      return true
-    end
-    self.settings ||= {}
+  def log_subscription_event(hash)
     hash[:time] = Time.now.to_i
-    self.settings['subscription_events'] ||= []
-    self.settings['subscription_events'] << hash
-    self.settings['subscription_events'].sort_by!{|e| e['time'] || Time.now.to_i }
-    self.save
+    AuditEvent.create({
+      record_id: self.record_code,
+      event_type: 'subscription_event',
+      data: hash
+    })
+  end
+  
+  def subscription_events
+    AuditEvent.where(event_type: 'subscription_event', record_id: self.record_code).order('id ASC').map{|e| e.data }
   end
       
   module ClassMethods  

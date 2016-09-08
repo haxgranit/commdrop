@@ -411,8 +411,8 @@ describe Purchasing do
         }).and_return(OpenStruct.new({
           subscriptions: {
             'data' => [
-              {'active' => false, 'id' => 'sub1'},
-              {'active' => true, 'id' => 'sub2'}
+              {'status' => 'broken', 'id' => 'sub1'},
+              {'status' => 'active', 'id' => 'sub2'}
             ]
           }
         }))
@@ -674,13 +674,13 @@ describe Purchasing do
       expect(res).to eq(true)
       Worker.process_queues
       u.reload
-      expect(u.settings['subscription_events']).to_not eq(nil)
-      expect(u.settings['subscription_events'][-1]['log']).to eq('subscription canceled')
-      expect(u.settings['subscription_events'][-1]['reason']).to eq('4567')
-      expect(u.settings['subscription_events'][-2]['log']).to eq('subscription canceled')
-      expect(u.settings['subscription_events'][-2]['reason']).to eq('4567')
-      expect(u.settings['subscription_events'][-3]['log']).to eq('subscription canceling')
-      expect(u.settings['subscription_events'][-3]['reason']).to eq('4567')
+      expect(u.subscription_events).to_not eq(nil)
+      expect(u.subscription_events[-1]['log']).to eq('subscription canceled')
+      expect(u.subscription_events[-1]['reason']).to eq('4567')
+      expect(u.subscription_events[-2]['log']).to eq('subscription canceled')
+      expect(u.subscription_events[-2]['reason']).to eq('4567')
+      expect(u.subscription_events[-3]['log']).to eq('subscription canceling')
+      expect(u.subscription_events[-3]['reason']).to eq('4567')
     end
     
     it "should not cancel other subscriptions if the referenced subscription is inactive" do
@@ -882,8 +882,8 @@ describe Purchasing do
       Purchasing.purchase(u, {'id' => 'token'}, 'long_term_150')
       Worker.process_queues
       u.reload
-      expect(u.settings['subscription_events'].length).to eq(5)
-      expect(u.settings['subscription_events'].map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting long-term purchase update', 'subscription canceling'])
+      expect(u.subscription_events.length).to eq(5)
+      expect(u.subscription_events.map{|e| e['log'] }).to eq(['purchase initiated', 'paid subscription', 'long-term - creating charge', 'persisting long-term purchase update', 'subscription canceling'])
     end
   end
 end

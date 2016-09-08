@@ -259,6 +259,7 @@ module Purchasing
             :source => token['id']
           })
           sub = customer.subscriptions['data'].detect{|s| s['status'] == 'active' || s['status'] == 'trialing' }
+          raise "no valid subscription found" unless sub
           user && user.log_subscription_event({:log => 'persisting subscription update'})
           updated = User.subscription_event({
             'subscribe' => true,
@@ -278,7 +279,6 @@ module Purchasing
       user && user.log_subscription_event({:error => 'stripe card_exception', :json => json})
       return {success: false, error: err[:code]}
     rescue => err
-    puts err.message
       type = (err.respond_to?('[]') && err[:type])
       code = (err.respond_to?('[]') && err[:code]) || 'unknown'
       user && user.log_subscription_event({:error => 'other_exception', :err => err.to_s + err.backtrace[0].to_s })

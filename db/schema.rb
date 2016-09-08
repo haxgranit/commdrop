@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160808224634) do
+ActiveRecord::Schema.define(version: 20160908200144) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -30,9 +30,11 @@ ActiveRecord::Schema.define(version: 20160808224634) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "event_type", limit: 255
+    t.string   "record_id"
   end
 
   add_index "audit_events", ["event_type", "created_at"], name: "index_audit_events_on_event_type_and_created_at", using: :btree
+  add_index "audit_events", ["event_type", "record_id"], name: "index_audit_events_on_event_type_and_record_id", using: :btree
   add_index "audit_events", ["user_key", "created_at"], name: "index_audit_events_on_user_key_and_created_at", using: :btree
 
   create_table "board_button_images", force: :cascade do |t|
