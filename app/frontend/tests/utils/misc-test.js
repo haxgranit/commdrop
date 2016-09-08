@@ -112,7 +112,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           } else if(attempt == 2) {
@@ -125,7 +125,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 4
+                next_offset: 4
               }
             });
           } else {
@@ -138,7 +138,7 @@ describe("misc", function() {
               meta: {
                 more: false,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           }
@@ -175,7 +175,7 @@ describe("misc", function() {
               meta: {
                 more: false,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           }
@@ -211,7 +211,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 2,
+                next_offset: 2,
                 next_url: '/api/v1/more/level/2'
               }
             });
@@ -226,7 +226,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 4,
+                next_offset: 4,
                 next_url: '/api/v1/more/level/3'
               }
             });
@@ -241,7 +241,7 @@ describe("misc", function() {
               meta: {
                 more: false,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           }
@@ -277,7 +277,7 @@ describe("misc", function() {
             meta: {
               more: false,
               per_page: 2,
-              offset: 2,
+              next_offset: 2,
               next_url: null
             }
           });
@@ -335,7 +335,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           } else if(attempt == 2) {
@@ -348,7 +348,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 4
+                next_offset: 4
               }
             });
           } else {
@@ -389,7 +389,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           } else if(attempt == 2) {
@@ -403,7 +403,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 4
+                next_offset: 4
               }
             });
           } else {
@@ -417,7 +417,7 @@ describe("misc", function() {
               meta: {
                 more: false,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           }
@@ -480,7 +480,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 2,
+                next_offset: 2,
                 next_url: '/api/v1/more/level/2'
               }
             });
@@ -495,7 +495,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 4,
+                next_offset: 4,
                 next_url: '/api/v1/more/level/3'
               }
             });
@@ -538,7 +538,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 2,
+                next_offset: 2,
                 next_url: '/api/v1/more/level/2'
               }
             });
@@ -554,7 +554,7 @@ describe("misc", function() {
               meta: {
                 more: true,
                 per_page: 2,
-                offset: 4,
+                next_offset: 4,
                 next_url: '/api/v1/more/level/3'
               }
             });
@@ -570,7 +570,7 @@ describe("misc", function() {
               meta: {
                 more: false,
                 per_page: 2,
-                offset: 2
+                next_offset: 2
               }
             });
           }

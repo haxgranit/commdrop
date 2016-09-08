@@ -144,6 +144,8 @@ Coughdrop::Application.routes.draw do
       post 'flush/user' => 'users#flush_user'
       delete 'devices/:device_id' => 'users#hide_device'
       put 'devices/:device_id' => 'users#rename_device'
+      get 'supervisors' => 'users#supervisors'
+      get 'supervisees' => 'users#supervisees'
       post 'claim_voice' => 'users#claim_voice'
       post 'rename' => 'users#rename'
       post 'activate_button' => 'users#activate_button'

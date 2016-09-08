@@ -1147,4 +1147,68 @@ describe Api::UsersController, :type => :controller do
       expect(progress.settings['method']).to eq('notify')
     end
   end
+  
+  describe 'GET supervisors' do
+    it "should require a valid token" do
+      get 'supervisors', 'user_id' => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should require a valid record" do
+      token_user
+      get 'supervisors', 'user_id' => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      get 'supervisors', 'user_id' => u.global_id
+      assert_unauthorized
+    end
+    
+    it "should return a paginated result" do
+      token_user
+      u = User.create
+      User.link_supervisor_to_user(u, @user)
+      get 'supervisors', 'user_id' => @user.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['meta']['more']).to eq(false)
+      expect(json['user'].length).to eq(1)
+      expect(json['user'][0]['id']).to eq(u.global_id)
+    end
+  end
+  
+  describe 'GET supervisees' do
+    it "should require a valid token" do
+      get 'supervisees', 'user_id' => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should require a valid record" do
+      token_user
+      get 'supervisees', 'user_id' => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      get 'supervisees', 'user_id' => u.global_id
+      assert_unauthorized
+    end
+    
+    it "should return a paginated result" do
+      token_user
+      u = User.create
+      User.link_supervisor_to_user(@user, u)
+      get 'supervisees', 'user_id' => @user.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['meta']['more']).to eq(false)
+      expect(json['user'].length).to eq(1)
+      expect(json['user'][0]['id']).to eq(u.global_id)
+    end
+  end
 end

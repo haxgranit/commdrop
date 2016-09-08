@@ -5,6 +5,7 @@ import app_state from '../utils/app_state';
 export default modal.ModalController.extend({
   opening: function() {
     this.set('model', this.get('model.user'));
+    this.set('model.load_all_connections', true);
   },
   actions: {
     close: function() {

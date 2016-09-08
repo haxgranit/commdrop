@@ -551,6 +551,9 @@ var app_state = Ember.Object.extend({
       }
       app_state.set('currentUser', user);
     }
+    if(app_state.get('currentUser')) {
+      app_state.set('currentUser.load_all_connections', true);
+    }
   }.observes('sessionUser', 'speak_mode', 'speakModeUser'),
   dom_changes_on_board_state_change: function() {
     if(!this.get('currentBoardState')) {

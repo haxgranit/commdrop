@@ -257,6 +257,45 @@ CoughDrop.User = DS.Model.extend({
       this.set('preferences.speak_mode_pin', new_pin);
     }
   }.observes('preferences.speak_mode_pin'),
+  load_more_supervision: function() {
+    var _this = this;
+    if(this.get('load_all_connections') && !this.get('all_connections.loaded')) {
+      _this.set('all_connections', {loading: true});
+      if((this.get('supervisors') || []).length >= 10) {
+        Utils.all_pages('/api/v1/users/' + this.get('id') + '/supervisors', {result_type: 'user', type: 'GET', data: {}}, function(data) {
+        }).then(function(res) {
+          _this.set('supervisors', res);
+          _this.set('all_connections.supervisors', true);
+        }, function(err) {
+          console.log('error loading supervisors');
+          console.log(err);
+          _this.set('all_connections.error', true);
+        });
+      } else {
+        _this.set('all_connections.supervisors', true);
+      }
+      if((this.get('supervisees') || []).length >= 10) {
+        Utils.all_pages('/api/v1/users/' + this.get('id') + '/supervisees', {result_type: 'user', type: 'GET', data: {}}, function(data) {
+        }).then(function(res) {
+          _this.set('supervisees', res);
+          _this.set('all_connections.supervisees', true);
+        }, function(err) {
+          console.log('error loading supervisees');
+          console.log(err);
+          _this.set('all_connections.error', true);
+        });
+      } else {
+        _this.set('all_connections.supervisees', true);
+      }
+      _this.set('all_connections_loaded', true);
+    }
+  }.observes('load_all_connections'),
+  check_all_connections: function() {
+    if(this.get('all_connections.supervisors') && this.get('all_connections.supervisees')) {
+      this.set('all_connections.loading', null);
+      this.set('all_connections.loaded', true);
+    }
+  }.observes('all_connections', 'all_connections.supervisors', 'all_connections.supervisees'),
   load_active_goals: function() {
     var _this = this;
     this.store.query('goal', {active: true, user_id: this.get('id')}).then(function(list) {

@@ -497,4 +497,108 @@ describe('User', function() {
       expect(user.get('preferences.device.voice.voice_uri')).toEqual('sad');
     });
   });
+
+  describe('load_all_connections', function() {
+    it('should not load anything if there are not already records', function() {
+      var user = CoughDrop.store.createRecord('user');
+      user.set('load_all_connections', true);
+      waitsFor(function() { return user.get('all_connections.loaded'); });
+      runs(function() {
+        expect(user.get('supervisors')).toEqual(undefined);
+      });
+    });
+
+    it('should load supervisors if it is possible there are more', function() {
+      var user = CoughDrop.store.createRecord('user');
+      user.set('id', 'bob');
+      user.set('supervisors', [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]);
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/users/bob/supervisors') {
+          return Ember.RSVP.resolve({
+            user: [{}]
+          });
+        } else {
+          return Ember.RSVP.reject();
+        }
+      });
+      user.set('load_all_connections', true);
+      waitsFor(function() { return user.get('all_connections.loaded'); });
+      runs(function() {
+        expect(user.get('supervisors').length).toEqual(1);
+      });
+    });
+
+    it('should load supervisees if it is possible there are more', function() {
+      var user = CoughDrop.store.createRecord('user');
+      user.set('id', 'bob');
+      user.set('supervisees', [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]);
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/users/bob/supervisees') {
+          return Ember.RSVP.resolve({
+            user: [{}]
+          });
+        } else {
+          return Ember.RSVP.reject();
+        }
+      });
+      user.set('load_all_connections', true);
+      waitsFor(function() { return user.get('all_connections.loaded'); });
+      runs(function() {
+        expect(user.get('supervisees').length).toEqual(1);
+      });
+    });
+
+    it('should flag as errored on any load error', function() {
+      var user = CoughDrop.store.createRecord('user');
+      user.set('id', 'bob');
+      user.set('supervisees', [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]);
+      user.set('supervisors', [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]);
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/users/bob/supervisees') {
+          return Ember.RSVP.resolve({
+            user: [{}]
+          });
+        } else {
+          return new Ember.RSVP.Promise(function(res, rej) {
+            setTimeout(function() {
+              rej();
+            }, 200);
+          });
+        }
+      });
+      user.set('load_all_connections', true);
+      waitsFor(function() { return user.get('all_connections.error'); });
+      runs(function() {
+        expect(user.get('supervisees').length).toEqual(1);
+        expect(user.get('all_connections.loaded')).toEqual(undefined);
+        expect(user.get('supervisors').length).toEqual(10);
+      });
+    });
+
+    it('should flag as done when everything is loaded', function() {
+      var user = CoughDrop.store.createRecord('user');
+      user.set('id', 'bob');
+      user.set('supervisees', [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]);
+      user.set('supervisors', [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]);
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/users/bob/supervisees') {
+          return Ember.RSVP.resolve({
+            user: [{}]
+          });
+        } else if(url == '/api/v1/users/bob/supervisors') {
+          return Ember.RSVP.resolve({
+            user: [{}, {}]
+          });
+        } else {
+          return Ember.RSVP.reject();
+        }
+      });
+      user.set('load_all_connections', true);
+      waitsFor(function() { return user.get('all_connections.loaded'); });
+      runs(function() {
+        expect(user.get('supervisees').length).toEqual(1);
+        expect(user.get('supervisors').length).toEqual(2);
+      });
+    });
+  });
 });

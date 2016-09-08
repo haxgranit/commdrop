@@ -174,7 +174,7 @@ class Api::UsersController < ApplicationController
   
   def rename_device
     user = User.find_by_path(params['user_id'])
-    return unless allowed?(user, 'delete')
+    return unless allowed?(user, 'edit')
     device = Device.find_by_global_id(params['device_id'])
     if device && device.user_id == user.id
       device.settings['name'] = params['device']['name']
@@ -183,6 +183,22 @@ class Api::UsersController < ApplicationController
     else
       api_error 400, {error: 'matching device not found'}
     end
+  end
+  
+  def supervisors
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    return unless allowed?(user, 'supervise')
+    supervisors = user.supervisors
+    render json: JsonApi::User.paginate(params, supervisors, limited_identity: true, supervisee: user, prefix: "users/#{user.global_id}/supervisors")
+  end
+  
+  def supervisees
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    return unless allowed?(user, 'supervise')
+    supervisees = user.supervisees
+    render json: JsonApi::User.paginate(params, supervisees, limited_identity: true, supervisor: user, prefix: "users/#{user.global_id}/supervisees")
   end
   
   def subscribe

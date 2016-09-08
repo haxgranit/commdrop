@@ -41,7 +41,7 @@
             <span class="glyphicon glyphicon-user"></span>
             <span style="display: inline-block; width: 200px; width: calc(100% - 60px);">
               {{t "supervisees:" key='supervisees_colon'}}<br/>
-              <ul class="list-unstyled" style="margin-bottom: 0;">
+              <ul class="list-unstyled" style="margin-bottom: 0; max-height: 200px; overflow: auto;">
               {{#if app_state.currentUser.supervisees}}
                 {{#each app_state.currentUser.supervisees as |supervisee|}}
                   <li style="margin: 5px 0; font-size: 20px;">
