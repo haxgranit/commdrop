@@ -11,6 +11,9 @@ header {
   
   + #content {
     margin-top: 70px;
+    + #sidebar, + #sidebar_tease {
+      margin-top: 70px;
+    }
   }
   .button_icon {
     font-size: 25px;
@@ -84,6 +87,9 @@ header {
       height: 50px;
       + #content {
         margin-top: 50px;
+        + #sidebar, + #sidebar_tease {
+          margin-top: 50px;
+        }
       }
       #button_list {
         height: 43px;
@@ -159,6 +165,9 @@ header {
       height: 100px;
       + #content {
         margin-top: 100px;
+        + #sidebar, + #sidebar_tease {
+          margin-top: 100px;
+        }
       }
       #button_list {
         height: 93px;
@@ -229,6 +238,9 @@ header {
       height: 150px;
       + #content {
         margin-top: 150px;
+        + #sidebar, + #sidebar_tease {
+          margin-top: 150px;
+        }
       }
       #button_list {
         height: 143px;
@@ -306,6 +318,9 @@ header {
       height: 200px;
       + #content {
         margin-top: 200px;
+        + #sidebar, + #sidebar_tease {
+          margin-top: 200px;
+        }
       }
       #button_list {
         height: 193px;

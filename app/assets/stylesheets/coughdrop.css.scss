@@ -14,7 +14,8 @@
 #within_ember {
   position: relative;
   background: #fff;
-  overflow: hidden; /* Windows-only quirk causes extra scrollbars without this */
+  overflow: hidden; /* Windows-only quirk causes extra scrollbars without this, if you 
+                      change, make sure to test sidebar and modal.highlight */
 }
 #within_ember.color_black {
   background: #000;
@@ -812,7 +813,7 @@ body.pretty_loader #loading_box {
 }
 #sidebar_tease {
   top: 0;
-  margin-top: 0px;
+  margin-top: 100px;
   position: absolute;
   right: 0;
   width: 80px;
@@ -834,6 +835,7 @@ body.pretty_loader #loading_box {
 }
 #sidebar {
   top: 0;
+  margin-top: 100px;
   position: absolute; 
   right: 0; 
   width: 100px; 
@@ -843,6 +845,7 @@ body.pretty_loader #loading_box {
   overflow-x: hidden;
   border-left: 1px solid #eee;
   border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
 }
 #sidebar > a {
   display: block;

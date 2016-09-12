@@ -44,12 +44,12 @@ export default modal.ModalController.extend({
     if(width > window_width - 8) {
       width = window_width - 8;
     }
-    this.set('model.top_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: -" + header_height + "px; left: 0; background: #000; opacity: " + opacity + "; width: 100%; height: " + top + "px;"));
-    this.set('model.left_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: " + (top - header_height) + "px; left: 0; background: #000; opacity: " + opacity + "; width: " + left + "px; height: " + height + "px;"));
-    this.set('model.right_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: " + (top - header_height) + "px; left: calc(" + left+ "px + " + width + "px); background: #000; opacity: " + opacity + "; width: calc(100% - " + left + "px - " + width + "px); height: " + height + "px;"));
-    this.set('model.bottom_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: " + (bottom - header_height) + "px; left: 0; background: #000; opacity: " + opacity + "; width: 100%; height: 5000px;"));
-    this.set('model.highlight_style', new Ember.Handlebars.SafeString("z-index: 10; position: absolute; top: " + (top - header_height - 4) + "px; left: " + (left - 4) + "px; width: " + (width + 8) + "px; height: " + (height + 8) + "px; cursor: pointer;"));
-    this.set('model.inner_highlight_style', new Ember.Handlebars.SafeString("z-index: 11; position: absolute; top: " + (top - header_height) + "px; left: " + left + "px; width: " + width + "px; height: " + height + "px; cursor: pointer;"));
+    this.set('model.top_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: -" + header_height + "px; left: 0; background: #000; opacity: " + opacity + "; width: 100%; height: " + (top + header_height) + "px;"));
+    this.set('model.left_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: " + (top) + "px; left: 0; background: #000; opacity: " + opacity + "; width: " + left + "px; height: " + height + "px;"));
+    this.set('model.right_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: " + (top) + "px; left: calc(" + left+ "px + " + width + "px); background: #000; opacity: " + opacity + "; width: calc(100% - " + left + "px - " + width + "px); height: " + height + "px;"));
+    this.set('model.bottom_style', new Ember.Handlebars.SafeString(display + "z-index: 9; position: absolute; top: " + (bottom) + "px; left: 0; background: #000; opacity: " + opacity + "; width: 100%; height: 5000px;"));
+    this.set('model.highlight_style', new Ember.Handlebars.SafeString("z-index: 10; position: absolute; top: " + (top - 4) + "px; left: " + (left - 4) + "px; width: " + (width + 8) + "px; height: " + (height + 8) + "px; cursor: pointer;"));
+    this.set('model.inner_highlight_style', new Ember.Handlebars.SafeString("z-index: 11; position: absolute; top: " + (top) + "px; left: " + left + "px; width: " + width + "px; height: " + height + "px; cursor: pointer;"));
   }.observes('model.left', 'model.top', 'model.width', 'model.height', 'model.bottom', 'model.right', 'model.overlay'),
   actions: {
     select: function() {
