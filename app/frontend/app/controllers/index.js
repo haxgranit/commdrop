@@ -206,6 +206,9 @@ export default Ember.Controller.extend({
       });
     }
   }.observes('model.id', 'persistence.online'),
+  many_supervisees: function() {
+    return (app_state.get('currentUser.supervisees') || []).length > 5;
+  }.property('app_state.currentUser.supervisees'),
   save_user_pref_change: function() {
     var mode = app_state.get('currentUser.preferences.auto_open_speak_mode');
     if(mode !== undefined) {

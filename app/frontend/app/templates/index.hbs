@@ -41,7 +41,7 @@
             <span class="glyphicon glyphicon-user"></span>
             <span style="display: inline-block; width: 200px; width: calc(100% - 60px);">
               {{t "supervisees:" key='supervisees_colon'}}<br/>
-              <ul class="list-unstyled" style="margin-bottom: 0; max-height: 200px; overflow: auto;">
+              <ul class={{if many_supervisees "list-unstyled supervisee_list tall" "list-unstyled supervisee_list"}} style="margin-bottom: 0;">
               {{#if app_state.currentUser.supervisees}}
                 {{#each app_state.currentUser.supervisees as |supervisee|}}
                   <li style="margin: 5px 0; font-size: 20px;">
@@ -68,7 +68,7 @@
                         <span class="caret"></span>
                         <span class="sr-only">{{t "Toggle Dropdown" key='toggle_dropdown'}}</span>
                       </button>
-                      <ul class="dropdown-menu" role="menu" style="width: 100%;">
+                      <ul class="dropdown-menu" role="menu">
                         <li>{{#link-to 'user' supervisee.user_name}}{{t "Account" key='account'}}{{/link-to}}</li>
                         <li><a href="#" {{action 'homeInSpeakMode' supervisee.id true}}>{{t "Speak Mode (as me)" key='speak_mode_as_me'}}</a></li>
                         <li><a href="#" {{action 'homeInSpeakMode' supervisee.id}}>{{t "Speak Mode (as %{user_name})" key='speak_mode_as_user' user_name=supervisee.user_name}}</a></li>
