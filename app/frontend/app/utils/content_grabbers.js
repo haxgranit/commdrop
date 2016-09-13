@@ -39,6 +39,7 @@ var contentGrabbers = Ember.Object.extend({
         object.set('url', null);
       }
       var original = object;
+      var original_url = object.get('url');
       object.save().then(function(object) {
         if(!object.get('url') && object.get('data_url')) {
           object.set('url', object.get('data_url'));
@@ -47,15 +48,26 @@ var contentGrabbers = Ember.Object.extend({
           var meta = persistence.meta(object.constructor.modelName, null); //object.store.metadataFor(object.constructor.modelName);
           if(!meta || !meta.remote_upload) { return reject({error: 'remote_upload parameters required'}); }
           // upload to S3
-          meta.remote_upload.data_url = object.get('data_url');
-          _this.upload_to_remote(meta.remote_upload).then(function(data) {
-            if(data.confirmed) {
-              object.set('url', data.url);
-              object.set('pending', false);
-              resolve(object);
-            } else {
-              reject({error: "upload not confirmed"});
-            }
+          var get_data_url = Ember.RSVP.resolve(object.get('data_url'));
+          if(!object.get('data_url') && original_url) {
+            get_data_url = persistence.ajax('/api/v1/search/proxy?url=' + encodeURIComponent(original_url), { type: 'GET'
+            }).then(function(data) {
+              return data.data;
+            });
+          }
+          get_data_url.then(function(data_url) {
+            meta.remote_upload.data_url = data_url;
+            return _this.upload_to_remote(meta.remote_upload).then(function(data) {
+              if(data.confirmed) {
+                object.set('url', data.url);
+                object.set('pending', false);
+                resolve(object);
+              } else {
+                reject({error: "upload not confirmed"});
+              }
+            }, function(err) {
+              reject(err);
+            });
           }, function(err) {
             reject(err);
           });
@@ -463,10 +475,12 @@ var pictureGrabber = Ember.Object.extend({
       author_url: preview.author_url,
       uneditable: true
     };
+
     this.controller.set('image_preview', {
       url: preview.image_url,
       search_term: this.controller.get('image_search.term'),
       external_id: preview.id,
+      content_type: preview.content_type,
       license: license
     });
   },
@@ -608,17 +622,25 @@ var pictureGrabber = Ember.Object.extend({
         console.log(item);
         var img = item.image || {};
         var cse = ((item.pagemap || {}).cse_image || [])[0] || {};
-        res.push({
-          image_url: cse.src || item.link,
-          license: 'public domain',
-          content_type: item.mime,
-          width: img.width,
-          height: img.height,
-          author: item.displayLink,
-          author_url: item.formattedUrl || img.contextLink,
-          license_url: 'https://creativecommons.org/publicdomain/zero/1.0/',
-          source_url: item.formattedUrl || img.contextLink
-        });
+        var mime = item.mime;
+        if(cse.src && cse.src.match(/\.jpe?g/)) {
+          mime = 'image/jpeg';
+        } else if(cse.src && cse.src.match(/\.png/)) {
+          mime = 'image/png';
+        }
+        if(mime && cse.src) {
+          res.push({
+            image_url: cse.src || item.link,
+            license: 'public domain',
+            content_type: mime,
+            width: img.width,
+            height: img.height,
+            author: item.displayLink,
+            author_url: item.formattedUrl || img.contextLink,
+            license_url: 'https://creativecommons.org/publicdomain/zero/1.0/',
+            source_url: item.formattedUrl || img.contextLink
+          });
+        }
       });
       return res;
     }, function(xhr, message) {

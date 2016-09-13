@@ -204,7 +204,7 @@ describe("contentGrabbers", function() {
       });
     });
 
-    it("should error or failed remote upload", function() {
+    it("should error on failed remote upload", function() {
       var defer = Ember.RSVP.defer();
       var defer2 = Ember.RSVP.defer();
       var save_called = false;
@@ -218,14 +218,15 @@ describe("contentGrabbers", function() {
         return {remote_upload: {a: 2}};
       });
       stub(contentGrabbers, 'upload_to_remote', function(args) {
+        Ember.run.later(function() {
+          defer2.reject({
+            abc: "123"
+          });
+        });
         return defer2.promise;
       });
       var res = contentGrabbers.save_record(obj);
       defer.resolve(obj);
-
-      defer2.reject({
-        abc: "123"
-      });
 
       var rejection = null;
       res.then(null, function(arg) { rejection = arg; });
@@ -265,6 +266,49 @@ describe("contentGrabbers", function() {
       runs(function() {
         expect(obj.get('pending')).toEqual(false);
         expect(obj.get('url')).toEqual("http://pics.example.com/pic.png");
+      });
+    });
+
+    it("should request proxied data url for records with a url but no data url", function() {
+      var defer = Ember.RSVP.defer();
+      var defer2 = Ember.RSVP.defer();
+      var save_called = false;
+      var obj = Ember.Object.extend({
+        save: function() { save_called = true; return defer.promise; }
+      }).create({
+        url: "http://www.example.com/pic.png",
+        pending: true
+      });
+      stub(persistence, 'meta', function(model, obj) {
+        return {remote_upload: {a: 2}};
+      });
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/search/proxy?url=' + encodeURIComponent('http://www.example.com/pic.png')) {
+          return Ember.RSVP.resolve({
+            data: "data:image/png;..."
+          });
+        } else {
+          return Ember.RSVP.reject();
+        }
+      });
+
+      stub(contentGrabbers, 'upload_to_remote', function(args) {
+        expect(args.data_url).toEqual('data:image/png;...');
+        expect(args.a).toEqual(2);
+        return defer2.promise;
+      });
+      var res = contentGrabbers.save_record(obj);
+      defer.resolve(obj);
+
+      defer2.resolve({
+        confirmed: true,
+        url: "http://pics.example.com/pic2.png"
+      });
+
+      waitsFor(function() { return obj.get('pending') === false; });
+      runs(function() {
+        expect(obj.get('pending')).toEqual(false);
+        expect(obj.get('url')).toEqual("http://pics.example.com/pic2.png");
       });
     });
   });
