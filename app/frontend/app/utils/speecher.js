@@ -112,7 +112,7 @@ var speecher = Ember.Object.extend({
     var pieces = text.split(/\.\.\./);
     var next_piece = function() {
       var piece_text = pieces.shift();
-      if(piece_text.length == 0 || piece_text.match(/^\s+$/)) {
+      if(piece_text.length === 0 || piece_text.match(/^\s+$/)) {
         Ember.run.later(function() {
           next_piece();
         }, 500);
