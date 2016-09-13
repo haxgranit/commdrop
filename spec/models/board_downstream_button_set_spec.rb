@@ -287,8 +287,9 @@ describe BoardDownstreamButtonSet, :type => :model do
         {'id' => 2, 'label' => 'banana'}
       ]}, :user => u)
       Worker.process_queues
-      expect(Worker.scheduled?(BoardDownstreamButtonSet, :perform_action, {'method' => 'update_for', 'arguments' => [b.global_id]})).to eq(true)
       expect(Worker.scheduled?(BoardDownstreamButtonSet, :perform_action, {'method' => 'update_for', 'arguments' => [b2.global_id]})).to eq(true)
+      Worker.process_queues
+      expect(Worker.scheduled?(BoardDownstreamButtonSet, :perform_action, {'method' => 'update_for', 'arguments' => [b.global_id]})).to eq(true)
       BoardDownstreamButtonSet.update_for(b.global_id)
       BoardDownstreamButtonSet.update_for(b2.global_id)
       

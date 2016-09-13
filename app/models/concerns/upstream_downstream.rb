@@ -3,10 +3,10 @@ module UpstreamDownstream
   
   def track_downstream_boards!(already_visited_ids=[], buttons_changed=false)
     @track_downstream_boards = true
-    Rails.logger.info('touching downstreams')
+    Rails.logger.info("touching downstreams #{self.global_id}")
     self.touch_downstreams(already_visited_ids)
     self.track_downstream_boards(already_visited_ids, buttons_changed)
-    Rails.logger.info('touching downstreams again')
+    Rails.logger.info("touching downstreams again #{self.global_id}")
     self.touch_downstreams(already_visited_ids)
     @track_downstream_boards = false
     true
@@ -70,29 +70,47 @@ module UpstreamDownstream
       end
     end
     downstream_boards_changed = false
+    changes = {}
     full_set_revision = Digest::MD5.hexdigest(revision_hashes.join('_'))[0, 10]
     if self.settings['full_set_revision'] != full_set_revision
-      self.settings['full_set_revision'] = full_set_revision
+      changes['full_set_revision'] = [self.settings['full_set_revision'], full_set_revision]
+      #self.settings['full_set_revision'] = full_set_revision
       downstream_boards_changed = true
       self.schedule_update_button_set
     end
     downstream_buttons_changed = false
     if self.settings['total_downstream_buttons'] != total_buttons
-      self.settings['total_downstream_buttons'] = total_buttons
+      changes['total_downstream_buttons'] = [self.settings['total_downstream_buttons'], total_buttons]
+      #self.settings['total_downstream_buttons'] = total_buttons
       downstream_buttons_changed = true
     end
     if self.settings['unlinked_downstream_buttons'] != unlinked_buttons
-      self.settings['unlinked_downstream_buttons'] = unlinked_buttons
+      changes['unlinked_downstream_buttons'] = [self.settings['unlinked_downstream_buttons'], unlinked_buttons]
+      #self.settings['unlinked_downstream_buttons'] = unlinked_buttons
       downstream_buttons_changed = true
     end
-    self.settings['downstream_board_ids'] = downs
+    changes['downstream_board_ids'] = [self.settings['downstream_board_ids'], downs]
+    #self.settings['downstream_board_ids'] = downs
 
     # step 3: notify upstream if there was a change
     Rails.logger.info('saving if changed')
     if changed || buttons_changed || downstream_buttons_changed || downstream_boards_changed
+      Rails.logger.info('saving because changed') if changed
+      Rails.logger.info('saving because buttons changed') if buttons_changed
+      Rails.logger.info('saving because downstream buttons changed') if downstream_buttons_changed
+      Rails.logger.info('saving because downstream boards changed') if downstream_boards_changed
       @track_downstream_boards = false
-      self.save_without_post_processing
-      self.complete_stream_checks(already_visited_ids)
+      board = Board.find_by_global_id(self.global_id).reload
+      changes.each do |key, vals|
+        pre, post = vals
+        if board.settings[key] != pre
+          Rails.logger.info("bad save, clobbering value for #{key}")
+        end
+        board.settings[key] = post
+        self.settings[key] = post
+      end
+      board.save_without_post_processing
+      board.complete_stream_checks(already_visited_ids)
     end
     
     # step 4: update any authors whose list of visible/editable private boards may have changed
@@ -145,7 +163,7 @@ module UpstreamDownstream
       ups = Board.find_all_by_global_id(self.settings['immediately_upstream_board_ids'] || [])
       ups.each do |board|
         if board && !notify_upstream_with_visited_ids.include?(board.global_id)
-          board.track_downstream_boards!(notify_upstream_with_visited_ids)
+          board.schedule(:track_downstream_boards!, notify_upstream_with_visited_ids)
         end
       end
     end

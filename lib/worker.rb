@@ -57,10 +57,20 @@ module Worker
   end
   
   def self.scheduled_actions(queue='default')
-    idx = Resque.size(queue)
+    queues = [queue]
+    if queue == '*'
+      queues = []
+      Resque.queues.each do |key|
+        queues << key
+      end
+    end
+
     res = []
-    idx.times do |i|
-      res << Resque.peek(queue, i)
+    queues.each do |queue|
+      idx = Resque.size(queue)
+      idx.times do |i|
+        res << Resque.peek(queue, i)
+      end
     end
     res
   end
