@@ -38,6 +38,8 @@ module Worker
     start = self.ts
     klass.send(method_name, *args_copy)
     diff = self.ts - start
+    pre_whodunnit = PaperTrail.whodunnit
+    PaperTrail.whodunnit = "job:#{action}"
     Rails.logger.info("done performing #{action}, finished in #{diff}s")
     # TODO: way to track what queue a job is coming from
     if diff > 60 && speed == :normal
@@ -45,6 +47,7 @@ module Worker
     elsif diff > 60*10 && speed == :slow
       Rails.logger.error("long-running job, #{action} (expected slow), #{diff}s")
     end
+    PaperTrail.whodunnit = pre_whodunnit
   rescue Resque::TermException
     Resque.enqueue(self, *args)
   end
