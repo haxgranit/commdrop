@@ -23,6 +23,8 @@ module JsonApi::ButtonSet
     Board.where(:id => Board.local_ids(board_ids), :public => true).select('id').each do |b|
       allowed_ids[b.global_id] = true
     end
+    # TODO: should site admins have access to all boards?
+    allowed_ids[board.global_id] = true if board
     if args[:permissions]
       args[:permissions].private_viewable_board_ids.each do |id|
         allowed_ids[id] = true

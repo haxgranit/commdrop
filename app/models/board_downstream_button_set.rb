@@ -25,7 +25,8 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
   def self.update_for(board_id)
     board = Board.find_by_global_id(board_id)
     if board
-      set = BoardDownstreamButtonSet.find_or_create_by(:board_id => board.id)
+      set = BoardDownstreamButtonSet.find_or_create_by(:board_id => board.id) rescue nil
+      set ||= BoardDownstreamButtonSet.find_or_create_by(:board_id => board.id)
       boards_hash = {}
       Board.find_all_by_global_id(board.settings['downstream_board_ids'] || []).each do |brd|
         boards_hash[brd.global_id] = brd

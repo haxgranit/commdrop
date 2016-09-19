@@ -4,13 +4,23 @@
     <h3>{{t "Button List for %{board_name}" key='button_list_for' board_name=model.board.name}}</h3>
   </div>
   <div class="modal-body">
-    <p>
+    <div style='float: right;'>
       <a href="#" {{action 'download_list'}}>{{t "Download this list" key='download_this_list'}}</a>
-    </p>
+    </div>
+    <div class="filters">
+      <a href="#" {{action 'filter' 'all'}} class={{if show_all 'active'}}>{{t "Show All" key='show_all'}}</a> |
+      <a href="#" {{action 'filter' 'repeats'}} class={{if show_repeats 'active'}}>{{t "Show Repeats" key='show_repeats'}}</a>
+    </div>
+    <div style='clear: right;'></div>
     <div class="list-group">
-      {{#each sorted_buttons as |button|}}
-        <div class="list-group-item" style="font-size: 20px;">
+      {{#each sorted_filtered_buttons as |button|}}
+        <div class={{if button.repeat "list-group-item repeat" "list-group-item"}} style="font-size: 20px;">
           {{button.label}}
+          {{#if show_all}}
+            {{#if button.repeat}}
+              <span style='font-size: 16px;' class='text-muted'>{{t "(repeat)" key='repeat'}}</span>
+            {{/if}}
+          {{/if}}
           <div class="text-muted" style="font-size: 10px;">
             {{#link-to 'board' button.board_key class="text-muted"}}{{button.board_key}}{{/link-to}}
           </div>

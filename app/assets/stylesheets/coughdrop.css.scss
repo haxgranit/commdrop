@@ -395,6 +395,14 @@ footer .wide_links {
 .btn.btn-primary.active .text-muted {
   color: #ccc;
 }
+.filters {
+  .active {
+    font-weight: bold;
+  }
+}
+.list-group-item.repeat {
+  background-color: #ffe;
+}
 .wide_bio {
   display: block;
 }

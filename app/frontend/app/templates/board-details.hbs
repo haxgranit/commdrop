@@ -1,4 +1,8 @@
 {{#modal-dialog action="close" opening='opening' closing='closing'}}
+  <div class="modal-header">
+    <button type="button" class="close" {{action 'close'}}>&times;</button>
+    <h3>{{t "Board Details" key='board_details'}}</h3>
+  </div>
   <div class="modal-body">
     <dl class="dl-horizontal">
       <dt>{{t "Name" key='name'}}</dt>
