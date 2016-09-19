@@ -107,6 +107,9 @@ export default Ember.Controller.extend({
       this.set('results', null);
     }
   }.observes('current_report', 'model.id'),
+  removable_report: function() {
+    return ['all_users', 'all_supervisors'].indexOf(this.get('current_report')) >= 0;
+  }.property('current_report'),
   user_report: function() {
     return true;
   }.property(),
@@ -147,6 +150,26 @@ export default Ember.Controller.extend({
       element.click();
 
       document.body.removeChild(element);
+    },
+    remove_report_user: function(user) {
+      var action = null;
+      var user_name = user.user_name;
+      if(this.get('current_report') == 'all_users') {
+        action = 'remove_user';
+      } else if(this.get('current_report') == 'all_supervisors') {
+        action = 'remove_supervisor';
+      }
+
+      var model = this.get('model');
+      var _this = this;
+      if(!user_name || !action) { return; }
+      model.set('management_action', action + '-' + user_name);
+      model.save().then(function() {
+        modal.success(i18n.t('user_removed', "The user %{user_name} was successfully removed.", {user_name: user.user_name}));
+        _this.get_report();
+      }, function(err) {
+        modal.error(i18n.t('error_removing_user', "There was an error removing the user %{user_name}", {user_name: user.user_name}));
+      });
     }
   }
 });
