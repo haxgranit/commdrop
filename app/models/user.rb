@@ -305,12 +305,15 @@ class User < ActiveRecord::Base
       end
     end
     Board.lump_triggers
+    board_added = false
     linked_boards.each do |hash|
       board = hash[:board]
       if board
         orphan_board_ids -= [board.id]
         # TODO: sharding
-        UserBoardConnection.find_or_create_by(:board_id => board.id, :user_id => self.id, :home => hash[:home])
+        UserBoardConnection.find_or_create_by(:board_id => board.id, :user_id => self.id, :home => hash[:home]) do |rec|
+          board_added = true
+        end
         board.instance_variable_set('@skip_update_available_boards', true)
         # TODO: I *think* this is here because board permissions may change for
         # supervisors/supervisees when a user's home board changes
@@ -325,6 +328,12 @@ class User < ActiveRecord::Base
       end
     end
     Board.process_lumped_triggers
+    
+    if board_added || orphan_board_ids.length > 0
+      # TODO: sharding
+      # TODO: finer-grained control, user.content_changed_at instead of updated_at
+      User.where(:id => self.id).update_all(:updated_at => Time.now)
+    end
     
     UserBoardConnection.delete_all(:user_id => self.id, :board_id => orphan_board_ids)
     # TODO: sharding

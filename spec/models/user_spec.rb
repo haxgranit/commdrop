@@ -264,6 +264,27 @@ describe User, :type => :model do
       expect(UserBoardConnection.find_by(:user_id => u.id, :board_id => b.id, :home => true)).not_to eq(nil)
       expect(UserBoardConnection.find_by(:user_id => u.id, :board_id => b2.id, :home => false)).not_to eq(nil)
     end
+    
+    it "should update the user date when updating tracked boards if there are changes" do
+      u = User.create
+      b = Board.create(:user => u)
+      User.where(:id => u.id).update_all(:updated_at => 2.months.ago)
+      u.reload
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.track_boards(true)
+      u.reload
+      expect(u.updated_at).to be > 1.week.ago
+    end
+    
+    it "should not update the user date when updating tracked board if there are no changes" do
+      u = User.create
+      b = Board.create(:user => u)
+      User.where(:id => u.id).update_all(:updated_at => 2.months.ago)
+      u.reload
+      u.track_boards(true)
+      u.reload
+      expect(u.updated_at).to be < 1.week.ago
+    end
   end
         
   describe "remember_starred_board!" do
@@ -1368,6 +1389,56 @@ describe User, :type => :model do
       expect(u.id).to eq(nil)
       expect(u.errored?).to eq(true)
       expect(u.processing_errors).to eq(['blocked email address'])
+    end
+  end
+  
+  def self.find_for_login(user_name)
+    user_name = user_name.strip
+    res = nil
+    if !user_name.match(/@/)
+      res = self.find_by(:user_name => user_name)
+      res ||= self.find_by(:user_name => user_name.downcase)
+      res ||= self.find_by(:user_name => User.clean_path(user_name.downcase))
+    end
+    if !res
+      emails = self.find_by_email(user_name)
+      emails = self.find_by_email(user_name.downcase) if emails.length == 0
+      res = emails[0] if emails.length == 1
+    end
+    res
+  end
+
+  describe "find_for_login" do
+    it "should find the right user_name" do
+      u = User.create(:user_name => 'brody')
+      u2 = User.create(:user_name => 'brittney')
+      expect(User.find_for_login('brody')).to eq(u)
+      expect(User.find_for_login('brittney')).to eq(u2)
+      expect(User.find_for_login('bacon')).to eq(nil)
+    end
+    
+    it "should be case insensitive and strip whitespace" do
+      u = User.create(:user_name => 'brody')
+      u2 = User.create(:user_name => 'brittney')
+      expect(User.find_for_login('Brody')).to eq(u)
+      expect(User.find_for_login(' BrOdY   ')).to eq(u)
+      expect(User.find_for_login('BRITTNEY')).to eq(u2)
+    end
+    
+    it "should find by email if not found by user_name" do
+      u = User.create(:user_name => 'bob', :settings => {'email' => 'bob@example.com'})
+      expect(User.find_for_login('bob@example.com')).to eq(u)
+      expect(User.find_for_login(' bob@example.com')).to eq(u)
+      expect(User.find_for_login('bob@example.com    ')).to eq(u)
+      expect(User.find_for_login('BOB@example.Com')).to eq(u)
+    end
+    
+    it "should return nothing if multiple logins for the same email address" do
+      u1 = User.create(:user_name => 'bob', :settings => {'email' => 'bob@example.com'})
+      u2 = User.create(:user_name => 'bob_2', :settings => {'email' => 'bob@example.com'})
+      expect(User.find_for_login('bob')).to eq(u1)
+      expect(User.find_for_login('bob_2')).to eq(u2)
+      expect(User.find_for_login('bob@example.com')).to eq(nil)
     end
   end
 end

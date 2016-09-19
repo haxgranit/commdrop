@@ -1185,4 +1185,164 @@ describe Board, :type => :model do
       expect(json['user_id']).to eq(nil)
     end
   end
+  
+  describe "update_affected_users" do
+    it "should find and update all users attached to the board" do
+      u = User.create
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.save
+      Worker.process_queues
+      Worker.process_queues
+      User.where(:id => u.id).update_all(:updated_at => 2.months.ago)
+      b.settings['buttons'] = [{'id' => 1, 'label' => 'whatever'}]
+      b.instance_variable_set('@buttons_changed', true)
+      b.save
+      expect(u.reload.updated_at).to be < 2.weeks.ago
+      Worker.process_queues
+      expect(u.reload.updated_at).to be > 2.weeks.ago
+    end
+    
+    it "should find and update supervisors of users attached to the board" do
+      u = User.create
+      u2 = User.create
+      User.link_supervisor_to_user(u2, u)
+      u.reload
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.save
+      Worker.process_queues
+      Worker.process_queues
+      User.where(:id => [u.id, u2.id]).update_all(:updated_at => 2.months.ago)
+      b.settings['buttons'] = [{'id' => 1, 'label' => 'whatever'}]
+      b.save
+      expect(u2.reload.updated_at).to be < 2.weeks.ago
+      Worker.process_queues
+      expect(u2.reload.updated_at).to be > 2.weeks.ago
+    end
+    
+    it "should call 'track_boards' if it's a new board update" do
+      u = User.create
+      b = Board.create(:user => u)
+      UserBoardConnection.create(:board_id => b.id, :user_id => u.id)
+      list = [u]
+      expect(User).to receive(:where).with(:id => [u.id.to_s]).and_return(list)
+      expect(list).to receive(:update_all).and_return(true)
+      expect(u).to receive(:track_boards)
+      b.update_affected_users(true)
+    end
+    
+    it "should not call 'track_boards' if it's not a new board update" do
+      u = User.create
+      b = Board.create(:user => u)
+      UserBoardConnection.create(:board_id => b.id, :user_id => u.id)
+      list = [u]
+      expect(User).to receive(:where).with(:id => [u.id.to_s]).and_return(list)
+      expect(list).to receive(:update_all).and_return(true)
+      expect(u).to_not receive(:track_boards)
+      b.update_affected_users(false)
+    end
+    
+    it "should not update users if nothing has changed" do
+      u = User.create
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.save
+      Worker.process_queues
+      Worker.process_queues
+      User.where(:id => u.id).update_all(:updated_at => 2.months.ago)
+      b.save
+      expect(u.reload.updated_at).to be < 2.weeks.ago
+      Worker.process_queues
+      expect(u.reload.updated_at).to be < 2.weeks.ago
+    end
+  end
+  
+  describe "UserBoardConnection" do
+    it "should touch connected users when a new sub-board of their home board is created" do
+      u = User.create
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.save
+      b2 = Board.create(:user => u)
+      Worker.process_queues
+      Worker.process_queues
+      Worker.process_queues
+      User.where(:id => u.id).update_all(:updated_at => 2.months.ago)
+      b.settings['buttons'] = [{'id' => 1, 'label' => 'water', 'load_board' => {'id' => b2.global_id}}]
+      b.instance_variable_set('@buttons_changed', true)
+      b.save
+      expect(u.reload.updated_at).to be < 2.weeks.ago
+      Worker.process_queues
+      u.reload
+      expect(u.reload.updated_at).to be > 2.weeks.ago
+    end
+  
+    it "should touch supervisors of connected users when a new sub-board of their home board is created" do
+      u = User.create
+      u2 = User.create
+      User.link_supervisor_to_user(u2, u)
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.save
+      b2 = Board.create(:user => u)
+      Worker.process_queues
+      Worker.process_queues
+      Worker.process_queues
+      User.where(:id => u2.id).update_all(:updated_at => 2.months.ago)
+      b.settings['buttons'] = [{'id' => 1, 'label' => 'water', 'load_board' => {'id' => b2.global_id}}]
+      b.instance_variable_set('@buttons_changed', true)
+      b.save
+      expect(u2.reload.updated_at).to be < 2.weeks.ago
+      Worker.process_queues
+      u.reload
+      expect(u2.reload.updated_at).to be > 2.weeks.ago
+    end
+    
+    it "should touch connected users when a sub-board of their home board is modified" do
+      u = User.create
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.save
+      b2 = Board.create(:user => u)
+      b.settings['buttons'] = [{'id' => 1, 'label' => 'water', 'load_board' => {'id' => b2.global_id}}]
+      b.instance_variable_set('@buttons_changed', true)
+      b.save
+      Worker.process_queues
+      Worker.process_queues
+      Worker.process_queues
+      b2.settings['buttons'] = [{'id' => 1, 'label' => 'wishing'}]
+      b2.instance_variable_set('@buttons_changed', true)
+      b2.save
+      User.where(:id => u.id).update_all(:updated_at => 2.months.ago)
+      expect(u.reload.updated_at).to be < 2.weeks.ago
+      Worker.process_queues
+      u.reload
+      expect(u.reload.updated_at).to be > 2.weeks.ago
+    end
+    
+    it "should touch supervisors of connected users when a sub-board of their home board is modified" do
+      u = User.create
+      u2 = User.create
+      User.link_supervisor_to_user(u2, u)
+      b = Board.create(:user => u)
+      u.settings['preferences']['home_board'] = {'id' => b.global_id}
+      u.save
+      b2 = Board.create(:user => u)
+      b.settings['buttons'] = [{'id' => 1, 'label' => 'water', 'load_board' => {'id' => b2.global_id}}]
+      b.instance_variable_set('@buttons_changed', true)
+      b.save
+      Worker.process_queues
+      Worker.process_queues
+      Worker.process_queues
+      b2.settings['buttons'] = [{'id' => 1, 'label' => 'wishing'}]
+      b2.instance_variable_set('@buttons_changed', true)
+      b2.save
+      User.where(:id => u2.id).update_all(:updated_at => 2.months.ago)
+      expect(u2.reload.updated_at).to be < 2.weeks.ago
+      Worker.process_queues
+      u.reload
+      expect(u2.reload.updated_at).to be > 2.weeks.ago
+    end
+  end
 end

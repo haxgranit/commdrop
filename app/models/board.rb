@@ -310,8 +310,36 @@ class Board < ActiveRecord::Base
       self.schedule(:check_for_parts_of_speech)
       @check_for_parts_of_speech = nil
     end
+    schedule(:update_affected_users, @brand_new) if @buttons_changed || @brand_new
 
     schedule_downstream_checks
+  end
+  
+  def update_affected_users(is_new_board)
+    # update user.content_changed_at based on UserBoardConnection 
+    # (including supervisors of connected users)
+    # TODO: sharding
+    board_ids = [self.global_id]
+    if is_new_board
+      board_ids += (self.settings['immediately_upstream_board_ids'] || [])
+    end
+    # TODO: sharding
+    ubcs = UserBoardConnection.where(:board_id => Board.local_ids(board_ids))
+    root_users = ubcs.map(&:user).uniq
+    more_user_ids = root_users.map(&:supervisor_user_ids).flatten.uniq
+    user_ids = root_users.map(&:global_id) + more_user_ids
+    
+    # TODO: sharding
+    users = User.where(:id => User.local_ids(user_ids))
+    # TODO: finer-grained control, user.content_changed_at instead of just user.updated_at
+    users.update_all(:updated_at => Time.now)
+    # when a new board is created, call user.track_boards on all affected users 
+    # (i.e. users with a connection to an upstream board)
+    if is_new_board
+      users.each do |user|
+        user.track_boards
+      end
+    end
   end
   
   def check_image_url
@@ -517,8 +545,8 @@ class Board < ActiveRecord::Base
         end
         if later_object
           v.instance_variable_set('@later_object', later_object)
-          versions << v
         end
+        versions << v
       end
     end
     versions
