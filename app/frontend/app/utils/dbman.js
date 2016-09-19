@@ -43,8 +43,14 @@ var dbman = {
     if(store == 'board' && key && key.match(/\//)) {
       var index = key.match(/^tmp_/) ? 'tmp_key' : 'key';
       return capabilities.dbman.find_all(store, index, key, function(list) {
-        if(list[0] && list[0].data) {
-          success(list[0].data);
+        var oldest = null;
+        list.forEach(function(item) {
+          if(item.data && (!oldest || oldest.persisted < item.data.persisted)) {
+            oldest = item.data;
+          }
+        });
+        if(oldest) {
+          success(oldest);
         } else {
           error({error: "no record found for " + store + ":" + key});
         }
@@ -52,8 +58,14 @@ var dbman = {
     } else if(store == 'user' && key && !key.match(/^\d+_\d+$/)) {
       var index = 'key';
       return capabilities.dbman.find_all(store, index, key, function(list) {
-        if(list[0] && list[0].data) {
-          success(list[0].data);
+        var oldest = null;
+        list.forEach(function(item) {
+          if(item.data && (!oldest || oldest.persisted < item.data.persisted)) {
+            oldest = item.data;
+          }
+        });
+        if(oldest) {
+          success(oldest);
         } else {
           error({error: "no record found for " + store + ":" + key});
         }
@@ -61,7 +73,6 @@ var dbman = {
     }
     return capabilities.dbman.find_one(store, key, success, error);
   },
-
   uniqify_key: function(key, store, index) {
     var keys = [key];
     if(key && key.forEach) { keys = key; }
