@@ -110,9 +110,9 @@ class Device < ActiveRecord::Base
     key = keys.detect{|k| k['value'] == token }
     do_save = false
     if key && key['last_timestamp'] < 30.minutes.ago.to_i
-      key['last_timestamp'] = Time.now.to_i
       self.settings['keys'].each_with_index do |key, idx|
-        if key['token'] == token
+        if key['value'] == token
+          key['last_timestamp'] = Time.now.to_i
           self.settings['keys'][idx] = key
           do_save = true
         end

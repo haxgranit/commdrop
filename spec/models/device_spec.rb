@@ -208,6 +208,7 @@ describe Device, :type => :model do
       d.settings = {}
       d.settings['keys'] = [{'value' => 'bob', 'last_timestamp' => 35.minutes.ago.to_i}]
       expect(d.valid_token?('bob')).to eq(true)
+      d.reload
       expect(d.settings['keys'][0]['last_timestamp']).to be > 10.seconds.ago.to_i
     end
     
