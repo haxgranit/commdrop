@@ -30,6 +30,23 @@ describe UserGoal, type: :model do
       g.generate_defaults
       expect(g.settings['ended_at']).to_not eq(nil)
     end
+    
+    it "should mark primary, template and template_header status correctly" do
+      g = UserGoal.new
+      g.active = false
+      g.generate_defaults
+      expect(g.primary).to eq(false)
+      g.template_header = true
+      g.generate_defaults
+      expect(g.template).to eq(true)
+      g.template = false
+      g.template_header = nil
+      g.generate_defaults
+      expect(g.template_header).to eq(false)
+      g.settings['template_header_id'] = 'asdf'
+      g.generate_defaults
+      expect(g.settings['old_template_header_id']).to eq('asdf')
+    end
   end
  
   describe "generate_stats" do
@@ -134,6 +151,23 @@ describe UserGoal, type: :model do
       expect(g.settings['stats']['weighted_average_status']).to eq(4)
       expect(g.settings['stats']['weighted_percent_positive']).to eq(46.902654867256636)
     end
+    
+    it "should generate template stats" do
+      u = User.create
+      g = UserGoal.create(:user => u, :template_header => true)
+      expect(g.settings['template_stats']).to eq({'goals' => 1, 'loop' => nil})
+      g2 = UserGoal.create(:user => u, :template => true, :settings => {'goal_duration' => 2.weeks.to_i})
+      g3 = UserGoal.create(:user => u, :template => true, :settings => {'goal_duration' => 3.weeks.to_i})
+      g.settings['linked_template_ids'] = [g.global_id, g2.global_id, g3.global_id]
+      g.generate_stats
+      expect(g.settings['template_stats']).to eq({'goals' => 3, 'total_duration' => 5.weeks.to_i, 'loop' => false})
+      g3.settings['next_template_id'] = g.global_id
+      g3.save
+      g.reload
+      g.settings['linked_template_ids'] = [g.global_id, g2.global_id, g3.global_id]
+      g.generate_stats
+      expect(g.settings['template_stats']).to eq({'goals' => 3, 'total_duration' => 5.weeks.to_i, 'loop' => true})
+    end
   end
   
   describe "remove_if_primary" do
@@ -156,7 +190,7 @@ describe UserGoal, type: :model do
       g = UserGoal.process_new({
         primary: true
       }, {user: u, author: u})
-      expect(g.primary).to eq(false)
+      expect(g.primary).to eq(true)
       expect(u.settings['primary_goal']).to eq({'id' => g.global_id, 'summary' => 'user goal'})
       expect(g.reload.primary).to eq(true)
       expect(gg.reload.primary).to eq(false)
@@ -507,5 +541,89 @@ describe UserGoal, type: :model do
       g.update_usage(two_weeks_ago)
       expect(u.reload.settings['primary_goal']['last_tracked']).to eq(now)
     end
+  end
+  
+  describe "update_template_header" do
+    it "should add new templates" do
+      u = User.create
+      g = UserGoal.new
+      expect(UserGoal).to receive(:find_by_path).with('bacon').and_return(g)
+      expect(g).to receive(:add_template).with(g).and_return true
+      g.settings = {'template_header_id' => 'bacon'}
+      g.update_template_header
+    end
+    
+    it "should remove old templates" do
+      u = User.create
+      g = UserGoal.new
+      expect(UserGoal).to receive(:find_by_path).with('bacon').and_return(g)
+      expect(g).to receive(:remove_template).with(g).and_return true
+      g.settings = {'old_template_header_id' => 'bacon'}
+      g.update_template_header
+    end
+    
+    it "should persist records correctly" do
+      u = User.create
+      g1 = UserGoal.create(:user => u)
+      g2 = UserGoal.create(:user => u)
+      g2.settings['template_header_id'] = g1.global_id
+      g2.save
+      g1.reload
+      expect(g1.settings['linked_template_ids']).to eq([g2.global_id])
+    end
+  end
+  
+  describe "add_template" do
+    it "should add the goal" do
+      u = User.create
+      g = UserGoal.new(:user => u, :settings => {})
+      g2 = UserGoal.new(:user => u, :settings => {})
+      g.add_template(g2)
+      expect(g.settings['linked_template_ids']).to eq([g2.global_id])
+      g.add_template(g2)
+      expect(g.settings['linked_template_ids']).to eq([g2.global_id])
+      g.add_template(g2)
+      expect(g.settings['linked_template_ids']).to eq([g2.global_id])
+    end
+  end
+  
+  describe "remove_template" do
+    it "should remove the goal" do
+      u = User.create
+      g = UserGoal.new(:user => u, :settings => {})
+      g2 = UserGoal.new(:user => u, :settings => {})
+      g.remove_template(g2)
+      expect(g.settings['linked_template_ids']).to eq([])
+      g.settings['linked_template_ids'] = [g2.global_id]
+      g.remove_template(g2)
+      expect(g.settings['linked_template_ids']).to eq([])
+    end
+  end
+  
+  describe "remove_linked_templates" do
+    it "should delete linked goals" do
+      u = User.create
+      g1 = UserGoal.create(:user => u)
+      g2 = UserGoal.create(:user => u)
+      g3 = UserGoal.create(:user => u)
+      g1.add_template(g2)
+      g1.add_template(g3)
+      expect(UserGoal.count).to eq(3)
+      g1.destroy
+      expect(UserGoal.count).to eq(0)
+    end
+  end
+  
+  it "should clear primary goal for the user correctly" do
+    u = User.create
+    g = UserGoal.process_new({:primary => true}, {:user => u, :author => u})
+    expect(g.primary).to eq(true)
+    Worker.process_queues
+    u.reload
+    expect(u.settings['primary_goal']['id']).to eq(g.global_id)
+    g.process({:primary => false}, {:author => u})
+    Worker.process_queues
+    u.reload
+    expect(u.settings['primary_goal']).to eq(nil)
   end
 end

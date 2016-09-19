@@ -10,10 +10,13 @@ CoughDrop.Goal = DS.Model.extend({
   has_video: DS.attr('boolean'),
   primary: DS.attr('boolean'),
   active: DS.attr('boolean'),
+  template_id: DS.attr('string'),
   template: DS.attr('boolean'),
   template_header: DS.attr('boolean'),
   summary: DS.attr('string'),
+  sequence_summary: DS.attr('string'),
   description: DS.attr('string'),
+  sequence_description: DS.attr('string'),
   permissions: DS.attr('raw'),
   video: DS.attr('raw'),
   user: DS.attr('raw'),
@@ -21,7 +24,11 @@ CoughDrop.Goal = DS.Model.extend({
   comments: DS.attr('raw'),
   started: DS.attr('date'),
   ended: DS.attr('date'),
+  advance: DS.attr('date'),
+  duration: DS.attr('number'),
   stats: DS.attr('raw'),
+  sequence: DS.attr('boolean'),
+  template_stats: DS.attr('raw'),
   best_time_level: function() {
     var stats = this.get('stats') || {};
     if(stats && stats.monthly && stats.monthly.totals && stats.monthly.totals.sessions > 0) {
@@ -196,7 +203,17 @@ CoughDrop.Goal = DS.Model.extend({
       });
     }
     return rows;
-  }.property('stats', 'best_time_level')
+  }.property('stats', 'best_time_level'),
+  high_level_summary: function() {
+    var res = this.get('sequence') ? this.get('sequence_summary') : null;
+    res = res || this.get('summary');
+    return res;
+  }.property('sequence', 'summary', 'sequence_summary'),
+  high_level_description: function() {
+    var res = this.get('sequence') ? this.get('sequence_description') : null;
+    res = res || this.get('description');
+    return res;
+  }.property('sequence', 'description', 'sequence_description')
 });
 
 export default CoughDrop.Goal;

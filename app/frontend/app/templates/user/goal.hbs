@@ -16,25 +16,35 @@
 
         <br/>
         <span class='text-muted'>
-          {{#if model.active}}
-            {{t "started" key='started'}}
-          {{else}}
-            {{t "ended" key='ended'}}
-          {{/if}}
-          {{#if model.active}}
-            {{date model.started 'day'}}
-          {{else}}
-            {{date model.ended 'day'}}
-          {{/if}}
+          {{t "author: " key='author'}}
+          {{#link-to 'user' model.author.user_name}}{{model.author.user_name}}{{/link-to}}
         </span>
       </div>
     </div>
   </div>
   <div class="col-sm-3 col-xs-2">
     <div class="panel panel-default summary smaller">
-      <div class="panel-heading">{{t "Author" key='author'}}</div>
-      <div class="panel-body" style='line-height: 44px;'>
-        {{#link-to 'user' model.author.user_name}}{{model.author.user_name}}{{/link-to}}
+      <div class="panel-heading">{{t "Date" key='date'}}</div>
+      <div class="panel-body">
+          {{#if model.active}}
+            {{t "started" key='started'}}
+          {{else}}
+            {{t "ended" key='ended'}}
+          {{/if}}
+          {{#if model.active}}
+            {{date model.started 'short_day'}}
+          {{else}}
+            {{date model.ended 'short_day'}}
+          {{/if}}
+          <br/>
+          <span class='text-muted'>
+            {{#if model.advance}}
+              {{t "changes" key='changes'}}
+              <!-- TODO: make this a link to the template for the next goal -->
+              {{date model.advance 'short_day'}}
+            {{/if}}
+            &nbsp;
+          </span>
       </div>
     </div>
   </div>
@@ -60,12 +70,14 @@
       </div>
     </div>
   </div>
-  <div class="col-sm-6">
-    {{stats/goal-statuses-over-time goal=model}}
-  </div>
-  <div class="col-sm-6">
-    {{stats/goal-summary goal=model}}
-  </div>
+  {{#if model.stats.sessions}}
+    <div class="col-sm-6">
+      {{stats/goal-statuses-over-time goal=model}}
+    </div>
+    <div class="col-sm-6">
+      {{stats/goal-summary goal=model}}
+    </div>
+  {{/if}}
 </div>
 <div class='safe_html'>{{safe model.description}}</div>
 <h3>{{t "Comments" key='comments'}}</h3>

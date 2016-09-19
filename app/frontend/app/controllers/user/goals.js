@@ -46,8 +46,26 @@ export default Ember.Controller.extend({
       }, function() { });
     },
     update: function(goal, attribute, action) {
+      var done = Ember.RSVP.resolve();
+      if(attribute == 'primary') {
+        goal.set('primary', action == 'on');
+        done = goal.save();
+      } else if(attribute == 'active') {
+        goal.set('active', action == 'on');
+        done = goal.save();
+      }
+      var _this = this;
+      done.then(function() {
+        _this.load_goals();
+      }, function() { });
     },
     delete: function(goal) {
+      var _this = this;
+      modal.open('confirm-delete-goal', {user: this.get('model'), goal: goal}).then(function(res) {
+        if(res.updated) {
+          _this.load_goals();
+        }
+      });
     }
   }
 });

@@ -8,7 +8,9 @@ class UserGoal < ActiveRecord::Base
   belongs_to :user
   before_save :generate_defaults
   after_save :check_set_as_primary
+  after_save :update_template_header
   after_destroy :remove_if_primary
+  after_destroy :remove_linked_templates
   replicated_model  
 
   secure_serialize :settings
@@ -26,6 +28,10 @@ class UserGoal < ActiveRecord::Base
     self.settings['summary'] ||= "user goal"
     self.generate_stats
     self.primary ||= false
+    self.primary = false if active == false
+    self.template = true if self.template_header
+    self.template_header = false if !self.template
+    self.settings['old_template_header_id'] = self.settings['template_header_id'] if self.settings['template_header_id']
     if self.active && !self.settings['started_at']
       self.settings['started_at'] = Time.now.iso8601
     end
@@ -34,7 +40,46 @@ class UserGoal < ActiveRecord::Base
     end
   end
   
+  def update_template_header
+    if self.settings['template_header_id']
+      header = UserGoal.find_by_path(self.settings['template_header_id'])
+      header.add_template(self) if header
+    elsif self.settings['old_template_header_id']
+      header = UserGoal.find_by_path(self.settings['old_template_header_id'])
+      header.remove_template(self) if header
+    end
+    true
+  end
+  
+  def add_template(goal)
+    self.settings['linked_template_ids'] ||= []
+    old_ids = self.settings['linked_template_ids']
+    self.settings['linked_template_ids'] |= [goal.global_id]
+    self.save if old_ids != self.settings['linked_template_ids']
+  end
+  
+  def remove_template(goal)
+    self.settings['linked_template_ids'] ||= []
+    old_ids = self.settings['linked_template_ids']
+    self.settings['linked_template_ids'] -= [goal.global_id]
+    self.save if old_ids != self.settings['linked_template_ids']
+  end
+  
+  def remove_linked_templates
+    ids = self.settings['linked_template_ids'] || []
+    UserGoal.find_all_by_global_id(ids).each{|g| g.destroy }
+  end
+  
   def generate_stats
+    if self.template_header
+      links = self.settings['linked_template_ids'] || []
+      self.settings['template_stats'] = {}
+      goals = ([self] + UserGoal.find_all_by_global_id(links)).uniq
+      self.settings['template_stats']['goals'] = goals.length
+      duration = goals.map{|g| g.settings['goal_duration'] || 0 }.sum
+      self.settings['template_stats']['total_duration'] = duration if duration > 0
+      self.settings['template_stats']['loop'] = self.id && goals.any?{|g| g.settings['next_template_id'] == self.global_id }
+    end
     stats = {}
     # TODO: sharding
     sessions = []
@@ -177,6 +222,15 @@ class UserGoal < ActiveRecord::Base
           self.user.save
         end
       end
+    elsif @clear_primary
+      if self.user && self.user.settings
+        # TODO: sharding
+        UserGoal.where(:user_id => self.user_id).update_all(:primary => false)
+        if self.user.settings && self.user.settings['primary_goal']
+          self.user.settings['primary_goal'] = nil
+          self.user.save
+        end
+      end
     end
     true
   end
@@ -248,7 +302,12 @@ class UserGoal < ActiveRecord::Base
     
     if params[:primary]
       @set_as_primary = true
+      @clear_primary = false
+    elsif self.primary && params[:primary] == false
+      @clear_primary = true
+      @set_as_primary = false
     end
+    self.primary = !!params[:primary] if params[:primary] != nil
     true
   end
   
@@ -260,7 +319,9 @@ class UserGoal < ActiveRecord::Base
     if self.settings['goal_duration']
       Time.now + self.settings['goal_duration']
     elsif self.settings['goal_advances_at']
-      Time.parse(self.settings['goal_advances_at'])
+      res = Time.parse(self.settings['goal_advances_at'])
+      res += 1.year if res < Time.now && !self.settings['goal_advances_at'].match(/\d\d\d\d/)
+      res
     else
       nil
     end

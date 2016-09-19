@@ -463,4 +463,26 @@ describe('Goal', function() {
     expect(goal.get('time_unit_status_rows')[3].time_blocks[3].style_class).toEqual('time_block level_4');
     expect(goal.get('time_unit_status_rows')[3].time_blocks[3].tooltip).toEqual('1 status, ' + day8.toISOString().substring(0, 7) + '-01');
   });
+
+  describe("high_level_summary", function() {
+    it("should return the correct value", function() {
+      var goal = CoughDrop.store.createRecord('goal');
+      goal.set('summary', 'asdf');
+      goal.set('sequence_summary', 'jkl');
+      expect(goal.get('high_level_summary')).toEqual('asdf');
+      goal.set('sequence', true);
+      expect(goal.get('high_level_summary')).toEqual('jkl');
+    });
+  });
+
+  describe("high_level_description", function() {
+    it("should return the correct value", function() {
+      var goal = CoughDrop.store.createRecord('goal');
+      goal.set('description', 'asdf');
+      goal.set('sequence_description', 'jkl');
+      expect(goal.get('high_level_description')).toEqual('asdf');
+      goal.set('sequence', true);
+      expect(goal.get('high_level_description')).toEqual('jkl');
+    });
+  });
 });

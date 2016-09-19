@@ -14,11 +14,15 @@ module JsonApi::Goal
       json[key] = goal.send(key)
     end
 
-    ['summary', 'description'].each do |key|
+    ['summary', 'description', 'sequence_description', 'sequence_summary'].each do |key|
       json[key] = goal.settings[key]
     end
     json['started'] = goal.settings['started_at']
     json['ended'] = goal.settings['ended_at']
+    json['duration'] = goal.settings['goal_duration'] if goal.settings['goal_duration']
+    json['advance'] = goal.settings['goal_advances_at'] && Time.parse(goal.settings['goal_advances_at']).iso8601
+    
+    json['sequence'] = !!goal.settings['template_header_id']
     if goal.settings['stats']
       json['stats'] = {}
       goal.settings['stats'].each do |key, val|
@@ -29,6 +33,10 @@ module JsonApi::Goal
         end
       end
     end
+    if goal.settings['template_stats']
+      json['template_stats'] = goal.settings['template_stats']
+    end
+    
 
     if args[:permissions]
       json['permissions'] = goal.permissions_for(args[:permissions])
@@ -50,7 +58,8 @@ module JsonApi::Goal
 
         video = videos_hash[goal.settings['video_id']]
         json['video'] = video.summary_hash if video
-
+        
+        json['advance'] = goal.advance_at && goal.advance_at.iso8601
 
         user = users_hash[goal.related_global_id(:user_id)]
         json['user'] = JsonApi::User.as_json(user, limited_identity: true) if user

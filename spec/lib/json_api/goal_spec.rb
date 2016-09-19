@@ -19,6 +19,22 @@ describe JsonApi::Goal do
         expect(JsonApi::Goal.build_json(s).keys).to be_include(key)
       end
     end
+
+    it "should include duration and advance information" do
+      g = UserGoal.new(:settings => {'goal_duration' => 1.hour.to_i, 'goal_advances_at' => 'Jan 1 2015'})
+      json = JsonApi::Goal.build_json(g)
+      expect(json['duration']).to eq(1.hour.to_i)
+      expect(json['advance']).to eq(Time.parse('Jan 1 2015').iso8601)
+    end
+    
+    it "should include template stats" do
+      g = UserGoal.new(:settings => {'template_stats' => {'staty' => true}})
+      json = JsonApi::Goal.build_json(g)
+      expect(json['template_stats']).to eq({'staty' => true})
+      g = UserGoal.new
+      json = JsonApi::Goal.build_json(g)
+      expect(json.keys).to_not be_include('template_stats')
+    end
     
     it "should include permissions" do
       u = User.create
