@@ -103,6 +103,8 @@ class Api::BoardsController < ApplicationController
     board = Board.find_by_path(params['id'])
     if !board
       deleted_board = DeletedBoard.find_by_path(params['id'])
+      # TODO: Sharding
+      deleted_board ||= DeletedBoard.find_by(:id => (Board.local_ids([params['id']])[0] || 0))
       user = deleted_board && deleted_board.user
       res = {error: "Record not found"}
       res[:id] = params['id']
