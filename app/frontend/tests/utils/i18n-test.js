@@ -12,6 +12,7 @@ describe("i18n", function() {
       expect(i18n.pluralize("cow")).toEqual("cows");
       expect(i18n.pluralize("wish")).toEqual("wishes");
       expect(i18n.pluralize("box")).toEqual("boxes");
+      expect(i18n.pluralize("day")).toEqual("days");
     });
   });
 
@@ -177,6 +178,52 @@ describe("i18n", function() {
       expect(i18n.tense('hurry', {past_participle: true})).toEqual("hurried");
       expect(i18n.tense('hit', {past_participle: true})).toEqual("hit");
       expect(i18n.tense('bus', {past_participle: true})).toEqual("bussed");
+    });
+  });
+
+  describe("seconds_ago", function() {
+    it("should return correct values", function() {
+      expect(Ember.templateHelpers.seconds_ago(12)).toEqual("12 seconds");
+      expect(Ember.templateHelpers.seconds_ago(1)).toEqual("1 second");
+      expect(Ember.templateHelpers.seconds_ago(0)).toEqual("");
+      expect(Ember.templateHelpers.seconds_ago(100)).toEqual("1.7 minutes");
+      expect(Ember.templateHelpers.seconds_ago(5000)).toEqual("1.4 hours");
+      expect(Ember.templateHelpers.seconds_ago(12600)).toEqual("3.5 hours");
+      expect(Ember.templateHelpers.seconds_ago(270000)).toEqual("75 hours");
+      expect(Ember.templateHelpers.seconds_ago(345800)).toEqual("96.1 hours");
+      expect(Ember.templateHelpers.seconds_ago(691800)).toEqual("192.2 hours");
+      expect(Ember.templateHelpers.seconds_ago(1382990)).toEqual("384.2 hours");
+      expect(Ember.templateHelpers.seconds_ago(2851200)).toEqual("792 hours");
+      expect(Ember.templateHelpers.seconds_ago(8553600)).toEqual("2376 hours");
+      expect(Ember.templateHelpers.seconds_ago(17280000)).toEqual("4800 hours");
+      expect(Ember.templateHelpers.seconds_ago(3801999)).toEqual("1056.1 hours");
+      expect(Ember.templateHelpers.seconds_ago(3801500)).toEqual("1056 hours");
+      expect(Ember.templateHelpers.seconds_ago(86400)).toEqual("24 hours");
+      expect(Ember.templateHelpers.seconds_ago(86401)).toEqual("24 hours");
+      expect(Ember.templateHelpers.seconds_ago(86399)).toEqual("24 hours");
+      expect(Ember.templateHelpers.seconds_ago(100, 'long')).toEqual("1.7 minutes");
+      expect(Ember.templateHelpers.seconds_ago(5000, 'long')).toEqual("1.4 hours");
+      expect(Ember.templateHelpers.seconds_ago(12600, 'long')).toEqual("3.5 hours");
+      expect(Ember.templateHelpers.seconds_ago(270000, 'long')).toEqual("3 days");
+      expect(Ember.templateHelpers.seconds_ago(345800, 'long')).toEqual("4 days");
+      expect(Ember.templateHelpers.seconds_ago(691800, 'long')).toEqual("1.1 weeks");
+      expect(Ember.templateHelpers.seconds_ago(1382990, 'long')).toEqual("2.3 weeks");
+      expect(Ember.templateHelpers.seconds_ago(2851200, 'long')).toEqual("4.7 weeks");
+      expect(Ember.templateHelpers.seconds_ago(8553600, 'long')).toEqual("3.3 months");
+      expect(Ember.templateHelpers.seconds_ago(17280000, 'long')).toEqual("6.7 months");
+      expect(Ember.templateHelpers.seconds_ago(3801999, 'long')).toEqual("6.3 weeks");
+      expect(Ember.templateHelpers.seconds_ago(3801500, 'long')).toEqual("6.3 weeks");
+      expect(Ember.templateHelpers.seconds_ago(86400, 'long')).toEqual("1 day");
+      expect(Ember.templateHelpers.seconds_ago(86401, 'long')).toEqual("1 day");
+      expect(Ember.templateHelpers.seconds_ago(86399, 'long')).toEqual("1 day");
+    });
+  });
+  describe("date", function() {
+    it("should return the correct value", function() {
+      var d = new Date(1474326397835);
+      expect(Ember.templateHelpers.date(d, 'day')).toEqual('September 19th 2016');
+      expect(Ember.templateHelpers.date(d, 'short_day')).toEqual('Sep 19th 2016');
+      expect(Ember.templateHelpers.date(d, 'whatever')).toEqual('September 19th 2016, 5:06 pm');
     });
   });
 });
