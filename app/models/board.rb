@@ -508,9 +508,17 @@ class Board < ActiveRecord::Base
     all_versions.each_with_index do |v, idx|
       if v.whodunnit && !v.whodunnit.match(/^job/)
         later_version = all_versions[idx - 1]
-        later_object = later_version ? later_version.reify : current
-        v.instance_variable_set('@later_object', later_object)
-        versions << v
+        later_object = current
+        if later_version
+          later_object = later_version.reify rescue nil
+          if later_object && !later_object.settings
+            later_object.load_secure_object rescue nil
+          end
+        end
+        if later_object
+          v.instance_variable_set('@later_object', later_object)
+          versions << v
+        end
       end
     end
     versions

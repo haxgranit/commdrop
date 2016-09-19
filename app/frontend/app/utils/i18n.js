@@ -8,6 +8,8 @@ Ember.templateHelpers.date = function(date, precision) {
   var moment = window.moment(date);
   if(precision == 'day') {
     return moment.format('MMMM Do YYYY');
+  } else if(precision == 'short_day') {
+    return moment.format('MMM Do YYYY');
   } else {
     return moment.format('MMMM Do YYYY, h:mm a');
   }
@@ -49,7 +51,7 @@ Ember.templateHelpers.locale = function(str) {
   return res;
 };
 
-Ember.templateHelpers.seconds_ago = function(seconds) {
+Ember.templateHelpers.seconds_ago = function(seconds, distance) {
   seconds = (Math.round(seconds * 10) / 10);
   if(!seconds || seconds < 1) {
     return "";
@@ -60,7 +62,22 @@ Ember.templateHelpers.seconds_ago = function(seconds) {
     return i18n.t('minutes_ago', "minute", {hash: {count: minutes}});
   } else {
     var hours = Math.round(seconds / 3600 * 10) / 10;
-    return i18n.t('hours_ago', "hour", {hash: {count: hours}});
+    if(distance != 'long' || hours < 24) {
+      return i18n.t('hours_ago', "hour", {hash: {count: hours}});
+    } else {
+      var days = Math.round(hours / 24);
+      if(days < 7) {
+        return i18n.t('days_ago', "day", {hash: {count: days}});
+      } else {
+        var weeks = Math.round(days / 7 * 10) / 10;
+        if(weeks < 12) {
+          return i18n.t('weeks_ago', "week", {hash: {count: weeks}});
+        } else {
+          var months = Math.round(days / 30 * 10) / 10;
+          return i18n.t('months_ago', "month", {hash: {count: months}});
+        }
+      }
+    }
   }
 };
 

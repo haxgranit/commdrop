@@ -18,4 +18,15 @@ describe('Boardversion', function() {
     bv.set('created', date);
     expect(bv.get('recent')).toEqual(false);
   });
+
+  describe("button_labels_list", function() {
+    it("should return correct values", function() {
+      var bv = CoughDrop.store.createRecord('boardversion');
+      expect(bv.get('button_labels_list')).toEqual('');
+      bv.set('button_labels', []);
+      expect(bv.get('button_labels_list')).toEqual('');
+      bv.set('button_labels', ['asdf', 'jkl']);
+      expect(bv.get('button_labels_list')).toEqual('asdf, jkl');
+    });
+  });
 });

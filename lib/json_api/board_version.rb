@@ -54,6 +54,8 @@ module JsonApi::BoardVersion
         if json['action'] == 'updated' && obj.settings['edit_description'] && obj.settings['edit_description']['notes'] && obj.settings['edit_description']['notes'].length > 0
           json['action'] = obj.settings['edit_description']['notes'].join(', ')
         end
+        json['button_labels'] = (obj.settings['buttons'] || []).map{|b| b['label'] || b['vocalization'] }
+        json['grid'] = obj.settings['grid']
         if args[:admin]
           args[:board_lookups] ||= {}
           upstream_ids = obj.settings['immediately_upstream_board_ids'] || []
