@@ -89,7 +89,7 @@ class UserIntegration < ActiveRecord::Base
     self.user = non_user_params['user']
 
     self.settings ||= {}
-    self.settings['name'] = params['name'] if params['name']
+    self.settings['name'] = process_string(params['name']) if params['name']
     self.settings['custom_integration'] = params['custom_integration'] if params['custom_integration'] != nil
     self.settings['button_webhook_url'] = params['button_webhook_url'] if params['button_webhook_url']
     # list of known types, probably need a background job here to confirm any

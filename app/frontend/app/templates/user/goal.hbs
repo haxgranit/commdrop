@@ -67,7 +67,7 @@
     {{stats/goal-summary goal=model}}
   </div>
 </div>
-<p>{{model.description}}</p>
+<div class='safe_html'>{{safe model.description}}</div>
 <h3>{{t "Comments" key='comments'}}</h3>
 <p>{{t "No Comments" key='no_comments'}}</p>
 <button class='btn btn-default'>{{t "Add Comment" key='add_comment'}}</button>

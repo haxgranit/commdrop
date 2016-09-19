@@ -383,10 +383,10 @@ class Board < ActiveRecord::Base
     self.settings ||= {}
     self.settings['last_updated'] = Time.now.iso8601
     @edit_notes << "renamed the board" if params['name'] && self.settings['name'] != params['name']
-    self.settings['name'] = params['name'] if params['name']
+    self.settings['name'] = process_string(params['name']) if params['name']
     self.settings['word_suggestions'] = params['word_suggestions'] if params['word_suggestions'] != nil
     @edit_notes << "updated the description" if params['description'] && params['description'] != self.settings['description']
-    self.settings['description'] = params['description'] if params['description']
+    self.settings['description'] = process_string(params['description']) if params['description']
     @edit_notes << "changed the image" if params['image_url'] && params['image_url'] != self.settings['image_url']
     self.settings['image_url'] = params['image_url'] if params['image_url']
     self.settings['never_edited'] = false

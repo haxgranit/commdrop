@@ -1,3 +1,5 @@
+require 'sanitize'
+
 module Processable
   extend ActiveSupport::Concern
   
@@ -29,6 +31,14 @@ module Processable
   
   def process_license(license)
     self.settings['license'] = OBF::Utils.parse_license(license);
+  end
+  
+  def process_string(str)
+    Sanitize.fragment(str)
+  end
+  
+  def process_html(html)
+    Sanitize.fragment(html, Sanitize::Config::RELAXED)
   end
   
   def generate_unique_key(suggestion)

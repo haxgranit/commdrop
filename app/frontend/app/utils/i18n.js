@@ -105,6 +105,10 @@ Ember.templateHelpers.t = function(str, options) {
   return new Ember.String.htmlSafe(i18n.t(options.key, str, options));
 };
 
+Ember.templateHelpers.safe = function(str) {
+  return new Ember.String.htmlSafe(str);
+};
+
 var i18n = Ember.Object.extend({
   init: function() {
     this._super();

@@ -21,7 +21,7 @@ class ContactMessage < ActiveRecord::Base
   def process_params(params, non_user_params)
     self.settings ||= {}
     ['name', 'email', 'subject', 'message', 'recipient'].each do |key|
-      self.settings[key] = params[key] if params[key]
+      self.settings[key] = process_string(params[key]) if params[key]
     end
     ['ip_address', 'user_agent', 'version'].each do |key|
       self.settings[key] = non_user_params[key] if non_user_params[key]

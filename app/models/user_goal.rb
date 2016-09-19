@@ -203,8 +203,12 @@ class UserGoal < ActiveRecord::Base
     self.settings ||= {}
     self.settings['author_id'] ||= non_user_params[:author].global_id
     self.active = !!params[:active] if params[:active] != nil
-    ['summary', 'description'].each do |key|
-      self.settings[key] = params[key] if params[key]
+    self.settings['summary'] = process_string(params['summary']) if params['summary']
+    self.settings['description'] = process_html(params['description']) if params['description']
+    if params['template']
+      self.settings['sequence_summary'] = process_string(params['sequence_summary']) if params['sequence_summary']
+      self.settings['sequence_description'] = process_html(params['sequence_description']) if params['sequence_description']
+      # TODO: duration, template_header_id, next_template_id
     end
     if params['video_id']
       video = UserVideo.find_by_global_id(params['video_id'])
@@ -230,7 +234,7 @@ class UserGoal < ActiveRecord::Base
         'user_id' => non_user_params[:author].global_id,
         'user_name' => non_user_params[:author].user_name,
         'created' => Time.now.iso8601,
-        'text' => params['comment']['text']
+        'text' => process_string(params['comment']['text'])
       }
       self.settings['last_comment_id'] += 1
       if video

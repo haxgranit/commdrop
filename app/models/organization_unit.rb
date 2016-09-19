@@ -20,7 +20,7 @@ class OrganizationUnit < ActiveRecord::Base
     self.organization ||= non_user_params[:organization]
     raise "organization required" unless self.organization
     self.settings ||= {}
-    self.settings['name'] = params['name'] if params['name']
+    self.settings['name'] = process_string(params['name']) if params['name']
     if params['management_action'] && params['management_action'] != ''
       process_result = process_action(params['management_action']) 
       if !process_result

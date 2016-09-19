@@ -208,7 +208,7 @@ class Webhook < ActiveRecord::Base
     if params['user_integration_id']
       ui = UserIntegration.where(:user_id => self.user_id).find_by_global_id(params['user_integration_id'])
     end
-    self.settings['name'] = params['name'] if params['name']
+    self.settings['name'] = process_string(params['name']) if params['name']
     self.settings['include_content'] = params['include_content'] if params['include_content'] != nil
     self.settings['content_types'] = params['content_types'] if params['content_types']
     self.settings['url'] = params['url'] if params['url'] && params['url'].match(/^http/)

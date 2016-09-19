@@ -396,7 +396,7 @@ class User < ActiveRecord::Base
   def process_params(params, non_user_params)
     self.settings ||= {}
     ['name', 'description', 'details_url', 'location', 'cell_phone'].each do |arg|
-      self.settings[arg] = params[arg] if params[arg]
+      self.settings[arg] = process_string(params[arg]) if params[arg]
     end
     if params['terms_agree']
       self.settings['terms_agreed'] = Time.now.to_i

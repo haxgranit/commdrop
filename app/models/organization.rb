@@ -459,7 +459,7 @@ class Organization < ActiveRecord::Base
   
   def process_params(params, non_user_params)
     self.settings ||= {}
-    self.settings['name'] = params['name'] if params['name']
+    self.settings['name'] = process_string(params['name']) if params['name']
     raise "updater required" unless non_user_params['updater']
     if params[:allotted_licenses]
       total = params[:allotted_licenses].to_i

@@ -91,6 +91,13 @@ h1 a:focus {
     text-decoration: none;
   }
 }
+.safe_html {
+  width: 100%;
+  overflow: hidden;
+  img {
+    max-width: 400px;
+  }
+}
 #board_canvas {
   outline: none;
 }
