@@ -11,17 +11,21 @@ export default modal.ModalController.extend({
     _this.set('loading', true);
     _this.set('error', null);
     var board = _this.get('model.board');
-    BoardHierarchy.load_with_button_set(board).then(function(hierarchy) {
-      _this.set('loading', false);
-      if(hierarchy && hierarchy.get('root')) {
-        _this.set('hierarchy', hierarchy);
-      } else {
-        _this.start_copying();
-      }
-    }, function(err) {
-      _this.set('loading', false);
-      _this.set('error', err);
-    });
+    if(this.get('model.action') == 'keep_links') {
+      _this.start_copying();
+    } else {
+      BoardHierarchy.load_with_button_set(board).then(function(hierarchy) {
+        _this.set('loading', false);
+        if(hierarchy && hierarchy.get('root')) {
+          _this.set('hierarchy', hierarchy);
+        } else {
+          _this.start_copying();
+        }
+      }, function(err) {
+        _this.set('loading', false);
+        _this.set('error', err);
+      });
+    }
   },
   start_copying: function() {
     var board_ids_to_include = null;
