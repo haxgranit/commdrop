@@ -42,9 +42,13 @@ class User < ActiveRecord::Base
   cache_permissions
   
   def self.find_for_login(user_name)
-    res = self.find_by(:user_name => user_name)
-    res ||= self.find_by(:user_name => user_name.downcase)
-    res ||= self.find_by(:user_name => User.clean_path(user_name.downcase))
+    user_name = user_name.strip
+    res = nil
+    if !user_name.match(/@/)
+      res = self.find_by(:user_name => user_name)
+      res ||= self.find_by(:user_name => user_name.downcase)
+      res ||= self.find_by(:user_name => User.clean_path(user_name.downcase))
+    end
     if !res
       emails = self.find_by_email(user_name)
       emails = self.find_by_email(user_name.downcase) if emails.length == 0
