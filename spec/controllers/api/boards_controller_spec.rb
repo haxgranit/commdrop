@@ -283,6 +283,18 @@ describe Api::BoardsController, :type => :controller do
       json = JSON.parse(response.body)
       expect(json['deleted']).to eq(true)
     end
+
+    it "should return deleted status if the information is allowed when searching by id" do
+      token_user
+      b = Board.create(:user => @user)
+      key = b.global_id
+      b.destroy
+      Worker.process_queues
+      get :show, :id => key
+      assert_not_found(key)
+      json = JSON.parse(response.body)
+      expect(json['deleted']).to eq(true)
+    end
     
     it "should not return deleted status if not allowed" do
       token_user
