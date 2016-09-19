@@ -31,6 +31,23 @@ describe Processable, :type => :model do
     end
   end
   
+  describe "process_string" do
+    it "should strip all html" do 
+      r = FakeRecord.new
+      expect(r.process_string('bacon <i>is')).to eq('bacon is')
+      expect(r.process_string('<p>something</p>')).to eq('something')
+    end
+  end
+  
+  describe "process_html" do
+    it "should strip protected values only" do
+      r = FakeRecord.new
+      expect(r.process_html('bacon <i>is')).to eq('bacon <i>is</i>')
+      expect(r.process_html('bacon <b>is</b>')).to eq('bacon <b>is</b>')
+      expect(r.process_html("<a href='http://www.google.com'>Google</a> <a href='javascript:alert(true);'>alert</a> <img src='file://something.png'/>")).to eq("<a href=\"http://www.google.com\">Google</a> <a>alert</a> <img>")
+    end
+  end
+  
   describe "clean_path" do
     it "should not allow starting with a number" do
       r = FakeRecord.new

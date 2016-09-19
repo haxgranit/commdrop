@@ -34,7 +34,7 @@ module Processable
   end
   
   def process_string(str)
-    Sanitize.fragment(str)
+    Sanitize.fragment(str).strip
   end
   
   def process_html(html)

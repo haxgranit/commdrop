@@ -294,6 +294,23 @@ describe UserGoal, type: :model do
       }, {user: u, author: u})
       expect(g.instance_variable_get('@set_as_primary')).to eq(true)
     end
+    
+    it "should sanitize fields" do
+      u = User.create
+      g = UserGoal.process_new({
+        active: true,
+        summary: "something <string>good</strong>",
+        description: "a something that is good<style></style><br/>so there",
+        template: true,
+        sequence_summary: "<script>alert('asdf');</script>something else<br/>",
+        sequence_description: "something I <a href='http://www.google.com'>like</a><em>!</em>"
+      }, {user: u, author: u})
+      expect(g.active).to eq(true)
+      expect(g.summary).to eq("something good")
+      expect(g.settings['description']).to eq("a something that is good<br>so there")
+      expect(g.settings['sequence_summary']).to eq("alert('asdf');something else")
+      expect(g.settings['sequence_description']).to eq("something I <a href=\"http://www.google.com\">like</a><em>!</em>")
+    end
   end
   
   describe "calculate_advancement" do

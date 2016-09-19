@@ -55,6 +55,12 @@ describe OrganizationUnit, :type => :model do
       expect(res).to eq(false)
       expect(ou.processing_errors).to eq(["management_action was unsuccessful, whatever"])
     end
+    
+    it "should sanitize name" do
+      o = Organization.create
+      ou = OrganizationUnit.process_new({'name' => '<b>Best</b> Room'}, {'organization' => o})
+      expect(ou.settings['name']).to eq('Best Room')
+    end
   end
 
   describe "process_action" do

@@ -423,7 +423,7 @@ class User < ActiveRecord::Base
         add_processing_error("blocked email address")
         return false
       end
-      self.settings['email'] = params['email']
+      self.settings['email'] = process_string(params['email'])
     end
     self.settings['referrer'] ||= params['referrer'] if params['referrer']
     self.settings['ad_referrer'] ||= params['ad_referrer'] if params['ad_referrer']

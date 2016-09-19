@@ -792,6 +792,14 @@ describe Board, :type => :model do
       b.process_params({}, {:key => "something_good"})
       expect(b.key).to eq("no-name/something_good")
     end
+    
+    it "should sanitize board name and description" do
+      u = User.create
+      b = Board.create(:user => u)
+      b.process({'name' => "<b>Coolness</b>", 'description' => "Something <a href='#'>fun</a>"})
+      expect(b.settings['name']).to eq('Coolness')
+      expect(b.settings['description']).to eq('Something fun')
+    end
   end
 
   it "should securely serialize settings" do

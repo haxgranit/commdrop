@@ -369,6 +369,15 @@ describe Webhook, :type => :model do
         ]
       })
     end
+    
+    it "should sanitize fields" do
+      u = User.create
+      h = Webhook.process_new({'name' => '<b>webhooky</b><br/>'}, {'user' => u})
+      expect(h).to_not eq(nil)
+      expect(h.id).to_not eq(nil)
+      expect(h.settings['name']).to eq('webhooky')
+      expect(h.user).to eq(u)
+    end
   end
   
   describe "generate_defaults" do

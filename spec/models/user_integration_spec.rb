@@ -168,6 +168,19 @@ describe UserIntegration, :type => :model do
       expect(ui.settings['token']).to_not eq(nil)
       expect(ui.settings['token']).to_not eq(token)
     end
+    
+    it "should sanitize fields" do
+      u = User.create
+      ui = UserIntegration.process_new({
+        'name' => '<b>good</b> integration',
+        'custom_integration' => true
+      }, {'user' => u})
+      expect(ui).to_not eq(nil)
+      expect(ui.id).to_not eq(nil)
+      expect(ui.settings['name']).to eq('good integration')
+      expect(ui.settings['custom_integration']).to eq(true)
+      expect(ui.settings['token']).to_not eq(nil)
+    end
   end  
   
   describe "destroy_device" do

@@ -458,6 +458,26 @@ describe User, :type => :model do
       u.process_params({'terms_agree' => true}, {})
       expect(u.settings['terms_agreed']).to eq(Time.now.to_i)
     end
+    
+    it "should sanitize parameters" do
+      u = User.new
+      expect { u.process_params({}, {}) }.to_not raise_error
+      expect(u.settings['name']).to eq(nil)
+      expect(u.settings['email']).to eq(nil)
+      expect(u.settings['location']).to eq(nil)
+      expect(u.settings['public']).to eq(nil)
+      
+      u.process_params({
+        'name' => '<br/>bob',
+        'email' => '<p>bob@example.com</p>',
+        'location' => "<a href='http://www.google.com'>link</a>",
+        'public' => true
+      }, {})
+      expect(u.settings['name']).to eq('bob')
+      expect(u.settings['email']).to eq('bob@example.com')
+      expect(u.settings['location']).to eq('link')
+      expect(u.settings['public']).to eq(true)
+    end
   end
 
   describe "replace_board" do

@@ -136,4 +136,28 @@ describe ContactMessage, :type => :model do
     ENV['ZENDESK_USER'] = orig_u
     ENV['ZENDESK_TOKEN'] = orig_t
   end
+  
+  it "should sanitize attributes" do
+    m = ContactMessage.process_new({
+      'name' => 'Bob <br/>Jones',
+      'email' => '<b>bob@example.com</b>',
+      'subject' => "ok<a href='#'></a>",
+      'recipient' => "nobody<iframe src='http://www.google.com/>",
+      'message' => 'asdf<p></p>',
+      'hat' => 'asdf'
+    })
+    expect(m).not_to eq(nil)
+    expect(m.errored?).to eq(false)
+    expect(m.settings['email']).to eq('bob@example.com')
+    expect(m.settings['name']).to eq('Bob  Jones')
+    expect(m.settings['subject']).to eq('ok')
+    expect(m.settings['recipient']).to eq('nobody')
+    expect(m.settings['message']).to eq('asdf')
+    expect(m.settings['hat']).to eq(nil)
+    
+    m = ContactMessage.process_new({})
+    expect(m).not_to eq(nil)
+    expect(m.errored?).to eq(false)
+    expect(m.settings['email']).to eq(nil)
+  end
 end
