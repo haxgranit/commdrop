@@ -162,6 +162,7 @@ CoughDrop.registrationTypes = [
   {name: i18n.t('registration_type_slp', "A therapist"), id: 'therapist'},
   {name: i18n.t('registration_type_parent', "A supervising parent"), id: 'parent'},
   {name: i18n.t('registration_type_eval', "An evaluation/assessment device"), id: 'eval'},
+  {name: i18n.t('registration_type_teacher', "A teacher"), id: 'teacher'},
   {name: i18n.t('registration_type_other', "An aide, caregiver or other supporter"), id: 'other'}
 ];
 CoughDrop.parts_of_speech = [
