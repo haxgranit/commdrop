@@ -364,7 +364,11 @@
         <a class='btn btn-default' id='identity_button' href="#" data-toggle="dropdown">
           {{#if app_state.currentUser}}
             <img src={{app_state.currentUser.avatar_url_with_fallback}} />
-            {{#if app_state.currentUser.unread_messages}}
+            {{#if persistence.syncing}}
+              <span class="unread glyphicon glyphicon-refresh spinning"></span>
+            {{else if persistence.app_needs_update}}
+              <span class="label label-danger unread">{{t "!" key='exclaim'}}</span>
+            {{else if app_state.currentUser.unread_messages}}
               <span class="label label-danger unread">{{app_state.currentUser.unread_messages}}</span>
             {{/if}}
           {{else}}
@@ -403,6 +407,14 @@
                 <li class="divider"></li>
               {{/if}}
             {{/unless}}
+          {{/if}}
+          {{#if persistence.app_needs_update}}
+            <li role="presentation">
+              <a href="#" {{action "confirm_update"}}>
+                <span class='label label-danger'>{{t "!" key='exclaim'}}</span>
+                {{t "Update Available" key="update_available"}}
+              </a>
+            </li>
           {{/if}}
           {{#unless app_state.limited_speak_mode_options}}
             {{#if session.isAuthenticated}}

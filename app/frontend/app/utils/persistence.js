@@ -1572,9 +1572,7 @@ var persistence = Ember.Object.extend({
     }
   }.observes('refresh_stamp', 'last_sync_at'),
   check_for_new_version: function() {
-    if(window.CoughDrop && window.CoughDrop.update_version) {
-      modal.queue('confirm-update-app');
-    }
+    persistence.set('app_needs_update', true);
   }.observes('refresh_stamp')
 }).create({online: (navigator.onLine)});
 stashes.set('online', navigator.onLine);

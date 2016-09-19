@@ -399,7 +399,10 @@ export default Ember.Controller.extend({
       capabilities.fullscreen(true).then(null, function() {
         modal.warning(i18n.t('fullscreen_failed', "Full Screen Mode failed to load"), true);
       });
-    }
+    },
+    confirm_update: function() {
+      modal.open('confirm-update-app');
+    },
   },
   activateButton: function(button, options) {
     options = options || {};
