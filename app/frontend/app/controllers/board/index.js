@@ -421,6 +421,7 @@ export default Ember.Controller.extend({
       });
     });
     app_state.set('board_virtual_dom.ordered_buttons', ob);
+    app_state.align_button_list();
   }.observes('model.id', 'extra_pad', 'inner_pad', 'base_text_height', 'text_style', 'text_position', 'ordered_buttons', 'border_style', 'height', 'width', 'app_state.edit_mode', 'nothing_visible', 'app_state.currentUser.preferences.stretch_buttons'),
   long_description: function() {
     var desc = "";

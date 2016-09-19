@@ -574,6 +574,11 @@ var app_state = Ember.Object.extend({
       buttonTracker.short_press_delay = 50;
     }
   }.observes('currentUser.preferences.activation_location', 'currentUser.preferences.activation_minimum', 'currentUser.preferences.activation_cutoff', 'currentUser.preferences.activation_on_start'),
+  align_button_list: function() {
+    Ember.run.later(function() {
+      Ember.$("#button_list").scrollTop(9999999);
+    }, 200);
+  }.observes('button_list'),
   monitor_scanning: function() {
     this.check_scanning();
   }.observes('speak_mode', 'currentBoardState'),
