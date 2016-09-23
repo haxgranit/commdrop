@@ -122,7 +122,7 @@ export default Ember.Controller.extend({
     var _this = this;
     if(!persistence.get('online')) { return; }
     var last_browse = stashes.get('last_index_browse');
-    var default_index = 0;
+    var default_index = 2;
     // If a user already has a home board they're not going to care about popular boards,
     // they want to see something more useful like all the boards they own, or maybe
     // the home boards of all their supervisees, or maybe all their starred boards
