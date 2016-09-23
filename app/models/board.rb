@@ -110,19 +110,23 @@ class Board < ActiveRecord::Base
   
   def generate_stats
     self.settings['stars'] = (self.settings['starred_user_ids'] || []).length
-    self.settings['forks'] = self.child_boards.count
+    child_board_ids = self.child_boards.map(&:id)
+    self.settings['forks'] = child_board_ids.length
+    self.settings['home_forks'] = UserBoardConnection.where(:board_id => child_board_ids, :home => true).count
     self.settings['home_uses'] = UserBoardConnection.where(:board_id => self.id, :home => true).count
     self.settings['recent_home_uses'] = UserBoardConnection.where(['board_id = ? AND home = ? AND updated_at > ?', self.id, true, 30.days.ago]).count
+    self.settings['recent_home_forks'] = UserBoardConnection.where(:board_id => child_board_ids).where(['home = ? AND updated_at > ?', true, 30.days.ago]).count
     self.settings['uses'] = UserBoardConnection.where(:board_id => self.id).count
     self.settings['recent_uses'] = UserBoardConnection.where(['board_id = ? AND updated_at > ?', self.id, 30.days.ago]).count
+    self.settings['recent_forks'] = UserBoardConnection.where(:board_id => child_board_ids).where(['updated_at > ?', 30.days.ago]).count
     self.settings['non_author_uses'] = UserBoardConnection.where(['board_id = ? AND user_id != ?', self.id, self.user_id]).count
     if self.settings['never_edited']
       self.popularity = -1
       self.home_popularity = -1
     else
       # TODO: a real algorithm perchance?
-      self.popularity = (self.settings['stars'] * 100) + self.settings['uses'] + (self.settings['recent_uses'] * 3)
-      self.home_popularity = (self.any_upstream ? 0 : 1) + self.settings['home_uses'] + (self.settings['recent_home_uses'] * 5)
+      self.popularity = (self.settings['stars'] * 100) + self.settings['uses'] + (self.settings['forks'] * 2) + (self.settings['recent_uses'] * 3)
+      self.home_popularity = (self.any_upstream ? 0 : 1) + self.settings['home_uses'] + (self.settings['home_forks'] * 2) + (self.settings['recent_home_uses'] * 5) + (self.settings['recent_home_forks'] * 5)
     end
     self.any_upstream ||= false
     self.settings['total_buttons'] = (self.settings['buttons'] || []).length + (self.settings['total_downstream_buttons'] || 0)
