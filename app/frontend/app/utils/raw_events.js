@@ -220,7 +220,7 @@ var buttonTracker = Ember.Object.extend({
               $stash_hover.removeClass('on_button');
               $stash_hover.detach();
               $stash_hover.css({
-                top: offset.top - Ember.$("header").height(),
+                top: offset.top,
                 left: offset.left
               });
               Ember.$(".board").before($stash_hover);
