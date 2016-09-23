@@ -134,7 +134,7 @@ export default Ember.Controller.extend({
   load_charts: function(side) {
     side = side || "left";
     // must have an active paid subscription to access reports for a user's account
-    if(!this.get('model.preferences.logging') || !this.get('model.full_premium')) {
+    if(!this.get('model.preferences.logging') || !this.get('model.full_premium_or_trial_period')) {
       return;
     }
 
@@ -195,6 +195,9 @@ export default Ember.Controller.extend({
         snapshot_id: args.snapshot_id
       });
       controller.set(status_key, null);
+      if(!stats.get('has_data')) {
+        controller.set(status_key, {no_data: true});
+      }
       controller.set(stats_key, stats);
     }, function() {
       if(controller.get(pending_key_name) == pending_key_value) { controller.set(pending_key_name, null); }

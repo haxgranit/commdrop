@@ -136,6 +136,9 @@ CoughDrop.User = DS.Model.extend({
   full_premium: function() {
     return !this.get('expired') && !this.get('free_premium');
   }.property('expired', 'free_premium'),
+  full_premium_or_trial_period: function() {
+    return this.get('full_premium') || (this.get('free_premium') && !this.get('subscription.limited_supervisor'));
+  }.property('full_premium', 'free_premium', 'subscription.limited_supervisor'),
   // free premium means limited functionality, as in a free supporter
   free_premium: function() {
     return !!this.get('subscription.free_premium');
