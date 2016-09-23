@@ -346,6 +346,21 @@ h2 {
   padding-top: 9px;
   padding-bottom: 10px;
 }
+.intro_box {
+  min-height: 200px;
+  h4 {
+    margin-top: -5px;
+  }
+  .pic {
+    margin-right: -10px;
+    img {
+      width: 100%;
+      padding: 3px;
+      border: 1px solid #ccc;
+      min-height: 100px;
+    }
+  }
+}
 footer {
   clear: both;
   padding: 20px 20px 0 20px;

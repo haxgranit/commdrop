@@ -41,6 +41,9 @@ export default Ember.Controller.extend({
       return progress;
     }
   }.property('app_state.currentUser.preferences.progress'),
+  no_intro: function() {
+    return this.get('blank_slate') && !this.get('app_state.currentUser.preferences.progress.intro_watched');
+  }.property('blank_slate', 'app_state.currentUser.preferences.progress.intro_watched'),
   blank_slate_percent: function() {
     var options = ['intro_watched', 'profile_edited', 'preferences_edited', 'home_board_set', 'app_added'];
 
@@ -287,6 +290,9 @@ export default Ember.Controller.extend({
     },
     intro_video: function(url) {
       modal.open('inline-video', {video: {url: url}, hide_overlay: true});
+    },
+    intro: function() {
+      modal.open('intro');
     },
     opening_index: function() {
       app_state.set('index_view', true);

@@ -2,6 +2,15 @@ import modal from '../utils/modal';
 import app_state from '../utils/app_state';
 
 export default modal.ModalController.extend({
+  intro_status_class: function() {
+    var res = "glyphicon ";
+    if(this.get('model.progress.intro_watched')) {
+      res = res + "glyphicon-ok ";
+    } else {
+      res = res + "glyphicon-book ";
+    }
+    return res;
+  }.property('model.progress.intro_watched'),
   home_status_class: function() {
     var res = "glyphicon ";
     if(this.get('model.progress.home_board_set')) {
@@ -48,11 +57,8 @@ export default modal.ModalController.extend({
     return res;
   }.property('model.progress.subscription_set'),
   actions: {
-    intro_video: function() {
-      alert("not implemented yet...");
-      var user = app_state.get('currentUser');
-      user.set('preferences.progress.intro_watched', true);
-      user.save().then(null, function() { });
+    intro: function() {
+      modal.open('intro');
     },
     app_install: function() {
       modal.open('add-app');

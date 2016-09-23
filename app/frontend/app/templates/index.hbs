@@ -256,13 +256,28 @@
     </div>
     <div class="col-sm-6 col-md-4 col faded_back" style="margin-bottom: 20px;">
       <div class="wrapper middle_column">
-        {{#if device.needs_install_reminder}}
+        {{#if no_intro}}
+          <div style="margin-bottom: 20px; text-align: center;">
+            <h2>
+              <span class="glyphicon glyphicon-book"></span>
+              {{t "Let's Get Started" key='lets_get_started'}}
+            </h2>
+            <div style='text-align: left;'>
+              {{t "Thanks for signing up! If you're new to CoughDrop, don't worry! We want to help make things easy as you get started. Just hit the button below to learn more about how the app works." key='getting_started_with_coughdrop'}}
+            </div>
+            <div style='margin: 10px 0 40px;'>
+              <button class='btn btn-lg btn-primary' {{action 'intro'}}>{{t "How To Use CoughDrop" key='how_this_works'}}</button>
+            </div>
+          </div>
+        {{else if device.needs_install_reminder}}
           <div style="margin-bottom: 20px; text-align: center;">
             <h2>
               <span class="glyphicon glyphicon-phone"></span>
               {{t "Try the App" key='use_cough_drop_app'}}
             </h2>
-            {{t "CoughDrop works in any web browser, but you can also install the app in the following stores:" key='app_stores'}}
+            <div style='text-align: left;'>
+              {{t "CoughDrop works in any web browser, but you can also install the app in the following stores:" key='app_stores'}}
+            </div>
             <div>
               <a href="https://itunes.apple.com/us/app/coughdrop/id1021384570?ls=1&mt=8" target="_blank">
                 <img src={{path "images/ios_app_store.svg"}} alt="ios app store" style="height: 40px; margin-top: 5px;"/>
@@ -278,11 +293,13 @@
               <span class="glyphicon glyphicon-refresh"></span>
               {{t "CoughDrop works Offline!" key='coughdrop_works_offline'}}
             </h2>
-            {{#if blank_slate}}
-              {{t "Once you're done with the setup checklist and have a home board set, you'll see a \"Sync\" button you can hit to save all your boards locally for offline use!" key='you_will_have_sync_for_offline'}}
-            {{else}}
-              {{t "Remember, you don't need a constant Internet connection to use CoughDrop. Just hit the \"Sync\" button when you're online and all your boards will be saved locally for offline use!" key='you_can_sync_for_offline'}}
-            {{/if}}
+            <div style='text-align: left;'>
+              {{#if blank_slate}}
+                {{t "Once you're done with the setup checklist and have a home board set, you'll see a \"Sync\" button you can hit to save all your boards locally for offline use!" key='you_will_have_sync_for_offline'}}
+              {{else}}
+                {{t "Remember, you don't need a constant Internet connection to use CoughDrop. Just hit the \"Sync\" button when you're online and all your boards will be saved locally for offline use!" key='you_can_sync_for_offline'}}
+              {{/if}}
+            </div>
           </div>
         {{/if}}
         <h4>{{t "Notifications" key='messages'}}</h4>
@@ -534,7 +551,7 @@
         {{#unless app_state.no_linky}}
           <button {{action 'intro_video' 'https://www.youtube.com/embed/ELNKXfvTDbA?rel=0&enablejsapi=1&autoplay=1'}} class='btn btn-default' style='background-color: rgba(255, 255, 255, 0.5); margin-top: 50px; margin-bottom: -50px; font-size: 16px; min-width: 300px; text-align: center;'>
             <span class='glyphicon glyphicon-play-circle' style='font-size: 24px; vertical-align: bottom;'></span>
-            See How CoughDrop Works
+            {{t "What Is CoughDrop?" key='what_is_coughdrop'}}
           </button>
         {{/unless}}
       </h2>

@@ -6,8 +6,23 @@
   <div class="modal-body">
     {{t "Welcome to CoughDrop! You should get a confirmation email in your inbox soon. In the mean time here's some easy next steps. You can get back to this list anytime from the dashboard, just hit the logo in the top corner then open this list again." key='welcome_with_steps'}}
     <ul id="checklist" class='list-unstyled' style="margin: 20px; font-size: 16px; line-height: 16px;">
+      <li class={{if model.progress.intro_finished 'text-muted'}} style='margin-bottom: 20px;'>
+        <span class={{intro_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span>
+        <a href="#" {{action 'intro'}}>
+          {{t "Learn about CoughDrop" key='learn_about_coughdrop'}}
+        </a>
+        <br/>
+        <span class="text-muted" style="font-size: 12px;">
+        {{#if model.progress.home_board_set}}
+          {{t "Done!" key='done'}}
+        {{else}}
+          {{t "Pick up some basics about what CoughDrop is and how it works." key='intro_explanation'}}
+        {{/if}}
+        </span>
+        <span style="clear: left;"></span>
+      </li>
       <li class={{if model.progress.home_board_set 'text-muted'}} style='margin-bottom: 20px;'>
-        <span class={{home_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span> 
+        <span class={{home_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span>
         {{#link-to "home-boards"}}
           {{t "Pick a home board" key='pick_a_home_board'}}
         {{/link-to}}
@@ -22,7 +37,7 @@
         <span style="clear: left;"></span>
       </li>
       <li class={{if model.progress.app_added 'text-muted'}} style='margin-bottom: 20px;'>
-        <span class={{app_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span> 
+        <span class={{app_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span>
         <a href="#" {{action "app_install"}}>
           {{t "Add the app to your device" key='add_app_to_your_device'}}
         </a>
@@ -37,7 +52,7 @@
         <span style="clear: left;"></span>
       </li>
       <li class={{if model.progress.preferences_edited 'text-muted'}} style='margin-bottom: 20px;'>
-        <span class={{preferences_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span> 
+        <span class={{preferences_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span>
         {{#link-to 'user.preferences' app_state.currentUser.user_name}}
           {{t "Configure your board preferences" key='configure_your_board_preferences'}}
         {{/link-to}}
@@ -52,7 +67,7 @@
         <span style="clear: left;"></span>
       </li>
       <li class={{if model.progress.profile_edited 'text-muted'}} style='margin-bottom: 20px;'>
-        <span class={{profile_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span> 
+        <span class={{profile_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span>
         {{#link-to 'user.edit' app_state.currentUser.user_name}}
           {{t "Update your profile" key='update_your_profile'}}
         {{/link-to}}
@@ -68,7 +83,7 @@
       </li>
       {{#if app_state.feature_flags.subscriptions}}
         <li class={{if model.progress.subscription_set 'text-muted'}} style='margin-bottom: 20px;'>
-          <span class={{subscription_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span> 
+          <span class={{subscription_status_class}} style="font-size: 35px; vertical-align: middle; margin-right: 15px; float: left;"></span>
           {{#link-to 'user.subscription' app_state.currentUser.user_name}}
             {{t "Set up a subscription" key='pick_subscription'}}
           {{/link-to}}
