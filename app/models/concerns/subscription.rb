@@ -15,8 +15,8 @@ module Subscription
         self.settings['subscription']['started'] = nil
         if self.expires_at && self.expires_at > Time.now
           self.settings['subscription']['seconds_left'] = self.expires_at.to_i - Time.now.to_i
-          self.expires_at = nil
         end
+        self.expires_at = nil
       end
       self.settings['subscription']['org_sponsored'] = sponsored
       self.settings['subscription']['added_to_organization'] = Time.now.iso8601
