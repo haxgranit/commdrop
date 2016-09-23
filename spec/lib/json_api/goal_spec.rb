@@ -31,7 +31,7 @@ describe JsonApi::Goal do
       g = UserGoal.new(:settings => {'template_stats' => {'staty' => true}})
       json = JsonApi::Goal.build_json(g)
       expect(json['template_stats']).to eq({'staty' => true})
-      g = UserGoal.new
+      g = UserGoal.new(:settings => {})
       json = JsonApi::Goal.build_json(g)
       expect(json.keys).to_not be_include('template_stats')
     end
