@@ -558,9 +558,9 @@ var app_state = Ember.Object.extend({
   dom_changes_on_board_state_change: function() {
     if(!this.get('currentBoardState')) {
       Ember.$('#speak_mode').popover('destroy');
-      Ember.$('body').css('overflow', '');
+      Ember.$('html,body').css('overflow', '');
     } else if(!app_state.get('testing')) {
-      Ember.$('body').css('overflow', 'hidden').scrollTop(0);
+      Ember.$('html,body').css('overflow', 'hidden').scrollTop(0);
       try {
         this.controller.set('footer', false);
       } catch(e) { }

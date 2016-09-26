@@ -279,7 +279,7 @@ export default Ember.Controller.extend({
     },
     hide_login: function() {
       app_state.set('login_modal', false);
-      Ember.$("body").css('overflow', '');
+      Ember.$("html,body").css('overflow', '');
       Ember.$("#login_overlay").remove();
     },
     show_explanation: function(exp) {

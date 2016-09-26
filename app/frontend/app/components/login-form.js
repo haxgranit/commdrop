@@ -24,7 +24,7 @@ export default Ember.Component.extend({
       session.restore(true);
     }
     if(this.get('set_overflow')) {
-      Ember.$("body").css('overflow', 'hidden');
+      Ember.$("html,body").css('overflow', 'hidden');
     }
   },
   app_state: function() {
