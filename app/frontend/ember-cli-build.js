@@ -30,7 +30,13 @@ module.exports = function(defaults) {
   // please specify an object with the list of modules as keys
   // along with the exports of each module as its value.
   app.import('bower_components/IndexedDBShim/dist/indexeddbshim.min.js');
-  app.import('bower_components/hammer-time/hammer-time.js');
+  // Hammer-Time causes a weird bug in Windows Chrome where if you
+  // tap a dropdown, when you touch (not mouse) the element within the dropdown, it
+  // triggers a click event on the page with the page-level coordinates
+  // matching the coordinates of the touch relative to the top left corner of
+  // the dropdown list. This typically results in a click on the "home"
+  // link in the top right corner of the app.
+//  app.import('bower_components/hammer-time/hammer-time.js');
   app.import('bower_components/moment/moment.js');
   app.import('bower_components/tinycolor/tinycolor.js');
   app.import('bower_components/jquery-minicolors/jquery.minicolors.min.js');
