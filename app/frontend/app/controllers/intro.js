@@ -4,6 +4,7 @@ import app_state from '../utils/app_state';
 export default modal.ModalController.extend({
   opening: function() {
     var user = app_state.get('currentUser');
+    app_state.set('show_intro', false);
     user.set('preferences.progress.intro_watched', true);
     user.save().then(null, function() { });
     this.set('page', 1);

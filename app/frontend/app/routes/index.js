@@ -82,6 +82,9 @@ export default Ember.Route.extend({
     }
     controller.update_selected();
     controller.checkForBlankSlate();
+    if(app_state.get('show_intro')) {
+      modal.open('intro');
+    }
   },
   actions: {
     homeInSpeakMode: function(board_for_user_id, keep_as_self) {
