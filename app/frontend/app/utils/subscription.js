@@ -174,9 +174,14 @@ var Subscription = Ember.Object.extend({
       if(changes == 'user_type') {
         this.set('subscription_type', 'long_term');
       }
-      this.set('subscription_type', 'long_term');
       if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^slp_/)) {
-        this.set('subscription_amount', 'slp_long_term_free');
+        this.set('subscription_type', 'monthly');
+        this.set('subscription_amount', 'slp_monthly_free');
+      }
+      if(this.get('subscription_amount') && this.get('subscription_amount').match(/^slp_long_term/)) {
+        this.set('subscription_type', 'long_term');
+      } else if(this.get('subscription_amount') && this.get('subscription_amount') == 'slp_monthly_free') {
+        this.set('subscription_type', 'monthly');
       }
     }
   }.observes('user_type', 'subscription_type', 'subscription_amount'),
