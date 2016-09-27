@@ -262,7 +262,7 @@ export default Ember.Controller.extend({
     },
     record_note: function(user) {
       Ember.set(user, 'avatar_url_with_fallback', Ember.get(user, 'avatar_url'));
-      modal.open('record-note', {type: 'text', user: user}).then(function() {
+      modal.open('record-note', {note_type: 'text', user: user}).then(function() {
         Ember.run.later(function() {
           app_state.get('currentUser').reload().then(null, function() { });
         }, 5000);

@@ -13,12 +13,22 @@ export default modal.ModalController.extend({
   }.property('note_type'),
   opening: function() {
     var type = this.get('model.type');
-    if(this.get('model.user')) {
-      this.get('model.user').load_active_goals();
+    var user = this.get('model.user');
+    var _this = this;
+    if(user && user.load_active_goals) {
+      user.load_active_goals();
+    } else if(user) {
+      this.store.findRecord('user', user.id).then(function(u) {
+        u.load_active_goals();
+        _this.set('model', u);
+      });
     }
     this.set('goal', this.get('model.goal'));
     this.set('goal_id', this.get('model.goal.id'));
-    this.set('model', this.get('model.user'));
+    if(this.get('model.note_type')) {
+      this.set('note_type', this.get('model.note_type'));
+    }
+    this.set('model', user);
     if(this.get('note_type') === undefined) { this.set('note_type', 'text'); }
     if(this.get('notify') === undefined) { this.set('notify', true); }
   },

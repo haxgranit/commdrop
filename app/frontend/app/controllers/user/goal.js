@@ -36,7 +36,7 @@ export default Ember.Controller.extend({
     },
     new_note: function(goal) {
       var _this = this;
-      modal.open('record-note', {type: 'text', user: this.get('user'), goal: this.get('model')}).then(function(res) {
+      modal.open('record-note', {note_type: 'text', user: this.get('user'), goal: this.get('model')}).then(function(res) {
         _this.load_logs();
       }, function() { });
     },

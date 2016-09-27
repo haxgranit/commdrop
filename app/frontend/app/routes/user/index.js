@@ -10,7 +10,7 @@ export default Ember.Route.extend({
     return model;
   },
   setupController: function(controller, model) {
-    controller.set('model', model); 
+    controller.set('model', model);
     controller.set('extras', coughDropExtras);
     controller.set('password', null);
     controller.update_selected();
@@ -20,7 +20,7 @@ export default Ember.Route.extend({
     recordNote: function(type) {
       var _this = this;
       var user = this.modelFor('user');
-      modal.open('record-note', {type: type, user: user}).then(function() {
+      modal.open('record-note', {note_type: type, user: user}).then(function() {
         _this.get('controller').reload_logs();
       });
     }

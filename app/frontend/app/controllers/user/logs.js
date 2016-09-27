@@ -36,7 +36,7 @@ export default Ember.Controller.extend({
     recordNote: function(type) {
       var _this = this;
       var user = this.get('model');
-      modal.open('record-note', {type: type, user: user}).then(function() {
+      modal.open('record-note', {note_type: type, user: user}).then(function() {
         _this.send('refresh');
       });
     },
