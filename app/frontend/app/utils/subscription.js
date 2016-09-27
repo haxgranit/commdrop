@@ -174,8 +174,8 @@ var Subscription = Ember.Object.extend({
       if(changes == 'user_type') {
         this.set('subscription_type', 'long_term');
       }
+      this.set('subscription_type', 'long_term');
       if(!this.get('subscription_amount') || !this.get('subscription_amount').match(/^slp_/)) {
-        this.set('subscription_type', 'long_term');
         this.set('subscription_amount', 'slp_long_term_free');
       }
     }
