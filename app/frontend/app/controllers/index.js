@@ -150,7 +150,7 @@ export default Ember.Controller.extend({
           if(!(_this.get('homeBoards') || {}).length) {
             _this.set('homeBoards', {loading: true});
           }
-          _this.store.query('board', {sort: 'home_popularity', per_page: 9}).then(function(data) {
+          _this.store.query('board', {public: true, starred: true, user_id: 'example', sort: 'home_popularity', per_page: 9}).then(function(data) {
             _this.set('homeBoards', data);
             _this.checkForBlankSlate();
           }, function() {

@@ -9,17 +9,17 @@ export default Ember.Route.extend({
         controller.set('home_boards', {loading: true});
         _this.store.query('board', {user_id: 'example', starred: true, public: true}).then(function(boards) {
           controller.set('home_boards', boards);
-        }, function() { 
+        }, function() {
           controller.set('home_boards', null);
         });
         controller.set('core_vocabulary', {loading: true});
-        _this.store.query('board', {user_id: 'example', starred: true, public: true}).then(function(boards) {
+        _this.store.query('board', {user_id: 'example', starred: true, public: true, per_page: 6}).then(function(boards) {
           controller.set('core_vocabulary', boards);
         }, function() {
           controller.set('core_vocabulary', null);
         });
         controller.set('subject_vocabulary', {loading: true});
-        _this.store.query('board', {user_id: 'subjects', starred: true, public: true}).then(function(boards) {
+        _this.store.query('board', {user_id: 'subjects', starred: true, public: true, per_page: 6}).then(function(boards) {
           controller.set('subject_vocabulary', boards);
         }, function() {
           return Ember.RSVP.resolve({});
