@@ -47,6 +47,9 @@ CoughDrop.Stats = Ember.Object.extend({
       return null;
     }
   }.property('filter'),
+  show_filtered_snapshot: function() {
+    return this.get('snapshot_id') && this.get('filtered_snapshot_id') == this.get('snapshot_id');
+  }.property('filtered_snapshot_id', 'snapshot_id'),
   filtered_start_date: function() {
     var date_strings = this.date_strings();
     if((this.get('filter') || "").match(/snapshot/)) {
@@ -90,7 +93,7 @@ CoughDrop.Stats = Ember.Object.extend({
     }
   },
   popular_words: function() {
-    return (this.get('words_by_frequency') || []).filter(function(word, idx) { return idx < 10 && word['count'] > 1; });
+    return (this.get('words_by_frequency') || []).filter(function(word, idx) { return idx < 100 && word['count'] > 1; });
   }.property('words_by_frequency'),
   weighted_words: function() {
     // TODO: weight correctly for side_by_side view

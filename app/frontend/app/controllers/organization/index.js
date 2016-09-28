@@ -19,16 +19,25 @@ export default Ember.Controller.extend({
     this.refresh_stats();
     var id = this.get('model.id');
     if(this.get('model.permissions.manage')) {
-      this.set('logs.loading', true);
-      persistence.ajax('/api/v1/organizations/' + id + '/logs', {type: 'GET'}).then(function(data) {
-        _this.set('logs.loading', null);
-        _this.set('logs.data', data.log);
-      }, function() {
-        _this.set('logs.loading', null);
-        _this.set('logs.data', null);
-      });
+      this.refresh_logs();
     }
   },
+  refresh_logs: function() {
+    var _this = this;
+    this.set('logs.loading', true);
+    persistence.ajax('/api/v1/organizations/' + id + '/logs', {type: 'GET'}).then(function(data) {
+      _this.set('logs.loading', null);
+      _this.set('logs.data', data.log);
+    }, function() {
+      _this.set('logs.loading', null);
+      _this.set('logs.data', null);
+    });
+  },
+  refresh_logs_on_reload: function() {
+    if(this.get('model.permissions.manage') && !this.get('logs')) {
+      this.refresh_logs();
+    }
+  }.observes('model.permissions.manage'),
   shown_view: function() {
     if(this.get('selected_view')) {
       return this.get('selected_view');

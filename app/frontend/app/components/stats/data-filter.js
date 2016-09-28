@@ -17,8 +17,8 @@ export default Ember.Component.extend({
     return res;
   }.property('snapshots'),
   tall_filter: function() {
-    return this.get('usage_stats.custom_filter') || this.get('ref_stats.custom_filter');
-  }.property('usage_stats.custom_filter', 'ref_stats.custom_filter'),
+    return this.get('usage_stats.custom_filter') || this.get('ref_stats.custom_filter') || this.get('usage_stats.snapshot_id') || this.get('ref_stats.snapshot_id');
+  }.property('usage_stats.custom_filter', 'ref_stats.custom_filter', 'usage_stats.snapshot_id', 'ref_stats.snapshot_id'),
   actions: {
     compare_to: function() {
       this.sendAction('compare_to');

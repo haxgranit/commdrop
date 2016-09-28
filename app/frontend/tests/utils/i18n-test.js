@@ -226,4 +226,16 @@ describe("i18n", function() {
       expect(Ember.templateHelpers.date(d, 'whatever')).toEqual('September 19th 2016, 5:06 pm');
     });
   });
+
+  describe("delimit", function() {
+    it("should return correct values", function() {
+      expect(Ember.templateHelpers.delimit(0.0432)).toEqual("0.0432");
+      expect(Ember.templateHelpers.delimit(12.999)).toEqual("12.999");
+      expect(Ember.templateHelpers.delimit(999.998)).toEqual("999.998");
+      expect(Ember.templateHelpers.delimit(1024.324)).toEqual("1,024");
+      expect(Ember.templateHelpers.delimit(5000.0004)).toEqual("5,000");
+      expect(Ember.templateHelpers.delimit(999999.987)).toEqual("999,999");
+      expect(Ember.templateHelpers.delimit(123456789)).toEqual("123,456k");
+    });
+  });
 });

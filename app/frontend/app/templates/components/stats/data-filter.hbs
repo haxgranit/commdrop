@@ -30,6 +30,28 @@
           {{input type="date" value=usage_stats.end_date_field class="form-control"}}
         </div>
         </span>
+      {{else if usage_stats.show_filtered_snapshot}}
+        <span class='text-muted'>
+          {{#if usage_stats.device_id}}
+            <div class="form-group well" style='padding: 0 10px;'>
+              {{usage_stats.device_name}}
+            </div>
+          {{/if}}
+          {{#if usage_stats.location_id}}
+            <div class="form-group well" style='padding: 0 10px;'>
+              {{usage_stats.location_name}}
+            </div>
+          {{/if}}
+          <span style="white-space: nowrap;">
+          <div class="form-group well" style='padding: 0 10px;'>
+            {{usage_stats.start_date_field}}
+          </div>
+            &nbsp;{{t "to" key='to'}}&nbsp;
+          <div class="form-group well" style='padding: 0 10px;'>
+            {{usage_stats.end_date_field}}
+          </div>
+          </span>
+        </span>
       {{/if}}
       <button type="button" {{action "update_filter" "date"}} class="btn btn-default">{{t "Go" key='go'}}</button>
       {{#unless side_by_side}}
