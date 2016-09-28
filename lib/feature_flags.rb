@@ -2,7 +2,8 @@ module FeatureFlags
   AVAILABLE_FRONTEND_FEATURES = ['subscriptions', 'assessments', 'custom_sidebar', 
               'canvas_render', 'snapshots', 'enable_all_buttons', 'chrome_filesystem',
               'video_recording', 'goals', 'app_connections']
-  ENABLED_FRONTEND_FEATURES = ['subscriptions', 'assessments', 'custom_sidebar', 'snapshots']
+  ENABLED_FRONTEND_FEATURES = ['subscriptions', 'assessments', 'custom_sidebar', 'snapshots',
+              'video_recording']
   DISABLED_CANARY_FEATURES = []
   def self.frontend_flags_for(user)
     flags = {}

@@ -979,6 +979,7 @@ var videoGrabber = Ember.Object.extend({
     var reader = contentGrabbers.read_file(file);
     reader.then(function(data) {
       _this.controller.set('video_preview', {
+        local_url: file.localURL,
         url: data.target.result,
         name: file.name
       });
@@ -1236,7 +1237,7 @@ var videoGrabber = Ember.Object.extend({
       preview.license.copyright_notice_url = license_url;
     }
 
-    var video_load = _this.measure_duration(preview.url, preview.duration);
+    var video_load = _this.measure_duration(preview.local_url || preview.url, preview.duration);
 
     var save_video = video_load.then(function(data) {
       var video = CoughDrop.store.createRecord('video', {

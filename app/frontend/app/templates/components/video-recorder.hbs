@@ -47,6 +47,8 @@
             <span class='text-danger'>
               {{t "Video recording is supported by this browser" key='video_recording_not_supported'}}
             </span>
+          {{else if video_preview.local_url}}
+            <video id='video_elem' controls preload='metadata' src={{video_preview.local_url}} style="width: 100%; border: 1px solid #ccc;"></video>
           {{else if video_preview.url}}
             <video id='video_elem' controls preload='metadata' src={{video_preview.url}} style="width: 100%; border: 1px solid #ccc;"></video>
           {{else if video_recording.video_url}}
