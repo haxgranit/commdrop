@@ -24,11 +24,8 @@ export default Ember.Controller.extend({
   },
   refresh_logs: function() {
     var _this = this;
-    if(!this.get('logs')) {
-      this.set('logs', {});
-    }
     if(!this.get('model.id')) { return; }
-    this.set('logs.loading', true);
+    this.set('logs', {loading: true});
     persistence.ajax('/api/v1/organizations/' + this.get('model.id') + '/logs', {type: 'GET'}).then(function(data) {
       _this.set('logs.loading', null);
       _this.set('logs.data', data.log);
@@ -38,10 +35,10 @@ export default Ember.Controller.extend({
     });
   },
   refresh_logs_on_reload: function() {
-    if(this.get('model.permissions.manage') && !this.get('logs')) {
+    if(this.get('model.permissions.manage') && !this.get('logs.data')) {
       this.refresh_logs();
     }
-  }.observes('model.permissions.manage'),
+  }.observes('model.permissions.manage', 'logs.data'),
   shown_view: function() {
     if(this.get('selected_view')) {
       return this.get('selected_view');
