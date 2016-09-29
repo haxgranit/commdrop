@@ -57,6 +57,7 @@ var contentGrabbers = Ember.Object.extend({
           }
           get_data_url.then(function(data_url) {
             meta.remote_upload.data_url = data_url;
+            meta.remote_upload.blob = object.get('blob');
             return _this.upload_to_remote(meta.remote_upload).then(function(data) {
               if(data.confirmed) {
                 object.set('url', data.url);
@@ -85,7 +86,11 @@ var contentGrabbers = Ember.Object.extend({
       for(var idx in params.upload_params) {
         fd.append(idx, params.upload_params[idx]);
       }
-      fd.append('file', _this.data_uri_to_blob(params.data_url));
+      if(params.blob) {
+        fd.append('file', params.blob);
+      } else if(params.data_url) {
+        fd.append('file', _this.data_uri_to_blob(params.data_url));
+      }
 
       persistence.ajax({
         url: params.upload_url,
@@ -244,16 +249,25 @@ var contentGrabbers = Ember.Object.extend({
       alert(i18n.t('unrecognized_drop_type', "Unrecognized drop type"));
     }
   },
-  read_file: function(file) {
+  read_file: function(file, type) {
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var reader = new FileReader();
       var _this = this;
-      reader.onload = function(data) {
+      reader.onloadend = function(data) {
         Ember.run(function() {
-          resolve(data);
+          if(type == 'blob') {
+            var blob = new Blob([new Uint8Array(data.target.result)], { type: file.type });
+            resolve(blob);
+          } else {
+            resolve(data);
+          }
         });
       };
-      reader.readAsDataURL(file);
+      if(type != 'blob') {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsArrayBuffer(file)
+      }
     });
   },
   save_pending: function() {
@@ -978,10 +992,13 @@ var videoGrabber = Ember.Object.extend({
     var _this = this;
     var reader = contentGrabbers.read_file(file);
     reader.then(function(data) {
-      _this.controller.set('video_preview', {
-        local_url: file.localURL,
-        url: data.target.result,
-        name: file.name
+      contentGrabbers.read_file(file, 'blob').then(null, function() { return Ember.RSVP.resolve(null); }).then(function(blob) {
+        _this.controller.set('video_preview', {
+          local_url: file.localURL,
+          url: data.target.result,
+          blob: blob,
+          name: file.name
+        });
       });
     });
   },
@@ -1198,19 +1215,31 @@ var videoGrabber = Ember.Object.extend({
   measure_duration: function(url, fallback_duration) {
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var a = document.createElement('video');
+      var done = false;
       a.preload = 'metadata';
       a.ondurationchange = function() {
         var duration = fallback_duration;
         if(a.duration && isFinite(a.duration)) {
           duration = a.duration;
         }
+        done = true;
         resolve({
           duration: duration
         });
       };
       a.onerror = function() {
+        done = true;
         reject({error: "video calculation failed"});
       };
+      Ember.run.later(function() {
+        if(!done) {
+          var e = Ember.$("#video_elem")[0];
+          var duration = (e && e.duration) || 10;
+          resolve({
+            duration: duration
+          });
+        }
+      }, 500);
       a.src = url;
     });
   },
@@ -1243,6 +1272,7 @@ var videoGrabber = Ember.Object.extend({
       var video = CoughDrop.store.createRecord('video', {
         content_type: preview.content_type || '',
         url: preview.url,
+        blob: preview.blob,
         duration: data.duration,
         license: preview.license
       });
