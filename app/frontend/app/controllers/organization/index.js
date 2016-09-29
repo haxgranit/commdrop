@@ -24,8 +24,12 @@ export default Ember.Controller.extend({
   },
   refresh_logs: function() {
     var _this = this;
+    if(!this.get('logs')) {
+      this.set('logs', {});
+    }
+    if(!this.get('model.id')) { return; }
     this.set('logs.loading', true);
-    persistence.ajax('/api/v1/organizations/' + id + '/logs', {type: 'GET'}).then(function(data) {
+    persistence.ajax('/api/v1/organizations/' + this.get('model.id') + '/logs', {type: 'GET'}).then(function(data) {
       _this.set('logs.loading', null);
       _this.set('logs.data', data.log);
     }, function() {
