@@ -24,21 +24,26 @@ export default Ember.Controller.extend({
   },
   refresh_logs: function() {
     var _this = this;
-    if(!this.get('model.id')) { return; }
+    var id = this.get('model.id');
+    if(!id) { return; }
     this.set('logs', {loading: true});
-    persistence.ajax('/api/v1/organizations/' + this.get('model.id') + '/logs', {type: 'GET'}).then(function(data) {
-      _this.set('logs.loading', null);
-      _this.set('logs.data', data.log);
+    persistence.ajax('/api/v1/organizations/' + id + '/logs', {type: 'GET'}).then(function(data) {
+      if(_this.get('model.id') == id) {
+        _this.set('logs.loading', null);
+        _this.set('logs.data', data.log);
+      }
     }, function() {
-      _this.set('logs.loading', null);
-      _this.set('logs.data', null);
+      if(_this.get('model.id') == id) {
+        _this.set('logs.loading', null);
+        _this.set('logs.data', null);
+      }
     });
   },
   refresh_logs_on_reload: function() {
-    if(this.get('model.permissions.manage') && !this.get('logs.data')) {
+    if(this.get('model.permissions.manage') && !this.get('logs.loading') && !this.get('logs.data')) {
       this.refresh_logs();
     }
-  }.observes('model.permissions.manage', 'logs.data'),
+  }.observes('model.permissions.manage', 'logs.loading', 'logs.data'),
   shown_view: function() {
     if(this.get('selected_view')) {
       return this.get('selected_view');
