@@ -346,6 +346,97 @@ describe Board, :type => :model do
       expect(b.current_revision).to eq(b.settings['revision_hashes'][-1][0])
     end
   end
+  
+  describe "full_set_revision" do
+    it "should push a revision hash change upstream when a new board is created" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b1.settings['buttons'] = [{'id' => 1, 'load_board' => {'id' => b2.global_id}, 'label' => 'hair'}]
+      b1.instance_variable_set('@buttons_changed', true)
+      b1.save
+      Worker.process_queues
+      hash = b1.reload.settings['full_set_revision']
+      current_hash = b1.current_revision
+      b2.settings['buttons'] = [{'id' => 1, 'label' => 'feet'}]
+      b2.instance_variable_set('@buttons_changed', true)
+      b2.save
+      Worker.process_queues
+      expect(b1.reload.settings['full_set_revision']).to_not eq(hash)
+      expect(b1.current_revision).to eq(current_hash)
+    end
+    
+    it "should push a revision hash change upstream when a board is modified" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b3 = Board.create(:user => u)
+      b4 = Board.create(:user => u)
+      b1.settings['buttons'] = [{'id' => 1, 'label' => 'cheese', 'load_board' => {'id' => b3.global_id}}]
+      b1.instance_variable_set('@buttons_changed', true)
+      b1.save
+      b2.settings['buttons'] = [{'id' => 1, 'label' => 'cheese', 'load_board' => {'id' => b3.global_id}}]
+      b2.instance_variable_set('@buttons_changed', true)
+      b2.save
+      b3.settings['buttons'] = [{'id' => 3, 'label' => 'chicken', 'load_board' => {'id' => b4.global_id}}]
+      b3.instance_variable_set('@buttons_changed', true)
+      b3.save
+      Worker.process_queues
+      hash1 = b1.reload.settings['full_set_revision']
+      current1 = b1.current_revision
+      hash2 = b2.reload.settings['full_set_revision']
+      current2 = b2.current_revision
+      hash3 = b3.reload.settings['full_set_revision']
+      current3 = b3.current_revision
+      b4.settings['buttons'] = [{'id' => 'asdf', 'label' => 'friend'}]
+      b4.instance_variable_set('@buttons_changed', true)
+      b4.save
+      Worker.process_queues
+      expect(b1.reload.settings['full_set_revision']).to_not eq(hash1)
+      expect(b1.current_revision).to eq(current1)
+      expect(b2.reload.settings['full_set_revision']).to_not eq(hash2)
+      expect(b2.current_revision).to eq(current2)
+      expect(b3.reload.settings['full_set_revision']).to_not eq(hash3)
+      expect(b3.current_revision).to eq(current3)
+    end
+    
+    it "should not push a revision has change downstream" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b1.settings['buttons'] = [{'id' => 1, 'label' => 'art', 'load_board' => {'id' => b2.global_id}}]
+      b1.instance_variable_set('@buttons_changed', true)
+      b1.save
+      Worker.process_queues
+      expect(b1.reload.settings['downstream_board_ids']).to eq([b2.global_id])
+      hash1 = b1.reload.settings['full_set_revision']
+      current1 = b1.current_revision
+      hash2 = b2.reload.settings['full_set_revision']
+      current2 = b2.current_revision
+      b1.settings['buttons'] = [{'id' => 1, 'label' => 'artist', 'load_board' => {'id' => b2.global_id}}]
+      b1.instance_variable_set('@buttons_changed', true)
+      b1.save
+      Worker.process_queues
+      expect(b1.reload.settings['full_set_revision']).to_not eq(hash1)
+      expect(b1.current_revision).to_not eq(current1)
+      expect(b2.reload.settings['full_set_revision']).to eq(hash2)
+      expect(b2.current_revision).to eq(current2)
+    end
+    
+    it "should update for an unlinked board when it is modified" do
+      u = User.create
+      b = Board.create(:user => u)
+      expect(b.settings['full_set_revision']).to eq(nil)
+      hash = b.full_set_revision
+      current = b.current_revision
+      b.settings['buttons'] = [{'id' => 1, 'label' => 'choker'}]
+      b.instance_variable_set('@buttons_changed', true)
+      b.save
+      Worker.process_queues
+      expect(b.full_set_revision).to_not eq(hash)
+      expect(b.current_revision).to_not eq(current)
+    end
+  end
 
   describe "labels" do
     it "should grab a list of labels using the grid of buttons from left to right" do
