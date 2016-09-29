@@ -993,12 +993,22 @@ var videoGrabber = Ember.Object.extend({
     var reader = contentGrabbers.read_file(file);
     reader.then(function(data) {
       contentGrabbers.read_file(file, 'blob').then(null, function() { return Ember.RSVP.resolve(null); }).then(function(blob) {
-        _this.controller.set('video_preview', {
+        var res = {
           local_url: file.localURL,
           url: data.target.result,
           blob: blob,
           name: file.name
-        });
+        }
+        if(window.resolveLocalFileSystemURL && file.localURL) {
+          window.resolveLocalFileSystemURL(file.localURL, function(e) {
+            if(e && e.toURL) {
+              res.local_url = e.toURL();
+            }
+            _this.controller.set('video_preview', res);
+          });
+        } else {
+          _this.controller.set('video_preview', res);
+        }
       });
     });
   },
