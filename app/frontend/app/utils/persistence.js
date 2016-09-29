@@ -1086,6 +1086,52 @@ var persistence = Ember.Object.extend({
       });
     });
   },
+  board_lookup: function(id, safely_cached_boards) {
+    var lookups = persistence.get('sync_progress.key_lookups');
+    if(!lookups) {
+      lookups = {};
+      persistence.set('sync_progress.key_lookups', lookups);
+    }
+    var lookup_id = id;
+    if(lookups[id] && !lookups[id].then) { lookup_id = lookups[id].get('id'); }
+
+    var peeked = CoughDrop.store.peekRecord('board', lookup_id);
+    var key_for_id = lookup_id.match(/\//);
+    var partial_load = peeked && !peeked.get('permissions');
+    if(peeked && !peeked.get('permissions')) { peeked = null; }
+    var find_board = null;
+    // because of async, it's possible that two threads will try
+    // to look up the same board independently, especially with supervisees
+    if(lookups[id] && lookups[id].then) {
+      find_board = lookups[id];
+    } else {
+      find_board = CoughDrop.store.findRecord('board', lookup_id);
+      find_board = find_board.then(function(record) {
+        if(!record.get('fresh') || key_for_id || partial_load) {
+          local_full_set_revision = record.get('full_set_revision');
+          // If the board is in the list of already-up-to-date, don't call reload
+          if(safely_cached_boards[id]) {
+            return record;
+          } else {
+            return record.reload();
+          }
+        } else {
+          return record;
+        }
+      });
+      if(!lookups[id]) {
+        lookups[id] = find_board;
+      }
+    }
+
+    var local_full_set_revision = null;
+
+    return find_board.then(function(board) {
+      lookups[id] = Ember.RSVP.resolve(board);
+      board.set('local_full_set_revision', local_full_set_revision);
+      return board;
+    });
+  },
   sync_boards: function(user, importantIds, synced_boards, force) {
     var get_revisions = persistence.find('settings', 'synced_full_set_revisions').then(function(res) {
       return res;
@@ -1141,33 +1187,20 @@ var persistence = Ember.Object.extend({
           var source = next && next.visit_source;
           if(next && next.depth < 20 && id && !visited_boards.find(function(i) { return i == id; })) {
             var local_full_set_revision = null;
-            var peeked = CoughDrop.store.peekRecord('board', id);
-            var key_for_id = id.match(/\//);
-            if(peeked && !peeked.get('permissions')) { peeked = null; }
-            var find_board = CoughDrop.store.findRecord('board', id);
-            find_board = find_board.then(function(record) {
-              importantIds.push('board_' + id);
-              if(peeked || key_for_id || !record.get('fresh')) {
-                local_full_set_revision = record.get('full_set_revision');
-                // If the board is in the list of already-up-to-date, don't call reload
-                if(safely_cached_boards[id]) {
-                  return record;
-                } else {
-                  return record.reload();
-                }
-              } else {
-                return record;
-              }
-            });
+
+            // check if there's a local copy that's already been loaded
+            var find_board = persistence.board_lookup(id, safely_cached_boards);
 
             find_board.then(function(board) {
+              local_full_set_revision = board.get('local_full_set_revision');
+              importantIds.push('board_' + id);
               board.load_button_set();
               var visited_board_promises = [];
               var safely_cached = !!safely_cached_boards[board.id];
               // If the retrieved board's revision matches the synced cache's revision,
               // then this board and all its children should be already in the db.
               safely_cached = safely_cached || (full_set_revisions[board.get('id')] && board.get('full_set_revision') == full_set_revisions[board.get('id')]);
-              if(force) { safely_cached = false; }
+              if(force == 'all_reload') { safely_cached = false; }
               if(safely_cached) {
                 console.log("this board (" + board.get('key') + ") has already been cached locally");
               }
