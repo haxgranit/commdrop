@@ -266,7 +266,7 @@ var contentGrabbers = Ember.Object.extend({
       if(type != 'blob') {
         reader.readAsDataURL(file);
       } else {
-        reader.readAsArrayBuffer(file)
+        reader.readAsArrayBuffer(file);
       }
     });
   },
@@ -998,7 +998,7 @@ var videoGrabber = Ember.Object.extend({
           url: data.target.result,
           blob: blob,
           name: file.name
-        }
+        };
         if(window.resolveLocalFileSystemURL && file.localURL) {
           window.resolveLocalFileSystemURL(file.localURL, function(e) {
             if(e && e.toURL) {

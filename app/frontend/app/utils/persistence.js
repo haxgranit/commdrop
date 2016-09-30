@@ -822,7 +822,7 @@ var persistence = Ember.Object.extend({
     return this.get('sync_status') == 'succeeded';
   }.property('sync_status'),
   update_sync_progress: function() {
-    var progresses = persistence.get('sync_progress.progress_for');
+    var progresses = persistence.get('sync_progress.progress_for') || {};
     var visited = 0;
     var to_visit = 0;
     for(var idx in progresses) {
@@ -900,6 +900,13 @@ var persistence = Ember.Object.extend({
       confirm_quota_for_user.then(function(user) {
         if(user) {
           user_id = user.get('id');
+          if(!persistence.get('sync_progress.root_user')) {
+            persistence.set('sync_progress', {
+              root_user: user.get('id'),
+              progress_for: {
+              }
+            });
+          }
         }
         // TODO: also download all the user's personally-created boards
 
@@ -992,6 +999,7 @@ var persistence = Ember.Object.extend({
             user_id: user_name,
             manual: force,
             finished: new Date(),
+            statuses: statuses,
             summary: i18n.t('finised_without_errors', "Finished syncing %{user_id} without errors", {user_id: user_name})
           });
           persistence.set('sync_log', log);
@@ -1001,6 +1009,7 @@ var persistence = Ember.Object.extend({
       return complete_sync;
     }, function(err) {
       if(persistence.get('sync_progress.root_user') == user_id) {
+        var statuses = persistence.get('sync_progress.board_statuses') || [];
         persistence.set('sync_progress', null);
         persistence.set('sync_status', 'failed');
         persistence.set('sync_status_error', null);
@@ -1010,12 +1019,14 @@ var persistence = Ember.Object.extend({
           persistence.set('sync_status_error', i18n.t('not_online', "Must be online to sync"));
         }
         var message = (err && err.error) || "unspecified sync error";
+        var statuses = statuses.uniq(function(s) { return s.id; });
         var log = persistence.get('sync_log') || [];
         log.push({
           user_id: user_name,
           manual: force,
           errored: true,
           finished: new Date(),
+          statuses: statuses,
           summary: i18n.t('finised_without_errors', "Error syncing %{user_id}: ", {user_id: user_name}) + message
         });
         persistence.set('last_sync_event_at', (new Date()).getTime());
@@ -1095,9 +1106,14 @@ var persistence = Ember.Object.extend({
   },
   board_lookup: function(id, safely_cached_boards) {
     var lookups = persistence.get('sync_progress.key_lookups');
+    var board_statuses = persistence.get('sync_progress.board_statuses');
     if(!lookups) {
       lookups = {};
       persistence.set('sync_progress.key_lookups', lookups);
+    }
+    if(!board_statuses) {
+      board_statuses = [];
+      persistence.set('sync_progress.board_statuses', board_statuses);
     }
     var lookup_id = id;
     if(lookups[id] && !lookups[id].then) { lookup_id = lookups[id].get('id'); }
@@ -1118,11 +1134,14 @@ var persistence = Ember.Object.extend({
           local_full_set_revision = record.get('full_set_revision');
           // If the board is in the list of already-up-to-date, don't call reload
           if(safely_cached_boards[id]) {
+            board_statuses.push({id: id, key: record.get('key'), status: 'cached'});
             return record;
           } else {
+            board_statuses.push({id: id, key: record.get('key'), status: 're-downloaded'});
             return record.reload();
           }
         } else {
+          board_statuses.push({id: id, key: record.get('key'), status: 'downloaded'});
           return record;
         }
       });
@@ -1164,12 +1183,8 @@ var persistence = Ember.Object.extend({
         }
         var safely_cached_boards = {};
         var visited_boards = [];
-        if(!persistence.get('sync_progress.root_user')) {
-          persistence.set('sync_progress', {
-            root_user: user.get('id'),
-            progress_for: {
-            }
-          });
+        if(!persistence.get('sync_progress.progress_for')) {
+          persistence.set('sync_progress.progress_for', {});
           persistence.get('sync_progress.progress_for')[user.get('id')] = {
             visited: visited_boards.length,
             to_visit: to_visit_boards.length
