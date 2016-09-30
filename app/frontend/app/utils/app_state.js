@@ -794,6 +794,22 @@ var app_state = Ember.Object.extend({
   current_time: function() {
     return (this.get('short_refresh_stamp') || new Date());
   }.property('short_refresh_stamp'),
+  check_for_user_updated: function(obj, changes) {
+    if(window.persistence) {
+      if(changes == 'sessionUser' || !window.persistence.get('last_sync_stamp')) {
+        window.persistence.set('last_sync_stamp', this.get('sessionUser.sync_stamp'));
+      }
+    }
+    if(this.get('sessionUser')) {
+      var interval = (this.get('sessionUser.preferences.sync_refresh_interval') || (15 * 60)) * 1000;
+      if(window.persistence) {
+        window.persistence.set('last_sync_stamp_interval', interval);
+        window.persistence.check_for_needs_sync(true);
+      } else {
+        console.error('persistence needed for checking user status');
+      }
+    }
+  }.observes('short_refresh_stamp', 'sessionUser'),
   board_virtual_dom: function() {
     var _this = this;
     var dom = {
@@ -897,15 +913,15 @@ var app_state = Ember.Object.extend({
 
 if(!app_state.get('testing')) {
   setInterval(function() {
-    app_state.set('refresh_stamp', new Date());
+    app_state.set('refresh_stamp', (new Date()).getTime());
+  }, 5*60*1000);
+  setInterval(function() {
+    app_state.set('short_refresh_stamp', (new Date()).getTime());
     if(window.persistence) {
       window.persistence.set('refresh_stamp', (new Date()).getTime());
     } else {
       console.error('persistence needed for setting refresh stamp');
     }
-  }, 5*60*1000);
-  setInterval(function() {
-    app_state.set('short_refresh_stamp', new Date());
   }, 500);
 }
 

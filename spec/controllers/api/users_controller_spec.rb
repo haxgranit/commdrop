@@ -1211,4 +1211,33 @@ describe Api::UsersController, :type => :controller do
       expect(json['user'][0]['id']).to eq(u.global_id)
     end
   end
+  
+  describe "GET 'sync_stamp'" do
+    it "should require an access token" do
+      get 'sync_stamp', 'user_id' => 'asdf'
+        assert_missing_token
+    end
+    
+    it "should require a valid user" do
+      token_user
+      get 'sync_stamp', 'user_id' => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      User.link_supervisor_to_user(@user, u, nil, true)
+      get 'sync_stamp', 'user_id' => u.global_id
+      assert_unauthorized
+    end
+    
+    it "should return the user's sync stamp" do
+      token_user
+      get 'sync_stamp', 'user_id' => @user.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['sync_stamp']).to eq(@user.updated_at.iso8601)
+    end
+  end
 end

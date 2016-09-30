@@ -22,6 +22,7 @@ module JsonApi::User
     end
     
     if json['permissions'] && json['permissions']['supervise']
+      json['sync_stamp'] = user.updated_at.utc.iso8601
       json['unread_messages'] = user.settings['unread_messages'] || 0
       json['preferences'] = {}
       ::User::PREFERENCE_PARAMS.each do |attr|

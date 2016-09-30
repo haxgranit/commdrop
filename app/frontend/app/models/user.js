@@ -15,6 +15,7 @@ CoughDrop.User = DS.Model.extend({
   user_name: DS.attr('string'),
   link: DS.attr('string'),
   joined: DS.attr('date'),
+  sync_stamp: DS.attr('string'),
   settings: DS.attr('raw'),
   is_admin: DS.attr('boolean'),
   authored_organization_id: DS.attr('string'),

@@ -13,23 +13,23 @@ describe('stats', function() {
       expect(stats.get('no_data')).toEqual(false);
     });
   });
-  
+
   describe("popular_words", function() {
     it("should return an empty list if no words set", function() {
       var stats = CoughDrop.Stats.create();
       expect(stats.get('popular_words')).toEqual([]);
     });
-    
-    it("should return the top ten words", function() {
+
+    it("should return the top 100 words", function() {
       var stats = CoughDrop.Stats.create();
       stats.set('words_by_frequency', [{text: "a", count: 20}, {text: "b", count: 19}, {text: "c", count: 18}, {text: "d", count: 17}, {text: "e", count: 16}, {text: "f", count: 15}, {text: "g", count: 14}, {text: "h", count: 13}, {text: "i", count: 12}, {text: "j", count: 11}, {text: "k", count: 10}]);
       var res = stats.get('popular_words');
-      expect(res.length).toEqual(10);
+      expect(res.length).toEqual(11);
       expect(res[0].text).toEqual('a');
       expect(res[9].text).toEqual('j');
     });
-    
-    it("should not return top ten words if they have a count <= 1", function() {
+
+    it("should not return top 100 words if they have a count <= 1", function() {
       var stats = CoughDrop.Stats.create();
       stats.set('words_by_frequency', [{text: "a", count: 20}, {text: "b", count: 19}, {text: "c", count: 18}, {text: "d", count: 1}, {text: "e", count: 1}, {text: "f", count: 1}, {text: "g", count: 1}, {text: "h", count: 1}, {text: "i", count: 1}, {text: "j", count: 1}, {text: "k", count: 1}]);
       var res = stats.get('popular_words');
@@ -38,13 +38,13 @@ describe('stats', function() {
       expect(res[2].text).toEqual('c');
     });
   });
-  
+
   describe("weighted_words", function() {
     it("should return an empty list by default", function() {
       var stats = CoughDrop.Stats.create();
       expect(stats.get('weighted_words')).toEqual([]);
     });
-    
+
     it("should return the list of words with their relative weighted classes", function() {
       var stats = CoughDrop.Stats.create();
       stats.set('words_by_frequency', [{text: "a", count: 20}, {text: "b", count: 19}, {text: "c", count: 18}, {text: "d", count: 17}, {text: "e", count: 16}, {text: "f", count: 15}, {text: "g", count: 14}, {text: "h", count: 13}, {text: "i", count: 12}, {text: "j", count: 11}, {text: "k", count: 10}]);
@@ -68,13 +68,13 @@ describe('stats', function() {
       expect(res[5].text).toEqual('f');
     });
   });
-  
+
   describe("geo_locations", function() {
     it("should return an empty list by default", function() {
       var stats = CoughDrop.Stats.create();
       expect(stats.get('geo_locations')).toEqual([]);
     });
-    
+
     it("should return only the geo-typed results", function() {
       var stats = CoughDrop.Stats.create();
       stats.set('locations', [{type: 'geo'}, {type: 'ip_address'}, {type: 'geo'}]);
@@ -94,7 +94,7 @@ describe('stats', function() {
       expect(stats.get('ip_locations').length).toEqual(1);
     });
   });
-  
+
   describe("local_time_blocks", function() {
     it("should return a complete list of blocks for the week", function() {
       var stats = CoughDrop.Stats.create();
@@ -104,7 +104,7 @@ describe('stats', function() {
       expect(blocks[0].blocks.length).toEqual(24*2);
       expect(blocks[3].day).toEqual('W');
       expect(blocks[3].blocks.length).toEqual(24*2);
-      
+
       stats.set('time_offset_blocks', {});
       var blocks = stats.get('local_time_blocks');
       expect(blocks.length).toEqual(7);
@@ -113,7 +113,7 @@ describe('stats', function() {
       expect(blocks[3].day).toEqual('W');
       expect(blocks[3].blocks.length).toEqual(24*2);
     });
-    
+
     it("should mark any non-zero blocks correctly", function() {
       var stats = CoughDrop.Stats.create();
       stub(stats, 'tz_offset', function() { return 300; });
@@ -131,13 +131,13 @@ describe('stats', function() {
       expect(blocks[5].blocks[1]).toEqual({val: 2, tooltip: "F 0:30, 2 events", style_class: "time_block level_1"});
     });
   });
-  
+
   describe("start_date_field", function() {
     it("should return an empty string by default", function() {
       var stats = CoughDrop.Stats.create();
       expect(stats.get('start_date_field')).toEqual("");
     });
-    
+
     it("should return just the date part of the iso8601 string", function() {
       var str = "2015-10-16T22:34:55.661Z";
       var stats = CoughDrop.Stats.create();
@@ -145,13 +145,13 @@ describe('stats', function() {
       expect(stats.get('start_date_field')).toEqual("2015-10-16");
     });
   });
-  
+
   describe("end_date_field", function() {
     it("should return an empty string by default", function() {
       var stats = CoughDrop.Stats.create();
       expect(stats.get('end_date_field')).toEqual("");
     });
-    
+
     it("should return just the date part of the iso8601 string", function() {
       var str = "2015-10-16T22:34:55.661Z";
       var stats = CoughDrop.Stats.create();

@@ -149,6 +149,7 @@ Coughdrop::Application.routes.draw do
       post 'claim_voice' => 'users#claim_voice'
       post 'rename' => 'users#rename'
       post 'activate_button' => 'users#activate_button'
+      get 'sync_stamp' => 'users#sync_stamp'
     end
     
     resources :images do

@@ -781,25 +781,6 @@ describe("persistence", function() {
     it("should be online by default", function() {
       expect(persistence.get('online')).toEqual(true);
     });
-    it("should call sync when changing to online", function() {
-      CoughDrop.sync_testing = true;
-      var online = persistence.get('online');
-      stashes.set('auth_settings', {});
-      var called = false;
-      stub(persistence, 'sync', function() {
-        called = true;
-        return Ember.RSVP.resolve();
-      });
-      persistence.set('online', false);
-      persistence.set('last_sync_at', -1);
-      expect(called).toEqual(false);
-      persistence.set('online', true);
-      waitsFor(function() { return called; });
-      runs(function() {
-        persistence.set('online', online);
-        CoughDrop.sync_testing = false;
-      });
-    });
 //     it("should set to offline on event", function() {
 //       var online = persistence.get('online');
 //       Ember.$(document).trigger('offline');
@@ -1917,4 +1898,228 @@ describe("persistence", function() {
       });
     });
   });
+
+  describe("check_for_needs_sync", function() {
+    beforeEach(function() {
+      persistence.set('last_sync_stamp_check', null);
+      persistence.set('last_sync_event_at', null);
+      persistence.set('last_sync_stamp_interval', null);
+      persistence.set('last_sync_stamp', null);
+      persistence.set('last_sync_at', null);
+      persistence.set('syncing', null);
+    });
+    afterEach(function() {
+      persistence.set('last_sync_stamp_check', null);
+      persistence.set('last_sync_event_at', null);
+      persistence.set('last_sync_stamp_interval', null);
+      persistence.set('last_sync_stamp', null);
+      persistence.set('last_sync_at', null);
+      persistence.set('syncing', null);
+      stashes.set('auth_settings', null);
+    });
+
+    it("should get called when online status changes", function() {
+      persistence.set('online', false);
+      stub(CoughDrop, 'sync_testing', true);
+      stashes.set('auth_settings', {});
+      var called = false;
+      stub(persistence, 'check_for_needs_sync', function(force) { called = !!force; });
+      persistence.set('online', true);
+      waitsFor(function() { return called; });
+      runs();
+    });
+
+    it("should not sync if last_sync_event_at is sooner than the user's interval", function() {
+      stub(persistence, 'sync', function() {
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(url, opts) {
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_event_at', (new Date()).getTime() - 100);
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', (new Date()).getTime() - 100);
+      var res = persistence.check_for_needs_sync(true);
+      expect(res).toEqual(false);
+    });
+
+    it("should not sync if offline", function() {
+      stub(persistence, 'sync', function() {
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(url, opts) {
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_event_at', 2);
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', 1);
+      persistence.set('online', false);
+      var res = persistence.check_for_needs_sync(true);
+      expect(res).toEqual(false);
+    });
+
+    it("should not sync if already syncing", function() {
+      stub(persistence, 'sync', function() {
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(url, opts) {
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_event_at', 2);
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', 1);
+      persistence.set('syncing', true);
+      var res = persistence.check_for_needs_sync(true);
+      expect(res).toEqual(false);
+    });
+
+    it("should sync if it's been a long time since syncing", function() {
+      var called = false;
+      stub(persistence, 'sync', function() {
+        called = true;
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(url, opts) {
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_event_at', 2);
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', 1);
+      var res = persistence.check_for_needs_sync();
+      expect(res).toEqual(true);
+      expect(called).toEqual(true);
+    });
+
+    it("should sync if force is called and there's a last_sync_stamp", function() {
+      var called = false;
+      stub(persistence, 'sync', function() {
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(url, opts) {
+        called = true;
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', (new Date()).getTime() - 100);
+      persistence.set('last_sync_stamp', 'asdf');
+      var res = persistence.check_for_needs_sync(true);
+      waitsFor(function() { return called; });
+      runs(function() {
+        expect(res).toEqual(true);
+      });
+    });
+
+    it("should not sync if there's not last_sync_stamp", function() {
+      var called = false;
+      stub(persistence, 'sync', function() {
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(url, opts) {
+        called = true;
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', (new Date()).getTime() - 100);
+      persistence.set('last_sync_stamp', null);
+      var res = persistence.check_for_needs_sync(true);
+      expect(res).toEqual(false);
+    });
+
+    it("should check remotely for a matching sync stamp", function() {
+      var called = false;
+      var url = null;
+      stub(persistence, 'sync', function() {
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(u, opts) {
+        url = u;
+        called = true;
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', (new Date()).getTime() - 100);
+      persistence.set('last_sync_stamp', 'asdf');
+      var res = persistence.check_for_needs_sync(true);
+      waitsFor(function() { return called; });
+      runs(function() {
+        expect(res).toEqual(true);
+        expect(url).toEqual('/api/v1/users/self/sync_stamp');
+      });
+    });
+
+    it("should not sync if it finds a matching remote sync stamp", function() {
+      var called = false;
+      var sync_called = false;
+      stub(persistence, 'sync', function() {
+        sync_called = true;
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(u, opts) {
+        called = true;
+        if(u == '/api/v1/users/self/sync_stamp') {
+          return Ember.RSVP.resolve({sync_stamp: 'asdf'});
+        }
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', (new Date()).getTime() - 100);
+      persistence.set('last_sync_stamp', 'asdf');
+      var res = persistence.check_for_needs_sync(true);
+      var sleeper = false;
+      waitsFor(function() { return called; });
+      runs(function() {
+        expect(res).toEqual(true);
+        setTimeout(function() { sleeper = true; }, 1000);
+      });
+      waitsFor(function() { return sleeper; });
+      runs(function() {
+        expect(sync_called).toEqual(false);
+      });
+    });
+
+    it("should sync if it finds an updated remote sync stamp", function() {
+      var called = false;
+      var sync_called = false;
+      stub(persistence, 'sync', function() {
+        sync_called = true;
+        return Ember.RSVP.reject();
+      });
+      stub(persistence, 'ajax', function(u, opts) {
+        called = true;
+        if(u == '/api/v1/users/self/sync_stamp') {
+          return Ember.RSVP.resolve({sync_stamp: 'jkl'});
+        }
+        return Ember.RSVP.reject();
+      });
+      stub(Ember, 'testing', false);
+      stashes.set('auth_settings', {});
+      persistence.set('last_sync_stamp_interval', 10000);
+      persistence.set('last_sync_at', (new Date()).getTime() - 100);
+      persistence.set('last_sync_stamp', 'asdf');
+      var res = persistence.check_for_needs_sync(true);
+      waitsFor(function() { return sync_called; });
+      runs(function() {
+        expect(res).toEqual(true);
+        expect(called).toEqual(true);
+      });
+    });
+  });
 });
+
+

@@ -47,7 +47,7 @@ Ember.templateHelpers.delimit = function(num) {
     leftover = leftover / 1000;
   }
   pieces.push(Math.floor(leftover));
-  pieces = pieces.reverse().map(function(p, idx) { p = p.toString(); while(idx > 0 && p.length < 3) { p = "0" + p; }; return p; });
+  pieces = pieces.reverse().map(function(p, idx) { p = p.toString(); while(idx > 0 && p.length < 3) { p = "0" + p; } return p; });
   if(pieces.length == 1) {
     return val.toString();
   } else if(pieces.length > 2) {

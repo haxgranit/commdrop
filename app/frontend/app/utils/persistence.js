@@ -849,6 +849,7 @@ var persistence = Ember.Object.extend({
     if(this.get('online')) {
       stashes.push_log();
     }
+    persistence.set('last_sync_event_at', (new Date()).getTime());
 
     this.set('sync_status', 'syncing');
     var synced_boards = [];
@@ -973,11 +974,16 @@ var persistence = Ember.Object.extend({
       var complete_sync = track_buttons.then(function() {
         var last_sync = (new Date()).getTime() / 1000;
         if(persistence.get('sync_progress.root_user') == user_id) {
+          var statuses = persistence.get('sync_progress.board_statuses') || [];
+          if(persistence.get('sync_progress.last_sync_stamp')) {
+            persistence.set('last_sync_stamp', persistence.get('sync_progress.last_sync_stamp'));
+          }
           persistence.set('sync_progress', null);
           persistence.set('sync_status', 'succeeded');
           console.log('synced!');
           persistence.store('settings', {last_sync: last_sync}, 'lastSync').then(function(res) {
             persistence.set('last_sync_at', res.last_sync);
+            persistence.set('last_sync_event_at', (new Date()).getTime());
           }, function() {
             debugger;
           });
@@ -1012,6 +1018,7 @@ var persistence = Ember.Object.extend({
           finished: new Date(),
           summary: i18n.t('finised_without_errors', "Error syncing %{user_id}: ", {user_id: user_name}) + message
         });
+        persistence.set('last_sync_event_at', (new Date()).getTime());
         persistence.set('sync_log', log);
         if(err && err.error) {
           modal.error(err.error);
@@ -1351,6 +1358,10 @@ var persistence = Ember.Object.extend({
     return new Ember.RSVP.Promise(function(resolve, reject) {
       importantIds.push('user_' + user.get('id'));
       var find_user = user.reload().then(function(u) {
+        if(persistence.get('sync_progress.root_user') == u.get('id')) {
+          persistence.set('sync_progress.last_sync_stamp', u.get('sync_stamp'));
+        }
+
         return Ember.RSVP.resolve(u);
       }, function() {
         reject({error: "failed to retrieve latest user details"});
@@ -1564,12 +1575,7 @@ var persistence = Ember.Object.extend({
       Ember.run.later(function() {
         // TODO: maybe do a quick xhr to a static asset to make sure we're for reals online?
         if(stashes.get('auth_settings')) {
-          var synced = _this.get('last_sync_at') || 1;
-          var now = (new Date()).getTime() / 1000;
-          // if we haven't synced in 1 hour and we're online, do a background sync
-          if((now - synced) > (60 * 60) && _this.get('online')) {
-            _this.sync('self').then(null, function() { });
-          }
+          _this.check_for_needs_sync(true);
         }
         _this.tokens = {};
         if(CoughDrop.session) {
@@ -1578,16 +1584,36 @@ var persistence = Ember.Object.extend({
       }, 500);
     }
   }.observes('online'),
-  check_for_needs_sync: function() {
+  check_for_needs_sync: function(force) {
     var _this = this;
     if(stashes.get('auth_settings')) {
       var synced = _this.get('last_sync_at') || 1;
+      var syncable = persistence.get('online') && !Ember.testing && !persistence.get('syncing');
+      var interval = persistence.get('last_sync_stamp_interval') || (15 * 60 * 1000);
+      if(this.get('last_sync_event_at')) {
+        // don't background sync more than once every 15 minutes
+        syncable = syncable && (this.get('last_sync_event_at') < ((new Date()).getTime() - interval));
+      }
       var now = (new Date()).getTime() / 1000;
-      // if we haven't synced in 12 hours and we're online, do a background sync
-      if((now - synced) > (12 * 60 * 60) && persistence.get('online') && !Ember.testing && !persistence.get('syncing')) {
+      // if we haven't synced in 48 hours and we're online, do a background sync
+      if((now - synced) > (48 * 60 * 60) && syncable) {
         persistence.sync('self').then(null, function() { });
+        return true;
+      } else if(force && syncable && _this.get('last_sync_stamp')) {
+        // don't check sync_stamp more than once every 15 minutes
+        var last_check = persistence.get('last_sync_stamp_check');
+        if(!last_check || (last_check < (new Date()).getTime() - interval)) {
+          persistence.set('last_sync_stamp_check', (new Date()).getTime());
+          persistence.ajax('/api/v1/users/self/sync_stamp', {type: 'GET'}).then(function(res) {
+            if(!_this.get('last_sync_stamp') || res.sync_stamp != _this.get('last_sync_stamp')) {
+              persistence.sync('self').then(null, function() { });
+            }
+          }, function() { });
+          return true;
+        }
       }
     }
+    return false;
   }.observes('refresh_stamp', 'last_sync_at'),
   check_for_sync_reminder: function() {
     var _this = this;

@@ -1720,4 +1720,52 @@ describe('app_state', function() {
       expect(app_state.get('sidebar_boards')).toEqual([1, 2]);
     });
   });
+
+  describe("check_for_user_updated", function() {
+    it("should set last_sync_stamp when sessionUser changes", function() {
+      var o = Ember.Object.create();
+      stub(window, 'persistence', o);
+      stub(o, 'check_for_needs_sync', function() { });
+      app_state.set('sessionUser', Ember.Object.create({sync_stamp: 'asdf'}));
+      waitsFor(function() { return o.get('last_sync_stamp') == 'asdf'; });
+      runs();
+    });
+
+    it("should set last_sync_stamp_interval", function() {
+      var o = Ember.Object.create();
+      stub(window, 'persistence', o);
+      stub(o, 'check_for_needs_sync', function() { });
+      app_state.set('sessionUser', Ember.Object.create({sync_stamp: 'asdf'}));
+      waitsFor(function() { return o.get('last_sync_stamp') == 'asdf'; });
+      runs(function() {
+        expect(o.get('last_sync_stamp_interval')).toEqual(15 * 60 * 1000);
+      });
+    });
+
+    it("should trigger check_for_needs_sync", function() {
+      var o = Ember.Object.create();
+      stub(window, 'persistence', o);
+      var called = false;
+      stub(o, 'check_for_needs_sync', function() { called = true; });
+      app_state.set('sessionUser', Ember.Object.create({sync_stamp: 'asdf'}));
+      waitsFor(function() { return o.get('last_sync_stamp') == 'asdf'; });
+      runs(function() {
+        expect(o.get('last_sync_stamp_interval')).toEqual(15 * 60 * 1000);
+        expect(called).toEqual(true);
+      });
+    });
+
+    it("should use the user's interval preference if defined", function() {
+      var o = Ember.Object.create();
+      stub(window, 'persistence', o);
+      var called = false;
+      stub(o, 'check_for_needs_sync', function() { called = true; });
+      app_state.set('sessionUser', Ember.Object.create({sync_stamp: 'asdf', preferences: {'sync_refresh_interval': 10}}));
+      waitsFor(function() { return o.get('last_sync_stamp') == 'asdf'; });
+      runs(function() {
+        expect(o.get('last_sync_stamp_interval')).toEqual(10000);
+        expect(called).toEqual(true);
+      });
+    });
+  });
 });

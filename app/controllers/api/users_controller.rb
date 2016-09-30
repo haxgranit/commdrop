@@ -18,6 +18,15 @@ class Api::UsersController < ApplicationController
     render json: json.to_json
   end
   
+  def sync_stamp
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    if user != @api_user
+      return unless allowed?(user, 'never_allow')
+    end
+    render json: {sync_stamp: user.updated_at.utc.iso8601 }
+  end
+  
   def index
     if !Organization.admin_manager?(@api_user)
       return api_error 400, {error: 'admins only'}
