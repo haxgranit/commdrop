@@ -12,6 +12,14 @@ module UpstreamDownstream
     true
   end
   
+  def edit_stats
+    {
+      'total_buttons' => self.settings['buttons'].length,
+      'unlinked_buttons' => self.settings['buttons'].select{|btn| !btn['load_board'] }.length,
+      'current_revision' => self.current_revision
+    }
+  end
+  
   def track_downstream_boards(already_visited_ids=[], buttons_changed=false)
     return unless @track_downstream_boards
     return if already_visited_ids.include?(self.global_id)
@@ -23,6 +31,17 @@ module UpstreamDownstream
     boards_with_children = {}
     board_edit_stats = {}
     unfound_boards = ["self"]
+
+    # short-circuit individual lookups, since the board most likely already knows about most of
+    # its downstreams, and only one or a few will be new or updated    
+    Board.find_all_by_global_id(self.settings['downstream_board_ids'] || []).each do |board|
+      id = board.global_id
+      # also track button counts, used for board stats
+      board_edit_stats[id] = board.edit_stats
+      boards_with_children[id] = (board.settings['immediately_downstream_board_ids'] || [])
+    end
+    unfound_boards += boards_with_children.map(&:last).flatten - boards_with_children.keys
+    
     while !unfound_boards.empty?
       id = unfound_boards.shift
       board = top_board 
@@ -33,11 +52,7 @@ module UpstreamDownstream
       if board
         children_ids = []
         # also track button counts, used for board stats
-        board_edit_stats[id] = {
-          'total_buttons' => board.settings['buttons'].length,
-          'unlinked_buttons' => board.settings['buttons'].select{|btn| !btn['load_board'] }.length,
-          'current_revision' => board.current_revision
-        }
+        board_edit_stats[id] = board.edit_stats
         downs = (board.settings['immediately_downstream_board_ids'] || [])
         downs.each do |child_id|
           children_ids << child_id
@@ -48,7 +63,6 @@ module UpstreamDownstream
         boards_with_children[id] = children_ids
       end
     end
-    
     
     # step 2: the complete downstream list is a collection of all these ids
     Rails.logger.info('generating stats and revision keys')

@@ -318,16 +318,23 @@ class User < ActiveRecord::Base
         # TODO: I *think* this is here because board permissions may change for
         # supervisors/supervisees when a user's home board changes
         board.track_downstream_boards!
-        Board.find_all_by_global_id(board.settings['downstream_board_ids']).each do |downstream_board|
+        Rails.logger.info("checking downstream boards for #{self.global_id}, #{board.global_id}")
+        
+        Board.select('id').find_all_by_global_id(board.settings['downstream_board_ids']).each do |downstream_board|
           if downstream_board
             orphan_board_ids -= [downstream_board.id]
             UserBoardConnection.find_or_create_by(:board_id => downstream_board.id, :user_id => self.id)
-            downstream_board.save_without_post_processing
+            # When a user updated their home board/sidebar, all linked boards will have updated
+            # tallies for popularity, home_popularity, etc.
+            downstream_board.schedule_once(:save_without_post_processing)
           end
         end
+        Rails.logger.info("done checking downstream boards for #{self.global_id}, #{board.global_id}")
       end
     end
+    Rails.logger.info("processing lumped triggers")
     Board.process_lumped_triggers
+    Rails.logger.info("done processing lumped triggers")
     
     if board_added || orphan_board_ids.length > 0
       # TODO: sharding
@@ -337,10 +344,9 @@ class User < ActiveRecord::Base
     
     UserBoardConnection.delete_all(:user_id => self.id, :board_id => orphan_board_ids)
     # TODO: sharding
-    Board.where(:id => orphan_board_ids).each do |board|
+    Board.where(:id => orphan_board_ids).select('id').each do |board|
       if board
-        board.generate_stats
-        board.save_without_post_processing
+        board.schedule_once(:save_without_post_processing)
       end
     end
     true

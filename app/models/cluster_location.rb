@@ -46,6 +46,7 @@ class ClusterLocation < ActiveRecord::Base
       schedule(:generate_stats, true)
       return true
     end
+    Rails.logger.info("generating stats for #{self.global_id}")
     self.data ||= {}
     self.cluster_type ||= 'ip_address'
     if self.user_id && self.ip_address? && self.data['ip_address']
@@ -66,7 +67,9 @@ class ClusterLocation < ActiveRecord::Base
     board_counts = {}
     total_events = 0
     geos = []
-    sessions.find_in_batches(batch_size: 30) do |batch|
+    Rails.logger.info("finding batches #{self.global_id}")
+    sessions.find_in_batches(batch_size: 20).with_index do |batch, idx|
+      Rails.logger.info("batch set #{idx} #{self.global_id}")
       batch.each do |session|
         if session.data['stats']
           total_utterances += session.data['stats']['utterances']
@@ -92,6 +95,7 @@ class ClusterLocation < ActiveRecord::Base
         end
       end
     end
+    Rails.logger.info("calculating geo #{self.global_id}")
     # TODO: guess at geo for ip addresses
     if self.geo? && !geos.blank?
       self.data['geo'] = ClusterLocation.median_geo(geos)
@@ -100,6 +104,7 @@ class ClusterLocation < ActiveRecord::Base
     self.data['total_utterances'] = total_utterances
     self.data['total_buttons'] = button_counts.map{|k, v| v['count'] }.sum
     self.data['total_boards'] = board_counts.map{|k, v| v['count'] }.sum
+    Rails.logger.info("saving #{self.global_id}")
     self.save
   end
   

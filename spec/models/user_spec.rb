@@ -242,10 +242,13 @@ describe User, :type => :model do
       u = User.create
       b = Board.create(:user => u)
       UserBoardConnection.create(:user_id => u.id, :board_id => b.id)
-      expect_any_instance_of(Board).to receive(:save)
+      o = [b]
+      expect(Board).to receive(:where).with(:id => [b.id]).and_return(o)
+      expect(o).to receive(:select).with('id').and_return([b])
+      expect(b).to receive(:schedule_once).with(:save_without_post_processing)
       u.track_boards(true)
     end
-    
+
     it "should create missing connections" do
       u = User.create
       b = Board.create(:user => u)
