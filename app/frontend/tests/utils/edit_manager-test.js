@@ -1573,6 +1573,7 @@ describe('editManager', function() {
         sound_id: 2,
         border_color: 'rgba(170, 187, 255, 0.53)',
         link_disabled: false,
+        blocking_speech: false,
         hidden: false,
         add_to_vocalization: false,
         home_lock: false
@@ -1585,6 +1586,7 @@ describe('editManager', function() {
         vocalization: 'it happened',
         background_color: 'rgb(255, 0, 0)',
         link_disabled: false,
+        blocking_speech: false,
         hidden: false,
         add_to_vocalization: false,
         home_lock: false
@@ -1595,6 +1597,7 @@ describe('editManager', function() {
         background_color: 'rgb(170, 187, 255)',
         border_color: 'rgb(150, 0, 100)',
         link_disabled: false,
+        blocking_speech: false,
         hidden: false,
         add_to_vocalization: false,
         home_lock: false
@@ -1647,6 +1650,7 @@ describe('editManager', function() {
         sound_id: 2,
         border_color: 'rgba(170, 187, 255, 0.53)',
         link_disabled: false,
+        blocking_speech: false,
         hidden: false,
         part_of_speech: 'noun',
         suggested_part_of_speech: 'verb',
@@ -1661,6 +1665,7 @@ describe('editManager', function() {
         vocalization: 'it happened',
         background_color: 'rgb(255, 0, 0)',
         link_disabled: false,
+        blocking_speech: false,
         hidden: false,
         part_of_speech: 'noun',
         painted_part_of_speech: 'noun',
@@ -1673,6 +1678,7 @@ describe('editManager', function() {
         background_color: 'rgb(170, 187, 255)',
         border_color: 'rgb(150, 0, 100)',
         link_disabled: false,
+        blocking_speech: false,
         hidden: false,
         add_to_vocalization: false,
         home_lock: false
@@ -1719,6 +1725,7 @@ describe('editManager', function() {
         sound_id: 3,
         vocalization: 'it happened',
         link_disabled: false,
+        blocking_speech: false,
         background_color: 'rgb(255, 0, 0)',
         hidden: false,
         add_to_vocalization: false,
@@ -1730,6 +1737,7 @@ describe('editManager', function() {
         background_color: 'rgb(170, 187, 255)',
         border_color: 'rgb(150, 0, 100)',
         link_disabled: false,
+        blocking_speech: false,
         hidden: false,
         add_to_vocalization: false,
         home_lock: false
@@ -1797,6 +1805,7 @@ describe('editManager', function() {
         integration: {okay: true},
         vocalization: 'hat',
         link_disabled: false,
+        blocking_speech: false,
         border_color: 'rgba(170, 187, 255, 0.53)',
         hidden: false,
         add_to_vocalization: false,

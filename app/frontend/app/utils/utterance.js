@@ -164,7 +164,7 @@ var utterance = Ember.Object.extend({
   },
   add_button: function(button, original_button) {
     if(this.get('clear_on_vocalize') && this.get('list_vocalized')) {
-      this.clear();
+      this.clear(true);
     }
     var b = Ember.$.extend({}, button);
     if(original_button) {
@@ -178,13 +178,21 @@ var utterance = Ember.Object.extend({
   },
   speak_button: function(button) {
     if(button.sound) {
-      speecher.speak_audio(button.sound);
+      var collection_id = null;
+      if(button.blocking_speech) {
+        collection_id = Math.round(Math.random() * 99999) + "-" + (new Date()).getTime();
+      }
+      speecher.speak_audio(button.sound, 'text', collection_id);
     } else {
       if(speecher.ready) {
         if(button.vocalization == ":beep") {
           speecher.beep();
         } else {
-          speecher.speak_text(button.vocalization || button.label);
+          var collection_id = null;
+          if(button.blocking_speech) {
+            collection_id = Math.round(Math.random() * 99999) + "-" + (new Date()).getTime();
+          }
+          speecher.speak_text(button.vocalization || button.label, collection_id);
         }
       } else {
         this.silent_speak_button(button);
@@ -223,12 +231,14 @@ var utterance = Ember.Object.extend({
   alert: function() {
     speecher.beep();
   },
-  clear: function() {
+  clear: function(auto_cleared) {
     this.set('rawButtonList', []);
     stashes.log({
       action: 'clear'
     });
-    speecher.stop('all');
+    if(!auto_cleared) {
+      speecher.stop('all');
+    }
     this.set('list_vocalized', false);
   },
   backspace: function() {
@@ -268,7 +278,7 @@ var utterance = Ember.Object.extend({
       text: text,
       buttons: stashes.get('working_vocalization')
     });
-    speecher.speak_collection(items);
+    speecher.speak_collection(items, Math.round(Math.random() * 99999) + '-' + (new Date()).getTime());
     this.set('list_vocalized', true);
   },
   set_ghost_utterance: function() {
@@ -282,7 +292,7 @@ var utterance = Ember.Object.extend({
     volume = parseFloat(volume);
     if(isNaN(volume)) { volume = 1.0; }
 
-    speecher.speak_text(i18n.t('do_you_like_voice', "Do you like my voice?"), true, {
+    speecher.speak_text(i18n.t('do_you_like_voice', "Do you like my voice?"), 'test-' + voiceURI, {
       volume: volume,
       pitch: pitch,
       rate: rate,

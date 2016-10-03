@@ -88,11 +88,9 @@ var speecher = Ember.Object.extend({
     return 1.0;
   },
   speak_id: 0,
-  speak_text: function(text, from_collection, opts) {
+  speak_text: function(text, collection_id, opts) {
     opts = opts || {};
-    var speaking = this.speaking;
-    var speaking_from_collection = this.speaking_from_collection;
-    if(this.speaking_from_collection && !from_collection) {
+    if(this.speaking_from_collection && !collection_id) {
       // lets the user start building their next sentence without interrupting the current one
       // TODO: this seems elegant right now, but it is actually a good idea?
       return;
@@ -114,23 +112,29 @@ var speecher = Ember.Object.extend({
       var piece_text = pieces.shift();
       if(piece_text.length === 0 || piece_text.match(/^\s+$/)) {
         Ember.run.later(function() {
-          next_piece();
+          if(_this.last_speak_id == speak_id) {
+            next_piece();
+          }
         }, 500);
       } else {
-        _this.speak_raw_text(piece_text, from_collection, opts, function() {
+        _this.speak_raw_text(piece_text, collection_id, opts, function() {
           if(pieces.length > 0) {
             Ember.run.later(function() {
-              next_piece();
+              if(_this.last_speak_id == speak_id) {
+                next_piece();
+              }
             }, 500);
           } else {
-            _this.speak_end_handler(speak_id);
+            if(_this.last_speak_id == speak_id) {
+              _this.speak_end_handler(speak_id);
+            }
           }
         });
       }
     };
     next_piece();
   },
-  speak_raw_text: function(text, from_collection, opts, callback) {
+  speak_raw_text: function(text, collection_id, opts, callback) {
     opts.rate = opts.rate || this.rate || this.default_rate();
     opts.volume = opts.volume || this.volume || 1.0;
     if(opts.alternate_voice) {
@@ -142,7 +146,7 @@ var speecher = Ember.Object.extend({
     if(speecher.scope.speechSynthesis) {
       if(opts.interrupt !== false) {
         this.speaking = true;
-        this.speaking_from_collection = !!from_collection;
+        this.speaking_from_collection = collection_id;
       }
       var utterance = new speecher.scope.SpeechSynthesisUtterance();
       utterance.text = text;
@@ -210,14 +214,13 @@ var speecher = Ember.Object.extend({
   },
   next_speak: function() {
     if(this.speaks && this.speaks.length) {
-      this.speaking_from_collection = true;
       var speak = this.speaks.shift();
       if(speak.sound) {
-        this.speak_audio(speak.sound, 'text', true);
+        this.speak_audio(speak.sound, 'text', this.speaking_from_collection);
       } else if(speak.text) {
         var stashVolume = this.volume;
         if(speak.volume) { this.volume = speak.volume; }
-        this.speak_text(speak.text, true);
+        this.speak_text(speak.text, this.speaking_from_collection);
         this.volume = stashVolume;
       }
     } else {
@@ -319,9 +322,9 @@ var speecher = Ember.Object.extend({
       console.log("beep sound not found");
     }
   },
-  speak_audio: function(url, type, from_collection, opts) {
+  speak_audio: function(url, type, collection_id, opts) {
     opts = opts || {};
-    if(this.speaking_from_collection && !from_collection) {
+    if(this.speaking_from_collection && !collection_id) {
       // lets the user start building their next sentence without interrupting the current one
       return;
     } else if(this.speaking && opts.interrupt === false) {
@@ -341,7 +344,7 @@ var speecher = Ember.Object.extend({
         var speak_id = this.speak_id++;
         this.last_speak_id = speak_id;
         this.speaking = true;
-        this.speaking_from_collection = from_collection;
+        this.speaking_from_collection = collection_id;
         audio.speak_id = speak_id;
       }
       var playing_audio = this.play_audio(audio);
@@ -357,10 +360,13 @@ var speecher = Ember.Object.extend({
     }
     return $res;
   },
-  speak_collection: function(list) {
+  speak_collection: function(list, collection_id) {
     this.stop('text');
     this.speaks = list;
-    this.next_speak();
+    if(list && list.length > 0) {
+      this.speaking_from_collection = collection_id;
+      this.next_speak();
+    }
   },
   stop: function(type) {
     this.audio = this.audio || {};

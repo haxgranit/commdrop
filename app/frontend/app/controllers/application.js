@@ -422,6 +422,7 @@ export default Ember.Controller.extend({
       sound: (sound && sound.get('url')),
       board: oldState,
       completion: button.completion,
+      blocking_speech: button.blocking_speech,
       type: 'speak'
     };
     var location = buttonTracker.locate_button_on_board(button.id, options.event);

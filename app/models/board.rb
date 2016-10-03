@@ -498,7 +498,10 @@ class Board < ActiveRecord::Base
       end
     end
     self.settings['buttons'] = buttons.map do |button|
-      button = button.slice('id', 'hidden', 'link_disabled', 'image_id', 'sound_id', 'label', 'vocalization', 'background_color', 'border_color', 'load_board', 'hide_label', 'url', 'apps', 'integration', 'video', 'part_of_speech', 'suggested_part_of_speech', 'painted_part_of_speech', 'add_to_vocalization', 'home_lock');
+      button = button.slice('id', 'hidden', 'link_disabled', 'image_id', 'sound_id', 'label', 'vocalization', 
+            'background_color', 'border_color', 'load_board', 'hide_label', 'url', 'apps', 
+            'integration', 'video', 'part_of_speech', 'suggested_part_of_speech', 
+            'painted_part_of_speech', 'add_to_vocalization', 'home_lock', 'blocking_speech');
       if button['load_board']
         if !approved_link_ids.include?(button['load_board']['id']) && !approved_link_ids.include?(button['load_board']['key'])
           link = Board.find_by_path(button['load_board']['id']) || Board.find_by_path(button['load_board']['key'])

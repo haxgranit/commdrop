@@ -17,6 +17,17 @@
       </span>
     </div>
   </div>
+  <div class="form-group">
+    <label for="blocking_speech" class="col-sm-2 control-label">{{t "Hold" key='hold'}}</label>
+    <div class="col-sm-10">
+      <div class="checkbox">
+        <label>
+          {{input checked=model.blocking_speech type="checkbox"}}
+          {{t "Hold other speech until this button completes" key='hold_other_speech_until_this_button_completes'}}
+        </label>
+      </div>
+    </div>
+  </div>
   {{#if sound_preview}}
     <div style="text-align: center;">
       Selected sound{{#if sound_preview.name}} ({{sound_preview.name}}){{/if}}:<br/>
@@ -55,7 +66,7 @@
         <div style="margin-bottom: 10px; text-align: center;">
           {{t "Played sound:" key='played_sound_colon'}}<br/>
           <audio controls src={{model.sound.url}}></audio>
-        </div>      
+        </div>
         {{pick-license license=model.sound.license}}
         <br/>
         <button class='btn btn-default' {{action "clear_sound"}}>{{t "Clear Sound" key='clear_sound'}}</button>
