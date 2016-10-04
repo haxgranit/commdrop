@@ -573,6 +573,14 @@ var buttonTracker = Ember.Object.extend({
       mask.className = 'mask';
       elem.appendChild(mask);
       buttonTracker.dwell_elem = elem;
+      var icon = document.createElement('div');
+      icon.id = 'dwell_icon';
+      document.body.appendChild(icon);
+      buttonTracker.dwell_icon_elem = icon;
+    }
+    if(buttonTracker.dwell_cursor) {
+      buttonTracker.dwell_icon_elem.style.left = (event.clientX - 5) + "px";
+      buttonTracker.dwell_icon_elem.style.top = (event.clientY - 5) + "px";
     }
 
     Ember.run.cancel(buttonTracker.linger_clear_later);
@@ -929,6 +937,9 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.dwell_elem.classList.remove('targeting');
       buttonTracker.dwell_elem.style.left = '-1000px';
       buttonTracker.last_dwell_linger = null;
+    }
+    if(buttonTracker.dwell_icon_elem) {
+      buttonTracker.dwell_icon_elem.style.left = '-1000px';
     }
   },
   start_dragging: function($elem, event) {

@@ -1654,6 +1654,16 @@ video.button_image {
     }
   }
 }
+#dwell_icon {
+  position: absolute;
+  z-index: 300;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  background: #000;
+  opacity: 0.5;
+  width: 10px;
+  height: 10px;
+}
 
 .label_count.too_many {
   color: #800;

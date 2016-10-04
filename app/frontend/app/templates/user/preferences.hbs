@@ -615,6 +615,17 @@
       </div>
     </div>
     <div class="form-group">
+      <label for="dwell_cursor" class="col-sm-3 control-label">{{t "Dwell Cursor" key='dwell_cursor'}}</label>
+      <div class="col-sm-5">
+        <div class="checkbox">
+          <label>
+            {{input type="checkbox" checked=model.preferences.device.dwell_cursor id="dwell_cursor"}}
+            {{t "Show small icon at current dwell location" key='dwell_cursor'}}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
       <label for="dwell_duration" class="col-sm-3 control-label">{{t "Dwell Time" key='dwell_duration'}}</label>
       <div class="col-sm-3">
         <div class="input-group">
