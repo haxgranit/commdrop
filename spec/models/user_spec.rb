@@ -1261,7 +1261,7 @@ describe User, :type => :model do
       u = User.new(:settings => {'preferences' => {'notification_frequency' => '1_week'}})
       u.id = 1
       # a week from saturday at 23:30
-      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 23:30 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-23 23:30 UTC'));
       u.id = 0
       # a week from friday at 22:00
       expect(u.next_notification_schedule).to eq(Time.parse('2016-07-29 22:00 UTC'));
@@ -1270,13 +1270,13 @@ describe User, :type => :model do
       expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 00:00 UTC'));
       u.id = 3
       # a week from saturday at 1:30 (move to sunday)
-      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-31 01:30 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-24 01:30 UTC'));
       u.id = 4
       # a week from friday at 2:00 (move to saturday)
       expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 02:00 UTC'));
       u.id = 5
       # a week from saturday at 22:30
-      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-30 22:30 UTC'));
+      expect(u.next_notification_schedule).to eq(Time.parse('2016-07-23 22:30 UTC'));
     end
     
     it "should generate correct next_notification_schedule for every other week updates" do

@@ -734,10 +734,12 @@ class User < ActiveRecord::Base
   
   def next_notification_schedule
     res = Time.now.utc
+    cutoff = res + 24.hours
     if !self.settings || !self.settings['preferences'] || !self.settings['preferences']['notification_frequency'] || self.settings['preferences']['notification_frequency'] == ''
       return nil
     elsif self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '1_month'
     else
+      res -= 24.hours
       already_friday_or_saturday = res.wday == 5 || res.wday == 6
       # friday or saturday in the US
       friday_or_saturday = (self.id || 0) % 2 == 0 ? 5 : 6
@@ -749,6 +751,9 @@ class User < ActiveRecord::Base
         end
       end
     end
+    if self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '2_weeks'
+      cutoff += 8.days
+    end
           # 6pm eastern thru 10pm eastern
     hours = [22, 23, 0, 1, 2]
     hour_idx = (self.id || 0) % hours.length
@@ -759,12 +764,15 @@ class User < ActiveRecord::Base
     min = (self.id || 0) % 2 == 0 ? 0 : 30
     res = res.change(:hour => hour, :min => min)
     # set to a nice happy time of day
-    if self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '2_weeks'
-      res += 14.days
-    elsif self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '1_month'
-      res += 1.month
-    else
-      res += 7.days
+    while res < cutoff
+      if self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '2_weeks'
+        # since the cutoff was extended, it'll get to 2 weeks via cutoff, this just makes it a little cleaner
+        res += 7.days
+      elsif self.settings && self.settings['preferences'] && self.settings['preferences']['notification_frequency'] == '1_month'
+        res += 1.month
+      else
+        res += 7.days
+      end
     end
     res
   end
