@@ -177,7 +177,7 @@ module UpstreamDownstream
       ups = Board.find_all_by_global_id(self.settings['immediately_upstream_board_ids'] || [])
       ups.each do |board|
         if board && !notify_upstream_with_visited_ids.include?(board.global_id)
-          board.schedule(:track_downstream_boards!, notify_upstream_with_visited_ids)
+          board.schedule_once(:track_downstream_boards!, notify_upstream_with_visited_ids)
         end
       end
     end
