@@ -1601,7 +1601,7 @@ var persistence = Ember.Object.extend({
   }.observes('online'),
   check_for_needs_sync: function(force) {
     var _this = this;
-    if(stashes.get('auth_settings')) {
+    if(stashes.get('auth_settings') && window.coughDropExtras && window.coughDropExtras.ready) {
       var synced = _this.get('last_sync_at') || 1;
       var syncable = persistence.get('online') && !Ember.testing && !persistence.get('syncing');
       var interval = persistence.get('last_sync_stamp_interval') || (15 * 60 * 1000);
@@ -1632,7 +1632,7 @@ var persistence = Ember.Object.extend({
   }.observes('refresh_stamp', 'last_sync_at'),
   check_for_sync_reminder: function() {
     var _this = this;
-    if(stashes.get('auth_settings')) {
+    if(stashes.get('auth_settings') && window.coughDropExtras && window.coughDropExtras.ready) {
       var synced = _this.get('last_sync_at') || 1;
       var now = (new Date()).getTime() / 1000;
       // if we haven't synced in 14 days, remind to sync
