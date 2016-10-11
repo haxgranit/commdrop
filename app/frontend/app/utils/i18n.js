@@ -209,9 +209,9 @@ var i18n = Ember.Object.extend({
       res = str.substring(0, str.length - 2) + "es";
     } else if(check.match(/(s|ch|sh|x|z)$/)) {
       res = str + "es";
-    } else if(check.match(/y$/)) {
+    } else if(check.match(/[^aeiouy]y$/)) {
       res = str.substring(0, str.length - 1) + "ies";
-    } else if(check.match(/[^aeiouy].fe?$/)) { // ends in consonant or single vowel, followed by f or fe
+    } else if(!check.match(/[aeiouy][aeiouy]f$/) && check.match(/[^f]fe?$/)) { // ends in consonant or single vowel, followed by f or fe
       res = str.replace(/fe?$/i, "ves");
     } else {
       res = str + "s";
@@ -292,14 +292,14 @@ var i18n = Ember.Object.extend({
       res = str + 'e' + modifier;
     } else if(check[check.length - 1] == 's' && options.simple_present) {
       res = str + 'e' + modifier;
-    } else if(check[check.length - 1] == 'y' && !options.present_participle) {
+    } else if(check.match(/[^aeiouy]y$/i) && !options.present_participle) {
       if(options.simple_present) {
         modifier = 'es';
       }
       res = str.substring(0, str.length - 1) + 'i' + modifier;
     } else if(vowel_cons && ending_stress && !options.simple_present) { // single vowel plus consonant ending, stress at end of word
       res = str + str[str.length - 1] + modifier;
-    } else if(vowel_cons && syllables == 1) { // single vowel plus consonant ending, one syllable
+    } else if(vowel_cons && syllables == 1 && !options.simple_present) { // single vowel plus consonant ending, one syllable
       res = str + str[str.length - 1] + modifier;
     } else {
       res = str + modifier;
@@ -459,11 +459,22 @@ var i18n = Ember.Object.extend({
       'torpedo': 'torpedoes',
       'veto': 'vetoes',
       'alga': 'algae',
-      'alumnus': 'alumnae',
+      'alumnus': 'alumni',
       'larva': 'larvae',
       'mouse': 'mice',
       'goose': 'geese',
-      'day': 'days'
+      'day': 'days',
+      'man': 'men',
+      'woman': 'women',
+      'person': 'people',
+      'foot': 'feet',
+      'tooth': 'teeth',
+      'leaf': 'leaves',
+      'sheep': 'sheep',
+      'deer': 'deer',
+      'moose': 'moose',
+      'stomach': 'stomachs',
+      'epoch': 'epochs'
     },
     singulars: {
       'halves': 'half',
@@ -503,7 +514,7 @@ var i18n = Ember.Object.extend({
       'be': ['is', 'was', 'been', 'being'],
       'bear': ['bears', 'bore', 'borne', 'bearing'],
       'beat': ['beats', 'beat', 'beaten', 'beating'],
-      'become': ['becomes', 'become', 'become', 'becoming'],
+      'become': ['becomes', 'became', 'become', 'becoming'],
       'begin': ['begins', 'began', 'begun', 'beginning'],
       'bend': ['bends', 'bent', 'bent', 'bending'],
       'bet': ['bets', 'bet', 'bet', 'betting'],
@@ -784,7 +795,7 @@ var i18n = Ember.Object.extend({
       'spoon-feed': ['spoon-feeds', 'spoon-fed', 'spoon-fed', 'spoon-feeding'],
       'spread': ['spreads', 'spread', 'spread', 'spreading'],
       'spring': ['springs', 'sprang', 'sprung', 'springing'],
-      'stand': ['stans', 'stood', 'stood', 'standing'],
+      'stand': ['stands', 'stood', 'stood', 'standing'],
       'steal': ['steals', 'stole', 'stolen', 'stealing'],
       'stick': ['sticks', 'stuck', 'stuck', 'sticking'],
       'sting': ['stings', 'stung', 'stung', 'stinging'],
