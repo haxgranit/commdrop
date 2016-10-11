@@ -1,6 +1,9 @@
 {{#modal-dialog action="close" opening='opening' closing='closing'}}
-  <div class="modal-body" id="speak_menu" style="padding: 0; font-size: 18px;">
+  <div class="modal-body advanced_selection" id="speak_menu" style="padding: 0; font-size: 18px;">
     <ul class="nav nav-pills nav-stacked">
+      <li style="padding: 15px 10px 0; font-size: 14px; color: #888;">
+        {{working_vocalization_text}}
+      </li>
       <li>
         <a href="#" {{action "selectButton" "remember"}}>{{t "Remember this" key='remember_this'}}</a>
       </li>
@@ -16,12 +19,12 @@
     {{#if rememberedUtterances}}
       <ul class="nav nav-pills nav-stacked">
         {{#each rememberedUtterances as |utterance|}}
-      
-          <li> 
-            <a href="#" {{action "selectButton" utterance}}>{{t "Say: " key="say_colon"}} "{{utterance.sentence}}"</a>
+
+          <li>
+            <a href="#" {{action "selectButton" utterance}}>{{t "Say: " key="say_colon"}} <span style='font-size: 14px;'>"{{utterance.sentence}}"</span></a>
           </li>
         {{/each}}
       </ul>
     {{/if}}
-  </div>    
+  </div>
 {{/modal-dialog}}

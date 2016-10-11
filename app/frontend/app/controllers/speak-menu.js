@@ -17,6 +17,10 @@ export default modal.ModalController.extend({
   sharing_allowed: function() {
     return (!this.get('app_state.currentUser') && window.user_preferences.any_user.sharing) || this.get('app_state.currentUser.preferences.sharing');
   }.property('app_state.currentUser', 'app_state.currentUser.preferences.sharing'),
+  working_vocalization_text: function() {
+    var buttons = stashes.get('working_vocalization') || [{label: "no text"}];
+    return buttons.map(function(b) { return b.label; }).join(" ");
+  }.property('stashes.working_vocalization'),
   actions: {
     selectButton: function(button) {
       if(button == 'remember') {

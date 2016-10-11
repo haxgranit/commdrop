@@ -735,6 +735,8 @@ var buttonTracker = Ember.Object.extend({
         return buttonTracker.element_wrap(region);
       } else if(region.id == 'sidebar') {
         return buttonTracker.element_wrap($target.closest(".btn,a")[0]);
+      } else if(region.id == 'speak_menu') {
+        return buttonTracker.element_wrap($target.closest("a")[0]);
       } else if(region.tagName == 'HEADER') {
         return buttonTracker.element_wrap($target.closest(".btn,#button_list")[0]);
       } else if((region.className || "").match(/board/) || region.id == 'board_canvas') {
