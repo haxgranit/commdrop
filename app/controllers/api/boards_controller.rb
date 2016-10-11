@@ -144,7 +144,7 @@ class Api::BoardsController < ApplicationController
       return unless allowed?(user, 'edit')
       @board_user = user
     end
-    board = Board.process_new(params['board'], {:user => @board_user, :key => params['board']['key']})
+    board = Board.process_new(params['board'], {:user => @board_user, :author => @api_user, :key => params['board']['key']})
     if board.errored?
       api_error(400, {error: "board creation failed", errors: board && board.processing_errors})
     else

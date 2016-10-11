@@ -365,6 +365,52 @@ describe Api::BoardsController, :type => :controller do
       expect(json['board']['user_name']).to eq(com.user_name)
     end
     
+    it "should allow links if the author can access the links but not the supervisee" do
+      token_user
+      u = User.create
+      User.link_supervisor_to_user(@user, u, nil, true)
+      b = Board.create(:user => @user)
+      post :create, :board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['board']['id']).to_not eq(nil)
+      Worker.process_queues
+      b2 = Board.find_by_path(json['board']['id'])
+      expect(b2).to_not eq(b)
+      expect(b2.settings['downstream_board_ids']).to eq([b.global_id])
+    end
+
+    it "should allow links if the supervisee can access the links but not the author" do
+      token_user
+      u = User.create
+      User.link_supervisor_to_user(@user, u, nil, true)
+      b = Board.create(:user => u)
+      post :create, :board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['board']['id']).to_not eq(nil)
+      Worker.process_queues
+      b2 = Board.find_by_path(json['board']['id'])
+      expect(b2).to_not eq(b)
+      expect(b2.settings['downstream_board_ids']).to eq([b.global_id])
+    end
+    
+    it "should not allow links if the supervisee can access the links but not the author" do
+      token_user
+      u = User.create
+      u2 = User.create
+      User.link_supervisor_to_user(@user, u, nil, true)
+      b = Board.create(:user => u2)
+      post :create, :board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['board']['id']).to_not eq(nil)
+      Worker.process_queues
+      b2 = Board.find_by_path(json['board']['id'])
+      expect(b2).to_not eq(b)
+      expect(b2.settings['downstream_board_ids']).to eq([])
+    end
+    
     it "should not allow creating a board for a random someone else" do
       token_user
       com = User.create

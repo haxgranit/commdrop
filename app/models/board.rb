@@ -422,7 +422,7 @@ class Board < ActiveRecord::Base
     @edit_notes << "changed the image" if params['image_url'] && params['image_url'] != self.settings['image_url']
     self.settings['image_url'] = params['image_url'] if params['image_url']
     self.settings['never_edited'] = false
-    process_buttons(params['buttons'], non_user_params[:user]) if params['buttons']
+    process_buttons(params['buttons'], non_user_params[:user], non_user_params[:author]) if params['buttons']
     prior_license = self.settings['license'].to_json
     process_license(params['license']) if params['license']
     @edit_notes << "changed the license" if self.settings['license'].to_json != prior_license
@@ -486,7 +486,7 @@ class Board < ActiveRecord::Base
     end
   end
   
-  def process_buttons(buttons, editor)
+  def process_buttons(buttons, editor, secondary_editor=nil)
     @edit_notes ||= []
     @check_for_parts_of_speech = true
     prior_buttons = self.settings['buttons'] || []
@@ -505,7 +505,7 @@ class Board < ActiveRecord::Base
       if button['load_board']
         if !approved_link_ids.include?(button['load_board']['id']) && !approved_link_ids.include?(button['load_board']['key'])
           link = Board.find_by_path(button['load_board']['id']) || Board.find_by_path(button['load_board']['key'])
-          if !link || !link.allows?(editor, 'view')
+          if !link || (!link.allows?(editor, 'view') && !link.allows?(secondary_editor, 'view'))
             button.delete('load_board')
           end
         end
