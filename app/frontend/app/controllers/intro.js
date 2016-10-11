@@ -5,8 +5,10 @@ export default modal.ModalController.extend({
   opening: function() {
     var user = app_state.get('currentUser');
     app_state.set('show_intro', false);
-    user.set('preferences.progress.intro_watched', true);
-    user.save().then(null, function() { });
+    if(user) {
+      user.set('preferences.progress.intro_watched', true);
+      user.save().then(null, function() { });
+    }
     this.set('page', 1);
     this.set('total_pages', 14);
     if(window.ga) {
