@@ -154,20 +154,25 @@ var speecher = Ember.Object.extend({
       utterance.volume = opts.volume;
       utterance.pitch = opts.pitch;
       utterance.voiceURI = opts.voiceURI;
-      var voices = speecher.get('voices');
-      var voice = voices.find(function(v) { return v.voiceURI == opts.voiceURI; });
-      voice = voice || voices.find(function(v) { return (v.name + " " + v.lang) == opts.voiceURI; });
-      voice = voice || voices.find(function(v) { return v.lang == opts.voiceURI; });
-      var locale = window.navigator.language.toLowerCase();
-      var language = locale && locale.split(/-/)[0];
-      voice = voice || voices.find(function(v) { return locale && v.lang && (v.lang.toLowerCase() == locale || v.lang.toLowerCase().replace(/-/, '_') == locale); });
-      voice = voice || voices.find(function(v) { return language && v.lang && v.lang.toLowerCase().split(/[-_]/)[0] == language; });
-      voice = voice || voices.find(function(v) { return v['default']; });
+      var voice = null;
+      if(opts.voiceURI != 'force_default') {
+        var voices = speecher.get('voices');
+        voice = voices.find(function(v) { return v.voiceURI == opts.voiceURI; });
+        voice = voice || voices.find(function(v) { return (v.name + " " + v.lang) == opts.voiceURI; });
+        voice = voice || voices.find(function(v) { return v.lang == opts.voiceURI; });
+        var locale = window.navigator.language.toLowerCase();
+        var language = locale && locale.split(/-/)[0];
+        voice = voice || voices.find(function(v) { return locale && v.lang && (v.lang.toLowerCase() == locale || v.lang.toLowerCase().replace(/-/, '_') == locale); });
+        voice = voice || voices.find(function(v) { return language && v.lang && v.lang.toLowerCase().split(/[-_]/)[0] == language; });
+        voice = voice || voices.find(function(v) { return v['default']; });
+      }
 
       var speak_utterance = function() {
-        utterance.voice = voice;
-        if(voice) {
-          utterance.lang = voice.lang;
+        if(opts.voiceURI != 'force_default') {
+          utterance.voice = voice;
+          if(voice) {
+            utterance.lang = voice.lang;
+          }
         }
         if(utterance.addEventListener) {
           utterance.addEventListener('end', function() {
@@ -363,7 +368,7 @@ var speecher = Ember.Object.extend({
   speak_collection: function(list, collection_id, opts) {
     this.stop('text');
     this.speaks = list;
-    if(opts.override_volume) {
+    if(opts && opts.override_volume) {
       list.forEach(function(s) { s.volume = opts.override_volume; });
     }
     if(list && list.length > 0) {

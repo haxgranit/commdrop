@@ -27,6 +27,7 @@ describe('speecher', function() {
       waitsFor(function() { return spoken; });
       runs();
     });
+
     it("should trigger speech synthesis", function() {
       var spoken = null;
       stub(window.speechSynthesis, 'speak', function(u) { spoken = u.text; });
@@ -36,16 +37,36 @@ describe('speecher', function() {
         expect(spoken).toEqual("hippo");
       });
     });
+
     it("should cancel any existing text utterances", function() {
-      var spoken = null;
+      var utterance = null;
       var cancelled = false;
-      stub(window.speechSynthesis, 'speak', function(u) { spoken = u.text; });
+      stub(window.speechSynthesis, 'speak', function(u) { utterance = u; });
       stub(window.speechSynthesis, 'cancel', function() { cancelled = true; });
+      stub(speecher.scope, 'SpeechSynthesisUtterance', function() { });
+
+      speecher.set('voices', [{'default': true, lang: 'asdf'}]);
       speecher.speak_text("hippo");
-      waitsFor(function() { return cancelled && spoken; });
+      waitsFor(function() { return cancelled && utterance; });
       runs(function() {
         expect(cancelled).toEqual(true);
-        expect(spoken).toEqual("hippo");
+        expect(utterance.text).toEqual("hippo");
+        expect(utterance.voice).toNotEqual(null);
+        expect(utterance.lang).toEqual('asdf');
+      });
+    });
+    it("should not set a voiceURI or voice or lang for force_default voice", function() {
+      var cancelled = false;
+      var utterance = null;
+      stub(window.speechSynthesis, 'speak', function(u) { utterance = u; });
+      stub(window.speechSynthesis, 'cancel', function() { cancelled = true; });
+      speecher.speak_text("hippo", 'asdf', {voiceURI: 'force_default'});
+      waitsFor(function() { return cancelled && utterance; });
+      runs(function() {
+        expect(cancelled).toEqual(true);
+        expect(utterance.voice).toEqual(null);
+        expect(utterance.lang).toEqual('')
+        expect(utterance.text).toEqual("hippo");
       });
     });
   });
@@ -227,6 +248,7 @@ describe('speecher', function() {
       expect(fg.listenersRemoved).toEqual(true);
       expect(bg.listenersRemoved).not.toEqual(true);
     });
+
     it("should run through the full list of speaks", function() {
       var audio = fakeAudio();
       stub(speecher, 'find_or_create_element', function() {

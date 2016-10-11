@@ -171,9 +171,13 @@ export default Ember.Controller.extend({
       }
     });
     if(result.length > 1) {
+      result.push({
+        id: 'force_default',
+        name: i18n.t('system_default_voice', 'System Default Voice')
+      });
       result.unshift({
         id: 'default',
-        name: '[ Select A Voice ]'
+        name: i18n.t('select_a_voice', '[ Select A Voice ]')
       });
     }
     return result;
