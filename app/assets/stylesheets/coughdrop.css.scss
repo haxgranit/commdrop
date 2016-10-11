@@ -1034,6 +1034,7 @@ body.pretty_loader #loading_box {
   right: 2px;
   top: 0px;
   visibility: hidden;
+  z-index: 2;
 }
 .button .action_container .action {
   height: 30px;
