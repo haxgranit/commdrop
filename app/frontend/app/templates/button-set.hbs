@@ -21,6 +21,9 @@
               <span style='font-size: 16px;' class='text-muted'>{{t "(repeat)" key='repeat'}}</span>
             {{/if}}
           {{/if}}
+          {{#if button.linked_board_id}}
+            <img src={{path 'images/folder.png'}} alt={{t "linked button" key='linked_button'}} style="height: 20px; margin-top: -3px;"/>
+          {{/if}}
           <div class="text-muted" style="font-size: 10px;">
             {{#link-to 'board' button.board_key class="text-muted"}}{{button.board_key}}{{/link-to}}
           </div>
