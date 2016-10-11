@@ -278,7 +278,7 @@ var utterance = Ember.Object.extend({
       text: text,
       buttons: stashes.get('working_vocalization')
     });
-    speecher.speak_collection(items, Math.round(Math.random() * 99999) + '-' + (new Date()).getTime());
+    speecher.speak_collection(items, Math.round(Math.random() * 99999) + '-' + (new Date()).getTime(), {override_volume: volume});
     this.set('list_vocalized', true);
   },
   set_ghost_utterance: function() {

@@ -360,9 +360,12 @@ var speecher = Ember.Object.extend({
     }
     return $res;
   },
-  speak_collection: function(list, collection_id) {
+  speak_collection: function(list, collection_id, opts) {
     this.stop('text');
     this.speaks = list;
+    if(opts.override_volume) {
+      list.forEach(function(s) { s.volume = opts.override_volume; });
+    }
     if(list && list.length > 0) {
       this.speaking_from_collection = collection_id;
       this.next_speak();
