@@ -537,6 +537,11 @@ var buttonTracker = Ember.Object.extend({
   },
   dwell_linger: function(event) {
     if(buttonTracker.dwell_wait) { return; }
+    // cursor-based trackers can throw the cursor up against the edges of the screen causing
+    // inaccurate lingers for the buttons along the edges
+    if(event.type == 'mousemove' && (event.clientX === 0 || event.clientY === 0 || event.clientX >= (window.innerWidth - 1) || event.clientY >= (window.innerHeight - 1))) {
+      return;
+    }
     if(buttonTracker.last_triggering_dwell_event) {
       // after a selection, require a little bit of movement before recognizing input
       var last = buttonTracker.last_triggering_dwell_event;
