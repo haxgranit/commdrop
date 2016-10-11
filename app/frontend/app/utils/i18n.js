@@ -143,8 +143,14 @@ Ember.templateHelpers.t = function(str, options) {
   return new Ember.String.htmlSafe(i18n.t(options.key, str, options));
 };
 
-Ember.templateHelpers.safe = function(str) {
-  return new Ember.String.htmlSafe(str);
+Ember.templateHelpers.safe = function(str, type) {
+  if(type == 'stripped') {
+    var div = document.createElement('div');
+    div.innerHTML = str;
+    return new Ember.String.htmlSafe(div.textContent);
+  } else {
+    return new Ember.String.htmlSafe(str);
+  }
 };
 
 var i18n = Ember.Object.extend({
