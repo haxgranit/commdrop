@@ -34,12 +34,12 @@ module Worker
     hash = args_copy[0] if args_copy[0].is_a?(Hash)
     hash ||= {'method' => method_name}
     action = "#{klass_string} . #{hash['method']} (#{hash['id']})"
+    pre_whodunnit = PaperTrail.whodunnit
+    PaperTrail.whodunnit = "job:#{action}"
     Rails.logger.info("performing #{action}")
     start = self.ts
     klass.send(method_name, *args_copy)
     diff = self.ts - start
-    pre_whodunnit = PaperTrail.whodunnit
-    PaperTrail.whodunnit = "job:#{action}"
     Rails.logger.info("done performing #{action}, finished in #{diff}s")
     # TODO: way to track what queue a job is coming from
     if diff > 60 && speed == :normal

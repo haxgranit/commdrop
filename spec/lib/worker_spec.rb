@@ -152,4 +152,17 @@ describe Worker do
       Worker.kill_all_workers
     end
   end
+  
+  describe "whodunnit" do
+    it "should mark whodunnit correctly" do
+      u = User.create
+      expect(u.versions.last.whodunnit).to eq(nil)
+      expect(u.reload.versions.count).to eq(1)
+
+      u.schedule(:enable_feature, 'bacon')
+      Worker.process_queues
+      expect(u.reload.versions.count).to eq(2)
+      expect(u.versions.last.whodunnit).to eq("job:User . enable_feature (#{u.id})")
+    end
+  end
 end
