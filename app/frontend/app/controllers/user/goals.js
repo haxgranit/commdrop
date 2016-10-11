@@ -66,6 +66,14 @@ export default Ember.Controller.extend({
           _this.load_goals();
         }
       });
+    },
+    find_goal: function() {
+      var _this = this;
+      modal.open('new-goal', {browse: true, user: this.get('model') }).then(function(res) {
+        if(res) {
+          _this.load_goals();
+        }
+      }, function() { });
     }
   }
 });

@@ -1,4 +1,4 @@
-Coughdrop::RESERVED_ROUTES = [
+Coughdrop::RESERVED_ROUTES ||= [
   'admin', 'etc', 'settings', 'status', 'reports', 'stats', 'search', 
   'messages', 'inbox', 'log', 'logs', 'session', 'sessions', 'imports', 
   'boards', 'users', 'groups', 'organizations', 'pages', 'people', 'videos', 
@@ -11,7 +11,8 @@ Coughdrop::RESERVED_ROUTES = [
   'news', 'styleguide', 'tour', 'compare', 'guides', 'partners', 
   'privacy', 'terms', 'hipaa', 'accessibility', 
   'js', 'css', 'scripts', 'script', 'pics', 'images',
-  'find', 'unknown', 'nobody'
+  'find', 'unknown', 'nobody', 'goals', 'notes', 'rooms', 'coughdrop', 'cough_drop',
+  'mycoughdrop'
 ]
 require 'resque/server'
 

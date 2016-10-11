@@ -25,9 +25,14 @@ CoughDrop.Goal = DS.Model.extend({
   started: DS.attr('date'),
   ended: DS.attr('date'),
   advance: DS.attr('date'),
+  advancement: DS.attr('string'),
   duration: DS.attr('number'),
   stats: DS.attr('raw'),
+  related: DS.attr('raw'),
   sequence: DS.attr('boolean'),
+  date_based: DS.attr('boolean'),
+  next_template_id: DS.attr('string'),
+  template_header_id: DS.attr('string'),
   template_stats: DS.attr('raw'),
   best_time_level: function() {
     var stats = this.get('stats') || {};
@@ -213,7 +218,52 @@ CoughDrop.Goal = DS.Model.extend({
     var res = this.get('sequence') ? this.get('sequence_description') : null;
     res = res || this.get('description');
     return res;
-  }.property('sequence', 'description', 'sequence_description')
+  }.property('sequence', 'description', 'sequence_description'),
+  advance_type: function() {
+    if(this.get('advance')) {
+      return 'date';
+    } else if(this.get('duration')) {
+      return 'duration';
+    } else {
+      return 'none';
+    }
+  }.property('advance', 'duration'),
+  date_advance: function() {
+    return this.get('advance_type') == 'date';
+  }.property('advance_type'),
+  duration_advance: function() {
+    return this.get('advance_type') == 'duration';
+  }.property('advance_type'),
+  any_advance: function() {
+    return this.get('advance_type') && this.get('advance_type') != 'none';
+  }.property('advance_type'),
+  update_advancement: function() {
+    if(this.get('advance_type') == 'date') {
+      if(this.get('date_advance_at')) {
+        this.set('advancement', 'date:' + this.get('date_advance_at'));
+      }
+    } else if(this.get('advance_type') == 'duration') {
+      if(this.get('duration_advance_at') && this.get('duration_advance_at_unit')) {
+        this.set('advancement', 'duration:' + this.get('duration_advance_at') + ':' + this.get('duration_advance_at_unit'));
+      }
+    } else {
+      this.set('advancement', 'none');
+    }
+  },
+  generate_next_template_if_new: function() {
+    if(this.get('new_next_template_id')) {
+      var next_template = CoughDrop.store.createRecord('goal');
+      next_template.set('template_header_id', this.get('related.header.id'));
+      next_template.set('template', true);
+      next_template.set('summary', this.get('new_next_template_summary'));
+      return next_template.save();
+    } else {
+      return Ember.RSVP.resolve(null);
+    }
+  },
+  new_next_template_id: function() {
+    return this.get('next_template_id') == 'new';
+  }.property('next_template_id')
 });
 
 export default CoughDrop.Goal;

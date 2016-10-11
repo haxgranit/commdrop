@@ -16,12 +16,22 @@ class Api::GoalsController < ApplicationController
     if params['template_header']
       goals = goals.where(:template_header => true)
       goals = goals.order('id ASC')
+    elsif params['template_header_id']
+      header = UserGoal.find_by_path(params['template_header_id'])
+      return unless exists?(header, params['template_header_id'])
+      return unless allowed?(header, 'edit')
+      goals = goals.where(:id => header.class.local_ids(header.settings['linked_template_ids'] || []))
+      goals = goals.order('id DESC')
     else
       user = User.find_by_global_id(params['user_id'])
-      return unless exists?(user)
+      return unless exists?(user, params['user_id'])
       return unless allowed?(user, 'supervise')
       # TODO: sharding
       goals = goals.where(:user_id => user.id)
+      if params['template']
+        return unless allowed?(user, 'delete')
+        goals = goals.where(:template => true)
+      end
       goals = goals.order('active, id DESC')
     end
     
@@ -36,9 +46,15 @@ class Api::GoalsController < ApplicationController
   end
   
   def create
+    params['goal']['user_id'] ||= @api_user.global_id
     user = User.find_by_global_id(params['goal']['user_id'])
     return unless exists?(user, params['goal']['user_id'])
     return unless allowed?(user, 'edit')
+    
+    if params['goal']['template_header']
+      admin_org = Organization.admin
+      return unless allowed?(admin_org, 'edit')
+    end
     
     goal = UserGoal.process_new(params['goal'], {:user => user, :author => @api_user})
     if !goal || goal.errored?

@@ -26,7 +26,11 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="col-sm-12"><h4>{{t "First Goal in the Sequence" key='first_goal_details'}}</h4></label>
+            {{#if selected_goal.date_based}}
+              <label class="col-sm-12"><h4>{{t "Current Goal in the Sequence" key='current_goal_details'}}</h4></label>
+            {{else}}
+              <label class="col-sm-12"><h4>{{t "First Goal in the Sequence" key='first_goal_details'}}</h4></label>
+            {{/if}}
           </div>
         {{/if}}
         <div class="form-group">
@@ -83,7 +87,7 @@
               </div>
             {{/if}}
             <div class='description text-muted'>
-              {{goal.high_level_description}}
+              {{safe goal.high_level_description 'stripped'}}
             </div>
           </div>
         {{/each}}

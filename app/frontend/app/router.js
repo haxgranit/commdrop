@@ -58,6 +58,9 @@ Router.map(function() {
     this.route('subscription');
     this.route('rooms');
   });
+  this.route('goals', { path: '/goals' }, function() {
+      this.route('goal', { path: '/:goal_id' });
+  });
   this.route('redeem', { path: '/redeem' });
   this.route('redeem_with_code', { path: '/redeem/:code' });
   this.route('gift_purchase', { path: '/gift' });

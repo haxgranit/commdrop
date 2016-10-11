@@ -41,9 +41,18 @@ class UserGoal < ActiveRecord::Base
   end
   
   def update_template_header
+    if @skip_update_template_header
+      @skip_update_template_header = false
+      return
+    end
     if self.settings['template_header_id']
-      header = UserGoal.find_by_path(self.settings['template_header_id'])
+      header_id = self.settings['template_header_id']
+      if self.settings['template_header_id'] == 'self'
+        header_id = self.global_id
+      end
+      header = UserGoal.find_by_path(header_id)
       header.add_template(self) if header
+      header.schedule(:compute_start_ats)
     elsif self.settings['old_template_header_id']
       header = UserGoal.find_by_path(self.settings['old_template_header_id'])
       header.remove_template(self) if header
@@ -51,18 +60,35 @@ class UserGoal < ActiveRecord::Base
     true
   end
   
+  def compute_start_ats
+    self.settings['linked_template_ids'] ||= []
+    links = UserGoal.find_all_by_path(self.settings['linked_template_ids'])
+    links.each do |goal|
+      if goal.settings['next_template_id'] && goal.settings['goal_advances_at']
+        next_template = links.detect{|g| g.global_id == goal.settings['next_template_id'] }
+        if next_template
+          next_template.settings['goal_starts_at'] = goal.settings['goal_advances_at']
+          next_template.instance_variable_set('@skip_update_template_header', true)
+          next_template.save
+        end
+      end
+    end
+  end
+  
   def add_template(goal)
     self.settings['linked_template_ids'] ||= []
     old_ids = self.settings['linked_template_ids']
     self.settings['linked_template_ids'] |= [goal.global_id]
-    self.save if old_ids != self.settings['linked_template_ids']
+    @skip_update_template_header = true
+    self.save #if old_ids != self.settings['linked_template_ids']
   end
   
   def remove_template(goal)
     self.settings['linked_template_ids'] ||= []
     old_ids = self.settings['linked_template_ids']
     self.settings['linked_template_ids'] -= [goal.global_id]
-    self.save if old_ids != self.settings['linked_template_ids']
+    @skip_update_template_header = true
+    self.save #if old_ids != self.settings['linked_template_ids']
   end
   
   def remove_linked_templates
@@ -259,10 +285,49 @@ class UserGoal < ActiveRecord::Base
     self.active = !!params[:active] if params[:active] != nil
     self.settings['summary'] = process_string(params['summary']) if params['summary']
     self.settings['description'] = process_html(params['description']) if params['description']
-    if params['template']
+    self.template = !!params['template'] if params['template'] != nil
+    self.template_header = !!params['template_header'] if params['template_header'] && self.template_header == nil
+    if self.template_header
+      self.template = true
+      self.settings['template_header_id'] ||= 'self'
+    end
+    if self.template
       self.settings['sequence_summary'] = process_string(params['sequence_summary']) if params['sequence_summary']
       self.settings['sequence_description'] = process_html(params['sequence_description']) if params['sequence_description']
-      # TODO: duration, template_header_id, next_template_id
+      if params['template_header_id'] && params['template_header_id'] != self.settings['template_header_id']
+        header = UserGoal.find_by_path(params['template_header_id'])
+        if header && header.allows?(self.user, 'edit')
+          self.settings['template_header_id'] = header.global_id
+        end
+      end
+      if params['next_template_id'] && params['next_template_id'] != self.settings['next_template_id']
+        next_template = UserGoal.find_by_path(params['next_template_id'])
+        if next_template && params['next_template_id'] != self.settings['next_template_id'] && next_template.settings['template_header_id'] == self.settings['template_header_id']
+          self.settings['next_template_id'] = next_template.global_id
+        elsif params['next_template_id'] == ''
+          self.settings['next_template_id'] = nil
+        end
+      end
+      if params['advancement']
+        parts = params['advancement'].split(/:/);
+        if parts[0] == 'none'
+          self.settings['goal_advances_at'] = nil
+          self.settings['goal_duration'] = nil
+        elsif parts[0] == 'date'
+          self.settings['goal_advances_at'] = parts[1]
+          self.settings['goal_duration'] = nil
+        elsif parts[0] == 'duration'
+          self.settings['goal_advances_at'] = nil
+          num = [parts[1].to_i, 1].max
+          duration = num.days
+          if parts[2] == 'month'
+            duration = num.months
+          elsif parts[2] == 'week'
+            duration = num.weeks
+          end
+          self.settings['goal_duration'] = duration.to_i
+        end
+      end
     end
     if params['video_id']
       video = UserVideo.find_by_global_id(params['video_id'])
@@ -314,20 +379,54 @@ class UserGoal < ActiveRecord::Base
   def author
     self.settings && self.settings['author_id'] && User.find_by_global_id(self.settings['author_id'])
   end
+  
+  def self.current_date_from_template(str)
+    return nil unless str
+    res = Time.parse(str) rescue nil
+    res += 1.year if res && res < Time.now && !str.match(/\d\d\d\d/)
+    res
+  end
 
   def calculate_advancement     
     if self.settings['goal_duration']
       Time.now + self.settings['goal_duration']
     elsif self.settings['goal_advances_at']
-      res = Time.parse(self.settings['goal_advances_at'])
-      res += 1.year if res < Time.now && !self.settings['goal_advances_at'].match(/\d\d\d\d/)
-      res
+      self.goal_advance
+      self.class.current_date_from_template(self.settings['goal_advances_at'])
     else
       nil
     end
   end
   
+  def goal_start
+    return @goal_start if @goal_start
+    if self.settings && self.settings['goal_starts_at']
+      @goal_start = self.class.current_date_from_template(self.settings['goal_starts_at'])
+    else
+      nil
+    end
+  end
+  
+  def goal_advance
+    return @goal_advance if @goal_advance
+    if self.settings && self.settings['goal_advances_at']
+      @goal_advance = self.class.current_date_from_template(self.settings['goal_advances_at'])
+    else
+      nil
+    end
+  end
+  
+  def current_template
+    return nil unless self.template
+    return self unless self.template_header
+    goals = UserGoal.find_all_by_global_id(self.settings['linked_template_ids'] || [])
+    goals.sort{|g| g.goal_start }.detect{|g| g.goal_start > Time.now }
+  end
+  
   def build_from_template(template, user, set_as_primary=false)
+    if template.template_header && !self.settings['prior_goal_id']
+      template = template.current_template || template
+    end
     self.settings ||= {}
     self.settings['template_id'] = template.global_id
     self.advance_at = template.calculate_advancement

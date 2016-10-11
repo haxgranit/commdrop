@@ -1,0 +1,92 @@
+<h2>{{t "Public Communication Goals" key='public_communication_goals'}}</h2>
+{{#if goals}}
+  {{#each goals as |goal|}}
+    <div class='well goal' {{action 'select_goal' goal}}>
+      {{#link-to 'goals.goal' goal.id}}
+        {{goal.high_level_summary}}
+      {{/link-to}}
+      {{#if goal.sequence}}
+        <div class='details'>
+          {{#if goal.template_stats.loop}}{{t "repeating" key='repeating'}}{{/if}}
+          {{t "sequence of" key='sequence_of'}}
+          {{t "goal" key='n_goals' count=goal.template_stats.goals}}
+        </div>
+      {{/if}}
+      <div class='description text-muted'>
+        {{safe goal.high_level_description 'stripped'}}
+      </div>
+    </div>
+  {{/each}}
+{{else}}
+  {{#unless goals.loading}}
+    {{#unless goals.error}}
+      <p>{{t "No goals to show" key='no_goals'}}</p>
+    {{/unless}}
+  {{/unless}}
+{{/if}}
+{{#if goals.loading}}
+  <p>{{t "Loading goals..." key='loading_goals'}}</p>
+{{else if goals.error}}
+  <p>{{t "There was an error loading goals" key='error_loading_goals'}}</p>
+{{/if}}
+
+{{#if new_goal}}
+  <form class="form-horizontal" {{action "save_goal" on="submit"}}>
+    <div class="form-group">
+      <label for="summary" class="col-sm-2 control-label">{{t "Summary" key='summary'}}</label>
+      <div class="col-sm-5">
+        {{input value=new_goal.summary class="form-control" id="summary" placeholder="short goal summary"}}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="description" class="col-sm-2 control-label">{{t "Description" key='description'}}</label>
+      <div class="col-sm-5">
+        {{textarea value=new_goal.description class="form-control" id="description" placeholder="longer, detailed description of the goal"}}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="sequence" class="col-sm-2 control-label">{{t "Sequence" key='sequence'}}</label>
+      <div class="col-sm-5">
+        <div class="checkbox">
+          <label>
+            {{input type="checkbox" checked=new_goal.sequence id="sequence"}}
+            {{t "This will be a sequence of goals" key='make_goal_sequence'}}
+          </label>
+        </div>
+      </div>
+    </div>
+    {{#if new_goal.sequence}}
+      <div class="form-group">
+        <label for="sequence_summary" class="col-sm-2 control-label">{{t "Sequence" key='sequence'}}</label>
+        <div class="col-sm-5">
+          {{input value=new_goal.sequence_summary class="form-control" id="sequence_summary" placeholder="short sequence summary"}}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="sequence_description" class="col-sm-2 control-label">{{t "Details" key='details'}}</label>
+        <div class="col-sm-5">
+          {{textarea value=new_goal.sequence_description class="form-control" id="sequence_description" placeholder="longer, detailed description of the goal sequence"}}
+        </div>
+      </div>
+    {{/if}}
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-4">
+        <button type="submit" class="btn btn-primary" disabled={{status.saving}}>
+          {{#if status.saving}}
+            {{t "Creating Goal..." key='saving_goal'}}
+          {{else}}
+            {{t "Create Goal" key='save_goal'}}
+          {{/if}}
+        </button>
+        <button type="button" class="btn btn-default" {{action "cancel_new"}}>{{t "Cancel" key='cancel'}}</button>
+        {{#if status.error}}
+          <p class='text-danger'>{{t "There was an unexpected error creating the goal" key='error_saving'}}</p>
+        {{/if}}
+      </div>
+    </div>
+  </form>
+{{/if}}
+
+{{#if app_state.currentUser.permissions.admin_support_actions}}
+  <button class='btn btn-default' {{action 'new_goal'}}>{{t "New Public Goal" key='new_public_goal'}}</button>
+{{/if}}

@@ -12,6 +12,9 @@ export default modal.ModalController.extend({
     this.set('saving', false);
     this.set('browse_goals', false);
     this.set('selected_goal', null);
+    if(this.get('model.browse')) {
+      this.send('browse_goals');
+    }
   },
   save_disabled: function() {
     return this.get('pending_save') || (this.get('browse_goals') && !this.get('selected_goal'));
