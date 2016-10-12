@@ -2,6 +2,17 @@
 
 ## Master
 
+### 2016-10-12
+- fix dwell-based selection issues
+- fix recurring notification scheduling
+- more details on sync results
+- more reliable syncing based on updates
+- enable video recording for log messages
+- introduction walkthrough for new users
+- improve goals interface (feature flag)
+- html sanitization for some fields
+- support multiple image repositories for symbol search
+
 ### 2016-09-03
 - support for Windows-based electron install
 - more configuration options for dwell tracking
