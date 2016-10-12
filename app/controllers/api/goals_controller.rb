@@ -18,8 +18,8 @@ class Api::GoalsController < ApplicationController
       goals = goals.order('id ASC')
     elsif params['template_header_id']
       header = UserGoal.find_by_path(params['template_header_id'])
+      header = nil unless header.template_header
       return unless exists?(header, params['template_header_id'])
-      return unless allowed?(header, 'edit')
       goals = goals.where(:id => header.class.local_ids(header.settings['linked_template_ids'] || []))
       goals = goals.order('id DESC')
     else

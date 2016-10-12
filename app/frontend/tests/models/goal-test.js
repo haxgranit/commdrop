@@ -517,16 +517,16 @@ describe('Goal', function() {
       goal.set('advance_type', 'date');
       goal.update_advancement();
       expect(goal.get('advancement')).toEqual('none');
-      goal.set('date_advance_at', 'July 1');
+      goal.set('goal_advances_at', 'July 1');
       goal.update_advancement();
       expect(goal.get('advancement')).toEqual('date:July 1');
       goal.set('advance_type', 'duration');
       goal.update_advancement();
       expect(goal.get('advancement')).toEqual('date:July 1');
-      goal.set('duration_advance_at', 12);
+      goal.set('goal_duration_number', 12);
       goal.update_advancement();
       expect(goal.get('advancement')).toEqual('date:July 1');
-      goal.set('duration_advance_at_unit', 'week');
+      goal.set('goal_duration_unit', 'week');
       goal.update_advancement();
       expect(goal.get('advancement')).toEqual('duration:12:week');
     });
@@ -573,6 +573,18 @@ describe('Goal', function() {
       expect(goal.get('new_next_template_id')).toEqual(false);
       goal.set('next_template_id', 'new');
       expect(goal.get('new_next_template_id')).toEqual(true);
+    });
+  });
+
+  describe('current_template', function() {
+    it("should return the correct result", function() {
+      var goal = CoughDrop.store.createRecord('goal');
+      goal.set('summary', 'bacon');
+      expect(goal.get('current_template')).toEqual(goal);
+      expect(goal.get('current_template.summary')).toEqual('bacon');
+      goal.set('currently_running_template', {summary: 'cheese'});
+      expect(goal.get('current_template')).toNotEqual(goal);
+      expect(goal.get('current_template.summary')).toEqual('cheese');
     });
   });
 });

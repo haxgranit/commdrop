@@ -120,14 +120,14 @@
         </div>
         {{#if model.date_advance}}
           <div class='col-sm-3'>
-            {{input value=model.date_advance_at class="form-control" id="date_advance" placeholder="month, day"}}
+            {{input value=model.goal_advances_at class="form-control" id="date_advance" placeholder="month, day"}}
           </div>
         {{else if model.duration_advance}}
           <div class='col-sm-1'>
-            {{input type='number' value=model.duration_advance_at class="form-control" id="duration_advance" placeholder="##"}}
+            {{input type='number' value=model.goal_duration_number class="form-control" id="duration_advance" placeholder="##"}}
           </div>
           <div class='col-sm-2'>
-            {{bound-select select_class="form-control" select_id="duration_advance_at_unit" content=advance_unit_options selection=model.duration_advance_at_unit action=(action (mut model.duration_advance_at_unit)) }}
+            {{bound-select select_class="form-control" select_id="duration_advance_at_unit" content=advance_unit_options selection=model.goal_duration_unit action=(action (mut model.goal_duration_unit)) }}
           </div>
         {{/if}}
       </div>

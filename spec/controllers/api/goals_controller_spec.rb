@@ -47,16 +47,6 @@ describe Api::GoalsController, type: :controller do
       expect(json['meta']['more']).to eq(true)
     end
     
-    it "should require edit permission to list goals for a specific template" do
-      token_user
-      u = User.create
-      g = UserGoal.create(:user => u, :settings => {'template_header_id' => 'self'}, :template_header => true)
-      Worker.process_queues
-      expect(g.reload.settings['template_header_id']).to eq(g.global_id)
-      get :index, :template_header_id => g.global_id
-      assert_unauthorized
-    end
-    
     it "should list goals for a specific template when authorized" do
       token_user
       g = UserGoal.create(:user => @user, :settings => {'template_header_id' => 'self'}, :template_header => true)

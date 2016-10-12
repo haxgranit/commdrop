@@ -10,10 +10,11 @@ module JsonApi::Goal
     json['id'] = goal.global_id
     json['has_video'] = goal.settings['video_id']
     
-    instance_goal = goal
     if !args[:permissions] && args[:lookups] != false && goal.template_header && goal.settings['goal_advances_at'] && goal.settings['linked_template_ids']
       current_goal = goal.current_template
-      instance_goal = current_goal if current_goal
+      if current_goal && current_goal != goal
+        json['currently_running_template'] = JsonApi::Goal.build_json(current_goal)
+      end
     end
     
     if goal.template 
@@ -40,16 +41,16 @@ module JsonApi::Goal
     end
 
     ['summary', 'description'].each do |key|
-      json[key] = instance_goal.settings[key]
+      json[key] = goal.settings[key]
     end
-    json['started'] = instance_goal.settings['started_at']
-    json['ended'] = instance_goal.settings['ended_at']
-    json['duration'] = instance_goal.settings['goal_duration'] if goal.settings['goal_duration']
-    json['advance'] = instance_goal.goal_advance && instance_goal.goal_advance.iso8601
+    json['started'] = goal.settings['started_at']
+    json['ended'] = goal.settings['ended_at']
+    json['duration'] = goal.settings['goal_duration'] if goal.settings['goal_duration']
+    json['advance'] = goal.goal_advance && goal.goal_advance.iso8601
     
-    if instance_goal.settings['stats']
+    if goal.settings['stats']
       json['stats'] = {}
-      instance_goal.settings['stats'].each do |key, val|
+      goal.settings['stats'].each do |key, val|
         if val.respond_to?(:round)
           json['stats'][key] = val.round(2)
         else
@@ -60,7 +61,7 @@ module JsonApi::Goal
     
 
     if args[:permissions]
-      json['permissions'] = instance_goal.permissions_for(args[:permissions])
+      json['permissions'] = goal.permissions_for(args[:permissions])
       if goal.template
         if goal.settings['template_header_id']
           header = goal if goal.settings['template_header_id'] == goal.global_id
@@ -73,15 +74,29 @@ module JsonApi::Goal
           json['related']['previous'] = JsonApi::Goal.build_json(previous_template, :lookups => false) if previous_template
           json['related']['header'] = JsonApi::Goal.build_json(header, :lookups => false) if header
         end
+        if goal.settings['goal_advances_at']
+          json['goal_advances_at'] = goal.settings['goal_advances_at']
+        elsif goal.settings['goal_duration']
+          if goal.settings['goal_duration'] >= 1.month
+            json['goal_duration_number'] = (goal.settings['goal_duration'].to_f / 1.month).round(2)
+            json['goal_duration_unit'] = 'month'
+          elsif goal.settings['goal_duration'] >= 1.week
+            json['goal_duration_number'] = (goal.settings['goal_duration'].to_f / 1.week).round(2)
+            json['goal_duration_unit'] = 'week'
+          else
+            json['goal_duration_number'] = (goal.settings['goal_duration'].to_f / 1.day).round(2)
+            json['goal_duration_unit'] = 'day'
+          end
+        end
       end
       if json['permissions']['view']
         video_ids = []
-        video_ids << instance_goal.settings['video_id'] if instance_goal.settings['video_id']
+        video_ids << goal.settings['video_id'] if goal.settings['video_id']
         
         user_ids = []
-        user_ids << instance_goal.related_global_id(:user_id) if instance_goal.user_id
-        user_ids << instance_goal.settings['author_id']
-        (instance_goal.settings['comments'] || []).each do |comment| 
+        user_ids << goal.related_global_id(:user_id) if goal.user_id
+        user_ids << goal.settings['author_id']
+        (goal.settings['comments'] || []).each do |comment| 
           user_ids << comment['user_id'] if comment['user_id']
           video_ids << comment['video_id'] if comment['video_id']
         end
@@ -90,19 +105,19 @@ module JsonApi::Goal
         videos_hash = {}
         UserVideo.find_all_by_global_id(video_ids).each{|video| videos_hash[video.global_id] = video }
 
-        video = videos_hash[instance_goal.settings['video_id']]
+        video = videos_hash[goal.settings['video_id']]
         json['video'] = video.summary_hash if video
         
-        if !instance_goal.template
-          json['advance'] = instance_goal.advance_at && instance_goal.advance_at.iso8601
+        if !goal.template
+          json['advance'] = goal.advance_at && goal.advance_at.iso8601
         end
 
-        user = users_hash[instance_goal.related_global_id(:user_id)]
+        user = users_hash[goal.related_global_id(:user_id)]
         json['user'] = JsonApi::User.as_json(user, limited_identity: true) if user
-        author = users_hash[instance_goal.settings['author_id']]
+        author = users_hash[goal.settings['author_id']]
         json['author'] = JsonApi::User.as_json(author, limited_identity: true) if author
         json['comments'] = []
-        (instance_goal.settings['comments'] || []).each do |comment|
+        (goal.settings['comments'] || []).each do |comment|
           commenter = users_hash[comment['user_id']]
           res = {
             'id' => comment['id'],

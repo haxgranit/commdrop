@@ -36,27 +36,27 @@
         <div class="form-group">
           <label for="new_goal_summary" class="col-sm-2 control-label">{{t "Summary" key='summary'}}</label>
           <div class="col-sm-10">
-            <p class='form-control-static'>{{selected_goal.summary}}</p>
+            <p class='form-control-static'>{{selected_goal.current_template.summary}}</p>
           </div>
         </div>
         <div class="form-group">
           <label for="new_goal_description" class="col-sm-2 control-label">{{t "Description" key='description'}}</label>
           <div class="col-sm-10">
-            <div class='form-control-static safe_html'>{{safe selected_goal.description}}</div>
+            <div class='form-control-static safe_html'>{{safe selected_goal.current_template.description}}</div>
           </div>
         </div>
-        {{#if selected_goal.duration}}
+        {{#if selected_goal.current_template.duration}}
           <div class="form-group">
             <label for="new_goal_duration" class="col-sm-2 control-label">{{t "Duration" key='duration'}}</label>
             <div class="col-sm-10">
-              <p class='form-control-static'>{{seconds_ago selected_goal.duration 'long'}}</p>
+              <p class='form-control-static'>{{seconds_ago selected_goal.current_template.duration 'long'}}</p>
             </div>
           </div>
-        {{else if selected_goal.advance}}
+        {{else if selected_goal.current_template.advance}}
           <div class="form-group">
             <label for="new_goal_duration" class="col-sm-2 control-label">{{t "Changes" key='changes'}}</label>
             <div class="col-sm-10">
-              <p class='form-control-static'>{{date selected_goal.advance}}</p>
+              <p class='form-control-static'>{{date selected_goal.current_template.advance}}</p>
             </div>
           </div>
         {{/if}}

@@ -189,8 +189,11 @@ describe JsonApi::Goal do
       json = JsonApi::Goal.build_json(g1)
       expect(json['id']).to eq(g1.global_id)
       expect(json['sequence_summary']).to eq('Numbered Goals')
-      expect(json['summary']).to eq('Second Goal')
-      expect(Time.parse(json['advance'])).to eq(Time.parse("October 1 2016"))
+      expect(json['summary']).to eq('First Goal')
+      expect(json['currently_running_template']).to_not eq(nil)
+      expect(json['currently_running_template']['summary']).to eq('Second Goal')
+      expect(Time.parse(json['advance'])).to eq(Time.parse("May 1 2017"))
+      expect(Time.parse(json['currently_running_template']['advance'])).to eq(Time.parse("October 1 2016"))
     end
     
     it "should include related goals in single lookup for a template goal" do

@@ -18,6 +18,7 @@ CoughDrop.Goal = DS.Model.extend({
   description: DS.attr('string'),
   sequence_description: DS.attr('string'),
   permissions: DS.attr('raw'),
+  currently_running_template: DS.attr('raw'),
   video: DS.attr('raw'),
   user: DS.attr('raw'),
   author: DS.attr('raw'),
@@ -34,6 +35,9 @@ CoughDrop.Goal = DS.Model.extend({
   next_template_id: DS.attr('string'),
   template_header_id: DS.attr('string'),
   template_stats: DS.attr('raw'),
+  goal_advances_at: DS.attr('string'),
+  goal_duration_unit: DS.attr('string'),
+  goal_duration_number: DS.attr('string'),
   best_time_level: function() {
     var stats = this.get('stats') || {};
     if(stats && stats.monthly && stats.monthly.totals && stats.monthly.totals.sessions > 0) {
@@ -239,12 +243,12 @@ CoughDrop.Goal = DS.Model.extend({
   }.property('advance_type'),
   update_advancement: function() {
     if(this.get('advance_type') == 'date') {
-      if(this.get('date_advance_at')) {
-        this.set('advancement', 'date:' + this.get('date_advance_at'));
+      if(this.get('goal_advances_at')) {
+        this.set('advancement', 'date:' + this.get('goal_advances_at'));
       }
     } else if(this.get('advance_type') == 'duration') {
-      if(this.get('duration_advance_at') && this.get('duration_advance_at_unit')) {
-        this.set('advancement', 'duration:' + this.get('duration_advance_at') + ':' + this.get('duration_advance_at_unit'));
+      if(this.get('goal_duration_number') && this.get('goal_duration_unit')) {
+        this.set('advancement', 'duration:' + this.get('goal_duration_number') + ':' + this.get('goal_duration_unit'));
       }
     } else {
       this.set('advancement', 'none');
@@ -263,7 +267,14 @@ CoughDrop.Goal = DS.Model.extend({
   },
   new_next_template_id: function() {
     return this.get('next_template_id') == 'new';
-  }.property('next_template_id')
+  }.property('next_template_id'),
+  current_template: function() {
+    if(this.get('currently_running_template')) {
+      return CoughDrop.store.createRecord('goal', this.get('currently_running_template'));
+    } else {
+      return this;
+    }
+  }.property('currently_running_template')
 });
 
 export default CoughDrop.Goal;
