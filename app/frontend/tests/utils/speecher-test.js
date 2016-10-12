@@ -65,7 +65,7 @@ describe('speecher', function() {
       runs(function() {
         expect(cancelled).toEqual(true);
         expect(utterance.voice).toEqual(null);
-        expect(utterance.lang).toEqual('')
+        expect(utterance.lang).toEqual('');
         expect(utterance.text).toEqual("hippo");
       });
     });
