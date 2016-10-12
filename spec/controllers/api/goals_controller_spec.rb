@@ -43,8 +43,39 @@ describe Api::GoalsController, type: :controller do
       get :index, :user_id => @user.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json['goal'].length).to eq(25)
+      expect(json['goal'].length).to eq(30)
       expect(json['meta']['more']).to eq(true)
+    end
+    
+    it "should require edit permission to list goals for a specific template" do
+      token_user
+      u = User.create
+      g = UserGoal.create(:user => u, :settings => {'template_header_id' => 'self'}, :template_header => true)
+      Worker.process_queues
+      expect(g.reload.settings['template_header_id']).to eq(g.global_id)
+      get :index, :template_header_id => g.global_id
+      assert_unauthorized
+    end
+    
+    it "should list goals for a specific template when authorized" do
+      token_user
+      g = UserGoal.create(:user => @user, :settings => {'template_header_id' => 'self'}, :template_header => true)
+      Worker.process_queues
+      expect(g.reload.settings['template_header_id']).to eq(g.global_id)
+      get :index, :template_header_id => g.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['goal'].length).to eq(1)
+    end
+    
+    it "should list a user's template if authorized" do
+      token_user
+      g = UserGoal.create(:user => @user, :template => true)
+      get :index, :user_id => @user.global_id, :template => true
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['goal'].length).to eq(1)
+      expect(json['goal'][0]['id']).to eq(g.global_id)
     end
   end
   
@@ -105,6 +136,27 @@ describe Api::GoalsController, type: :controller do
       expect(json['goal']['id']).to_not be_nil
       expect(json['goal']['summary']).to eq('cool goal')
     end
+    
+    it "should require admin permission to create a template header" do
+      token_user
+      post :create, :goal => {'template_header' => true, 'summary' => 'template goal'}
+      assert_unauthorized
+      o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
+      o.add_manager(@user.user_name, true)
+      post :create, :goal => {'template_header' => true, 'summary' => 'template goal'}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['goal']['id']).to_not be_nil
+    end
+    
+    it "should default to the api_user when creating a goal" do
+      token_user
+      post :create, :goal => {'summary' => 'cool goal'}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['goal']['id']).to_not be_nil
+      expect(json['goal']['author']['id']).to eq(@user.global_id)
+    end
   end
 
   describe "update" do
@@ -152,14 +204,6 @@ describe Api::GoalsController, type: :controller do
     end
   end
 
-#   def destroy
-#     goal = UserGoal.find_by_global_id(params['id'])
-#     return unless exists?(goal)
-#     return unless allowed?(goal, 'edit')
-# 
-#     goal.destroy
-#     render json: JsonApi::Board.as_json(board, :wrapper => true).to_json
-#   end
   describe "destroy" do
     it "should require api token" do
       delete :destroy, :id => 'asdf'

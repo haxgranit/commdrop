@@ -20,16 +20,19 @@ module JsonApi::Goal
       ['active', 'template', 'template_header'].each do |key|
         json[key] = goal.send(key)
       end
-      ['sequence_description', 'sequence_summary', 'next_template_id', 'template_header_id'].each do |key|
+      ['next_template_id', 'template_header_id'].each do |key|
         json[key] = goal.settings[key]
       end
       json['date_based'] = !!goal.settings['goal_advances_at']
       if goal.settings['template_stats']
         json['template_stats'] = goal.settings['template_stats']
       end
-      json['sequence'] = goal.settings['template_stats'] && goal.settings['template_stats']['goals'] && goal.settings['template_stats']['goals'] > 1
-      json['next_template_id'] = goal.settings['next_template_id']
-      json['template_header_id'] = goal.settings['template_header_id']
+      if goal.template_header
+        json['sequence'] = !!(goal.settings['template_stats'] && goal.settings['template_stats']['goals'] && goal.settings['template_stats']['goals'] > 1)
+        ['sequence_description', 'sequence_summary'].each do |key|
+          json[key] = goal.settings[key]
+        end
+      end
     else
       ['active', 'primary'].each do |key|
         json[key] = goal.send(key)

@@ -311,6 +311,197 @@ describe UserGoal, type: :model do
       expect(g.settings['sequence_summary']).to eq("alert('asdf');something else")
       expect(g.settings['sequence_description']).to eq("something I <a href=\"http://www.google.com\">like</a><em>!</em>")
     end
+    
+    it "should generate a template correctly" do
+      u = User.create
+      g = UserGoal.process_new({
+        template: true,
+        template_header: true,
+        next_template_id: '1234'
+      }, {user: u, author: u})
+      expect(g.template).to eq(true)
+      expect(g.template_header).to eq(true)
+      expect(g.settings['next_template_id']).to eq(nil)
+      expect(g.settings['template_header_id']).to eq('self')
+      g2 = UserGoal.process_new({
+        template: true,
+        template_header_id: g.global_id,
+        next_template_id: g.global_id
+      }, {user: u, author: u})
+      expect(g2.template).to eq(true)
+      expect(g2.template_header).to eq(nil)
+      expect(g2.settings['next_template_id']).to eq(g.global_id)
+      expect(g2.settings['template_header_id']).to eq(g.global_id)
+    end
+    
+    it "should set template_header_id if defined" do
+      u = User.create
+      g = UserGoal.process_new({
+        template: true,
+        template_header: true,
+        next_template_id: '1234'
+      }, {user: u, author: u})
+      expect(g.template).to eq(true)
+      expect(g.template_header).to eq(true)
+      expect(g.settings['next_template_id']).to eq(nil)
+      expect(g.settings['template_header_id']).to eq('self')
+      g2 = UserGoal.process_new({
+        template: true,
+        template_header_id: g.global_id,
+        next_template_id: g.global_id
+      }, {user: u, author: u})
+      expect(g2.template).to eq(true)
+      expect(g2.template_header).to eq(nil)
+      expect(g2.settings['next_template_id']).to eq(g.global_id)
+      expect(g2.settings['template_header_id']).to eq(g.global_id)
+    end
+    
+    it "should set next_template_id if valid" do
+      u = User.create
+      g = UserGoal.process_new({
+        template: true,
+        template_header: true,
+        next_template_id: '1234'
+      }, {user: u, author: u})
+      expect(g.template).to eq(true)
+      expect(g.template_header).to eq(true)
+      expect(g.settings['next_template_id']).to eq(nil)
+      expect(g.settings['template_header_id']).to eq('self')
+      g2 = UserGoal.process_new({
+        template: true,
+        template_header_id: g.global_id,
+        next_template_id: g.global_id
+      }, {user: u, author: u})
+      expect(g2.template).to eq(true)
+      expect(g2.template_header).to eq(nil)
+      expect(g2.settings['next_template_id']).to eq(g.global_id)
+      expect(g2.settings['template_header_id']).to eq(g.global_id)
+    end
+    
+    it "should clear next_template_id if not valid" do
+      u = User.create
+      g = UserGoal.process_new({
+        template: true,
+        template_header: true,
+        next_template_id: '1234'
+      }, {user: u, author: u})
+      expect(g.template).to eq(true)
+      expect(g.template_header).to eq(true)
+      expect(g.settings['next_template_id']).to eq(nil)
+      expect(g.settings['template_header_id']).to eq('self')
+      g2 = UserGoal.process_new({
+        template: true,
+        template_header_id: g.global_id,
+        next_template_id: g.global_id
+      }, {user: u, author: u})
+      expect(g2.template).to eq(true)
+      expect(g2.template_header).to eq(nil)
+      expect(g2.settings['next_template_id']).to eq(g.global_id)
+      expect(g2.settings['template_header_id']).to eq(g.global_id)
+    end
+    
+    it "should set advancement settings for a template" do
+      u = User.create
+      g = UserGoal.process_new({
+        template: true,
+        advancement: "date: July 1"
+      }, {user: u, author: u})
+      expect(g.settings['goal_duration']).to eq(nil)
+      expect(g.settings['goal_advances_at']).to eq('July 1')
+
+      g.process({
+        advancement: "duration:12:week"
+      }, {author: u})
+      expect(g.settings['goal_duration']).to eq(12.weeks.to_i)
+      expect(g.settings['goal_advances_at']).to eq(nil)
+
+      g.process({
+        advancement: "duration:12:day"
+      }, {author: u})
+      expect(g.settings['goal_duration']).to eq(12.days.to_i)
+      expect(g.settings['goal_advances_at']).to eq(nil)
+
+      g.process({
+        advancement: "duration:4:month"
+      }, {author: u})
+      expect(g.settings['goal_duration']).to eq(4.months.to_i)
+      expect(g.settings['goal_advances_at']).to eq(nil)
+
+      g.process({
+        advancement: "none"
+      }, {author: u})
+      expect(g.settings['goal_duration']).to eq(nil)
+      expect(g.settings['goal_advances_at']).to eq(nil)
+    end
+  end
+  
+  describe "current_date_from_template" do
+    it "should calculate correctly" do
+      expect(Time).to receive(:now).and_return(Time.parse("May 1 2016")).at_least(1).times
+      expect(UserGoal.current_date_from_template('Jan 5')).to eq(Time.parse("Jan 5 2017"))
+      expect(UserGoal.current_date_from_template('Mar 5')).to eq(Time.parse("Mar 5 2017"))
+      expect(UserGoal.current_date_from_template('August 11')).to eq(Time.parse("August 11 2016"))
+      expect(UserGoal.current_date_from_template('Dec 12')).to eq(Time.parse("Dec 12 2016"))
+      expect(UserGoal.current_date_from_template('Dec 12 2017')).to eq(Time.parse("Dec 12 2017"))
+    end
+    
+    it "should compute a correct goal_start for a goal" do
+      expect(Time).to receive(:now).and_return(Time.parse("May 1 2016")).at_least(1).times
+      g = UserGoal.new
+      g.settings = {'goal_starts_at' => 'Jan 5'}
+      expect(g.goal_start).to eq(Time.parse("Jan 5 2017"))
+      g.settings = {'goal_starts_at' => 'Mar 5'}
+      expect(g.goal_start).to eq(Time.parse("Mar 5 2017"))
+      g.settings = {'goal_starts_at' => 'August 11'}
+      expect(g.goal_start).to eq(Time.parse("August 11 2016"))
+      g.settings = {'goal_starts_at' => 'Dec 12'}
+      expect(g.goal_start).to eq(Time.parse("December 12 2016"))
+      g.settings = {'goal_starts_at' => 'Dec 12 2018'}
+      expect(g.goal_start).to eq(Time.parse("Dec 12 2018"))
+    end
+    
+    it "should compute a correct goal_advance for a goal" do
+      expect(Time).to receive(:now).and_return(Time.parse("May 1 2016")).at_least(1).times
+      g = UserGoal.new
+      g.settings = {'goal_advances_at' => 'Jan 5'}
+      expect(g.goal_advance).to eq(Time.parse("Jan 5 2017"))
+      g.settings = {'goal_advances_at' => 'Mar 5'}
+      expect(g.goal_advance).to eq(Time.parse("Mar 5 2017"))
+      g.settings = {'goal_advances_at' => 'August 11'}
+      expect(g.goal_advance).to eq(Time.parse("August 11 2016"))
+      g.settings = {'goal_advances_at' => 'Dec 12'}
+      expect(g.goal_advance).to eq(Time.parse("December 12 2016"))
+      g.settings = {'goal_advances_at' => 'Dec 12 2018'}
+      expect(g.goal_advance).to eq(Time.parse("Dec 12 2018"))
+    end
+    
+    it "should find the current template in a time-based sequence" do
+      expect(Time).to receive(:now).and_return(Time.parse("May 1 2016")).at_least(1).times
+      u = User.create
+      g1 = UserGoal.create(:user => u, :template => true, :template_header => true)
+      g2 = UserGoal.create(:user => u, :template => true)
+      g3 = UserGoal.create(:user => u, :template => true)
+      g1.settings['template_header_id'] = g1.global_id
+      g1.settings['goal_advances_at'] = 'Feb 1'
+      g1.settings['next_template_id'] = g2.global_id
+      g1.save
+      g2.settings['template_header_id'] = g1.global_id
+      g2.settings['goal_advances_at'] = 'March 1'
+      g2.settings['next_template_id'] = g3.global_id
+      g2.save
+      g3.settings['template_header_id'] = g1.global_id
+      g3.settings['goal_advances_at'] = 'June 1'
+      g3.settings['next_template_id'] = g1.global_id
+      g3.save
+      Worker.process_queues
+      expect(g1.reload.settings['linked_template_ids'].sort).to eq([g1.global_id, g2.global_id, g3.global_id].sort)
+      expect(g1.settings['goal_starts_at']).to eq('June 1')
+      expect(g2.reload.settings['goal_starts_at']).to eq('Feb 1')
+      expect(g3.reload.settings['goal_starts_at']).to eq('March 1')
+      expect(g1.settings['template_stats']['loop']).to eq(true)
+      expect(g1.settings['template_stats']['goals']).to eq(3)
+      expect(g1.reload.current_template).to eq(g3)
+    end
   end
   
   describe "calculate_advancement" do
@@ -587,6 +778,91 @@ describe UserGoal, type: :model do
       g2.save
       g1.reload
       expect(g1.settings['linked_template_ids']).to eq([g2.global_id])
+    end
+    
+    it "should do nothing id @skip_template_header is set" do
+      u = User.create
+      g1 = UserGoal.new(:user => u)
+      g1.settings = {'template_header_id' => 'self'}
+      g1.instance_variable_set('@skip_update_template_header', true)
+      g1.save
+      expect(Worker.scheduled?(UserGoal, 'perform_action', {'id' => g1.id, 'method' => 'compute_start_ats', 'arguments' => []})).to eq(false)
+    end
+    
+    it "should update start_ats for all templates in the sequence" do
+      u = User.create
+      g1 = UserGoal.create(:user => u)
+      g2 = UserGoal.create(:user => u)
+      g3 = UserGoal.create(:user => u)
+      g1.settings['template_header_id'] = g1.global_id
+      g1.settings['goal_advances_at'] = 'Jan 1'
+      g1.settings['next_template_id'] = g2.global_id
+      g1.save
+      g2.settings['template_header_id'] = g1.global_id
+      g2.settings['goal_advances_at'] = 'Apr 1'
+      g2.settings['next_template_id'] = g3.global_id
+      g2.save
+      g3.settings['template_header_id'] = g1.global_id
+      g3.settings['goal_advances_at'] = 'Aug 1'
+      g3.settings['next_template_id'] = g1.global_id
+      g3.save
+      Worker.process_queues
+      expect(g1.reload.settings['linked_template_ids'].sort).to eq([g1.global_id, g2.global_id, g3.global_id].sort)
+      expect(g1.reload.settings['goal_starts_at']).to eq('Aug 1')
+      expect(g2.reload.settings['goal_starts_at']).to eq('Jan 1')
+      expect(g3.reload.settings['goal_starts_at']).to eq('Apr 1')
+    end
+  end
+  
+  describe "compute_start_ats" do
+    it "should update start_ats for all templates in the sequence" do
+      u = User.create
+      g1 = UserGoal.create(:user => u)
+      g2 = UserGoal.create(:user => u)
+      g3 = UserGoal.create(:user => u)
+      g1.settings['template_header_id'] = g1.global_id
+      g1.settings['goal_advances_at'] = 'Jan 1'
+      g1.settings['next_template_id'] = g2.global_id
+      g1.settings['linked_template_ids'] = [g1.global_id, g2.global_id, g3.global_id]
+      g1.save
+      g2.settings['template_header_id'] = g1.global_id
+      g2.settings['goal_advances_at'] = 'Apr 1'
+      g2.settings['next_template_id'] = g3.global_id
+      g2.save
+      g3.settings['template_header_id'] = g1.global_id
+      g3.settings['goal_advances_at'] = 'Aug 1'
+      g3.settings['next_template_id'] = g1.global_id
+      g3.save
+      g1.compute_start_ats
+      expect(g1.reload.settings['goal_starts_at']).to eq('Aug 1')
+      expect(g2.reload.settings['goal_starts_at']).to eq('Jan 1')
+      expect(g3.reload.settings['goal_starts_at']).to eq('Apr 1')
+    end
+    
+    it "should not run an infinite loop of saves" do
+      u = User.create
+      g1 = UserGoal.create(:user => u)
+      g2 = UserGoal.create(:user => u)
+      g3 = UserGoal.create(:user => u)
+      g1.settings['template_header_id'] = g1.global_id
+      g1.settings['goal_advances_at'] = 'Jan 1'
+      g1.settings['next_template_id'] = g2.global_id
+      g1.save
+      g2.settings['template_header_id'] = g1.global_id
+      g2.settings['goal_advances_at'] = 'Apr 1'
+      g2.settings['next_template_id'] = g3.global_id
+      g2.save
+      g3.settings['template_header_id'] = g1.global_id
+      g3.settings['goal_advances_at'] = 'Aug 1'
+      g3.settings['next_template_id'] = g1.global_id
+      g3.save
+      Worker.process_queues
+      Worker.process_queues
+      expect(g1.reload.settings['linked_template_ids'].sort).to eq([g1.global_id, g2.global_id, g3.global_id].sort)
+      expect(g1.reload.settings['goal_starts_at']).to eq('Aug 1')
+      expect(g2.reload.settings['goal_starts_at']).to eq('Jan 1')
+      expect(g3.reload.settings['goal_starts_at']).to eq('Apr 1')
+      expect(Worker.scheduled_actions).to eq([])
     end
   end
   

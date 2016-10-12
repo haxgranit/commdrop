@@ -485,4 +485,94 @@ describe('Goal', function() {
       expect(goal.get('high_level_description')).toEqual('jkl');
     });
   });
+  describe("advance_type", function() {
+    it("should return the correct value", function() {
+      var goal = CoughDrop.store.createRecord('goal');
+      expect(goal.get('advance_type')).toEqual('none');
+      expect(goal.get('any_advance')).toEqual(false);
+      expect(goal.get('date_advance')).toEqual(false);
+      expect(goal.get('duration_advance')).toEqual(false);
+      goal.set('advance', new Date());
+      expect(goal.get('advance_type')).toEqual('date');
+      expect(goal.get('any_advance')).toEqual(true);
+      expect(goal.get('date_advance')).toEqual(true);
+      expect(goal.get('duration_advance')).toEqual(false);
+      goal.set('duration', 123456);
+      expect(goal.get('advance_type')).toEqual('date');
+      expect(goal.get('any_advance')).toEqual(true);
+      expect(goal.get('date_advance')).toEqual(true);
+      expect(goal.get('duration_advance')).toEqual(false);
+      goal.set('advance', null);
+      expect(goal.get('advance_type')).toEqual('duration');
+      expect(goal.get('any_advance')).toEqual(true);
+      expect(goal.get('date_advance')).toEqual(false);
+      expect(goal.get('duration_advance')).toEqual(true);
+    });
+  });
+  describe('update_advancement', function() {
+    it("should generate correct values", function() {
+      var goal = CoughDrop.store.createRecord('goal');
+      goal.update_advancement();
+      expect(goal.get('advancement')).toEqual('none');
+      goal.set('advance_type', 'date');
+      goal.update_advancement();
+      expect(goal.get('advancement')).toEqual('none');
+      goal.set('date_advance_at', 'July 1');
+      goal.update_advancement();
+      expect(goal.get('advancement')).toEqual('date:July 1');
+      goal.set('advance_type', 'duration');
+      goal.update_advancement();
+      expect(goal.get('advancement')).toEqual('date:July 1');
+      goal.set('duration_advance_at', 12);
+      goal.update_advancement();
+      expect(goal.get('advancement')).toEqual('date:July 1');
+      goal.set('duration_advance_at_unit', 'week');
+      goal.update_advancement();
+      expect(goal.get('advancement')).toEqual('duration:12:week');
+    });
+  });
+  describe('generate_next_template_if_new', function() {
+    it("should return success if not new", function() {
+      stub(Ember.RSVP, 'resolve', function(res) {
+        expect(res).toEqual(null);
+        return "promisey";
+      });
+      var goal = CoughDrop.store.createRecord('goal');
+      var res = goal.generate_next_template_if_new();
+      expect(res).toEqual('promisey');
+    });
+    it("should return save promise if new", function() {
+      var obj = Ember.Object.create();
+      stub(CoughDrop.store, 'createRecord', function(type) {
+        expect(type).toEqual('goal');
+        return obj;
+      });
+      var saving = false;
+      stub(obj, 'save', function() {
+        saving = true;
+        return "saving";
+      });
+      var goal = CoughDrop.store.createRecord('goal');
+      goal.set('next_template_id', 'new');
+      goal.set('template_header_id', 'bacon');
+      goal.set('new_next_template_summary', 'summary');
+      var res = goal.generate_next_template_if_new();
+      expect(res).toEqual('saving');
+      expect(saving).toEqual(true);
+      expect(obj.get('template_header_id')).toEqual('bacon');
+      expect(obj.get('template')).toEqual(true);
+      expect(obj.get('summary')).toEqual('summary');
+    });
+  });
+
+  describe('new_next_template_id', function() {
+    it("should return the correct value", function() {
+      var goal = CoughDrop.store.createRecord('goal');
+      expect(goal.get('new_next_template_id')).toEqual(false);
+      goal.set('next_template_id', '12');
+      expect(goal.get('new_next_template_id')).toEqual(false);
+      goal.set('next_template_id', 'new');
+      expect(goal.get('new_next_template_id')).toEqual(true);
+    });
+  });
 });

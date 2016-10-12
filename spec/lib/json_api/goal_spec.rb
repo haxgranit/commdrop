@@ -3,7 +3,7 @@ require 'spec_helper'
 describe JsonApi::Goal do
   it "should have defined pagination defaults" do
     expect(JsonApi::Goal::TYPE_KEY).to eq('goal')
-    expect(JsonApi::Goal::DEFAULT_PAGE).to eq(25)
+    expect(JsonApi::Goal::DEFAULT_PAGE).to eq(30)
     expect(JsonApi::Goal::MAX_PAGE).to eq(50)
   end
 
@@ -29,6 +29,7 @@ describe JsonApi::Goal do
     
     it "should include template stats" do
       g = UserGoal.new(:settings => {'template_stats' => {'staty' => true}})
+      g.template = true
       json = JsonApi::Goal.build_json(g)
       expect(json['template_stats']).to eq({'staty' => true})
       g = UserGoal.new(:settings => {})
@@ -119,5 +120,105 @@ describe JsonApi::Goal do
       expect(json['stats']['c']).to eq(9.88)
       expect(json['stats']['d']).to eq('bacon')
     end
+    
+    it "should include template attributes only for template goals" do
+      g = UserGoal.new(settings: {
+        'sequence_summary' => 'summary',
+        'sequence_description' => 'description',
+        'next_template_id' => '123',
+        'template_header_id' => '234',
+        'goal_advances_at' => 'June 1',
+        
+      }, active: true)
+      json = JsonApi::Goal.build_json(g)
+      expect(json['sequence_summary']).to eq(nil)
+      expect(json['sequence_description']).to eq(nil)
+      expect(json['active']).to eq(true)
+      expect(json['template']).to eq(nil)
+      expect(json['template_header']).to eq(nil)
+      expect(json['date_based']).to eq(nil)
+      expect(json['sequence']).to eq(nil)
+      expect(json['next_template_id']).to eq(nil)
+      expect(json['template_header_id']).to eq(nil)
+
+      g.template = true
+      json = JsonApi::Goal.build_json(g)
+      expect(json['sequence_summary']).to eq(nil)
+      expect(json['sequence_description']).to eq(nil)
+      expect(json['active']).to eq(true)
+      expect(json['template']).to eq(true)
+      expect(json['template_header']).to eq(nil)
+      expect(json['date_based']).to eq(true)
+      expect(json['sequence']).to eq(nil)
+      expect(json['next_template_id']).to eq('123')
+      expect(json['template_header_id']).to eq('234')
+      
+      g.template_header = true
+      json = JsonApi::Goal.build_json(g)
+      expect(json['sequence_summary']).to eq('summary')
+      expect(json['sequence_description']).to eq('description')
+      expect(json['active']).to eq(true)
+      expect(json['template']).to eq(true)
+      expect(json['template_header']).to eq(true)
+      expect(json['date_based']).to eq(true)
+      expect(json['sequence']).to eq(false)
+      expect(json['next_template_id']).to eq('123')
+      expect(json['template_header_id']).to eq('234')
+    end
+    
+    it "should include current_template attributes for template header in search" do
+      expect(Time).to receive(:now).and_return(Time.parse("Jun 1 2016")).at_least(1).times
+      u = User.create
+      g1 = UserGoal.create(:user => u, :template_header => true, :template => true)
+      g2 = UserGoal.create(:user => u, :template => true)
+      g1.settings['template_header_id'] = g1.global_id
+      g1.settings['next_template_id'] = g2.global_id
+      g1.settings['goal_advances_at'] = 'May 1'
+      g1.settings['summary'] = 'First Goal'
+      g1.settings['sequence_summary'] = 'Numbered Goals'
+      g1.save
+      g2.settings['template_header_id'] = g1.global_id
+      g2.settings['next_template_id'] = g1.global_id
+      g2.settings['goal_advances_at'] = 'October 1'
+      g2.settings['summary'] = 'Second Goal'
+      g2.save
+      Worker.process_queues
+      expect(g1.reload.settings['goal_starts_at']).to eq('October 1')
+      expect(g2.reload.settings['goal_starts_at']).to eq('May 1')
+      expect(g1.reload.current_template).to eq(g2)
+      json = JsonApi::Goal.build_json(g1)
+      expect(json['id']).to eq(g1.global_id)
+      expect(json['sequence_summary']).to eq('Numbered Goals')
+      expect(json['summary']).to eq('Second Goal')
+      expect(Time.parse(json['advance'])).to eq(Time.parse("October 1 2016"))
+    end
+    
+    it "should include related goals in single lookup for a template goal" do
+      expect(Time).to receive(:now).and_return(Time.parse("Jun 1 2016")).at_least(1).times
+      u = User.create
+      g1 = UserGoal.create(:user => u, :template_header => true, :template => true)
+      g2 = UserGoal.create(:user => u, :template => true)
+      g1.settings['template_header_id'] = g1.global_id
+      g1.settings['next_template_id'] = g2.global_id
+      g1.settings['goal_advances_at'] = 'May 1'
+      g1.settings['summary'] = 'First Goal'
+      g1.settings['sequence_summary'] = 'Numbered Goals'
+      g1.save
+      g2.settings['template_header_id'] = g1.global_id
+      g2.settings['next_template_id'] = g1.global_id
+      g2.settings['goal_advances_at'] = 'October 1'
+      g2.settings['summary'] = 'Second Goal'
+      g2.save
+      Worker.process_queues
+      expect(g1.reload.settings['goal_starts_at']).to eq('October 1')
+      expect(g2.reload.settings['goal_starts_at']).to eq('May 1')
+      expect(g1.reload.current_template).to eq(g2)
+      json = JsonApi::Goal.build_json(g1, :permissions => u)
+      expect(json['id']).to eq(g1.global_id)
+      expect(json['sequence_summary']).to eq('Numbered Goals')
+      expect(json['summary']).to eq('First Goal')
+      expect(Time.parse(json['advance'])).to eq(Time.parse("May 1 2017"))
+    end
+    
   end
 end

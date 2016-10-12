@@ -552,7 +552,7 @@ describe("i18n", function() {
       expect(i18n.tense('pat', {past_participle: true})).toEqual("patted");
       expect(i18n.tense('put', {past_participle: true})).toEqual("put");
       expect(i18n.tense('read', {past_participle: true})).toEqual("read");
-      expect(i18n.tense('ride', {past_participle: true})).toEqual("rode");
+      expect(i18n.tense('ride', {past_participle: true})).toEqual("ridden");
       expect(i18n.tense('rise', {past_participle: true})).toEqual("risen");
       expect(i18n.tense('run', {past_participle: true})).toEqual("run");
       expect(i18n.tense('say', {past_participle: true})).toEqual("said");
@@ -642,6 +642,19 @@ describe("i18n", function() {
       expect(Ember.templateHelpers.delimit(5000.0004)).toEqual("5,000");
       expect(Ember.templateHelpers.delimit(999999.987)).toEqual("999,999");
       expect(Ember.templateHelpers.delimit(123456789)).toEqual("123,456k");
+    });
+  });
+
+  describe("safe", function() {
+    it("should return safe text", function() {
+      var res = Ember.templateHelpers.safe('something <b>cool</b>');
+      expect(res instanceof Ember.Handlebars.SafeString).toEqual(true);
+      expect(res.string).toEqual('something <b>cool</b>');
+    });
+    it("should strip html if specified", function() {
+      var res = Ember.templateHelpers.safe('something <b>cool</b>', 'stripped');
+      expect(res instanceof Ember.Handlebars.SafeString).toEqual(true);
+      expect(res.string).toEqual('something cool');
     });
   });
 });

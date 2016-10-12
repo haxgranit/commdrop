@@ -76,6 +76,9 @@ class UserGoal < ActiveRecord::Base
   end
   
   def add_template(goal)
+    if self.settings['template_header_id'] == 'self'
+      self.settings['template_header_id'] = self.global_id
+    end
     self.settings['linked_template_ids'] ||= []
     old_ids = self.settings['linked_template_ids']
     self.settings['linked_template_ids'] |= [goal.global_id]
@@ -314,11 +317,11 @@ class UserGoal < ActiveRecord::Base
           self.settings['goal_advances_at'] = nil
           self.settings['goal_duration'] = nil
         elsif parts[0] == 'date'
-          self.settings['goal_advances_at'] = parts[1]
+          self.settings['goal_advances_at'] = parts[1].strip
           self.settings['goal_duration'] = nil
         elsif parts[0] == 'duration'
           self.settings['goal_advances_at'] = nil
-          num = [parts[1].to_i, 1].max
+          num = [parts[1].strip.to_i, 1].max
           duration = num.days
           if parts[2] == 'month'
             duration = num.months
@@ -399,7 +402,6 @@ class UserGoal < ActiveRecord::Base
   end
   
   def goal_start
-    return @goal_start if @goal_start
     if self.settings && self.settings['goal_starts_at']
       @goal_start = self.class.current_date_from_template(self.settings['goal_starts_at'])
     else
@@ -408,7 +410,6 @@ class UserGoal < ActiveRecord::Base
   end
   
   def goal_advance
-    return @goal_advance if @goal_advance
     if self.settings && self.settings['goal_advances_at']
       @goal_advance = self.class.current_date_from_template(self.settings['goal_advances_at'])
     else
@@ -420,7 +421,8 @@ class UserGoal < ActiveRecord::Base
     return nil unless self.template
     return self unless self.template_header
     goals = UserGoal.find_all_by_global_id(self.settings['linked_template_ids'] || [])
-    goals.sort{|g| g.goal_start }.detect{|g| g.goal_start > Time.now }
+    sorted_goals = goals.select{|g| g.goal_advance }.sort_by{|g| g.goal_advance }
+    sorted_goals.detect{|g| g.goal_advance > Time.now }
   end
   
   def build_from_template(template, user, set_as_primary=false)
