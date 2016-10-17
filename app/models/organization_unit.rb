@@ -10,7 +10,9 @@ class OrganizationUnit < ActiveRecord::Base
 
   belongs_to :organization
   
+  add_permissions('view', 'view_stats') {|user| self.supervisor?(user) }
   add_permissions('view', 'edit', 'delete') {|user| self.organization && self.organization.allows?(user, 'edit') }
+  add_permissions('view', 'view_stats', 'edit', 'delete') {|user| self.organization && self.organization.allows?(user, 'manage') }
   
   def generate_defaults
     self.settings ||= {}

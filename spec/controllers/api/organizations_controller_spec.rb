@@ -645,7 +645,7 @@ describe Api::OrganizationsController, :type => :controller do
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0}})
+      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0, 'recent_session_count' => 0, 'recent_session_user_count' => 0, 'total_users' => 0}})
       
       LogSession.process_new({
         :events => [
@@ -663,7 +663,7 @@ describe Api::OrganizationsController, :type => :controller do
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0}})
+      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0, 'recent_session_count' => 0, 'recent_session_user_count' => 0, 'total_users' => 0}})
       
       o.add_user(user.user_name, false, false)
       expect(o.reload.approved_users.length).to eq(1)
@@ -693,14 +693,17 @@ describe Api::OrganizationsController, :type => :controller do
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0}})
+      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0, 'recent_session_count' => 0, 'recent_session_user_count' => 0, 'total_users' => 0}})
       
       get :stats, :organization_id => o.global_id
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['user_counts']).to eq({
         'goal_set' => 0,
-        'goal_recently_logged' => 0
+        'goal_recently_logged' => 0, 
+        'recent_session_count' => 0, 
+        'recent_session_user_count' => 0, 
+        'total_users' => 0
       })
       
       o.add_user(user.user_name, false, false)
@@ -710,7 +713,10 @@ describe Api::OrganizationsController, :type => :controller do
       json = JSON.parse(response.body)
       expect(json['user_counts']).to eq({
         'goal_set' => 1,
-        'goal_recently_logged' => 1
+        'goal_recently_logged' => 1, 
+        'recent_session_count' => 0, 
+        'recent_session_user_count' => 0, 
+        'total_users' => 1
       })
     end
   end

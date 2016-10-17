@@ -457,6 +457,37 @@ class Organization < ActiveRecord::Base
     end
   end
   
+  def self.usage_stats(approved_users, admin=false)
+    sessions = LogSession.where(['started_at > ?', 4.months.ago])
+    res = {
+      'weeks' => [],
+      'user_counts' => {}
+    }
+
+    if !admin
+      # TODO: sharding
+      sessions = sessions.where(:user_id => approved_users.map(&:id))
+    end
+
+    res['user_counts']['goal_set'] = approved_users.select{|u| !!u.settings['primary_goal'] }.length
+    two_weeks_ago_iso = 2.weeks.ago.iso8601
+    res['user_counts']['goal_recently_logged'] = approved_users.select{|u| u.settings['primary_goal'] && u.settings['primary_goal']['last_tracked'] && u.settings['primary_goal']['last_tracked'] > two_weeks_ago_iso }.length
+    
+    res['user_counts']['recent_session_count'] = sessions.count
+    res['user_counts']['recent_session_user_count'] = sessions.distinct.count('user_id')
+    res['user_counts']['total_users'] = approved_users.count
+    
+    sessions.group("date_trunc('week', started_at)").count.sort_by{|d, c| d }.each do |date, count|
+      if date && date < Time.now
+        res['weeks'] << {
+          'timestamp' => date.to_time.to_i,
+          'sessions' => count
+        }
+      end
+    end
+    res
+  end
+  
   def process_params(params, non_user_params)
     self.settings ||= {}
     self.settings['name'] = process_string(params['name']) if params['name']

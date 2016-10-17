@@ -12,6 +12,7 @@ CoughDrop.Unit = DS.Model.extend({
   management_action: DS.attr('string'),
   supervisors: DS.attr('raw'),
   communicators: DS.attr('raw'),
+  permissions: DS.attr('raw'),
   supervisor_count: function() {
     return (this.get('supervisors') || []).length;
   }.property('supervisors'),

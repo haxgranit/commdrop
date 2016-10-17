@@ -1950,6 +1950,52 @@ table>tbody>tr.voice_pad>td {
     width: 100%;
   }
 }
+.user_weeks {
+  .week {
+    width: 10%; 
+    height: 50px; 
+    float: left; 
+    border: 1px solid #ddd; 
+    margin-left: -1px; 
+    margin-bottom: -1px;
+    margin-top: -1px;
+    padding: 5px;
+    &.level_0 {
+      background: #fff;
+    }
+    &.level_1, &.level_2 {
+      background: #D1E1EE;
+    }
+    &.level_3, &.level_4 {
+      background: #A4C5E1;
+    }
+    &.level_5, &.level_6, &.level_7 {
+      background: #6195C2;
+      color: #fff;
+    }
+    &.level_8, &.level_9, &.level_10 {
+      background: #337AB7;
+      color: #fff;
+    }
+    &:hover {
+      border-width: 3px;
+      padding: 3px;
+    }
+  }
+  .week_label {
+    width: 10%; 
+    float: left; 
+    border: 1px solid rgba(255, 255, 255, 0); 
+    margin-left: -1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-top: 5px;
+    padding-bottom: 10px;
+    rotate: -15deg;
+    color: #888;
+  }
+}
 table tr.long_delay td {
   border-top-width: 2px;
 }

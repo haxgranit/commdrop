@@ -1031,4 +1031,49 @@ describe Organization, :type => :model do
       expect(o.reload.supervisors.count).to eq(0)
     end
   end
+  
+  describe "usage_stats" do
+    it "should return expected values" do
+      @user = User.create
+      user = User.create
+      d = Device.create(:user => user)
+      o = Organization.create
+      o.add_manager(@user.user_name, false)
+      o.add_user(user.user_name, true, false)
+      expect(o.reload.approved_users.length).to eq(0)
+      json = Organization.usage_stats([])
+      expect(json).to eq({'weeks' => [], 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0, 'recent_session_count' => 0, 'recent_session_user_count' => 0, 'total_users' => 0}})
+      
+      LogSession.process_new({
+        :events => [
+          {'timestamp' => 4.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 3.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => user, :device => d, :author => user})
+      LogSession.process_new({
+        :events => [
+          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'ok', 'board' => {'id' => '1_1'}}},
+          {'timestamp' => 4.weeks.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
+        ]
+      }, {:user => user, :device => d, :author => user})
+      Worker.process_queues
+      expect(o.reload.approved_users.length).to eq(0)
+      
+      o.add_user(user.user_name, false, false)
+      expect(o.reload.approved_users.length).to eq(1)
+      json = Organization.usage_stats([user])
+      expect(json['weeks'].length).to eq(2)
+      expect(json['weeks'][0]['sessions']).to eq(1)
+      expect(json['weeks'][0]['timestamp']).to be > 0
+      expect(json['weeks'][1]['sessions']).to eq(1)
+      expect(json['weeks'][1]['timestamp']).to be > 0
+      expect(json['user_counts']).to eq({
+        "goal_set"=>0, 
+        "goal_recently_logged"=>0, 
+        "recent_session_count"=>2, 
+        "recent_session_user_count"=>1, 
+        "total_users"=>1
+      })
+    end
+  end
 end

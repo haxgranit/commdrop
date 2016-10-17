@@ -172,7 +172,11 @@ Coughdrop::Application.routes.draw do
     end
     
     resources :goals
-    resources :units
+    
+    resources :units do
+      get 'stats'
+      get 'logs'
+    end
     resources :snapshots
     
     resources :organizations do

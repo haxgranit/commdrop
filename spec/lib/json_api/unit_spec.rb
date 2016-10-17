@@ -33,6 +33,7 @@ describe JsonApi::Unit do
       expect(json['unit']['permissions']).to eq({
         'user_id' => user.global_id,
         'view' => true,
+        'view_stats' => true,
         'edit' => true,
         'delete' => true
       })

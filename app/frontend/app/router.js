@@ -57,6 +57,7 @@ Router.map(function() {
     this.route('reports');
     this.route('subscription');
     this.route('rooms');
+    this.route('room', { path: '/rooms/:room_id' });
   });
   this.route('goals', { path: '/goals' }, function() {
       this.route('goal', { path: '/:goal_id' });

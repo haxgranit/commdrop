@@ -20,7 +20,7 @@ describe OrganizationUnit, :type => :model do
       expect(ou.permissions_for(u)).to eq({'user_id' => u.global_id, 'view' => true, 'edit' => true, 'delete' => true})
     end
     
-    it "should not allow non-org editos to access" do
+    it "should not allow non-org editors to access" do
       o = Organization.create(:admin => true)
       ou = OrganizationUnit.create
       u = User.create
@@ -28,6 +28,48 @@ describe OrganizationUnit, :type => :model do
       u.reload
       expect(ou.permissions_for(u)).to eq({'user_id' => u.global_id})
     end
+    
+    it "should allow admins to view_stats" do
+      o = Organization.create
+      ou = OrganizationUnit.create(:organization => o)
+      u = User.create
+      o.add_manager(u.user_name, true)
+      u.reload
+      expect(ou.permissions_for(u)['view_stats']).to eq(true)
+    end
+    
+    it "should allow supervisors to view_stats" do
+      o = Organization.create
+      ou = OrganizationUnit.create(:organization => o)
+      u = User.create
+      o.add_supervisor(u.user_name, false)
+      u.reload
+      expect(ou.permissions_for(u)['view_stats']).to eq(nil)
+      expect(ou.add_supervisor(u.user_name)).to eq(true)
+      u.reload
+      expect(ou.permissions_for(u)['view_stats']).to eq(true)
+    end
+    
+    it "should not allow assistants to view_stats" do
+      o = Organization.create
+      ou = OrganizationUnit.create(:organization => o)
+      u = User.create
+      o.add_manager(u.user_name, false)
+      u.reload
+      expect(ou.permissions_for(u)['view_stats']).to eq(nil)
+    end
+    
+    it "should not allow communicators to view_stats" do
+      o = Organization.create
+      ou = OrganizationUnit.create(:organization => o)
+      u = User.create
+      o.add_user(u.user_name, false, false)
+      u.reload
+      expect(ou.permissions_for(u)['view_stats']).to eq(nil)
+      expect(ou.add_communicator(u.user_name)).to eq(true)
+      u.reload
+      expect(ou.permissions_for(u)['view_stats']).to eq(nil)
+    end 
   end
   
   describe "process_params" do
