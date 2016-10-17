@@ -34,6 +34,10 @@ export default Ember.Controller.extend({
             var next = list.find(function(r) { return r.get('id') == g.get('next_template_id'); });
             g.set('related.next', next);
           }
+          if(!g.get('related.previous')) {
+            var previous = list.find(function(r) { return r.get('next_template_id') == g.get('id'); });
+            g.set('related.previous', previous);
+          }
           if(!g.get('related.header') && g.get('template_header_id')) {
             var header = list.find(function(r) { return r.get('id') == g.get('template_header_id'); });
             g.set('related.header', header);
@@ -68,6 +72,7 @@ export default Ember.Controller.extend({
       }).then(function(g) {
         _this.set('status', null);
         _this.set('editing', false);
+        _this.get('templates_list_for', null)
       }, function(err) {
         _this.set('status', {saving_error: true});
       });

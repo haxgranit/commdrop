@@ -6,7 +6,10 @@ export default Ember.Route.extend({
     var obj = this.store.findRecord('goal', params.goal_id);
     return obj.then(function(data) {
       if(!data.get('permissions') && persistence.get('online')) {
-        Ember.run.later(function() {data.reload();});
+        Ember.run.later(function() {
+          data.rollbackAttributes();
+          data.reload();
+        });
       }
       return data;
     });
