@@ -144,6 +144,7 @@ Ember.templateHelpers.t = function(str, options) {
 };
 
 Ember.templateHelpers.safe = function(str, type) {
+  if(!str) { return ""; }
   if(type == 'stripped') {
     var div = document.createElement('div');
     div.innerHTML = str;
