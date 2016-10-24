@@ -2315,6 +2315,16 @@ table tr.long_delay td {
   }
 }
 
+.compare.table {
+  >tbody>tr>td {
+    vertical-align: middle;
+    text-align: center;
+  }
+  >tbody>tr>td:first-child {
+    text-align: left;
+  }
+}
+
 .caret-right {
   border-bottom: 4px solid transparent;
   border-top: 4px solid transparent;

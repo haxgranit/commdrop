@@ -51,6 +51,9 @@ Router.map(function() {
   this.route('intro');
   this.route('forgot_password');
   this.route('forgot_login');
+  this.route('partners');
+  this.route('compare');
+  this.route('ambassadors');
   this.route('utterance', { path: '/utterances/:id' });
   this.route('admin', { path: '/admin' });
   this.route('organization', { path: '/organizations/:id' }, function() {
