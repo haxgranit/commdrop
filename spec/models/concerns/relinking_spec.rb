@@ -66,6 +66,13 @@ describe Relinking, :type => :model do
       expect(res.instance_variable_get('@images_mapped_at')).not_to eq(nil)
       expect(res.instance_variable_get('@images_mapped_at')).to be > Time.now.to_i - 5
     end
+    
+    it "should make public if specified" do
+      u = User.create
+      b = Board.create(:user => u, :settings => {'hat' => true, 'image_url' => 'bob', 'buttons' => []})
+      res = b.copy_for(u, true)
+      expect(res.public).to eq(true)
+    end
   end
   
   describe "replace_links!" do
@@ -160,9 +167,11 @@ describe Relinking, :type => :model do
       expect(b2.settings['buttons'][0]['load_board']['key']).not_to eq(b1a.key)
       b2a = Board.find_by_path(b2.settings['buttons'][0]['load_board']['key'])
       expect(b2a.settings['buttons'][0]['load_board']['key']).not_to eq(b1b.key)
+      expect(b2a.public).to eq(false)
       b2b = Board.find_by_path(b2a.settings['buttons'][0]['load_board']['key'])
       expect(b2.settings['buttons'][0]['load_board']).to eq({'key' => b2a.key, 'id' => b2a.global_id})
       expect(b2a.settings['buttons'][0]['load_board']).to eq({'key' => b2b.key, 'id' => b2b.global_id, 'link_disabled' => true})
+      expect(b2b.public).to eq(false)
     end
     
     it "should only copy explicitly-listed boards if there's a list" do
@@ -236,6 +245,35 @@ describe Relinking, :type => :model do
         expect(action).to eq('update_inline')
       end
       Board.copy_board_links_for(u3, {:starting_old_board => b1, :starting_new_board => b2, :authorized_user => u2})
+    end
+    
+    it "should make public if specified" do
+      u1 = User.create
+      u2 = User.create
+      b1 = Board.create(:user => u1, :public => true)
+      b1a = Board.create(:user => u1, :public => true)
+      b1.settings['buttons'] = [{'id' => 1, 'load_board' => {'key' => b1a.key, 'id' => b1a.global_id}}]
+      b1.save!
+      b1.track_downstream_boards!
+      expect(b1.settings['downstream_board_ids']).to eq([b1a.global_id])
+      b2 = b1.copy_for(u2)
+      expect(Board).to receive(:relink_board_for) do |user, opts|
+        boards = opts[:boards]
+        pending_replacements = opts[:pending_replacements]
+        action = opts[:update_preference]
+        expect(user).to eq(u2)
+        expect(boards.length).to eq(2)
+        expect(boards).to eq([b1, b1a])
+        expect(pending_replacements.length).to eq(2)
+        expect(pending_replacements[0]).to eq([b1, b2])
+        expect(pending_replacements[1][0]).to eq(b1a)
+        expect(action).to eq('update_inline')
+      end
+      Board.copy_board_links_for(u2, {:starting_old_board => b1, :starting_new_board => b2, :make_public => true})
+      Worker.process_queues
+      expect(b2.reload.settings['downstream_board_ids'].length).to eq(1)
+      boards = Board.find_all_by_global_id(b2.settings['downstream_board_ids'])
+      expect(boards.map(&:public)).to eq([true])
     end
   end
  
@@ -603,6 +641,48 @@ describe Relinking, :type => :model do
       expect(level1.reload.child_boards.count).to eq(0)
       expect(level2.reload.child_boards.count).to eq(1)
       expect(level3.reload.child_boards.count).to eq(1)
+    end
+
+    it "should make public if specified" do
+      u = User.create
+      u2 = User.create
+      old = Board.create(:user => u, :public => true, :settings => {'name' => 'old'})
+      make_copy = Board.create(:user => u, :public => true, :settings => {'name' => 'make copy'})
+      make_copy2 = Board.create(:user => u2, :public => true, :settings => {'name' => 'make copy too'})
+      make_copy.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => old.global_id}}
+      ]
+      make_copy.save
+      make_copy2.settings['buttons'] = [
+        {'id' => 1, 'load_board' => {'id' => make_copy.global_id}}
+      ]
+      make_copy2.save
+      Worker.process_queues
+      new = old.copy_for(u)
+      new.settings['name'] = 'new'
+      new.save
+      u.settings['preferences']['home_board'] = {'id' => make_copy2.global_id}
+      u.save
+      Worker.process_queues
+      expect(make_copy.reload.settings['immediately_downstream_board_ids']).to eq([old.global_id])
+      expect(make_copy.reload.settings['downstream_board_ids']).to eq([old.global_id])
+      expect(make_copy2.reload.settings['immediately_downstream_board_ids']).to eq([make_copy.global_id])
+      expect(make_copy2.reload.settings['downstream_board_ids'].sort).to eq([make_copy.global_id, old.global_id].sort)
+      
+      Board.replace_board_for(u.reload, {:starting_old_board => old.reload, :starting_new_board => new.reload, :update_inline => false, :make_public => true})
+      expect(u.settings['preferences']['home_board']['id']).not_to eq(make_copy2.global_id)
+      b = Board.find_by_path(u.settings['preferences']['home_board']['id'])
+      expect(b).not_to eq(nil)
+      expect(b.public).to eq(true)
+      b = Board.find_by_path(b.settings['immediately_downstream_board_ids'][0])
+      expect(b).not_to eq(nil)
+      expect(b.public).to eq(true)
+      
+      b = make_copy2.reload
+      expect(b.public).to eq(true)
+
+      b = make_copy.reload
+      expect(b.public).to eq(true)
     end
   end
   

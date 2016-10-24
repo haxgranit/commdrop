@@ -2244,6 +2244,7 @@ describe('editManager', function() {
             new_board_id: '1_2',
             old_board_id: '1_1',
             update_inline: false,
+            make_public: undefined,
             ids_to_copy: ""
           }
         });
@@ -2491,6 +2492,52 @@ describe('editManager', function() {
       });
     });
 
+    it("should make boards public if specified", function() {
+      app_state.set('currentBoardState', {id: '1_1'});
+      stub(modal, 'flash', function() { });
+      var user = Ember.Object.create({
+        stats: {
+          board_set_ids: ['1_2', '1_3', '1_1']
+        },
+        id: 'self',
+      });
+      app_state.set('sessionUser', user);
+      expect(app_state.get('board_in_current_user_set')).toEqual(true);
+
+      var b = CoughDrop.store.createRecord('board', {
+        key: 'example/fred',
+        buttons: [],
+        grid: {}
+      });
+      b.set('id', '1_1');
+      var found = false;
+      queryLog.defineFixture({
+        method: 'POST',
+        type: 'board',
+        response: Ember.RSVP.resolve({board: {
+          id: '1_2'
+        }}),
+        compare: function(object) {
+          expect(object.get('public')).toEqual(true);
+          found = true;
+          return true;
+        }
+      });
+      stub(persistence, 'ajax', function(u, o) {
+        expect(o.data.make_public).toEqual(true);
+        return Ember.RSVP.resolve({});
+      });
+      stub(progress_tracker, 'track', function(p, callback) {
+        callback({status: 'errored'});
+      });
+      var error = null;
+      editManager.copy_board(b, 'modify_links_copy', user, true).then(null, function(err) { error = err; });
+      waitsFor(function() { return error; });
+      runs(function() {
+        expect(error).toEqual("Board re-linking failed while processing");
+      });
+    });
+
     it("should allow trying to copy for someone else", function() {
       app_state.set('currentBoardState', {id: '1_1'});
       stub(modal, 'flash', function() { });
@@ -2538,6 +2585,7 @@ describe('editManager', function() {
             new_board_id: '1_2',
             old_board_id: '1_1',
             update_inline: false,
+            make_public: undefined,
             ids_to_copy: ""
           }
         });

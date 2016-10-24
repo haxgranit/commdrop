@@ -787,7 +787,7 @@ class User < ActiveRecord::Base
     end
   end
   
-  def replace_board(starting_old_board_id, starting_new_board_id, ids_to_copy=[], update_inline=false, whodunnit=nil)
+  def replace_board(starting_old_board_id, starting_new_board_id, ids_to_copy=[], update_inline=false, make_public=false, whodunnit=nil)
     prior = PaperTrail.whodunnit
     PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
@@ -797,7 +797,7 @@ class User < ActiveRecord::Base
       valid_ids = ids_to_copy.split(/,/)
       valid_ids = nil if valid_ids.length == 0
     end
-    Board.replace_board_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :update_inline => update_inline, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)})
+    Board.replace_board_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :update_inline => update_inline, :make_public => make_public, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)})
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
     {'affected_board_ids' => ids.uniq}
@@ -805,7 +805,7 @@ class User < ActiveRecord::Base
     PaperTrail.whodunnit = prior
   end
   
-  def copy_board_links(starting_old_board_id, starting_new_board_id, ids_to_copy=[], whodunnit=nil)
+  def copy_board_links(starting_old_board_id, starting_new_board_id, ids_to_copy=[], make_public=false, whodunnit=nil)
     prior = PaperTrail.whodunnit
     PaperTrail.whodunnit = whodunnit if whodunnit
     starting_old_board = Board.find_by_path(starting_old_board_id)
@@ -815,7 +815,7 @@ class User < ActiveRecord::Base
       valid_ids = ids_to_copy.split(/,/)
       valid_ids = nil if valid_ids.length == 0
     end
-    change_hash = Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :make_public => make_public, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)})
+    change_hash = Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :make_public => make_public, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)}) || {}
     updated_ids = [starting_new_board_id]
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board

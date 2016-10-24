@@ -18,7 +18,7 @@ module Relinking
     return !self.public && self.for_user?(user) && !self.shared_by?(user)
   end
   
-  def copy_for(user)
+  def copy_for(user, make_public=false)
     return nil unless user
     board = Board.new(:user_id => user.id, :parent_board_id => self.id)
     board.key = board.generate_board_key(self.key.split(/\//)[1])
@@ -29,6 +29,7 @@ module Relinking
     board.settings['license'] = self.settings['license']
     board.settings['grid'] = self.settings['grid']
     board.settings['never_edited'] = true
+    board.public = true if make_public
     board.save
     board
   end
@@ -49,6 +50,7 @@ module Relinking
       starting_old_board = opts[:starting_old_board] || raise("starting_old_board required")
       starting_new_board = opts[:starting_new_board] || raise("starting_new_board required")
       update_inline = opts[:update_inline] || false
+      make_public = opts[:make_public] || false
       board_ids = []
       # get all boards currently connected to the user
       if user.settings['preferences'] && user.settings['preferences']['home_board']
@@ -64,7 +66,7 @@ module Relinking
       boards = Board.find_all_by_path(board_ids)
       pending_replacements = [[starting_old_board, starting_new_board]]
 
-      user_home_changed = relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => (update_inline ? 'update_inline' : nil), :authorized_user => auth_user})
+      user_home_changed = relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => (update_inline ? 'update_inline' : nil), :make_public => make_public, :authorized_user => auth_user})
       
       # if the user's home board was replaced, update their preferences
       if user_home_changed
@@ -85,6 +87,7 @@ module Relinking
       auth_user = opts[:authorized_user]
       starting_old_board = opts[:starting_old_board] || raise("starting_old_board required")
       starting_new_board = opts[:starting_new_board] || raise("starting_new_board required")
+      make_public = opts[:make_public] || false
       board_ids = starting_old_board.settings['downstream_board_ids']
       if opts[:valid_ids]
         board_ids = board_ids & opts[:valid_ids]
@@ -101,7 +104,8 @@ module Relinking
       end
       boards = [starting_old_board] + boards
 
-      relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => 'update_inline', :authorized_user => auth_user})
+      relink_board_for(user, {:boards => boards, :pending_replacements => pending_replacements, :update_preference => 'update_inline', :make_public => make_public, :authorized_user => auth_user})
+      @replacement_map
     end
     
     def relink_board_for(user, opts)
@@ -144,6 +148,7 @@ module Relinking
           end
         end
       end
+      @replacement_map = replacement_map
       
       return replacement_map[user.settings['preferences']['home_board']['id']] if user.settings['preferences'] && user.settings['preferences']['home_board']
     end

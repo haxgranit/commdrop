@@ -313,7 +313,7 @@ CoughDrop.Board = DS.Model.extend({
   multiple_copies: function() {
     return this.get('copies') > 1;
   }.property('copies'),
-  create_copy: function(user) {
+  create_copy: function(user, make_public) {
     var board = CoughDrop.store.createRecord('board', {
       parent_board_id: this.get('id'),
       key: this.get('key').split(/\//)[1],
@@ -322,7 +322,7 @@ CoughDrop.Board = DS.Model.extend({
       image_url: this.get('image_url'),
       license: this.get('license'),
       word_suggestions: this.get('word_suggestions'),
-      public: false,
+      public: (make_public || false),
       buttons: this.get('buttons'),
       grid: this.get('grid'),
       for_user_id: (user && user.get('id'))

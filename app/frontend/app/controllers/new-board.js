@@ -17,6 +17,22 @@ export default modal.ModalController.extend({
     }
 
     var supervisees = [];
+
+    var locale = window.navigator.language.replace(/-/g, '_');
+    var pieces = locale.split(/_/);
+    if(pieces[0]) { pieces[0] = pieces[0].toLowerCase(); }
+    if(pieces[1]) { pieces[1] = pieces[1].toUpperCase(); }
+    locale = pieces[0] + "_" + pieces[1];
+    var locales = i18n.get('locales');
+    if(locales[locale]) {
+      this.set('model.locale', locale);
+    } else {
+      locale = locale.split(/_/)[0];
+      if(locales[locale]) {
+        this.set('model.locale', locale);
+      }
+    }
+
     if(app_state.get('sessionUser.supervisees')) {
       app_state.get('sessionUser.supervisees').forEach(function(supervisee) {
         supervisees.push({

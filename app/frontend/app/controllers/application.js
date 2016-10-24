@@ -33,9 +33,6 @@ export default Ember.Controller.extend({
     // If a board has any sub-boards or if the current user has any supervisees,
     // or if the board is in the current user's board set,
     // then there's a confirmation step before copying.
-    // TODO: always show confirmation, because need to confirm if they want to translate
-    // in addition to copying, and it would be good to confirm it's going to the right
-    // place anyway
 
     // ALSO ask if copy should be public, if the source board is public
     var needs_decision = (oldBoard.get('linked_boards') || []).length > 0;

@@ -509,8 +509,16 @@ describe User, :type => :model do
       u = User.create
       b = Board.create(:user => u)
       b2 = Board.create(:user => u)
-      expect(Board).to receive(:replace_board_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :update_inline => true, :authorized_user => nil})
+      expect(Board).to receive(:replace_board_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :update_inline => true, :authorized_user => nil, :make_public => false})
       u.replace_board(b.global_id, b2.global_id, [], true)
+    end
+
+    it "should make public if specified" do
+      u = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      expect(Board).to receive(:replace_board_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :update_inline => true, :authorized_user => nil, :make_public => true})
+      u.replace_board(b.global_id, b2.global_id, [], true, true)
     end
   end
     
@@ -519,10 +527,18 @@ describe User, :type => :model do
       u = User.create
       b = Board.create(:user => u)
       b2 = Board.create(:user => u)
-      expect(Board).to receive(:copy_board_links_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :authorized_user => nil})
+      expect(Board).to receive(:copy_board_links_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :authorized_user => nil, :make_public => false})
       u.copy_board_links(b.global_id, b2.global_id)
     end
     
+    it "should make public if specified" do
+      u = User.create
+      b = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      expect(Board).to receive(:copy_board_links_for).with(u, {:valid_ids => nil, :starting_old_board => b, :starting_new_board => b2, :authorized_user => nil, :make_public => true})
+      u.copy_board_links(b.global_id, b2.global_id, [], true)
+    end
+
     it "should use correct whodunnit user" do
       u1 = User.create
       u2 = User.create
@@ -548,7 +564,7 @@ describe User, :type => :model do
         expect(pending_replacements[1][0]).to eq(b1a)
         expect(action).to eq('update_inline')
       end
-      u3.copy_board_links(b1.global_id, b2.global_id, [], "user:#{u2.global_id}")
+      u3.copy_board_links(b1.global_id, b2.global_id, [], false, "user:#{u2.global_id}")
     end
   end
  
@@ -1200,7 +1216,7 @@ describe User, :type => :model do
       u.save
       expect(u.next_notification_at).to be > Time.now
       expect(u.next_notification_at).to be > Time.now + 1.week
-      expect(u.next_notification_at).to be < Time.now + 2.weeks
+      expect(u.next_notification_at).to be < Time.now + 16.days
     end
     
     it "should generate correct next_notification_schedule for weekly updates" do

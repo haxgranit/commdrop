@@ -235,10 +235,14 @@ class Board < ActiveRecord::Base
       end
     end
           
-    # TODO: encrypted search
-    self.settings['search_string'] = "#{self.name} #{self.settings['description'] || ""} #{self.key} #{self.labels}".downcase
+    # TODO: encrypted search, lol
+    self.settings['search_string'] = "#{self.name} #{self.settings['description'] || ""} #{self.key} #{self.labels} locale:#{self.settings['locale'] || ''}".downcase
     self.search_string = self.public ? self.settings['search_string'] : nil
     true
+  end
+  
+  def protected_material?
+    false
   end
   
   def labels
