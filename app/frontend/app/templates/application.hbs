@@ -317,15 +317,6 @@
                       <a role="menuitem" tabindex="-1" href="#" {{action "toggleEditMode"}}>{{t "Edit Board" key='edit_board'}}</a>
                     </li>
                   {{/if}}
-                  {{#if app_state.currentUser}}
-                    <li role="presentation">
-                      {{#if board.model.starred}}
-                        <a role="menuitem" tabindex="-1" href="#" {{action "star"}}>{{t "Unlike Board" key='star_board'}}</a>
-                      {{else}}
-                        <a role="menuitem" tabindex="-1" href="#" {{action "star"}}>{{t "Like Board" key='star_board'}}</a>
-                      {{/if}}
-                    </li>
-                  {{/if}}
                   <li role="presentation">
                     <a role="menuitem" tabindex="-1" href="#" {{action "tweakBoard"}}>{{t "Make a Copy" key="make_copy"}}</a>
                   </li>
