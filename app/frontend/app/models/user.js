@@ -52,6 +52,7 @@ CoughDrop.User = DS.Model.extend({
   supervisor_key: DS.attr('string'),
   supervisors: DS.attr('raw'),
   supervisee_code: DS.attr('string'),
+  supervised_units: DS.attr('raw'),
   supervisees: DS.attr('raw'),
   goal: DS.attr('raw'),
   pending_board_shares: DS.attr('raw'),

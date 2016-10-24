@@ -1,0 +1,128 @@
+{{#if model.permissions.edit}}
+  <h2>{{ model.name }}</h2>
+  {{#if model.permissions.view_stats}}
+    <div class="row">
+      <div class="col-sm-3 col-xs-6">
+        <div class="panel panel-default summary smaller">
+          <div class="panel-heading">
+            {{t "Last logged session" key='last_logged_session'}}
+          </div>
+          <div class="panel-body">
+            {{#if first_log}}
+              {{date_ago first_log.started_at}}
+            {{else}}
+              {{t "..." key='ellipsis'}}
+            {{/if}}
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-3 col-xs-6">
+        <div class="panel panel-default summary smaller">
+          <div class="panel-heading">
+            {{t "Recent sessions" key='recent_sessions'}}
+          </div>
+          <div class="panel-body">
+            {{t "session" key='sessions' count=user_counts.recent_session_count}}
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-3 col-xs-6">
+        <div class="panel panel-default summary smaller">
+          <div class="panel-heading">
+            {{t "Recently-logged users" key='recently_logged_users'}}
+          </div>
+          <div class="panel-body">
+            {{t "user" key='users' count=user_counts.recent_session_user_count}}
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-3 col-xs-6">
+        <div class="panel panel-default summary smaller">
+          <div class="panel-heading">
+            {{t "Total users" key='total_users'}}
+          </div>
+          <div class="panel-body">
+            {{t "user" key='users' count=user_counts.total_users}}
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6" style="padding: 0;">
+        {{#if weekly_stats.error}}
+          {{t "There was a problem loading this report" key='problem_loading_report'}}
+        {{else}}
+          {{stats/sessions-per-week weekly_stats=weekly_stats}}
+        {{/if}}
+      </div>
+      <div class="col-sm-3" style="padding: 0;">
+        {{stats/recent-sessions total=user_counts.total_users recent=user_counts.recent_session_user_count}}
+      </div>
+      {{#if app_state.feature_flags.goals}}
+        {{#if user_counts}}
+          <div class="col-sm-3" style="padding: 0;">
+            {{stats/recent-goals total=user_counts.total_users tracked=user_counts.goal_set untracked=user_counts.goal_recently_logged}}
+          </div>
+        {{/if}}
+      {{/if}}
+    </div>
+  {{/if}}
+  <h3>{{t "Supervisors" key='supervisors'}}</h3>
+  {{#if model.supervisors}}
+    <table class="table table-hover" style="width: 600px;">
+      <tbody>
+        {{#each model.supervisors as |user|}}
+          <tr>
+            <td style='font-size: 20px;'>
+              {{#link-to 'user' user.user_name}}
+                <img src={{user.avatar_url}} style="height: 30px;"/>
+                {{user.user_name}}
+              {{/link-to}}
+            </td>
+            <td style='font-size: 14px;'>
+              {{#each user.org_supervisees as |sup|}}
+                {{#link-to 'user' sup.user_name}}{{sup.user_name}}{{/link-to}}<br/>
+              {{/each}}
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  {{else}}
+    <p style="margin-bottom: 30px;">{{t "None found" key='none_found'}}</p>
+  {{/if}}
+
+  <h3>{{t "Communicators" key='communicators'}}</h3>
+  {{#if model.communicators}}
+    {{stats/user-weeks users=model.communicators weeks=user_weeks}}
+  {{else}}
+    <p style="margin-bottom: 30px;">{{t "None found" key='none_found'}}</p>
+  {{/if}}
+
+  {{#if model.permissions.view_stats}}
+    <h3 style='margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;'>{{t "Recent Sessions" key='recent_sessions'}}</h3>
+    {{#if logs.data}}
+      <ul class="list-unstyled">
+      {{#each logs.data as |log|}}
+        <li>
+          <p>
+            {{#link-to 'user' log.user.user_name}}{{log.user.user_name}}{{/link-to}} -
+            <span title="{{unbound date log.started_at}}">
+              {{date_ago log.started_at}}
+            </span>
+            {{#link-to 'user.log' log.user.user_name log.id}}
+              {{t "button" count=log.button_count key='button_count'}}
+            {{/link-to}}
+            <br/>
+            <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">{{log.summary}}</span>
+          </p>
+        </li>
+      {{/each}}
+      </ul>
+    {{else if logs.loading}}
+      <p>{{t "Loading sessions..." key='loading_sessions'}}</p>
+    {{else}}
+      <p>{{t "None found" key='none_found'}}</p>
+    {{/if}}
+  {{/if}}
+{{else}}
+  {{t "No information available" key='no_information_available'}}
+{{/if}}

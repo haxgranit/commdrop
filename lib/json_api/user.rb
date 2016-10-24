@@ -87,6 +87,13 @@ module JsonApi::User
       end
       if supervisees.length > 0
         json['supervisees'] = supervisees[0, 10].map{|u| JsonApi::User.as_json(u, limited_identity: true, supervisor: user) }
+        json['supervised_units'] = OrganizationUnit.supervised_units(user).map{|ou|
+          {
+            'id' => ou.global_id,
+            'organization_id' => ou.related_global_id(ou.organization_id),
+            'name' => ou.settings['name']
+          }
+        }
       end
       if json['subscription'] && json['subscription']['free_premium']
         json['subscription']['limited_supervisor'] = true

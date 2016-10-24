@@ -1,0 +1,40 @@
+<table class="table table-hover">
+  <tbody>
+    {{#each communicators_with_stats as |user|}}
+      <tr>
+        <td style='width: 10%; white-space: nowrap;'>
+          {{#link-to 'user' user.user_name}}
+            <img src={{user.avatar_url}} style="height: 30px;"/>
+            {{user.user_name}}
+          {{/link-to}}
+        </td>
+        <td style='padding: 0;'>
+          <div class='user_weeks'>
+            {{#each user.week_stats as |stat|}}
+              <div class={{stat.class}} title={{stat.tooltip}} data-toggle="tooltip" data-placement="top">
+                {{#if stat.goals}}
+                  <span class='glyphicon glyphicon-flag'></span>
+                {{else}}
+                  &nbsp;
+                {{/if}}
+                {{count}}
+              </div>
+            {{/each}}
+          </div>
+        </td>
+      </tr>
+    {{/each}}
+    <tr>
+      <td>{{t "week of" key='week_of'}}</td>
+      <td style='padding: 5px 0 0;'>
+        <div class='user_weeks'>
+          {{#each labeled_weeks as |label|}}
+            <div class='week_label'>
+              {{label}}
+            </div>
+          {{/each}}
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>

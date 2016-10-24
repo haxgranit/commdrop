@@ -124,6 +124,14 @@ class OrganizationUnit < ActiveRecord::Base
     end
   end
   
+  def self.supervised_units(user)
+    supervision_orgs = Organization.attached_orgs(user, true).select{|o| o['type'] == 'supervisor' }.map{|o| o['org'] }
+    # TODO: sharding
+    possible_units = OrganizationUnit.where(:organization_id => supervision_orgs.map(&:id))
+    supervised_units = possible_units.select{|ou| (ou.settings['supervisors'] || []).any?{|s| s['user_id'] == user.global_id } }
+    supervised_units
+  end
+  
   def assert_list(list, exclude_user_id)
     self.settings[list] = (self.settings[list] || []).select{|s| s['user_id'] != exclude_user_id }
   end
