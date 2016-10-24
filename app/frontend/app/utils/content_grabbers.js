@@ -187,6 +187,17 @@ var contentGrabbers = Ember.Object.extend({
       alert(i18n.t('bad_file', "bad file"));
     }
   },
+  file_pasted: function(type, items) {
+    var image = null;
+    for(var idx = 0; idx < items.length; idx++) {
+      if(!image && items[idx].type.match(/^image/)) {
+        image = items[idx];
+      }
+    }
+    if(type == 'image' && image) {
+      pictureGrabber.file_selected(image.getAsFile());
+    }
+  },
   content_dropped: function(button_id, dataTransfer) {
     if(!app_state.get('edit_mode') || !dataTransfer) { return; }
     if(dataTransfer.files && dataTransfer.files.length > 0) {
@@ -1895,6 +1906,14 @@ Ember.$(document).on('change', '#image_upload,#sound_upload,#board_upload,#avata
   if(event.target.id == 'avatar_upload') { type = 'avatar'; }
   var files = event.target.files;
   contentGrabbers.file_selected(type, files);
+}).on('paste', '#find_picture', function(event) {
+  event = event.originalEvent || event;
+  var data = event && event.clipboardData && event.clipboardData.items;
+  if(data) {
+    contentGrabbers.file_pasted('image', data);
+    event.preventDefault();
+    event.stopPropagation();
+  }
 }).on('drop', '.button', function(event) {
   event.preventDefault();
   event.stopPropagation();

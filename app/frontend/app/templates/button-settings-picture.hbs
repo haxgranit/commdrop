@@ -2,7 +2,7 @@
 <div class={{if pictureState 'active' 'hidden'}}>
   <div style="margin-bottom: 10px;" class="options">
     <span class="picture_search_field">
-      {{input value=model.image_field enter="find_picture" placeholder="URL or search term" class="form-control inline"}}
+      {{input id='find_picture' value=model.image_field enter="find_picture" placeholder="URL or search term" class="form-control inline"}}
     </span>
     <button type="button" class='btn btn-default' {{action "find_picture"}}>{{t "Search" key='search'}}</button>
     <button type="button" {{action "webcamPicture" on="click"}} disabled={{webcam_unavailable}} class="btn btn-default">

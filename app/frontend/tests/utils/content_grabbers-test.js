@@ -438,6 +438,22 @@ describe("contentGrabbers", function() {
     });
   });
 
+  describe("file_pasted", function() {
+    it("should call file_selected with the first matching image", function() {
+      var image = null;
+      var i1 = {type: 'video/mp4'};
+      var i2 = {type: 'image/png'};
+      stub(i2, 'getAsFile', function() { return 'asdfasdf'; });
+      stub(pictureGrabber, 'file_selected', function(r) {
+        image = r;
+      });
+      contentGrabbers.file_pasted('image', [
+        i1, i2
+      ]);
+      expect(image).toEqual('asdfasdf');
+    });
+  });
+
   describe("check_for_dropped_file", function() {
     it("should call the correct handler for the dropped file/link type", function() {
       contentGrabbers.droppedFile = {
