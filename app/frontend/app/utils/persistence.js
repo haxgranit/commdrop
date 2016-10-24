@@ -872,6 +872,9 @@ var persistence = Ember.Object.extend({
         });
       });
 
+      // cache images used for keyboard spelling to work offline
+      persistence.store_url('https://s3.amazonaws.com/opensymbols/libraries/mulberry/pencil%20and%20paper%202.svg', 'image', false, false).then(null, function() { });
+      persistence.store_url('https://s3.amazonaws.com/opensymbols/libraries/mulberry/paper.svg', 'image', false, false).then(null, function() { });
 
       var confirm_quota_for_user = find_user.then(function(user) {
         if(user) {
