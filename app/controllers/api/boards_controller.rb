@@ -74,6 +74,8 @@ class Api::BoardsController < ApplicationController
           boards = boards.order(popularity: :desc, home_popularity: :desc, id: :desc)
         elsif params['sort'] == 'home_popularity'
           boards = boards.where(['home_popularity > ?', 0]).order(home_popularity: :desc, id: :desc)
+        elsif params['sort'] == 'custom_order'
+          boards = boards[0, 12].sort_by{|b| b.settings['custom_order'] || b.id }
         end
       else
         boards = boards.order(popularity: :desc, any_upstream: :asc, id: :desc)
