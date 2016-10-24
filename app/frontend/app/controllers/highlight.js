@@ -6,8 +6,21 @@ export default modal.ModalController.extend({
   opening: function() {
     modal.highlight_controller = this;
     scanner.setup(this);
+    var _this = this;
+    Ember.run.later(function() {
+      _this.compute_styles();
+    }, 500);
+    if(_this.recompute) {
+      window.removeEventListener(_this.recompute);
+    }
+    _this.recompute = function() {
+      Ember.run.debounce(_this, _this.compute_styles, 500);
+    };
+    window.addEventListener('resize', _this.recompute);
   },
   closing: function() {
+    window.removeEventListener('resize', this.recompute);
+    this.recompute = null;
     modal.highlight_controller = null;
   },
   compute_styles: function() {
@@ -17,8 +30,8 @@ export default modal.ModalController.extend({
       opacity = "0.0";
     }
     var header_height = Ember.$("header").outerHeight();
-    var window_height = Ember.$(window).height();
-    var window_width = Ember.$(window).width();
+    var window_height = Ember.$(window).outerHeight();
+    var window_width = Ember.$(window).outerWidth();
     var top = this.get('model.top');
     var left = this.get('model.left');
     var bottom = this.get('model.bottom');
