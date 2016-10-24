@@ -277,6 +277,8 @@ var stashes = Ember.Object.extend({
       if(stashes.get('referenced_user_id')) {
         log_event.referenced_user_id = stashes.get('referenced_user_id');
       }
+      log_event.window_width = window.outerWidth;
+      log_event.window_height= window.outerHeight;
 
       if(log_event) {
 //        console.log(log_event);

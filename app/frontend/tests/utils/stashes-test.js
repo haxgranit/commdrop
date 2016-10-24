@@ -275,6 +275,8 @@ describe('stashes', function() {
       stashes.screen_brightness = null;
       stashes.geo = {};
       stashes.set('referenced_user_id', null);
+      stub(window, 'outerWidth', 1234);
+      stub(window, 'outerHeight', 2345);
 
       var log_pushed = false;
       stub(stashes, 'push_log', function() {
@@ -293,7 +295,9 @@ describe('stashes', function() {
         geo: null,
         timestamp: last_event.timestamp,
         type: 'action',
-        user_id: 'asdf'
+        user_id: 'asdf',
+        window_width: 1234,
+        window_height: 2345
       });
 
       stashes.log_event({buttons: []}, 'asdf');
@@ -302,7 +306,9 @@ describe('stashes', function() {
         timestamp: last_event.timestamp,
         type: 'utterance',
         user_id: 'asdf',
-        utterance: {buttons: []}
+        utterance: {buttons: []},
+        window_width: 1234,
+        window_height: 2345
       });
 
       stashes.log_event({button_id: 9}, 'asdf');
@@ -311,7 +317,9 @@ describe('stashes', function() {
         geo: null,
         timestamp: last_event.timestamp,
         type: 'button',
-        user_id: 'asdf'
+        user_id: 'asdf',
+        window_width: 1234,
+        window_height: 2345
       });
 
       stashes.log_event({tallies: []}, 'asdf');
@@ -320,7 +328,9 @@ describe('stashes', function() {
         user_id: 'asdf',
         type: 'assessment',
         geo: null,
-        timestamp: last_event.timestamp
+        timestamp: last_event.timestamp,
+        window_width: 1234,
+        window_height: 2345
       });
 
       stashes.log_event({note: 'haha'}, 'asdf');
@@ -329,7 +339,9 @@ describe('stashes', function() {
         type: 'note',
         user_id: 'asdf',
         timestamp: last_event.timestamp,
-        note: {note: 'haha'}
+        note: {note: 'haha'},
+        window_width: 1234,
+        window_height: 2345
       });
     });
 
@@ -351,6 +363,8 @@ describe('stashes', function() {
       stashes.ambient_light = 1200;
       stashes.screen_brightness = 88;
       stashes.set('referenced_user_id', '1234');
+      stub(window, 'outerWidth', 1234);
+      stub(window, 'outerHeight', 2345);
 
       stashes.log_event({}, 'asdf');
       expect(last_event).toEqual({
@@ -363,7 +377,9 @@ describe('stashes', function() {
         volume: 90,
         ambient_light: 1200,
         screen_brightness: 88,
-        referenced_user_id: '1234'
+        referenced_user_id: '1234',
+        window_width: 1234,
+        window_height: 2345
       });
     });
   });
