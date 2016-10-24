@@ -227,7 +227,9 @@ class Board < ActiveRecord::Base
     
     self.settings['license'] ||= {type: 'private'}
     self.name = self.settings['name']
-    if self.public == nil
+    if self.protected_material?
+      self.public = false
+    elsif self.public == nil
       if self.user && self.user.premium?
         self.public = false
       else
