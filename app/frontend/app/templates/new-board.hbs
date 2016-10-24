@@ -109,6 +109,12 @@
             {{bound-select select_class="form-control" select_id="license" content=license_options selection=model.license.type action=(action (mut model.license.type)) }}
           </div>
         </div>
+        <div class="form-group">
+          <label for="locale" class="col-sm-2 control-label">{{t "Language" key='locale'}}</label>
+          <div class="col-sm-10">
+            {{bound-select select_class="form-control" select_id="locale" content=locales selection=model.locale action=(action (mut model.locale)) }}
+          </div>
+        </div>
         {{#if attributable_license_type}}
           <div class="form-group">
             <label for="author" class="col-sm-2 control-label">{{t "Author" key='author'}}</label>

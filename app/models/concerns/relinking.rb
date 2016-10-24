@@ -131,7 +131,7 @@ module Relinking
             elsif !board.just_for_user?(user)
               # if it's not already private for the user, make a private copy for the user 
               # and add to list of replacements to handle.
-              copy = board.copy_for(user)
+              copy = board.copy_for(user, opts[:make_public])
               copy.replace_links!(old_board, new_board)
               replacement_map[board.global_id] = copy
               pending_replacements << [board, copy]

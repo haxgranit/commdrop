@@ -443,7 +443,31 @@ var i18n = Ember.Object.extend({
   key_string: function(keyCode) {
     var codes = this.get('keys');
     return codes[keyCode];
+  },
+  readable_language: function(locale) {
+    if(!locale) { return i18n.t('unknown_language', "Unknown Language"); }
+    var pieces = locale.split(/-/);
+    locale = pieces[0].toLowerCase();
+    if(pieces[1]) { locale = locale + "_" + pieces[1].toUpperCase(); }
+
+    var list = i18n.get('locales');
+    var res = i18n.t('unknown_language', "Unknown Language");
+    for(var key in list) {
+      if(key == locale) {
+        res = list[key];
+      }
+    }
+    if(!res) {
+      locale = locale.split(/_/)[0];
+      for(var key in list) {
+        if(key == locale) {
+          res = list[key];
+        }
+      }
+    }
+    return res;
   }
+
   // http://www.oxforddictionaries.com/us/words/spelling
 }).create({
   vowels: ['a', 'e', 'i', 'o', 'u', 'y'],

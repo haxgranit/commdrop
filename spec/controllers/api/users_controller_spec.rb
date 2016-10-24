@@ -1240,4 +1240,34 @@ describe Api::UsersController, :type => :controller do
       expect(json['sync_stamp']).to eq(@user.updated_at.iso8601)
     end
   end
+  
+  describe "translate" do
+    it "should require an access token" do
+      post 'translate', :user_id => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should require a valid user" do
+      token_user
+      post 'translate', :user_id => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require permission" do
+      token_user
+      u = User.create
+      post 'translate', :user_id => u.global_id
+      assert_unauthorized
+    end
+    
+    it "should call translate action and return the result" do
+      token_user
+      words = ['a', 'b', 'c']
+      expect(WordData).to receive(:translate_batch).with(words.map{|w| {:text => w} }, 'en', 'es').and_return({a: 'a'})
+      post 'translate', :user_id => @user.global_id, :words => words, :source_lang => 'en', :destination_lang => 'es'
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq({'a' => 'a'})
+    end
+  end
 end

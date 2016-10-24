@@ -8,6 +8,7 @@
     {{/if}}
   </div>
   <div class="modal-body">
+    <h4>{{t "Copy of " key='copy_of'}} {{ model.board.key }}</h4>
     {{#if model.supervisees}}
       <p>{{t "For which user would you like to make a copy of this board? If you are planning to use this board for multiple communicators, you should probably copy it for yourself and manually add it for each communicator." key='which-user'}}</p>
       {{partial "select-user"}}
@@ -44,8 +45,32 @@
         </p>
       {{/if}}
     {{/if}}
-  </div>
 
+    <div class="row" style='margin-top: 20px;'>
+      <label style='font-weight: normal; color: #888;' class="col-sm-12">
+        {{input type='checkbox' checked=public}}
+        &nbsp;&nbsp;{{t "Make the copied board(s) public to share changes with others" key='make_copies_public'}}
+      </label>
+    </div>
+    {{#if app_state.feature_flags.translation}}
+      <div class="row" style='margin-top: 20px;'>
+        <label style='font-weight: normal; color: #888;' class="col-sm-12">
+          {{input type='checkbox' checked=translate}}
+          &nbsp;&nbsp;{{t "Translate the copied board(s) into a different language" key='translate_boards'}}
+        </label>
+      </div>
+      {{#if translate}}
+        <div class="row">
+          <label class="col-sm-2 control-label" for="translate_locale">
+            Language:
+          </label>
+          <div class="col-sm-4">
+            {{bound-select select_class="form-control" select_id="translate_locale" content=locales selection=translate_locale action=(action (mut translate_locale)) }}
+          </div>
+        </div>
+      {{/if}}
+    {{/if}}
+  </div>
   <div class="modal-footer">
     {{#if home_board}}
       <div class="btn-group dropup">

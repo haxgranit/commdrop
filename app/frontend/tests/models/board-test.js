@@ -406,4 +406,150 @@ describe('Board', function() {
       });
     });
   });
+
+  describe("load_button_set", function() {
+    it('should return the set value if already set', function() {
+      var b = CoughDrop.store.createRecord('board');
+      b.set('button_set', 'asdf');
+      var res = null;
+      b.load_button_set().then(function(r) { res = r; });
+      waitsFor(function() { return res; });
+      runs(function() {
+        expect(res).toEqual('asdf');
+      });
+    });
+
+    it('should return the peeked value if found', function() {
+      var b = CoughDrop.store.createRecord('board');
+      b.set('id', '1234');
+      stub(CoughDrop.store, 'peekRecord', function(type, id) {
+        if(type == 'buttonset' && id == '1234') {
+          return 'asdf';
+        }
+      });
+      var res = null;
+      b.load_button_set().then(function(r) { res = r; });
+      waitsFor(function() { return res; });
+      runs(function() {
+        expect(res).toEqual('asdf');
+      });
+    });
+
+    it('should return the peeked value for a linked board if found', function() {
+      var b = CoughDrop.store.createRecord('board');
+      b.set('id', '1234');
+      var bs1 = Ember.Object.create({board_ids: ['1234'], fresh: true});
+      var bs2 = Ember.Object.create({board_ids: ['2345'], fresh: true});
+      stub(CoughDrop.store, 'peekAll', function(type) {
+        if(type == 'buttonset') {
+          return {
+            content: [
+              {record: bs1},
+              {record: bs2}
+            ]
+          };
+        }
+      });
+      var res = null;
+      b.load_button_set().then(function(r) { res = r; });
+      waitsFor(function() { return res; });
+      runs(function() {
+        expect(res).toEqual(bs1);
+      });
+    });
+
+    it('should not return the peeked value for a linked board if it is not fresh', function() {
+      var b = CoughDrop.store.createRecord('board');
+      b.set('id', '1234');
+      var bs1 = Ember.Object.create({board_ids: ['1234'], fresh: false});
+      var bs2 = Ember.Object.create({board_ids: ['2345', '1234'], fresh: true});
+      stub(CoughDrop.store, 'peekAll', function(type) {
+        if(type == 'buttonset') {
+          return {
+            content: [
+              {record: bs1},
+              {record: bs2}
+            ]
+          };
+        }
+      });
+      var res = null;
+      b.load_button_set().then(function(r) { res = r; });
+      waitsFor(function() { return res; });
+      runs(function() {
+        expect(res).toEqual(bs2);
+      });
+    });
+
+    it('should try to find the record if not found other ways', function() {
+      var b = CoughDrop.store.createRecord('board');
+      b.set('id', '1234');
+      var bs1 = Ember.Object.create({board_ids: ['1234'], fresh: true});
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'buttonset' && id == '1234') {
+          return Ember.RSVP.resolve(bs1);
+        }
+      });
+      var res = null;
+      b.load_button_set().then(function(r) { res = r; });
+      waitsFor(function() { return res; });
+      runs(function() {
+        expect(res).toEqual(bs1);
+      });
+    });
+
+    it('should reload the record if found but not fresh', function() {
+      var b = CoughDrop.store.createRecord('board');
+      b.set('id', '1234');
+      b.set('fresh', true);
+      var bs1 = Ember.Object.create({board_ids: ['1234'], fresh: false});
+      var reloaded = false;
+      stub(bs1, 'reload', function() { reloaded = true; return Ember.RSVP.resolve(bs1); });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'buttonset' && id == '1234') {
+          return Ember.RSVP.resolve(bs1);
+        }
+      });
+      var res = null;
+      b.load_button_set().then(function(r) { res = r; });
+      waitsFor(function() { return res; });
+      runs(function() {
+        expect(res).toEqual(bs1);
+        expect(reloaded).toEqual(true);
+      });
+    });
+
+    it('should reload if force is called, regardless of other factors', function() {
+      var b = CoughDrop.store.createRecord('board');
+      b.set('id', '1234');
+      b.set('button_set', 'asdf');
+      stub(CoughDrop.store, 'peekRecord', function(type, id) {
+        return 'asdf';
+      });
+      var bs1 = Ember.Object.create({board_ids: ['1234'], fresh: false});
+      stub(CoughDrop.store, 'peekAll', function(type) {
+        if(type == 'buttonset') {
+          return {
+            content: [
+              {record: bs1}
+            ]
+          };
+        }
+      });
+      var reloaded = false;
+      stub(bs1, 'reload', function() { reloaded = true; return Ember.RSVP.resolve(bs1); });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'buttonset' && id == '1234') {
+          return Ember.RSVP.resolve(bs1);
+        }
+      });
+      var res = null;
+      b.load_button_set(true).then(function(r) { res = r; });
+      waitsFor(function() { return res; });
+      runs(function() {
+        expect(res).toEqual(bs1);
+        expect(reloaded).toEqual(true);
+      });
+    });
+  });
 });

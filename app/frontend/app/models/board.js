@@ -20,6 +20,7 @@ CoughDrop.Board = DS.Model.extend({
   created: DS.attr('date'),
   updated: DS.attr('date'),
   user_name: DS.attr('string'),
+  locale: DS.attr('string'),
   full_set_revision: DS.attr('string'),
   for_user_id: DS.attr('string'),
   could_be_in_use: function() {
@@ -419,13 +420,13 @@ CoughDrop.Board = DS.Model.extend({
   checkForDataURLOnChange: function() {
     this.checkForDataURL().then(null, function() { });
   }.observes('image_url'),
-  load_button_set: function() {
+  load_button_set: function(force) {
     var _this = this;
-    if(this.get('button_set')) {
+    if(this.get('button_set') && !force) {
       return Ember.RSVP.resolve(this.get('button_set'));
     }
     var button_set = CoughDrop.store.peekRecord('buttonset', this.get('id'));
-    if(button_set) {
+    if(button_set && !force) {
       this.set('button_set', button_set);
       return Ember.RSVP.resolve(button_set);
     } else {
@@ -438,7 +439,7 @@ CoughDrop.Board = DS.Model.extend({
           }
         }
       });
-      if(valid_button_set) {
+      if(valid_button_set && !force) {
         if(!_this.get('fresh') || valid_button_set.get('fresh')) {
           _this.set('button_set', valid_button_set);
           return Ember.RSVP.resolve(valid_button_set);
@@ -448,7 +449,7 @@ CoughDrop.Board = DS.Model.extend({
       // first check if there's a satisfactory higher-level buttonset that can be used instead
       var res = CoughDrop.store.findRecord('buttonset', this.get('id')).then(function(button_set) {
         _this.set('button_set', button_set);
-        if(_this.get('fresh') && !button_set.get('fresh')) {
+        if((_this.get('fresh') || force) && !button_set.get('fresh')) {
           return button_set.reload();
         } else {
           return button_set;

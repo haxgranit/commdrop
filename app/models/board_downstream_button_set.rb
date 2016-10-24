@@ -46,6 +46,7 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
           image = images.detect{|i| button['image_id'] == i.global_id }
           button_data = {
             'id' => button['id'],
+            'locale' => board_to_visit.settings['locale'] || 'en',
             'board_id' => board_to_visit.global_id,
             'board_key' => board_to_visit.key,
             'hidden' => !!button['hidden'],
@@ -78,6 +79,7 @@ class BoardDownstreamButtonSet < ActiveRecord::Base
       end
       set.data['buttons'] = all_buttons
       set.save
+      board.reload
       board.settings['board_downstream_button_set_id'] = set.global_id
       board.save
       set

@@ -2,6 +2,7 @@ import Ember from 'ember';
 import CoughDrop from '../app';
 import modal from '../utils/modal';
 import app_state from '../utils/app_state';
+import i18n from '../utils/i18n';
 
 export default modal.ModalController.extend({
   opening: function() {
@@ -29,6 +30,15 @@ export default modal.ModalController.extend({
   linked: function() {
     return (this.get('model.board.linked_boards') || []).length > 0;
   }.property('model.board.buttons'),
+  locales: function() {
+    var list = i18n.get('locales');
+    var res = [{name: i18n.t('choose_locale', '[Choose a Language]'), id: ''}];
+    for(var key in list) {
+      res.push({name: list[key], id: key});
+    }
+    res.push({name: i18n.t('unspecified', "Unspecified"), id: ''});
+    return res;
+  }.property(),
   user_board: function() {
     var for_user_id = this.get('currently_selected_id');
     this.set('self_currently_selected', for_user_id == 'self');
@@ -88,7 +98,11 @@ export default modal.ModalController.extend({
           }
         });
       }
-      modal.close({action: decision, user: this.get('current_user'), shares: shares});
+      var translate_locale = null;
+      if(this.get('translate') && this.get('translate_locale')) {
+        translate_locale = this.get('translate_locale');
+      }
+      modal.close({action: decision, user: this.get('current_user'), shares: shares, make_public: this.get('public'), translate_locale: translate_locale});
     },
     close: function() {
       modal.close(false);

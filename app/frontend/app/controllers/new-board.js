@@ -28,7 +28,7 @@ export default modal.ModalController.extend({
       });
       if(supervisees.length > 0) {
         supervisees.unshift({
-          name: i18n.t('me', "me"), 
+          name: i18n.t('me', "me"),
           id: 'self',
           image: app_state.get('sessionUser.avatar_url_with_fallback')
         });
@@ -37,6 +37,15 @@ export default modal.ModalController.extend({
     }
     this.set('supervisees', supervisees);
   },
+  locales: function() {
+    var list = i18n.get('locales');
+    var res = [{name: i18n.t('choose_locale', '[Choose a Language]'), id: ''}];
+    for(var key in list) {
+      res.push({name: list[key], id: key});
+    }
+    res.push({name: i18n.t('unspecified', "Unspecified"), id: ''});
+    return res;
+  }.property(),
   ahem: function() {
     console.log(this.get('model.for_user_id'));
   }.observes('model.for_user_id'),
@@ -228,7 +237,7 @@ export default modal.ModalController.extend({
         new_lines.push(enabled_words[idx]);
       }
       // TODO: one-per-line is long and not terribly readable. maybe make commas the default?
-      // in that case it might make sense to invert the button-population algorithm 
+      // in that case it might make sense to invert the button-population algorithm
       // (right now it's vertical-first)
       this.set('model.grid.labels', new_lines.join("\n"));
     },

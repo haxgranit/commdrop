@@ -129,6 +129,7 @@ Coughdrop::Application.routes.draw do
       post 'rename' => 'boards#rename'
       post 'share_response' => 'boards#share_response'
       get 'copies' => 'boards#copies'
+      post 'translate' => 'boards#translate'
     end
     
     
@@ -151,6 +152,7 @@ Coughdrop::Application.routes.draw do
       post 'rename' => 'users#rename'
       post 'activate_button' => 'users#activate_button'
       get 'sync_stamp' => 'users#sync_stamp'
+      post 'translate' => 'users#translate'
     end
     
     resources :images do

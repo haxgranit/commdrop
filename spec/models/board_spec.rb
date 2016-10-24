@@ -270,7 +270,7 @@ describe Board, :type => :model do
       expect(b.settings['grid']['columns']).to eq(4)
       expect(b.settings['grid']['order']).to eq([[nil, nil, nil, nil], [nil, nil, nil, nil]])
       expect(b.settings['immediately_downstream_board_ids']).to eq([])
-      expect(b.search_string).to eq("unnamed board   ")
+      expect(b.search_string).to eq("unnamed board    locale:")
       expect(b.settings['image_url']).to eq(Board::DEFAULT_ICON)
     end
     
@@ -282,6 +282,7 @@ describe Board, :type => :model do
       b.settings['grid'] = {}
       b.settings['grid']['rows'] = 3
       b.settings['grid']['columns'] = 5
+      b.settings['locale'] = 'es'
       
       b.generate_defaults
       expect(b.settings['name']).to eq('Friends and Romans')
@@ -290,7 +291,7 @@ describe Board, :type => :model do
       expect(b.settings['grid']['columns']).to eq(5)
       expect(b.settings['grid']['order']).to eq([[nil, nil, nil, nil, nil], [nil, nil, nil, nil, nil], [nil, nil, nil, nil, nil]])
       expect(b.settings['immediately_downstream_board_ids']).to eq([])
-      expect(b.search_string).to eq("friends and romans a good little board  ")
+      expect(b.search_string).to eq("friends and romans a good little board   locale:es")
     end
     
     it "should enforce proper format/dimensions for grid value" do
@@ -1434,6 +1435,97 @@ describe Board, :type => :model do
       Worker.process_queues
       u.reload
       expect(u2.reload.updated_at).to be > 2.weeks.ago
+    end
+  end
+  
+  describe "protected_material?" do
+    it "should return the correct value" do
+      b = Board.new
+      expect(b.protected_material?).to eq(false)
+    end
+    
+    it "should not allow a board to be public if it has protected material" do
+      u = User.create
+      b = Board.create(:user => u)
+      b.public = true
+      expect(b).to receive(:protected_material?).and_return(true)
+      b.save
+      expect(b.public).to eq(false)
+    end
+  end
+  
+  describe "translate_set" do
+    it "should return done if user_id doesn't match" do
+      u = User.create
+      b = Board.create(:user => u)
+      res = b.translate_set({}, 'en', 'es', [b.global_id], 1234)
+      expect(res).to eq({done: true, translated: false})
+    end
+    
+    it "should do nothing if the board's locale already matches the desired locale" do
+      u = User.create
+      b = Board.create(:user => u, :settings => {'locale' => 'es'})
+      b.settings['buttons'] = [
+        {'id' => 1, 'label' => 'hat'},
+        {'id' => 2, 'label' => 'cat'}
+      ]
+      b.save
+      res = b.translate_set({'hat' => 'sat', 'cat' => 'rat'}, 'en', 'es', [b.global_id])
+      expect(res[:done]).to eq(true)
+      expect(b.settings['buttons'][0]['label']).to eq('hat')
+    end
+    
+    it "should translate correct boards" do
+      u = User.create
+      b = Board.create(:user => u)
+      b.settings['buttons'] = [
+        {'id' => 1, 'label' => 'hat'},
+        {'id' => 2, 'label' => 'cat'}
+      ]
+      b.save
+      res = b.translate_set({'hat' => 'sat', 'cat' => 'rat'}, 'en', 'es', [b.global_id])
+      expect(res[:done]).to eq(true)
+      expect(b.settings['buttons'][0]['label']).to eq('sat')
+    end
+    
+    it "should recursively update only the correct boards" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u, :settings => {'locale' => 'es'})
+      b3 = Board.create(:user => u)
+      b4 = Board.create(:user => u)
+      b5 = Board.create(:user => u)
+      b1.settings['buttons'] = [
+        {'id' => 1, 'label' => 'hat', 'load_board' => {'id' => b2.global_id, 'key' => b2.key}},
+        {'id' => 2, 'label' => 'cat', 'load_board' => {'id' => b3.global_id, 'key' => b3.key}},
+        {'id' => 2, 'label' => 'rat', 'load_board' => {'id' => b5.global_id, 'key' => b5.key}}
+      ]
+      b1.save
+      b2.settings['buttons'] = [
+        {'id' => 1, 'label' => 'fat', 'load_board' => {'id' => b4.global_id, 'key' => b4.key}}
+      ]
+      b2.save
+      b3.settings['buttons'] = [
+        {'id' => 1, 'label' => 'cheese', 'vocalization' => 'hat'}
+      ]
+      b3.save
+      b4.settings['buttons'] = [
+        {'id' => 1, 'label' => 'hat', 'load_board' => {'id' => b1.global_id, 'key' => b1.key}}
+      ]
+      b4.save
+      b5.settings['buttons'] = [
+        {'id' => 1, 'label' => 'hat'}
+      ]
+      b5.save
+      
+      res = b1.translate_set({'hat' => 'top', 'cat' => 'feline', 'rat' => 'mouse', 'fat' => 'lard'}, 'en', 'es', [b1.global_id, b2.global_id, b3.global_id, b4.global_id])
+      expect(res[:done]).to eq(true)
+      expect(b1.reload.settings['buttons'].map{|b| b['label'] }).to eq(['top', 'feline', 'mouse'])
+      expect(b2.reload.settings['buttons'].map{|b| b['label'] }).to eq(['fat'])
+      expect(b3.reload.settings['buttons'].map{|b| b['label'] }).to eq(['cheese'])
+      expect(b3.reload.settings['buttons'].map{|b| b['vocalization'] }).to eq(['top'])
+      expect(b4.reload.settings['buttons'].map{|b| b['label'] }).to eq(['top'])
+      expect(b5.reload.settings['buttons'].map{|b| b['label'] }).to eq(['hat'])
     end
   end
 end

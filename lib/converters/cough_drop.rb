@@ -10,7 +10,7 @@ module Converters::CoughDrop
     res = OBF::Utils.obf_shell
     res['id'] = board.global_id
     res['name'] = board.settings['name']
-    res['locale'] = 'en'
+    res['locale'] = board.settings['locale'] || 'en'
     res['default_layout'] = 'landscape'
     res['url'] = "#{JsonApi::Json.current_host}/#{board.key}"
     res['data_url'] = "#{JsonApi::Json.current_host}/api/v1/boards/#{board.key}"

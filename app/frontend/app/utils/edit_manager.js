@@ -754,13 +754,16 @@ var editManager = Ember.Object.extend({
       this.imageEditingCallback(data);
     }
   },
-  copy_board: function(old_board, decision, user) {
+  copy_board: function(old_board, decision, user, make_public) {
     return new Ember.RSVP.Promise(function(resolve, reject) {
       var ids_to_copy = old_board.get('downstream_board_ids_to_copy') || [];
-      var save = old_board.create_copy(user);
+      var save = old_board.create_copy(user, make_public);
       save.then(function(board) {
         board.set('should_reload', true);
-        var done_callback = function(affected_board_ids) {
+        var done_callback = function(result) {
+          var affected_board_ids = result && result.affected_board_ids;
+          var new_board_ids = result && result.new_board_ids;
+          board.set('new_board_ids', new_board_ids);
           if(decision && decision.match(/as_home$/)) {
             user.set('preferences.home_board', {
               id: board.get('id'),
@@ -791,14 +794,15 @@ var editManager = Ember.Object.extend({
               old_board_id: old_board.get('id'),
               new_board_id: board.get('id'),
               update_inline: (decision == 'modify_links_update'),
-              ids_to_copy: ids_to_copy.join(',')
+              ids_to_copy: ids_to_copy.join(','),
+              make_public: make_public
             }
           }).then(function(data) {
             progress_tracker.track(data.progress, function(event) {
               if(event.status == 'finished') {
                 user.reload();
                 app_state.refresh_session_user();
-                done_callback(event.result && event.result.affected_board_ids);
+                done_callback(event.result);
               } else if(event.status == 'errored') {
                 reject(i18n.t('re_linking_failed', "Board re-linking failed while processing"));
               }

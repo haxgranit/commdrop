@@ -421,6 +421,7 @@ class Board < ActiveRecord::Base
     self.settings['description'] = process_string(params['description']) if params['description']
     @edit_notes << "changed the image" if params['image_url'] && params['image_url'] != self.settings['image_url']
     self.settings['image_url'] = params['image_url'] if params['image_url']
+    self.settings['locale'] = params['locale'] if params['locale']
     self.settings['never_edited'] = false
     process_buttons(params['buttons'], non_user_params[:user], non_user_params[:author]) if params['buttons']
     prior_license = self.settings['license'].to_json
@@ -572,6 +573,35 @@ class Board < ActiveRecord::Base
     res['sounds'] = self.button_sounds.map{|s| JsonApi::Sound.as_json(s) }
     set_cached(key, res)
     res
+  end
+
+  def translate_set(translations, source_lang, dest_lang, board_ids, user_local_id=nil, visited_board_ids=[])
+    user_local_id ||= self.user_id
+    return {done: true, translated: false} if user_local_id != self.user_id
+    if self.settings['locale'] != dest_lang && (board_ids.blank? || board_ids.include?(self.global_id))
+      self.settings['locale'] = dest_lang
+      if self.settings['name'] && translations[self.settings['name']]
+        self.settings['name'] = translations[self.settings['name']]
+      end
+      self.settings['buttons'].each do |button|
+        if button['label'] && translations[button['label']]
+          button['label'] = translations[button['label']]
+          @buttons_changed = true
+        end
+        if button['vocalization'] && translations[button['vocalization']]
+          button['vocalization'] = translations[button['vocalization']]
+          @buttons_changed = true
+        end
+      end
+      self.save
+    end
+    visited_board_ids << self.global_id
+    downstreams = self.settings['immediately_downstream_board_ids'] - visited_board_ids
+    Board.find_all_by_path(downstreams).each do |brd|
+      brd.translate_set(translations, source_lang, dest_lang, board_ids, user_local_id, visited_board_ids)
+      visited_board_ids << brd.global_id
+    end
+    {done: true, translations: translations, d: dest_lang, s: source_lang, board_ids: board_ids}
   end
   
   def default_listeners(notification_type)

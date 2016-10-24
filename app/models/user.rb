@@ -815,10 +815,17 @@ class User < ActiveRecord::Base
       valid_ids = ids_to_copy.split(/,/)
       valid_ids = nil if valid_ids.length == 0
     end
-    Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)})
+    change_hash = Board.copy_board_links_for(self, {:starting_old_board => starting_old_board, :starting_new_board => starting_new_board, :valid_ids => valid_ids, :make_public => make_public, :authorized_user => User.whodunnit_user(PaperTrail.whodunnit)})
+    updated_ids = [starting_new_board_id]
     ids = [starting_old_board_id]
     ids += (starting_old_board.reload.settings['downstream_board_ids'] || []) if starting_old_board
-    {'affected_board_ids' => ids.uniq}
+    ids.each do |id|
+      updated_ids << change_hash[id].global_id if change_hash[id]
+    end
+    {
+      'affected_board_ids' => ids.uniq,
+      'new_board_ids' => updated_ids.uniq
+    }
   ensure
     PaperTrail.whodunnit = prior
   end

@@ -33,10 +33,16 @@ export default Ember.Controller.extend({
     // If a board has any sub-boards or if the current user has any supervisees,
     // or if the board is in the current user's board set,
     // then there's a confirmation step before copying.
+    // TODO: always show confirmation, because need to confirm if they want to translate
+    // in addition to copying, and it would be good to confirm it's going to the right
+    // place anyway
+
+    // ALSO ask if copy should be public, if the source board is public
     var needs_decision = (oldBoard.get('linked_boards') || []).length > 0;
     var _this = this;
     needs_decision = needs_decision || (app_state.get('currentUser.supervisees') || []).length > 0;
     needs_decision = needs_decision || (app_state.get('currentUser.stats.board_set_ids') || []).indexOf(oldBoard.get('id')) >= 0;
+    needs_decision = true;
 
     if(!decision && needs_decision) {
       return modal.open('copy-board', {board: oldBoard, for_editing: for_editing, selected_user_name: selected_user_name}).then(function(opts) {
@@ -46,7 +52,7 @@ export default Ember.Controller.extend({
     decision = decision || {};
     decision.user = decision.user || app_state.get('currentUser');
     decision.action = decision.action || "nothing";
-    return modal.open('copying-board', {board: oldBoard, action: decision.action, user: decision.user, shares: decision.shares});
+    return modal.open('copying-board', {board: oldBoard, action: decision.action, user: decision.user, shares: decision.shares, make_public: decision.make_public, translate_locale: decision.translate_locale});
   },
   actions: {
     invalidateSession: function() {

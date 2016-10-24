@@ -26,7 +26,8 @@ export default Ember.Controller.extend({
       if(persistence.get('online')) {
         _this.set('online_results', {loading: true, results: []});
         _this.set('personal_results', {loading: true, results: []});
-        CoughDrop.store.query('board', {q: str}).then(function(res) {
+        var locale = (window.navigator.language || 'en').split(/-/)[0];
+        CoughDrop.store.query('board', {q: str, locale: locale}).then(function(res) {
           _this.set('online_results', {results: res.content.mapBy('record')});
         }, function() {
           _this.set('online_results', {results: []});

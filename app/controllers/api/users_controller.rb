@@ -241,7 +241,7 @@ class Api::UsersController < ApplicationController
     return unless exists?(user, params['user_id']) && exists?(old_board, params['old_board_id']) && exists?(new_board, params['new_board_id'])
     return unless allowed?(user, 'edit') && allowed?(old_board, 'view') && allowed?(new_board, 'view')
     
-    progress = Progress.schedule(user, :replace_board, params['old_board_id'], params['new_board_id'], params['ids_to_copy'], params['update_inline'], user_for_paper_trail)
+    progress = Progress.schedule(user, :replace_board, params['old_board_id'], params['new_board_id'], params['ids_to_copy'], params['update_inline'], params['make_public'], user_for_paper_trail)
     render json: JsonApi::Progress.as_json(progress, :wrapper => true)
   end
   
@@ -341,5 +341,13 @@ class Api::UsersController < ApplicationController
     rescue Stats::StatsError => e
       api_error 400, {error: e.message}
     end
+  end
+  
+  def translate
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    return unless allowed?(user, 'delete')
+    res = WordData.translate_batch(params['words'].map{|w| {:text => w } }, params['source_lang'], params['destination_lang'])
+    render json: res.to_json
   end
 end

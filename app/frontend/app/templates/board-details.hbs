@@ -1,7 +1,8 @@
 {{#modal-dialog action="close" opening='opening' closing='closing'}}
   <div class="modal-header">
     <button type="button" class="close" {{action 'close'}}>&times;</button>
-    <h3>{{t "Board Details" key='board_details'}}</h3>
+    <h3>{{t "Board Details" key='board_details'}}
+</h3>
   </div>
   <div class="modal-body">
     <dl class="dl-horizontal">
@@ -13,6 +14,10 @@
         <dd>{{date model.created 'day'}}</dd>
       <dt>{{t "Last Updated" key='updated'}}</dt>
         <dd>{{date model.updated 'day'}}</dd>
+      {{#if model.locale}}
+        <dt>{{t "Language" key='language'}}</dt>
+          <dd>{{language}}</dd>
+      {{/if}}
       {{#if model.parent_board_key}}
         <dt>{{t "Copied From" key='copied_from'}}</dt>
         <dd>

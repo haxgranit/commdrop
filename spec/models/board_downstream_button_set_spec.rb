@@ -44,7 +44,8 @@ describe BoardDownstreamButtonSet, :type => :model do
         'hidden' => false,
         'image' => nil,
         'link_disabled' => false,
-        'vocalization' => nil
+        'vocalization' => nil,
+        'locale' => 'en'
       })
       expect(bs.data['buttons'][1]).to eq({
         'id' => 2,
@@ -55,7 +56,8 @@ describe BoardDownstreamButtonSet, :type => :model do
         'hidden' => true,
         'image' => nil,
         'link_disabled' => false,
-        'vocalization' => nil
+        'vocalization' => nil,
+        'locale' => 'en'
       })
     end
     
@@ -82,7 +84,8 @@ describe BoardDownstreamButtonSet, :type => :model do
         'hidden' => false,
         'image' => nil,
         'link_disabled' => false,
-        'vocalization' => nil
+        'vocalization' => nil,
+        'locale' => 'en'
       })
     end
     
@@ -112,7 +115,8 @@ describe BoardDownstreamButtonSet, :type => :model do
         'vocalization' => nil,
         'preferred_link' => true,
         'linked_board_id' => b2.global_id,
-        'linked_board_key' => b2.key
+        'linked_board_key' => b2.key,
+        'locale' => 'en'
       })
     end
     
@@ -136,7 +140,8 @@ describe BoardDownstreamButtonSet, :type => :model do
         'hidden' => false,
         'image' => nil,
         'link_disabled' => false,
-        'vocalization' => nil
+        'vocalization' => nil,
+        'locale' => 'en'
       })
     end
     

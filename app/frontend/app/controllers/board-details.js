@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import modal from '../utils/modal';
 import BoardHierarchy from '../utils/board_hierarchy';
+import i18n from '../utils/i18n';
 
 export default modal.ModalController.extend({
   opening: function() {
@@ -19,6 +20,9 @@ export default modal.ModalController.extend({
   sounds_with_license: function() {
     return this.get('model.local_sounds_with_license');
   }.property('model.buttons', 'model.grid'),
+  language: function() {
+    return i18n.readable_language(this.get('model.locale'));
+  }.property('model.locale'),
   actions: {
     close: function() {
       modal.close();

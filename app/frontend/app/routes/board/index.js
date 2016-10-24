@@ -13,7 +13,7 @@ export default Ember.Route.extend({
     var res = this.modelFor('board');
     if(res.get('should_reload')) {
       res.set('should_reload', false);
-      return res.reload();
+      res.reload();
     }
     return res;
   },

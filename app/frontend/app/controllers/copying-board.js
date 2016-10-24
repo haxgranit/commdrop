@@ -35,8 +35,9 @@ export default modal.ModalController.extend({
     }
     this.get('model.board').set('downstream_board_ids_to_copy', board_ids_to_include);
     var _this = this;
-    editManager.copy_board(_this.get('model.board'), _this.get('model.action'), _this.get('model.user')).then(function(board) {
+    editManager.copy_board(_this.get('model.board'), _this.get('model.action'), _this.get('model.user'), _this.get('model.make_public')).then(function(board) {
       var next = Ember.RSVP.resolve();
+      var new_board_ids = board_ids_to_include ? board.get('new_board_ids') : null;
       if(_this.get('model.shares') && _this.get('model.shares').length > 0) {
         var promises = [];
         _this.get('model.shares').forEach(function(share) {
@@ -52,8 +53,33 @@ export default modal.ModalController.extend({
         });
       }
 
-      next.then(function() {
-        if(modal.is_open('copying-board')) {
+      next = next.then(function() {
+        if(_this.get('model.translate_locale')) {
+          return _this.get('model.board').load_button_set(true).then(function() {
+            var translate_opts = {
+              board: _this.get('model.board'),
+              copy: board,
+              button_set: _this.get('model.board.button_set'),
+              locale: _this.get('model.translate_locale'),
+              old_board_ids_to_translate: board_ids_to_include,
+              new_board_ids_to_translate: new_board_ids
+            };
+            return modal.open('button-set', translate_opts).then(function(res) {
+              if(res && res.translated) {
+                board.reload();
+                return Ember.RSVP.resolve({translated: true});
+              } else {
+                return Ember.RSVP.reject(i18n.t('translation_canceled', "Translation was canceled"));
+              }
+            });
+          });
+        } else {
+          return Ember.RSVP.resolve();
+        }
+      });
+
+      next.then(function(res) {
+        if(modal.is_open('copying-board') || (res && res.translated)) {
           app_state.jump_to_board({
             id: board.get('id'),
             key: board.get('key')
