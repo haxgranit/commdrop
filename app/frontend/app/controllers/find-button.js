@@ -33,7 +33,7 @@ export default modal.ModalController.extend({
             var new_results = [];
             var promises = [];
             results.forEach(function(b) {
-              if(b.image && b.image.match(/^data/)) {
+              if(b.image && (b.image.match(/^data/) || !b.image.match(/^http/))) {
                 new_results.push(b);
               } else {
                 promises.push(persistence.find_url(b.image, 'image').then(function(data_uri) {
@@ -55,7 +55,7 @@ export default modal.ModalController.extend({
         });
       } else {
         _this.set('loading', false);
-        _this.set('error', i18n.t('button_set_not_found', "Button set not downloaded, please syncing or going online and reopening this board"));
+        _this.set('error', i18n.t('button_set_not_found', "Button set not downloaded, please try syncing or going online and reopening this board"));
       }
     }
   }.observes('searchString'),
