@@ -236,6 +236,10 @@ export default modal.ModalController.extend({
     }
     return res;
   }.property('webcam.snapshot'),
+  show_libraries: function() {
+    var previews = this.get('image_search.previews');
+    return (previews && previews.length > 0) || this.get('image_search.previews_loaded');
+  }.property('image_search.previews', 'image_search.previews_loaded'),
   actions: {
     nothing: function() {
       // I had some forms that were being used mainly for layout and I couldn't
