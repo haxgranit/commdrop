@@ -45,12 +45,19 @@ export default Ember.Component.extend({
       this.set('subscription.user_type', type);
     },
     set_subscription_type: function(type) {
+      if(type && (type.match(/communicator/) || type.match(/gift_code/))) {
+        this.set('subscription.user_type', 'communicator');
+        type = type.replace(/_communicator/, '');
+      }
       this.set('subscription.subscription_type', type);
     },
     set_special_subscription: function() {
       this.set('subscription.special_type', !this.get('subscription.special_type'));
     },
     set_subscription: function(amount) {
+      if(amount && amount.match(/slp/)) {
+        this.set('subscription.user_type', 'supporter');
+      }
       this.set('subscription.subscription_amount', amount);
     },
     show_options: function() {

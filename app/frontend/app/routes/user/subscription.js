@@ -9,7 +9,7 @@ export default Ember.Route.extend({
     return user;
   },
   setupController: function(controller, model) {
-    controller.set('model', model); 
+    controller.set('model', model);
     controller.set('subscription', Subscription.create({user: model, code: controller.get('code')}));
     Subscription.init();
   }

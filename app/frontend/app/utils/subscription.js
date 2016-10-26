@@ -3,6 +3,7 @@ import i18n from './i18n';
 import CoughDrop from '../app';
 
 var types = ['communicator_type', 'supporter_type', 'monthly_subscription', 'long_term_subscription',
+  'communicator_monthly_subscription', 'communicator_long_term_subscription',
   'monthly_3', 'monthly_4', 'monthly_5', 'monthly_6', 'monthly_7', 'monthly_8', 'monthly_9', 'monthly_10',
   'long_term_150', 'long_term_200', 'long_term_250', 'long_term_300', 'long_term_custom',
   'slp_monthly_free', 'slp_monthly_3', 'slp_monthly_4', 'slp_monthly_5',
@@ -104,6 +105,7 @@ var Subscription = Ember.Object.extend({
     this.set_default_subscription_amount();
   },
   discount_period: function() {
+    return false;
     return !!this.get('user.joined_within_24_hours');
   }.property('user.joined_within_24_hours'),
   valid: function() {
@@ -194,6 +196,12 @@ var Subscription = Ember.Object.extend({
   gift_type: function() {
     return this.get('subscription_type') == 'gift_code';
   }.property('subscription_type'),
+  communicator_monthly_subscription: function() {
+    return this.get('user_type') == 'communicator' && this.get('subscription_type') == 'monthly';
+  }.property('user_type', 'subscription_type'),
+  communicator_long_term_subscription: function() {
+    return this.get('user_type') == 'communicator' && this.get('subscription_type') == 'long_term';
+  }.property('user_type', 'subscription_type'),
   monthly_subscription: function() {
     return this.get('subscription_type') == 'monthly';
   }.property('subscription_type'),

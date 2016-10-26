@@ -1,276 +1,135 @@
 <form {{action "purchase" on="submit"}} class="row">
-  <div class="form-group">
-    <div class='col-sm-10' style="padding-top: 20px;">
-      {{#if pricing_only}}
-        <label>{{t "For A" key='for_a'}}</label>
-      {{else}}
-        <label>{{t "This Account is Mainly For A" key='i_am_a'}}</label>
-      {{/if}}
-      <a href="#" {{action 'toggle_explanation' 'user_type'}} class="glyphicon glyphicon-question-sign"></a>
-      <br/>
-      <div class="btn-group btn-group-lg" role="group" aria-label="user type">
-        <button type="button" class={{communicator_type_class}} {{action "set_user_type" 'communicator'}}>Communicator</button>
-        <button type="button" class={{supporter_type_class}} {{action "set_user_type" 'supporter'}}>Therapist/Parent/Supporter</button>
-      </div>
-      {{#if explanation_user_type}}
-        <p class='explanation' style='max-width: 600px;'>
-          {{t "CoughDrop is priced per-communicator. Supporting parents and therapists can create free logins, but they won't have their own logs and reports, just those of the communicators they supervise." key='which_user_type'}}
-          <a href="#" {{action "set_special_subscription"}} style="color: #fff;">{{t "More pricing options." key='more_pricing_options'}}</a>
-        </p>
-      {{/if}}
-    </div>
-  </div>
-  {{#unless subscription.communicator_type}}
-    {{#if subscription.user.supervisors}}
-      <div class="form_group">
-        <div class="col-sm-9" style="padding-top: 10px;">
-          <p class='text-danger'>{{t "You have one or more supervisors assigned to your account. Supporter accounts aren't allowed to have supervisors, so keep in mind that signing up for this account type will automatically remove your supervisors." key='warning_supervisors_will_be_removed'}}</p>
-        </div>
-      </div>
-    {{else}}
-      <div class="form_group">
-        <div class="col-sm-9" style="padding-top: 10px;">
-          <p class='text-danger'>{{t "Remember, supervisor accounts are for people supporting a communicator and are limited in their functionality. If this account will be used for speech by a communicator, you should choose that option." key='warning_supervisors_are_limited'}}</p>
-        </div>
-      </div>
-    {{/if}}
-  {{/unless}}
-  {{#if subscription.special_type}}
-    <div class="form-group">
-      <div class="col-sm-12" style="padding-top: 20px;">
-        {{#if pricing_only}}
-          <label>{{t "Who Prefers to Pay" key='who_prefers_to_pay'}}</label><br/>
-        {{else}}
-          <label>{{t "I Prefer to Pay" key='i_prefer_to_pay'}}</label><br/>
-        {{/if}}
-        <div class="btn-group btn-group-lg" role="group" aria-label="subscription frequency">
-          <button type="button" class={{monthly_subscription_class}} {{action "set_subscription_type" 'monthly'}}>Monthly</button>
-          <button type="button" class={{long_term_subscription_class}} {{action "set_subscription_type" 'long_term'}}>Long-Term Purchase</button>
-          {{#if subscription.gift_type}}
-            <button type="button" class="btn btn-primary active" {{action 'set_subscription_type' 'gift_code'}}>{{t "I have a gift code" key='voucher_code'}}</button>
-          {{/if}}
-        </div>
-        {{#unless subscription.gift_type}}
-          {{#unless pricing_only}}
-            <a href="#" class={{if subscription.gift_type 'bold'}} style="padding-left: 10px;" {{action 'set_subscription_type' 'gift_code'}}>{{t "I have a gift code" key='voucher_code'}}</a>
-          {{/unless}}
-        {{/unless}}
-      </div>
-    </div>
-  {{else}}
-    <div class="form-group">
-      <div class="col-sm-12" style="padding-top: 20px;">
-        {{#if pricing_only}}
-          <label>{{t "Subscription Options Include" key='subscription_options_include'}}</label>
-        {{else}}
-          <label>{{t "My Subscription Plan" key='my_subscription_plan'}}</label>
-        {{/if}}
-        <a href="#" {{action 'toggle_explanation' 'subscription_plan'}} class="glyphicon glyphicon-question-sign"></a><br/>
-          {{#if subscription.communicator_type}}
-            <div class={{if subscription.cheaper_offer "btn-group btn-group-lg quick_money discount" "btn-group btn-group-lg quick_money"}} role="group" aria-label="subscription frequency">
-              <button type="button" class={{monthly_subscription_class}} {{action "set_subscription_type" 'monthly'}}>
-                {{#if subscription.much_cheaper_offer}}
-                  <div class="suggested">
-                      {{t "save 50%" key='sale'}}
-                  </div>
-                  <span style="padding-right: 10px; font-size: 20px;">
-                    $<span style="text-decoration: line-through;">6</span>
-                  </span>
-                  $<span style="font-size: 50px; vertical-align: middle;">3</span><br/>
-                {{else}}
-                  $<span style="font-size: 50px; vertical-align: middle;">6</span><br/>
-                {{/if}}
-                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">per month</div>
-              </button>
-              <button type="button" class={{long_term_subscription_class}} {{action "set_subscription_type" 'long_term'}}>
-                {{#if subscription.much_cheaper_offer}}
-                  <div class="suggested">
-                      {{t "save 50%" key='sale'}}
-                  </div>
-                  <span style="padding-right: 10px; font-size: 20px;">
-                    $<span style="text-decoration: line-through;">200</span>
-                  </span>
-                  $<span style="font-size: 50px; vertical-align: middle;">100</span><br/>
-                {{else if subscription.cheaper_offer}}
-                  <div class="suggested">
-                      {{t "save 25%" key='sale'}}
-                  </div>
-                  <span style="padding-right: 10px; font-size: 20px;">
-                    $<span style="text-decoration: line-through;">200</span>
-                  </span>
-                  $<span style="font-size: 50px; vertical-align: middle;">150</span><br/>
-                {{else}}
-                  $<span style="font-size: 50px; vertical-align: middle;">200</span><br/>
-                {{/if}}
-                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">for 5 years</div>
-              </button>
-              {{#if subscription.gift_type}}
-                <button type="button" class="btn btn-primary active" {{action 'set_subscription_type' 'gift_code'}}>
-                  {{t "I have a gift code" key='voucher_code'}}
-                </button>
-              {{else if pricing_only}}
-                <span style="padding-left: 20px; margin-top: 40px; display: inline-block;">
-                  {{#link-to 'gift_purchase'}}
-                    {{t "Purchase as a gift" key='purchase_as_a_gift'}}
-                  {{/link-to}}
-                </span>
-              {{/if}}
+  <div class="form-group"><div class="col-sm-12">
+  <table class='subscription_table'>
+    <tbody>
+      <tr>
+        <td colspan="2" style='font-size: 20px; font-weight: bold; color: #fff; background-color: #286090;'>Communicator</td>
+        <td colspan="2" style='font-size: 16px; font-weight: bold; color: #fff; background-color: #666;' class='separator'>Therapist/Parent/Supporter</td>
+      </tr>
+      <tr>
+        <td colspan="2" style='vertical-align: top;'>{{t "Works as a general communication app for one user on multiple devices, and can be linked to many free supporters" key='general_communication'}}</td>
+        <td colspan="2" style='vertical-align: top; font-size: ' class='separator dim'>{{t "Free account to be used for supporting communicators on devices or on the web. Some features are limited to only work for linked communicators" key='supporting_communicators'}}</td>
+      </tr>
+      <tr>
+        <td style='width: 25%; vertical-align: top; padding-top: 40px; color: #888; position: relative;'>
+          {{#if subscription.much_cheaper_offer}}
+            <div class='sale'>
+              {{t "sale! 50% off" key='save_50_percent'}}
             </div>
+            <span style='text-decoration: line-through; margin-right: 10px;'>$6</span>
+            $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>3</span>
           {{else}}
-            <div class="btn-group btn-group-lg quick_money" role="group" aria-label="subscription frequency">
-              <button type="button" class={{slp_monthly_free_class}} {{action "set_subscription" 'slp_monthly_free'}} style="height: 110px; min-width: 200px;">
-                <span style="font-size: 50px; vertical-align: middle;">free</span><br/>
-                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 16px;">thanks for all you do!</div>
-              </button>
-              <button type="button" class={{slp_long_term_50_class}} {{action "set_subscription" 'slp_long_term_50'}} style="height: 110px; min-width: 200px;">
-                $<span style="font-size: 50px; vertical-align: middle;">50</span><br/>
-                <div class="text-muted" style="margin-top: -10px; margin-bottom: 10px; font-size: 15px; line-height: 17px;">funding donation for<br/>one free account</div>
-              </button>
-            </div>
+            $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>6</span>
           {{/if}}
-        {{#unless subscription.gift_type}}
-          {{#unless pricing_only}}
-            {{#if subscription.communicator_type}}
-              <a href="#" class={{if subscription.gift_type 'bold'}} style="padding-left: 10px;" {{action 'set_subscription_type' 'gift_code'}}>{{t "I have a gift code" key='voucher_code'}}</a>
-            {{/if}}
-          {{/unless}}
-        {{/unless}}
-        {{#if explanation_subscription_plan}}
-          <p class='explanation' style='max-width: 600px;'>
-            {{t "CoughDrop is priced per-communicator. Supporting parents and therapists can create free logins to use while working with communicators, or donate to help give access to those in need." key='which_user_type'}}
-            <a href="#" {{action "set_special_subscription"}} style="color: #fff;">{{t "More pricing options." key='more_pricing_options'}}</a>
-          </p>
-        {{else}}
-          <div>
-            <a href="#" {{action 'show_alternative_pricing'}}>{{t "working with insurance or grant funding?" key='insurance_funding'}}</a>
-            {{#if show_alternative_pricing}}
-              <p class='explanation' style='max-width: 600px; margin-top: 15px;'>
-                {{t "Sometimes insurance providers or grant issuers require one-time or longer-term purchasing for software and hardware. If this is your situation please " key='alternative_pricing_1'}}
-                {{#link-to 'contact' (query-params to='sales')}}{{t "reach out to us" key='reach_out_to_us'}}{{/link-to}}
-                {{t "and we can help get things figured out." key='alternative_pricing_2'}}
-              </p>
-            {{/if}}
-          </div>
-        {{/if}}
-      </div>
-    </div>
-  {{/if}}
-  {{#if subscription.gift_type}}
-    <div class="form-group">
-      <div class="col-sm-10" style="padding-top: 30px;">
-        <label>{{t "Gift Code" key='gift_code'}}</label><br/>
-        <p>{{t "You should have received a redemption code from whoever gifted you a CoughDrop subscription. Please enter it below to redeem." key='gift_code_prompt'}}</p>
-        <span style="display: inline-block; width: 200px;">
-          {{input type='text' value=subscription.gift_code class='form-control input-lg' placeholder='CODE'}}
-        </span>
-      </div>
-    </div>
-  {{else if subscription.special_type}}
-    <div class="form-group">
-      <div class="col-sm-10" style="padding-top: 30px;">
-        {{#if pricing_only}}
-          <label>{{t "Subscription Options Include" key='subscription_options_include'}}</label>
-        {{else}}
-          <label>{{t "My Subscription Plan" key='my_subscription_plan'}}</label>
-        {{/if}}
-        <a href="#" {{action 'toggle_explanation' 'plan'}} class="glyphicon glyphicon-question-sign"></a>
-        <br/>
-        {{#if explanation_plan}}
-          <p class='explanation'>
-            {{t "To make CoughDrop accessible to as many people as possible, we offer flexible \"pay-what-you-can\" pricing. Choose the price point that you can afford, they all have the same premium features. If you can afford to pay more, your contribution will help us gift CoughDrop to families in need!" key='how_much_to_pay'}}
-          </p>
-        {{/if}}
-      </div>
-    </div>
-  {{/if}}
+          <div style='margin-top: -5px; line-height: 17px;'>{{t "per month" key='per_month'}}</div>
+        </td>
+        <td style='width: 25%; vertical-align: top; padding-top: 40px; color: #888; position: relative;'>
+          {{#if subscription.much_cheaper_offer}}
+            <div class='sale'>
+              {{t "sale! 50% off" key='save_50_percent'}}
+            </div>
+            <span style='text-decoration: line-through; margin-right: 10px;'>$200</span>
+            $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>100</span>
+          {{else if subscription.cheaper_offer}}
+            <div class='sale'>
+              {{t "save 25%" key='save_25_percent'}}
+            </div>
+            <span style='text-decoration: line-through; margin-right: 10px;'>$200</span>
+            $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>150</span>
+          {{else}}
+            $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>200</span>
+          {{/if}}
 
-  <div class="form-group">
-    <div class="col-sm-12" style="overflow-x: auto; margin-top: 10px; margin-bottom: 30px;">
-      {{#if subscription.gift_type}}
-      {{else if subscription.special_type}}
-        {{#if subscription.communicator_type}}
-          {{#if subscription.monthly_subscription}}
-            <div class="btn-group btn-group-lg money" role="group" aria-label="subscription plan" style="min-width: 800px; overflow: auto;">
-              <button type="button" class={{monthly_3_class}} {{action "set_subscription" 'monthly_3'}}>$3<span class='text-muted money-smaller'>/mo</span></button>
-              <button type="button" class={{monthly_4_class}} {{action "set_subscription" 'monthly_4'}}>$4<span class='text-muted money-smaller'>/mo</span></button>
-              <button type="button" class={{monthly_5_class}} {{action "set_subscription" 'monthly_5'}}>$5<span class='text-muted money-smaller'>/mo</span></button>
-              <button type="button" class={{monthly_6_class}} {{action "set_subscription" 'monthly_6'}}>
-                <div class="suggested">
-                    {{t "suggested" key='suggested'}}
-                </div>
-                $6<span class='text-muted money-smaller'>/mo</span>
-              </button>
-              <button type="button" class={{monthly_7_class}} {{action "set_subscription" 'monthly_7'}}>
-                $7<span class='text-muted money-smaller'>/mo</span>
-                <div class="sponsor sponsor_1">
-                  {{t "help sponsor someone else's subscription!" key='help_sponsor'}}
-                </div>
-              </button>
-              <button type="button" class={{monthly_8_class}} {{action "set_subscription" 'monthly_8'}}>
-                $8<span class='text-muted money-smaller'>/mo</span>
-              </button>
-              <button type="button" class={{monthly_9_class}} {{action "set_subscription" 'monthly_9'}}>$9<span class='text-muted money-smaller'>/mo</span></button>
-              <button type="button" class={{monthly_10_class}} {{action "set_subscription" 'monthly_10'}}>$10<span class='text-muted money-smaller'>/mo</span></button>
-            </div>
-          {{else}}
-            <div class="btn-group btn-group-lg money two-line thick" role="group" aria-label="subscription plan" style="min-width: 800px; overflow: auto;">
-              <button type="button" class={{long_term_150_class}} {{action "set_subscription" 'long_term_150'}}>$150<br/><span class='text-muted money-smaller'>for 5 years</span></button>
-              <button type="button" class={{long_term_200_class}} {{action "set_subscription" 'long_term_200'}}>
-                <div class="suggested">
-                    {{t "suggested" key='suggested'}}
-                </div>
-                $200<br/><span class='text-muted money-smaller'>for 5 years</span>
-              </button>
-              <button type="button" class={{long_term_250_class}} {{action "set_subscription" 'long_term_250'}}>
-                $250<br/><span class='text-muted money-smaller'>for 5 years</span>
-                <div class="sponsor sponsor_2">
-                  {{t "help sponsor someone else!" key='help_sponsor_short'}}
-                </div>
-              </button>
-              <button type="button" class={{long_term_300_class}} {{action "set_subscription" 'long_term_300'}}>
-                $300<br/><span class='text-muted money-smaller'>for 5 years</span>
-              </button>
-            </div>
-          {{/if}}
-        {{else}}
-          {{#if subscription.monthly_subscription}}
-            <div class="btn-group btn-group-lg money thick" role="group" aria-label="subscription plan" style="min-width: 800px; overflow: auto;">
-              <button type="button" class={{slp_monthly_free_class}} {{action "set_subscription" 'slp_monthly_free'}}>FREE<span class='text-muted money-smaller'>&nbsp;</span></button>
-              <button type="button" class={{slp_monthly_3_class}} {{action "set_subscription" 'slp_monthly_3'}}>
-                $3<span class='text-muted money-smaller'>/mo</span>
-                <div class="sponsor sponsor_3">
-                  {{t "help sponsor someone else's subscription!" key='help_sponsor'}}
-                </div>
-              </button>
-              <button type="button" class={{slp_monthly_4_class}} {{action "set_subscription" 'slp_monthly_4'}}>
-                $4<span class='text-muted money-smaller'>/mo</span>
-              </button>
-              <button type="button" class={{slp_monthly_5_class}} {{action "set_subscription" 'slp_monthly_5'}}>$5<span class='text-muted money-smaller'>/mo</span></button>
-            </div>
-          {{else}}
-            <div class="btn-group btn-group-lg money thick two-line" role="group" aria-label="subscription plan" style="min-width: 800px; overflow: auto;">
-              <button type="button" class={{slp_long_term_free_class}} {{action "set_subscription" 'slp_long_term_free'}}>FREE<br/><span class='text-muted money-smaller'>forever</span></button>
-              <button type="button" class={{slp_long_term_50_class}} {{action "set_subscription" 'slp_long_term_50'}}>
-                $50<br/><span class='text-muted money-smaller'>for 5 years</span>
-                <div class="sponsor sponsor_4">
-                  {{t "help sponsor someone else's subscription!" key='help_sponsor'}}
-                </div>
-              </button>
-              <button type="button" class={{slp_long_term_100_class}} {{action "set_subscription" 'slp_long_term_100'}}>
-                $100<br/><span class='text-muted money-smaller'>for 5 years</span>
-              </button>
-              <button type="button" class={{slp_long_term_150_class}} {{action "set_subscription" 'slp_long_term_150'}}>
-                $150<br/><span class='text-muted money-smaller'>for 5 years</span>
-              </button>
-            </div>
-          {{/if}}
-        {{/if}}
-      {{/if}}
-    </div>
-  </div>
+          <div style='margin-top: -5px; line-height: 17px;'>{{t "one-time purchase" key='one_time_purchase'}}</div>
+        </td>
+        <td class='separator dim' style='width: 25%; vertical-align: top; padding-top: 40px; color: #888;'>
+          <span style='font-size: 40px; vertical-align: middle; color: #000;'>free</span>
+          <div style='margin-top: -5px; line-height: 17px;'>{{t "when supporting communicators" key='when_supporting_communicators'}}</div>
+        </td>
+        <td class='dim' style='width: 25%; vertical-align: top; padding-top: 40px; color: #888;'>
+          $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>50</span>
+          <div style='margin-top: -5px; line-height: 17px;'>{{t "donate a license<br/> for others" key='donate_a_license'}}</div>
+        </td>
+      </tr>
+      <tr>
+        <td>{{t "cloud extras included in subscription" key='included_in_subscription'}}</td>
+        <td>{{t "5 years of cloud extras included<br/>with purchase" key='5_years_included'}}</td>
+        <td colspan="2" class='separator dim'>{{t "cloud extras work for supported communicators" key='for_supported_communicators'}}</td>
+      </tr>
+      <tr>
+        <td colspan="2">{{t "run on multiple devices" key='run_on_multiple_devices'}}</td>
+        <td colspan="2" class='separator dim'>{{t "run on multiple devices" key='run_on_multiple_devices'}}</td>
+      </tr>
+      <tr>
+        <td colspan="2">{{t "full communication system" key='full_communication_system'}}</td>
+        <td colspan="2" class='separator dim'>{{t "works as a communication system for supported communicators" key='works_for_communicators'}}</td>
+      </tr>
+      <tr>
+        <td colspan="2">{{t "premium voices included" key='premium_voices'}}</td>
+        <td colspan="2" class='separator dim'>{{t "track usage, get alerts and modify<br/>boards for communicators" key='track_for_communicators'}}</td>
+      </tr>
+      {{#unless pricing_only}}
+        <tr>
+          <td style='width: 25%;'>
+            <button style='width: 100%;' class={{communicator_monthly_subscription_class}} type="button" {{action "set_subscription_type" 'monthly_communicator'}}>
+              <b>{{t "select this plan" key='select_this_plan'}}</b><br/>
+              {{#if subscription.much_cheaper_offer}}
+                {{t "$3 per month" key='3_per_month'}}
+              {{else}}
+                {{t "$6 per month" key='6_per_month'}}
+              {{/if}}
+            </button>
+          </td>
+          <td style='width: 25%;'>
+            <button style='width: 100%;' class={{communicator_long_term_subscription_class}} type="button" {{action "set_subscription_type" 'long_term_communicator'}}>
+              <b>{{t "select this plan" key='select_this_plan'}}</b><br/>
+              {{#if subscription.much_cheaper_offer}}
+                {{t "$100 purchase" key='100_purchase'}}
+              {{else if subscription.cheaper_offer}}
+                {{t "$150 purchase" key='150_purchase'}}
+              {{else}}
+                {{t "$200 purchase" key='200_purchase'}}
+              {{/if}}
+            </button>
+          </td>
+          <td class='separator dim' style='width: 25%;'>
+            <button type="button" class={{slp_monthly_free_class}} {{action "set_subscription" 'slp_monthly_free'}}>
+              <b>{{t "select this plan" key='select_this_plan'}}</b><br/>
+              {{t "free supporter" key='free_for_supporters'}}
+            </button>
+          </td>
+          <td class='dim' style='width: 25%;'>
+            <button type="button" class={{slp_long_term_50_class}} {{action "set_subscription" 'slp_long_term_50'}}>
+              <b>{{t "select this plan" key='select_this_plan'}}</b><br/>
+              {{t "$50 donation" key='50_donation'}}
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style='text-align: right;'>
+            {{#if subscription.gift_type}}
+              <button class='btn btn-primary btn-sm'>{{t "I have a gift code" key='have_a_gift_code'}}</button>
+              <div style='margin-top: 5px; text-align: center;'>
+                <label>{{t "Gift Code:" key='gift_code_colon'}}</label>
+                <span style="display: inline-block; width: 150px; margin-left: 5px;">
+                  {{input type='text' value=subscription.gift_code class='form-control input-lg' placeholder='CODE'}}
+                </span>
+              </div>
+            {{else}}
+              <a href="#" {{action 'set_subscription_type' 'gift_code'}}>
+                {{t "I have a gift code" key='have_a_gift_code'}}
+              </a>
+            {{/if}}
+          </td>
+          <td colspan="2" class='separator dim'></td>
+        </tr>
+      {{/unless}}
+    </tbody>
+  </table>
+  </div></div>
   {{#if pricing_only}}
     <div class="form-group">
-      <div class="col-sm-9" style="padding-bottom: 20px;">
+      <div class="col-sm-9" style="margin-top: 20px; padding-bottom: 20px;">
         <p style="font-size: 18px;"><strong>{{t "Or start with a 2-month free trial and make sure it works for you." key='after_free_trial'}}</strong></p>
         <p style="margin-top: 10px;">
           <a href="#" {{action 'show_expiration_notes'}}>{{t "What happens if my subscription expires?" key='what_happens_expires'}}</a>
@@ -289,8 +148,14 @@
     </div>
   {{else}}
     <div class="form-group">
-      <div class="col-sm-9">
-        <button type="submit" class="btn btn-lg btn-primary">{{t "Update Subscription" key='activate_subscription'}}</button>
+      <div class="col-sm-9" style='margin-top: 20px;'>
+        <button type="submit" class="btn btn-lg btn-primary">
+          {{#if subscription.user.subscription.grace_period}}
+            {{t "Activate Account" key='activate_account'}}
+          {{else}}
+            {{t "Update Account" key='update_account'}}
+          {{/if}}
+        </button>
         {{#if trial_option}}
           {{#if subscription.user.really_expired}}
             &nbsp;&nbsp;<a href="#" {{action 'skip_subscription'}}>{{t "I need more time" key='i_need_more_time'}}</a>
