@@ -54,6 +54,7 @@ class ButtonImage < ActiveRecord::Base
     if label && options[:external_id] && ENV['OPENSYMBOLS_TOKEN'] && options[:user_id]
       id = options[:external_id]
       # TODO: don't hard-code to this URL
+      # TODO: add a timeout for this, or it can hang for a very long time...
       Typhoeus.post("https://opensymbols.herokuapp.com/api/v1/symbols/#{id}/use", body: {
         access_token: ENV['OPENSYMBOLS_TOKEN'],
         user_id: Security.sha512(options[:user_id], 'global_user_id')[0, 10],

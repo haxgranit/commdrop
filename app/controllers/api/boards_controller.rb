@@ -67,6 +67,8 @@ class Api::BoardsController < ApplicationController
         boards = boards.where(:public => true)
       end
     end
+    
+    # TODO: filter public board searches by locale in addition to query string
 
     self.class.trace_execution_scoped(['boards/sort']) do
       if params['sort']
