@@ -70,7 +70,9 @@ export default Ember.Route.extend({
           controller.processButtons();
         }
       }, function(error) {
-        _this.send('error', error);
+        if(!controller.get('ordered_buttons') || !app_state.get('speak_mode')) {
+          _this.send('error', error);
+        }
       });
     }
   },
