@@ -106,7 +106,7 @@ var Subscription = Ember.Object.extend({
   },
   discount_period: function() {
     return false;
-    return !!this.get('user.joined_within_24_hours');
+//    return !!this.get('user.joined_within_24_hours');
   }.property('user.joined_within_24_hours'),
   valid: function() {
     if(this.get('subscription_type') == 'gift_code') {
