@@ -657,4 +657,64 @@ describe("i18n", function() {
       expect(res.string).toEqual('something cool');
     });
   });
+
+  describe("readable_language", function() {
+    it("should return unknown if no locale specified", function() {
+      expect(i18n.readable_language(null)).toEqual("Unknown Language");
+      expect(i18n.readable_language('bacon')).toEqual('Unknown Language');
+    });
+
+    it("should match known locales", function() {
+      var locales = {
+        nyn_UG: "Nyankole (Uganda)",
+        or_IN: "Oriya (India)",
+        om_KE: "Oromo (Kenya)",
+        ps_AF: "Pashto (Afghanistan)",
+        fa_IR: "Persian (Iran)",
+        pt_GW: "Portuguese (Guinea-Bissau)",
+        pa_Arab_PK: "Punjabi (Arabic, Pakistan)",
+        ro_RO: "Romanian (Romania)",
+        ru_RU: "Russian (Russia)",
+        ii_CN: "Sichuan Yi (China)",
+        sl_SI: "Slovenian (Slovenia)",
+        so_ET: "Somali (Ethiopia)",
+        es_CR: "Spanish (Costa Rica)",
+        es_MX: "Spanish (Mexico)",
+        sw_TZ: "Swahili (Tanzania)",
+        ta_IN: "Tamil (India)",
+        th_TH: "Thai (Thailand)",
+        to_TO: "Tonga (Tonga)"
+      };
+      for(var key in locales) {
+        expect(i18n.readable_language(key)).toEqual(locales[key]);
+      }
+    });
+
+    it("should match known languages", function() {
+      var languages = {
+        or: "Oriya",
+        ps: "Pashto",
+        pl: "Polish",
+        pt: "Portuguese",
+        rof: "Rombo",
+        sg: "Sango",
+        sn: "Shona",
+        so: "Somali",
+        es: "Spanish",
+        te: "Telugu",
+        tr: "Turkish",
+        uk: "Ukrainian"
+      };
+      for(var key in languages) {
+        expect(i18n.readable_language(key)).toEqual(languages[key]);
+      }
+    });
+
+    it("should match even when case is wrong", function() {
+      expect(i18n.readable_language('nYn-ug')).toEqual("Nyankole (Uganda)");
+      expect(i18n.readable_language('ES')).toEqual('Spanish');
+      expect(i18n.readable_language('RU-ru')).toEqual('Russian (Russia)');
+      expect(i18n.readable_language('PA-ARAB-pk')).toEqual('Punjabi (Arabic, Pakistan)');
+    });
+  });
 });

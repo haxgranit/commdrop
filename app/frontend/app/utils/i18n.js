@@ -445,13 +445,20 @@ var i18n = Ember.Object.extend({
     return codes[keyCode];
   },
   readable_language: function(locale) {
-    if(!locale) { return i18n.t('unknown_language', "Unknown Language"); }
-    var pieces = locale.split(/-/);
-    locale = pieces[0].toLowerCase();
-    if(pieces[1]) { locale = locale + "_" + pieces[1].toUpperCase(); }
+    var unknown = i18n.t('unknown_language', "Unknown Language");
+    if(!locale) { return unknown; }
+    var pieces = locale.split(/[-_]/);
+    locale = pieces.shift().toLowerCase();
+    if(pieces.length > 1) {
+      var mid = pieces.shift().toLowerCase();
+      mid = mid[0].toUpperCase() + mid.substring(1);
+      locale = locale + "_" + mid;
+    }
+
+    if(pieces[0]) { locale = locale + "_" + pieces[0].toUpperCase(); }
 
     var list = i18n.get('locales');
-    var res = i18n.t('unknown_language', "Unknown Language");
+    var res = unknown;
     for(var key in list) {
       if(key == locale) {
         res = list[key];

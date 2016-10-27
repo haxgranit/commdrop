@@ -72,7 +72,7 @@ export default Ember.Controller.extend({
       }).then(function(g) {
         _this.set('status', null);
         _this.set('editing', false);
-        _this.get('templates_list_for', null)
+        _this.get('templates_list_for', null);
       }, function(err) {
         _this.set('status', {saving_error: true});
       });
