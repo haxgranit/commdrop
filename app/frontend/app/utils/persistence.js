@@ -595,10 +595,10 @@ var persistence = Ember.Object.extend({
           var opts = persistence.urls_to_store.shift();
           persistence.store_url_now(opts.url, opts.type, opts.keep_big, opts.force_reload).then(function(res) {
             opts.defer.resolve(res);
-            persistence.storing_urls();
+            if(persistence.storing_urls) { persistence.storing_urls(); }
           }, function(err) {
             opts.defer.reject(err);
-            persistence.storing_urls();
+            if(persistence.storing_urls) { persistence.storing_urls(); }
           });
         } else {
           persistence.storing_url_watchers--;
@@ -873,8 +873,10 @@ var persistence = Ember.Object.extend({
       });
 
       // cache images used for keyboard spelling to work offline
-      persistence.store_url('https://s3.amazonaws.com/opensymbols/libraries/mulberry/pencil%20and%20paper%202.svg', 'image', false, false).then(null, function() { });
-      persistence.store_url('https://s3.amazonaws.com/opensymbols/libraries/mulberry/paper.svg', 'image', false, false).then(null, function() { });
+      if(!CoughDrop.testing || CoughDrop.sync_testing) {
+        persistence.store_url('https://s3.amazonaws.com/opensymbols/libraries/mulberry/pencil%20and%20paper%202.svg', 'image', false, false).then(null, function() { });
+        persistence.store_url('https://s3.amazonaws.com/opensymbols/libraries/mulberry/paper.svg', 'image', false, false).then(null, function() { });
+      }
 
       var confirm_quota_for_user = find_user.then(function(user) {
         if(user) {
