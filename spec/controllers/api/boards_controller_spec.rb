@@ -155,6 +155,20 @@ describe Api::BoardsController, :type => :controller do
       expect(json['board'][1]['id']).to eq(b.global_id)
     end
     
+    it "should allow sorting by custom_order" do
+      u = User.create(:settings => {:public => true})
+      b = Board.create(:user => u, :public => true, :settings => {'custom_order' => 2})
+      Board.where(:id => b.id).update_all({:home_popularity => 3, :popularity => 1})
+      b2 = Board.create(:user => u, :public => true, :settings => {'custom_order' => 1})
+      Board.where(:id => b2.id).update_all({:home_popularity => 1, :popularity => 3})
+      get :index, :sort => "custom_order"
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['board'].length).to eq(2)
+      expect(json['board'][0]['id']).to eq(b2.global_id)
+      expect(json['board'][1]['id']).to eq(b.global_id)
+    end
+    
     it "should only show boards with some home_popularity score when sorting by that" do
       u = User.create(:settings => {:public => true})
       b = Board.create(:user => u, :public => true)
@@ -888,6 +902,7 @@ describe Api::BoardsController, :type => :controller do
       
       it "should include board copy as a version" do
         token_user
+        PaperTrail.whodunnit = "user:#{@user.global_id}"
         u = User.create
         b = Board.create(:user => u, :public => true)
         b2 = Board.create(:user => u, :public => true)
@@ -909,9 +924,9 @@ describe Api::BoardsController, :type => :controller do
         expect(new_b2.parent_board_id).to eq(b2.id)
         
         vs = Board.user_versions(new_b.global_id)
-        expect(vs.length).to eq(1)
+        expect(vs.length).to eq(2)
         vs2 = Board.user_versions(new_b2.global_id)
-        expect(vs.length).to eq(1)
+        expect(vs.length).to eq(2)
         
         get :history, :board_id => new_b2.key
         expect(response).to be_success

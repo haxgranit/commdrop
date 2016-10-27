@@ -30,7 +30,7 @@ module Relinking
     board.settings['grid'] = self.settings['grid']
     board.settings['never_edited'] = true
     board.public = true if make_public
-    board.save
+    board.save!
     board
   end
   
