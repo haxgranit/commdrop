@@ -119,7 +119,7 @@ describe('boundClasses', function() {
       for(var idx = 0; idx < style.sheet.rules.length; idx++) {
         var rule = style.sheet.rules[idx];
         if(rule.selectorText == (".button." + key)) {
-          expect(rule.style.cssText).toEqual('color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);');
+          expect(rule.style.cssText).toEqual('background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);');
           found_rule = true;
         }
       }
