@@ -543,6 +543,7 @@ describe('Goal', function() {
     });
     it("should return save promise if new", function() {
       var obj = Ember.Object.create();
+      var goal = CoughDrop.store.createRecord('goal');
       stub(CoughDrop.store, 'createRecord', function(type) {
         expect(type).toEqual('goal');
         return obj;
@@ -552,10 +553,10 @@ describe('Goal', function() {
         saving = true;
         return "saving";
       });
-      var goal = CoughDrop.store.createRecord('goal');
       goal.set('next_template_id', 'new');
       goal.set('template_header_id', 'bacon');
       goal.set('new_next_template_summary', 'summary');
+      goal.set('related', {header: {id: 'bacon'}});
       var res = goal.generate_next_template_if_new();
       expect(res).toEqual('saving');
       expect(saving).toEqual(true);
