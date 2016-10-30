@@ -1,0 +1,4 @@
+#!/bin/sh
+git push heroku master
+
+rake extras:deploy_notification

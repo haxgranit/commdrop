@@ -13,6 +13,15 @@ task "extras:clear_report_tallies" => :environment do
   RedisInit.default.del('missing_symbols')
 end
 
+task "extras:deploy_notification" => :environment do
+  str = File.read('./app/assets/javascripts/application-preload.js')
+  match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+\w*)\";/)
+  version = match && match[1]
+
+  `curl -X POST -H 'Content-type: application/json' --data '{"username": "deploy-bot", "icon_emoji": ":octopus:", "text":"New version deployed, #{version}\n<https://github.com/CoughDrop/coughdrop/blob/master/CHANGELOG.md|see lates change notes here>"}' #{ENV['SLACK_NOTIFICATION_URL']}`
+  #SLACK_NOTIFICATION_URL
+end
+
 task "extras:version" => :environment do
   str = File.read('./app/assets/javascripts/application-preload.js')
   match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+)(\w*)\";/)
