@@ -2,7 +2,7 @@
 
 ## Master
 
-### 2016-10-14
+### 2016-10-27
 - improved goal management interface
 - room-level usage stats page
 - support for pasting images onto buttons
