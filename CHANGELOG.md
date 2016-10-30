@@ -2,6 +2,13 @@
 
 ## Master
 
+### 2016-10-14
+- improved goal management interface
+- room-level usage stats page
+- support for pasting images onto buttons
+- option to make boards public when copying
+- option to translate boards when copying (feature flag)
+
 ### 2016-10-12
 - fix dwell-based selection issues
 - fix recurring notification scheduling
