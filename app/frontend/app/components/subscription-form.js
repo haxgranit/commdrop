@@ -85,7 +85,7 @@ export default Ember.Component.extend({
         }).then(function(data) {
           progress_tracker.track(data.progress, function(event) {
             if(event.status == 'errored') {
-              _this.sendAction('subscription_error', i18n.t('user_subscription_update_failed', "Subscription failed. Please try again or contact support for help."));
+              _this.sendAction('subscription_error', i18n.t('user_subscription_update_failed', "Purchase failed. Please try again or contact support for help."));
               _this.send('reset');
               console.log(event);
               if(event.sub_status == 'server_unresponsive') {
@@ -94,7 +94,7 @@ export default Ember.Component.extend({
                 console.error('purchase_progress_failed');
               }
             } else if(event.status == 'finished' && event.result && event.result.success === false && event.result.error == 'card_declined') {
-              _this.sendAction('subscription_error', i18n.t('card_declined', "Subscription failed, your card was declined. Please try a different card or contact support for help."));
+              _this.sendAction('subscription_error', i18n.t('card_declined', "Purchase failed, your card was declined. Please try a different card or contact support for help."));
               _this.send('reset');
               console.log(event);
             } else if(event.status == 'finished') {
@@ -102,9 +102,9 @@ export default Ember.Component.extend({
                 user.set('preferences.progress.subscription_set', true);
                 user.save();
                 _this.send('reset');
-                _this.sendAction('subscription_success', i18n.t('user_subscribed', "Your subscription succeeded! Thank you for supporting CoughDrop!"));
+                _this.sendAction('subscription_success', i18n.t('user_subscribed', "Your purchase succeeded! Thank you for supporting CoughDrop!"));
               }, function() {
-                _this.sendAction('subscription_error', i18n.t('user_subscription_reload_failed', "Subscription succeeded, but there was a problem reloading your user account. Please try loading this page again."));
+                _this.sendAction('subscription_error', i18n.t('user_subscription_reload_failed', "Purchase succeeded, but there was a problem reloading your user account. Please try loading this page again."));
               });
             }
           });
@@ -112,7 +112,7 @@ export default Ember.Component.extend({
           console.log(err);
           console.error('purchase_subscription_start_failed');
           _this.send('reset');
-          _this.sendAction('subscription_error', i18n.t('user_subscription_update_failed', "Subscription failed unexpectedly. Please contact support for help."));
+          _this.sendAction('subscription_error', i18n.t('user_subscription_update_failed', "Purchase failed unexpectedly. Please contact support for help."));
         });
       };
 

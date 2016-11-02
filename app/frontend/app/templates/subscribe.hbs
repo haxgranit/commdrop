@@ -13,7 +13,7 @@
       </p>
     {{else}}
       <p>
-        {{t "We're excited you're here! Before you get started, please take a minute to select a subscription plan that works for you. Remember you can always switch plans later if you change your mind or need to update things." key='welcome_fill_out_subscription'}}
+        {{t "We're excited you're here! Before you get started, please take a minute to select a purchase option that works for you. Remember you can always switch plans later if you change your mind or need to update things." key='welcome_fill_out_subscription'}}
       </p>
       {{#if model.subscription.discount_period}}
         <p>
@@ -27,7 +27,7 @@
       {{/if}}
     {{/if}}
     {{#if model.subscription.finalizing_purchase}}
-      <h4>{{t "Confirming subscription update..." key='finalizing_subscription'}}</h4>
+      <h4>{{t "Confirming purchase..." key='finalizing_subscription'}}</h4>
     {{else if error}}
       <h4 class='text-danger'>{{error}}</h4>
     {{else}}

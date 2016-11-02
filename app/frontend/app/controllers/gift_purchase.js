@@ -52,7 +52,7 @@ export default Ember.Controller.extend({
         }).then(function(data) {
           progress_tracker.track(data.progress, function(event) {
             if(event.status == 'errored') {
-              modal.error(i18n.t('user_subscription_update_failed', "Subscription failed. Please try again or contact support for help."));
+              modal.error(i18n.t('user_subscription_update_failed', "Purchase failed. Please try again or contact support for help."));
               _this.send('reset');
               console.log(event);
             } else if(event.status == 'finished') {
@@ -61,10 +61,10 @@ export default Ember.Controller.extend({
           });
         }, function() {
           _this.send('reset');
-          modal.error(i18n.t('user_subscription_update_failed', "Subscription failed unexpectedly. Please contact support for help."));
+          modal.error(i18n.t('user_subscription_update_failed', "Purchase failed unexpectedly. Please contact support for help."));
         });
       };
-      
+
       Subscription.purchase(subscription).then(function(result) {
         var amount = subscription.get('subscription_amount');
         if(amount == 'long_term_custom') {

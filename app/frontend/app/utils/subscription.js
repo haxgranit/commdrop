@@ -306,7 +306,7 @@ var Subscription = Ember.Object.extend({
       }
     } else {
       if(this.get('subscription_type') == 'monthly') {
-        return i18n.t('slp_monthly_sub', "CoughDrop supporting-role monthly subscription");
+        return i18n.t('slp_monthly_sub', "CoughDrop supporting-role");
       } else {
         return i18n.t('slp_long_term_sub', "CoughDrop supporting-role 5-year purchase");
       }
