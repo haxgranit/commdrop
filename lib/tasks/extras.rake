@@ -18,7 +18,7 @@ task "extras:deploy_notification" => :environment do
   match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+\w*)\";/)
   version = match && match[1]
 
-  `curl -X POST -H 'Content-type: application/json' --data '{"username": "deploy-bot", "icon_emoji": ":octopus:", "text":"New version deployed, #{version}\n<https://github.com/CoughDrop/coughdrop/blob/master/CHANGELOG.md|see lates change notes here>"}' #{ENV['SLACK_NOTIFICATION_URL']}`
+  `curl -X POST -H 'Content-type: application/json' --data '{"username": "deploy-bot", "icon_emoji": ":octopus:", "text":"New version deployed, #{version}\n<https://github.com/CoughDrop/coughdrop/blob/master/CHANGELOG.md|change notes> | <https://github.com/CoughDrop/coughdrop/commits/master|detailed log>"}' #{ENV['SLACK_NOTIFICATION_URL']}`
   #SLACK_NOTIFICATION_URL
 end
 
