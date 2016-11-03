@@ -5,6 +5,7 @@ import capabilities from './capabilities';
 import app_state from './app_state';
 import i18n from './i18n';
 import speecher from './speecher';
+import buttonTracker from './raw_events';
 
 var scanner = Ember.Object.extend({
   setup: function(controller) {
@@ -265,9 +266,15 @@ var scanner = Ember.Object.extend({
       elem = elem.children[0];
     }
 
-    if(elem.dom.hasClass('btn') && elem.dom.closest("#identity").length > 0) {
+    buttonTracker.track_selection({
+      event_type: 'click',
+      selection_type: 'scanner'
+    });
+
+    if(elem.dom && elem.dom.hasClass('btn') && elem.dom.closest("#identity").length > 0) {
       var e = Ember.$.Event( "click" );
       e.pass_through = true;
+      e.switch_activated = true;
       Ember.$(elem.dom).trigger(e);
       setTimeout(function() {
         Ember.$("#home_button").focus().select();
@@ -283,7 +290,7 @@ var scanner = Ember.Object.extend({
       });
     } else if(elem.children) {
       scanner.load_children(elem, scanner.elements, scanner.element_index);
-    } else {
+    } else if(elem.dom) {
       if(elem.dom.hasClass('button') && elem.dom.attr('data-id')) {
         var id = elem.dom.attr('data-id');
         var button = editManager.find_button(id);

@@ -277,6 +277,11 @@ var stashes = Ember.Object.extend({
       if(stashes.get('referenced_user_id')) {
         log_event.referenced_user_id = stashes.get('referenced_user_id');
       }
+      if(stashes.get('modeling')) {
+        log_event.modeling = true;
+      } else if(stashes.last_selection && stashes.last_selection.modeling && stashes.last_selection.ts > ((new Date()).getTime() - 500)) {
+        log_event.modeling = true;
+      }
       log_event.window_width = window.outerWidth;
       log_event.window_height= window.outerHeight;
 

@@ -263,8 +263,10 @@ module Stats
       :buttons_per_utterance => 0.0,
       :total_buttons => 0,
       :unique_buttons => 0,
+      :modeled_buttons => 0,
       :total_words => 0,
       :unique_words => 0,
+      :modeled_words => 0,
       :words_by_frequency => [],
       :buttons_by_frequency => [],
       :words_per_minute => 0.0,
@@ -300,8 +302,10 @@ module Stats
       res[:total_sessions] += stats[:total_sessions]
       res[:total_utterances] += stats[:total_utterances]
       res[:total_buttons] += buttons
+      res[:modeled_buttons] += (stats[:modeled_button_counts] || {}).map{|k, v| v['count'] }.sum
       res[:unique_buttons] += stats[:all_button_counts].keys.length
       res[:total_words] += words
+      res[:modeled_words] += (stats[:modeled_word_counts] || {}).map{|k, v| v }.sum
       res[:unique_words] += stats[:all_word_counts].keys.length
       res[:started_at] = [res[:started_at], stats[:started_at]].compact.min
       res[:ended_at] = [res[:ended_at], stats[:ended_at]].compact.max
@@ -423,6 +427,17 @@ module Stats
           stats[:all_word_counts][word] ||= 0
           stats[:all_word_counts][word] += cnt
         end
+        (session.data['stats']['modeled_button_counts'] || []).each do |ref, button|
+          if stats[:modeled_button_counts][ref]
+            stats[:modeled_button_counts][ref]['count'] += button['count']
+          else
+            stats[:modeled_button_counts][ref] = button.merge({})
+          end
+        end
+        (session.data['stats']['modeled_word_counts'] || []).each do |word, cnt|
+          stats[:modeled_word_counts][word] ||= 0
+          stats[:modeled_word_counts][word] += cnt
+        end
         if session.data['goal']
           goal = session.data['goal']
           stats[:goals] ||= {}
@@ -461,6 +476,17 @@ module Stats
           total_stats[:all_word_counts][word] ||= 0
           total_stats[:all_word_counts][word] += cnt
         end
+        stats[:modeled_button_counts].each do |ref, button|
+          if total_stats[:modeled_button_counts][ref]
+            total_stats[:modeled_button_counts][ref]['count'] += button['count']
+          else
+            total_stats[:modeled_button_counts][ref] = button.merge({})
+          end
+        end
+        stats[:modeled_word_counts].each do |word, cnt|
+          total_stats[:modeled_word_counts][word] ||= 0
+          total_stats[:modeled_word_counts][word] += cnt
+        end
         (stats[:goals] || {}).each do |id, goal|
           total_stats[:goals] ||= {}
           total_stats[:goals][id] ||= {
@@ -490,6 +516,8 @@ module Stats
     stats[:total_session_seconds] = 0.0
     stats[:all_button_counts] = {}
     stats[:all_word_counts] = {}
+    stats[:modeled_button_counts] = {}
+    stats[:modeled_word_counts] = {}
     stats
   end
   

@@ -300,6 +300,13 @@ var buttonTracker = Ember.Object.extend({
           }
         }
       }
+
+      buttonTracker.multi_touch = buttonTracker.multi_touch || {total: 0, multis: 0};
+      buttonTracker.multi_touch.total++;
+      if(event.type != 'gazelinger' && event.total_touches && event.total_touches > 1) {
+        buttonTracker.multi_touch.multis++;
+      }
+
       if(!elem_wrap || !app_state.get('edit_mode')) {
       } else {
         // this is expensive, only do when the drop target has changed
@@ -459,16 +466,34 @@ var buttonTracker = Ember.Object.extend({
         }
       }
 
+      buttonTracker.multi_touch = buttonTracker.multi_touch || {total: 0, multis: 0};
+      buttonTracker.multi_touch.total++;
+      if(event.type != 'gazelinger' && event.total_touches && event.total_touches > 1) {
+        buttonTracker.multi_touch.multis++;
+      }
+
       // logic to prevent quick double-tap, seems like this was a fix for iOS problems
       // but it may no longer be necessary
       if(elem_wrap && elem_wrap.dom && buttonTracker.lastSelect != elem_wrap.dom) {
         event.preventDefault();
-        buttonTracker.lastSelect = elem_wrap.dom;
-        Ember.run.later(function() {
-          if(buttonTracker.lastSelect == elem_wrap.dom) {
-            buttonTracker.lastSelect = null;
-          }
-        }, 300);
+        if(elem_wrap.dom.id != 'clear_button') {
+          buttonTracker.lastSelect = elem_wrap.dom;
+          buttonTracker.clear_hits = 0;
+          Ember.run.later(function() {
+            if(buttonTracker.lastSelect == elem_wrap.dom) {
+              buttonTracker.lastSelect = null;
+            }
+          }, 300);
+        }
+        var event_type = 'mouse';
+        if(event.type && event.type.match(/touch/)) { event_type = 'touch'; }
+        if(event.dwell_linger) { event_type = 'dwell'; }
+        buttonTracker.track_selection({
+          event_type: event.type,
+          selection_type: event_type,
+          total_events: buttonTracker.multi_touch.total,
+          multi_touch_events: buttonTracker.multi_touch.multis
+        });
 
         // different elements have different selection styles
         // TODO: standardize this more
@@ -504,6 +529,23 @@ var buttonTracker = Ember.Object.extend({
           e.pass_through = true;
           Ember.$(elem_wrap.dom).trigger(e);
         }
+
+        if(elem_wrap.dom.id == 'clear_button' && event.type != 'gazelinger') {
+          buttonTracker.clear_hits = (buttonTracker.clear_hits || 0) + 1;
+          Ember.run.cancel(buttonTracker.clear_hits_timeout);
+          buttonTracker.clear_hits_timeout = Ember.run.later(function() {
+            buttonTracker.clear_hits = 0;
+          }, 1500);
+          if(buttonTracker.clear_hits >= 3) {
+            buttonTracker.clear_hits = 0;
+            console.log("triple!");
+            var e = Ember.$.Event('tripleclick');
+            e.clientX = event.clientX;
+            e.clientY = event.clientY;
+            e.pass_through = true;
+            Ember.$(elem_wrap.dom).trigger(e);
+          }
+        }
       }
     } else if(app_state.get('edit_mode') && !editManager.paint_mode) {
       if(((elem_wrap && elem_wrap.dom && elem_wrap.dom.className) || "").match(/button/)) {
@@ -514,6 +556,7 @@ var buttonTracker = Ember.Object.extend({
     // without this, applying a button from the stash causes the selected
     // button to be put in drag mode
     buttonTracker.buttonDown = false;
+    buttonTracker.multi_touch = null;
   },
   button_release: function(elem_wrap, event) {
     // buttons have a slightly-more advanced logic, because of all the selection
@@ -986,12 +1029,14 @@ var buttonTracker = Ember.Object.extend({
       event.pageY = event.originalEvent.touches[0].pageY;
       event.clientX = event.originalEvent.touches[0].clientX;
       event.clientY = event.originalEvent.touches[0].clientY;
+      event.total_touches = event.originalEvent.touches.length;
     }
     if(event.originalEvent && event.originalEvent.changedTouches && event.originalEvent.changedTouches[0]) {
       event.pageX = event.originalEvent.changedTouches[0].pageX;
       event.pageY = event.originalEvent.changedTouches[0].pageY;
       event.clientX = event.originalEvent.changedTouches[0].clientX;
       event.clientY = event.originalEvent.changedTouches[0].clientY;
+      event.total_touches = event.originalEvent.touches.length;
     }
     return event;
   },
@@ -1024,6 +1069,25 @@ var buttonTracker = Ember.Object.extend({
         this.ignoreUp = true;
       }
     }
+  },
+  track_selection: function(opts) {
+    var ls = {
+      event_type: opts.event_type,
+      selection_type: opts.selection_type,
+      total_events: opts.total_events || 1,
+      multi_touch_events: opts.multi_touch_events || 0,
+      ts: (new Date()).getTime()
+    };
+    if(ls.selection_type == 'touch' && ls.total_events > 0 && ls.multi_touch_events > 0 && (ls.multi_touch_events / (ls.total_events - 1)) >= 0.4) {
+      ls.multi_touch = true;
+    }
+    if(ls.multi_touch && buttonTracker.multi_touch_modeling) {
+      ls.modeling = true;
+    } else if(ls.selection_type != 'dwell' && buttonTracker.dwell_modeling) {
+      ls.modeling = true;
+    }
+    stashes.last_selection = ls;
+    buttonTracker.last_selection = ls;
   },
   focus_tab: function(from_start) {
     if(!buttonTracker.focus_wrap) {

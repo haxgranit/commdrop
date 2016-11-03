@@ -1,5 +1,10 @@
 {{#each button_list as |button|}}
   <div class="history_button">
+    {{#if button.modeling}}
+      <div class='modeling'>
+        <span class='glyphicon glyphicon-hand-up'></span>
+      </div>
+    {{/if}}
     {{#if button.image}}
       <img src={{button.image}} onerror="button_broken_image(this);"/>
     {{else}}

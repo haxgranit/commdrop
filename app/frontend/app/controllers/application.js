@@ -89,6 +89,7 @@ export default Ember.Controller.extend({
       utterance.backspace();
     },
     clear: function() {
+      app_state.toggle_modeling(false);
       utterance.clear();
     },
     toggle_home_lock: function() {
@@ -406,6 +407,9 @@ export default Ember.Controller.extend({
     confirm_update: function() {
       modal.open('confirm-update-app');
     },
+    toggle_modeling: function() {
+      app_state.toggle_modeling(true);
+    }
   },
   activateButton: function(button, options) {
     options = options || {};
@@ -428,6 +432,11 @@ export default Ember.Controller.extend({
       blocking_speech: button.blocking_speech,
       type: 'speak'
     };
+    if(app_state.get('modeling')) {
+      obj.modeling = true;
+    } else if(stashes.last_selection && stashes.last_selection.modeling && stashes.last_selection.ts > ((new Date()).getTime() - 500)) {
+      obj.modeling = true;
+    }
     var location = buttonTracker.locate_button_on_board(button.id, options.event);
     if(location) {
       obj.percent_x = location.percent_x;

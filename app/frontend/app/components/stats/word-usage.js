@@ -14,10 +14,17 @@ export default Ember.Component.extend({
     CoughDrop.Visualizations.wait('word-graph', function() {
       if(elem && stats && stats.get('days')) {
         var raw_data = [[i18n.t('day', "Day"), i18n.t('total_words', "Total Words"), i18n.t('unique_words', "Unique Words")]];
+        if(stats.get('modeled_words')) {
+          raw_data[0].push(i18n.t('modeled_words', "Modeled Words"));
+        }
         var max_words = 0;
         for(var day in stats.get('days')) {
           var day_data = stats.get('days')[day];
-          raw_data.push([day, day_data.total_words, day_data.unique_words]);
+          var row = [day, day_data.total_words, day_data.unique_words];
+          if(stats.get('modeled_words')) {
+            row.push(day_data.modeled_words);
+          }
+          raw_data.push(row);
           max_words = Math.max(max_words, day_data.total_words || 0);
         }
         if(ref_stats) {
@@ -41,7 +48,7 @@ export default Ember.Component.extend({
               max: max_words
             }
           },
-          colors: ['#428bca', '#444444' ],
+          colors: ['#428bca', '#444444', '#f2b367'],
           pointSize: 3
         };
 

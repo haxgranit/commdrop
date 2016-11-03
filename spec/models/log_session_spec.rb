@@ -470,6 +470,43 @@ describe LogSession, :type => :model do
       expect(day['orientation']['gamma']['histogram']['-18-18']).to eq(1)
       expect(day['orientation']['gamma']['histogram']['18-54']).to eq(1)
     end
+    
+    it "should track modeling events correctly" do
+      u = User.create
+      d = Device.create
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'modeling' => true, 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 5},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 3},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      
+      day = s1.data['stats']
+      expect(day['utterances']).to eq(1)
+      expect(day['all_button_counts']['1::1_1']).to eq({'button_id' => 1, 'board_id' => '1_1', 'text' => 'ok go ok', 'count' => 2})
+      expect(day['all_word_counts']).to eq({'ok' => 4, 'go' => 2})
+      expect(day['modeled_button_counts']['1::1_1']).to eq({'button_id' => 1, 'board_id' => '1_1', 'text' => 'ok go ok', 'count' => 1})
+      expect(day['modeled_word_counts']).to eq({'ok' => 2, 'go' => 1})
+    end
+    
+    it "should not include modeling events in regular stats" do
+      u = User.create
+      d = Device.create
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'modeling' => true, 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 5},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 3},
+        {'type' => 'button', 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'geo' => ['13', '12'], 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      
+      day = s1.data['stats']
+      expect(day['utterances']).to eq(1)
+      expect(day['utterances']).to eq(1)
+      expect(day['all_button_counts']['1::1_1']).to eq({'button_id' => 1, 'board_id' => '1_1', 'text' => 'ok go ok', 'count' => 2})
+      expect(day['all_word_counts']).to eq({'ok' => 4, 'go' => 2})
+      expect(day['modeled_button_counts']['1::1_1']).to eq({'button_id' => 1, 'board_id' => '1_1', 'text' => 'ok go ok', 'count' => 1})
+      expect(day['modeled_word_counts']).to eq({'ok' => 2, 'go' => 1})
+    end
   end
 
   describe "split_out_later_sessions" do

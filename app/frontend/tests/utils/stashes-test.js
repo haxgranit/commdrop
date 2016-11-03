@@ -8,6 +8,12 @@ var App;
 describe('stashes', function() {
   beforeEach(function() {
     window.localStorage.root_board_state = null;
+      stashes.orientation = null;
+      stashes.volume = null;
+      stashes.geo = null;
+      stashes.ambient_light = null;
+      stashes.screen_brightness = null;
+      stashes.set('referenced_user_id', null);
   });
 
   describe("setup", function() {
@@ -380,6 +386,82 @@ describe('stashes', function() {
         referenced_user_id: '1234',
         window_width: 1234,
         window_height: 2345
+      });
+    });
+
+    it("should mark as modeling if true", function() {
+      var log_pushed = false;
+      stub(stashes, 'push_log', function() {
+        log_pushed = true;
+      });
+      var last_event = null;
+      stub(stashes, 'persist', function(key, val) {
+        if(key == 'last_event') {
+          last_event = val;
+        }
+      });
+      stub(window, 'outerWidth', 1234);
+      stub(window, 'outerHeight', 2345);
+
+      stashes.log_event({}, 'asdf');
+      expect(last_event).toEqual({
+        action: {},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'action',
+        user_id: 'asdf',
+        window_width: 1234,
+        window_height: 2345,
+      });
+
+      stashes.set('modeling', true);
+      stashes.log_event({}, 'asdf');
+      expect(last_event).toEqual({
+        action: {},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'action',
+        user_id: 'asdf',
+        window_width: 1234,
+        window_height: 2345,
+        modeling: true
+      });
+
+      stashes.set('modeling', false);
+      stashes.log_event({}, 'asdf');
+      expect(last_event).toEqual({
+        action: {},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'action',
+        user_id: 'asdf',
+        window_width: 1234,
+        window_height: 2345,
+      });
+
+      stashes.last_selection = {modeling: true, ts: ((new Date()).getTime() - 1000)};
+      stashes.log_event({}, 'asdf');
+      expect(last_event).toEqual({
+        action: {},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'action',
+        user_id: 'asdf',
+        window_width: 1234,
+        window_height: 2345,
+      });
+
+      stashes.last_selection = {modeling: true, ts: ((new Date()).getTime() - 300)};
+      stashes.log_event({}, 'asdf');
+      expect(last_event).toEqual({
+        action: {},
+        geo: null,
+        timestamp: last_event.timestamp,
+        type: 'action',
+        user_id: 'asdf',
+        window_width: 1234,
+        window_height: 2345,
+        modeling: true
       });
     });
   });

@@ -311,7 +311,55 @@ describe Stats do
       expect(day['orientation']['gamma']['total']).to eq(1)
       expect(day['orientation']['gamma']['average']).to eq(50)
       expect(day['orientation']['gamma']['histogram']['18-54']).to eq(1)
-    end    
+    end   
+    
+    it "should include modeling data when available" do
+      u = User.create
+      d = Device.create
+      s1 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'modeling' => true, 'button' => {'label' => 'donut', 'button_id' => 2, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => Time.now.to_i - 6},
+        {'type' => 'button', 'button' => {'label' => 'tastes', 'button_id' => 3, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => Time.now.to_i - 3},
+        {'type' => 'button', 'modeling' => true, 'button' => {'label' => 'ok go ok', 'button_id' => 1, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => Time.now.to_i - 1},
+        {'type' => 'utterance', 'utterance' => {'text' => 'ok go ok', 'buttons' => []}, 'timestamp' => Time.now.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      s2 = LogSession.process_new({'events' => [
+        {'type' => 'button', 'modeling' => true, 'button' => {'label' => 'donut', 'button_id' => 2, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => 2.days.ago.to_time.to_i - 6},
+        {'type' => 'button', 'button' => {'label' => 'tastes like', 'button_id' => 3, 'board' => {'id' => '1_1'}, 'spoken' => true}, 'timestamp' => 2.days.ago.to_time.to_i - 3},
+        {'type' => 'utterance', 'utterance' => {'text' => 'never again', 'buttons' => []}, 'timestamp' => 2.days.ago.to_time.to_i}
+      ]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
+      
+      WeeklyStatsSummary.update_for(s1.global_id)
+      WeeklyStatsSummary.update_for(s2.global_id)
+      
+      starty = 3.days.ago
+      endy = Time.now + 100
+      res = Stats.daily_use(u.global_id, {:start_at => starty, :end_at => endy})
+      res = Stats.cached_daily_use(u.global_id, {:start_at => starty, :end_at => endy})
+      expect(res[:cached]).to eq(true)
+      expect(res[:total_sessions]).to eq(2)
+      expect(res[:total_utterances]).to eq(2)
+      expect(res[:total_buttons]).to eq(2)
+      expect(res[:total_words]).to eq(3)
+      expect(res[:modeled_buttons]).to eq(3)
+      expect(res[:modeled_words]).to eq(5)
+      
+      expect(res[:days].length).to eq(4)
+      day = res[:days][Date.today.to_s]
+      expect(day).not_to eq(nil)
+      expect(day[:total_sessions]).to eq(1)
+      expect(day[:total_buttons]).to eq(1)
+      expect(day[:total_words]).to eq(1)
+      expect(day[:modeled_buttons]).to eq(2)
+      expect(day[:modeled_words]).to eq(4)
+      
+      day = res[:days][2.days.ago.to_date.to_s]
+      expect(day).not_to eq(nil)
+      expect(day[:total_sessions]).to eq(1)
+      expect(day[:total_buttons]).to eq(1)
+      expect(day[:total_words]).to eq(2)
+      expect(day[:modeled_buttons]).to eq(1)
+      expect(day[:modeled_words]).to eq(1)
+    end 
     
     it "should allow filtering by geolocation or ip address" do
       u = User.create

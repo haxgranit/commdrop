@@ -377,7 +377,6 @@ var pictureGrabber = Ember.Object.extend({
             width = canvas.width - diff;
           }
           context.clearRect(0, 0, canvas.width, canvas.height);
-          console.log(x + "," + y + "  " + width + "x" + height);
           context.drawImage(img, x, y, width, height);
           try {
             result = canvas.toDataURL();

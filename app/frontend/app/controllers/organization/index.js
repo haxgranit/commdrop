@@ -44,6 +44,9 @@ export default Ember.Controller.extend({
       this.refresh_logs();
     }
   }.observes('model.permissions.manage', 'logs.loading', 'logs.data'),
+  loading_org: function() {
+    return !this.get('model.permissions');
+  }.property('model.permissions'),
   shown_view: function() {
     if(this.get('selected_view')) {
       return this.get('selected_view');

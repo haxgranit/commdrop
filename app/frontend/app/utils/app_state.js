@@ -265,6 +265,13 @@ var app_state = Ember.Object.extend({
       }
     }
   },
+  toggle_modeling: function(enable) {
+    if(enable === undefined || enable === null) {
+      enable = !app_state.get('modeling');
+    }
+    stashes.set('modeling', !!enable);
+    app_state.set('modeling', !!enable);
+  },
   back_one_board: function() {
     buttonTracker.transitioning = true;
     var history = this.get_history();
@@ -456,6 +463,8 @@ var app_state = Ember.Object.extend({
           scanner.stop();
         }
       }
+      buttonTracker.multi_touch_modeling = _this.get('currentUser.preferences.multi_touch_modeling');
+
       if(app_state.get('speak_mode') && _this.get('currentUser.preferences.device.dwell')) {
         buttonTracker.dwell_enabled = true;
         buttonTracker.dwell_timeout = _this.get('currentUser.preferences.device.dwell_timeout');
@@ -465,6 +474,7 @@ var app_state = Ember.Object.extend({
         buttonTracker.dwell_release_distance = _this.get('currentUser.preferences.device.dwell_release_distance');
         buttonTracker.dwell_no_cutoff = _this.get('currentUser.preferences.device.dwell_no_cutoff');
         buttonTracker.dwell_cursor = _this.get('currentUser.preferences.device.dwell_cursor');
+        buttonTracker.dwell_modeling = _this.get('currentUser.preferences.device.dwell_modeling');
         if(buttonTracker.dwell_type == 'eyegaze') {
           capabilities.eye_gaze.listen();
         }

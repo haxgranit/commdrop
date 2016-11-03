@@ -409,7 +409,7 @@ class User < ActiveRecord::Base
       'silence_spelling_buttons', 'stretch_buttons', 'registration_type',
       'board_background', 'vocalization_height', 'role', 'auto_open_speak_mode',
       'canvas_render', 'blank_status', 'share_notifications', 'notification_frequency',
-      'skip_supervisee_sync', 'sync_refresh_interval']
+      'skip_supervisee_sync', 'sync_refresh_interval', 'multi_touch_modeling']
 
   PROGRESS_PARAMS = ['setup_done', 'intro_watched', 'profile_edited', 'preferences_edited', 'home_board_set', 'app_added', 'skipped_subscribe_modal']
   def process_params(params, non_user_params)

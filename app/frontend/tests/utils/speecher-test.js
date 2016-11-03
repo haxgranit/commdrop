@@ -114,6 +114,7 @@ describe('speecher', function() {
     var audio = null;
     beforeEach(function() {
       audio = fakeAudio();
+      speecher.speaking_from_collection = null;
       stub(speecher, 'find_or_create_element', function() {
         return [audio];
       });

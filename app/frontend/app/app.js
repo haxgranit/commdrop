@@ -41,6 +41,7 @@ var customEvents = {
     'actionselect': 'actionSelect',
     'symbolselect': 'symbolSelect',
     'rearrange': 'rearrange',
+    'tripleclick': 'tripleClick',
     'clear': 'clear',
     'stash': 'stash',
     'select': 'select'

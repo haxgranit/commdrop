@@ -143,7 +143,7 @@
       <tbody>
         {{#each model.processed_events as |event|}}
           <tr class={{if event.long_delay 'long_delay'}}>
-            <td>
+            <td style='white-space: nowrap;'>
               <span class={{event.type_class}} title={{event.type}}>
                 <span class="sr-only">{{event.type}}</span>
               </span>
@@ -157,6 +157,10 @@
               <span class={{event.part_of_speech_class}} title={{event.part_of_speech}}>
                 <span class="sr-only">{{event.part_of_speech}}</span>
               </span>
+              {{#if event.modeling}}
+                <span class='glyphicon glyphicon-hand-up' title={{t "modeled event" key='modeled_event'}}></span>
+                <span class='sr-only'>{{t "modeled event" key='modeled_event'}}</span>
+              {{/if}}
               <span class={{if event.button_type '' 'text-muted'}}>
                 {{event.summary}}
               </span>

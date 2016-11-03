@@ -455,6 +455,25 @@ describe('app_state', function() {
     });
   });
 
+  describe('toggle_modeling', function() {
+    it("should toggle correctly", function() {
+      app_state.set('modeling', undefined);
+      expect(app_state.get('modeling')).toEqual(undefined);
+      app_state.toggle_modeling();
+      expect(app_state.get('modeling')).toEqual(true);
+      app_state.toggle_modeling();
+      expect(app_state.get('modeling')).toEqual(false);
+      app_state.toggle_modeling();
+      expect(app_state.get('modeling')).toEqual(true);
+      app_state.toggle_modeling(true);
+      expect(app_state.get('modeling')).toEqual(true);
+      app_state.toggle_modeling();
+      expect(app_state.get('modeling')).toEqual(false);
+      app_state.toggle_modeling(false);
+      expect(app_state.get('modeling')).toEqual(false);
+    });
+  });
+
   describe('toggle_edit_mode', function() {
     it("should clear the edit history", function() {
       var history_cleared = false;

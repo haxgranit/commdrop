@@ -231,6 +231,8 @@ class LogSession < ActiveRecord::Base
     self.data['stats']['all_boards'] = []
     self.data['stats']['all_button_counts'] = {}
     self.data['stats']['all_word_counts'] = {}
+    self.data['stats']['modeled_button_counts'] = {}
+    self.data['stats']['modeled_word_counts'] = {}
     self.data['stats']['all_board_counts'] = {}
     self.data['stats']['parts_of_speech'] = {}
     self.data['stats']['core_words'] = {}
@@ -241,7 +243,7 @@ class LogSession < ActiveRecord::Base
     if self.data['events'] && self.started_at && self.ended_at
       self.data['stats']['session_seconds'] = (self.ended_at - self.started_at).to_i
       self.data['events'].each do |event|
-        if event['type'] == 'utterance'
+        if !event['modeling'] && event['type'] == 'utterance'
           self.data['stats']['utterances'] += 1
           self.data['stats']['utterance_words'] += event['utterance']['text'].split(/\s+/).length
           self.data['stats']['utterance_buttons'] += (event['utterance']['buttons'] || []).length
@@ -255,38 +257,51 @@ class LogSession < ActiveRecord::Base
             }
             if button['button_id'] && button['board_id']
               ref = "#{button['button_id']}::#{button['board_id']}"
-              self.data['stats']['all_button_counts'][ref] ||= button
-              self.data['stats']['all_button_counts'][ref]['count'] += 1
-              if button['text'] && button['text'].length > 0 && event['button']['spoken']
-                button['text'].split(/\s+/).each do |word|
-                  self.data['stats']['all_word_counts'][word] ||= 0
-                  self.data['stats']['all_word_counts'][word] += 1
+              if !event['modeling']
+                self.data['stats']['all_button_counts'][ref] ||= button
+                self.data['stats']['all_button_counts'][ref]['count'] += 1
+                if button['text'] && button['text'].length > 0 && event['button']['spoken']
+                  button['text'].split(/\s+/).each do |word|
+                    self.data['stats']['all_word_counts'][word] ||= 0
+                    self.data['stats']['all_word_counts'][word] += 1
+                  end
+                end
+            
+                board = event['button']['board'].merge({'count' => 0})
+                self.data['stats']['all_board_counts'][button['board_id']] ||= board
+                self.data['stats']['all_board_counts'][button['board_id']]['count'] ||= 0
+                self.data['stats']['all_board_counts'][button['board_id']]['count'] += 1
+              else
+                self.data['stats']['modeled_button_counts'][ref] ||= button
+                self.data['stats']['modeled_button_counts'][ref]['count'] += 1
+                if button['text'] && button['text'].length > 0 && event['button']['spoken']
+                  button['text'].split(/\s+/).each do |word|
+                    self.data['stats']['modeled_word_counts'][word] ||= 0
+                    self.data['stats']['modeled_word_counts'][word] += 1
+                  end
                 end
               end
-              
-              board = event['button']['board'].merge({'count' => 0})
-              self.data['stats']['all_board_counts'][button['board_id']] ||= board
-              self.data['stats']['all_board_counts'][button['board_id']]['count'] ||= 0
-              self.data['stats']['all_board_counts'][button['board_id']]['count'] += 1
             end
           end
         end
-        
+      
         self.data['stats']['all_volumes'] << event['volume'].to_f if event['volume']
         self.data['stats']['all_ambient_light_levels'] << event['ambient_light'].to_f if event['ambient_light']
         self.data['stats']['all_screen_brightness_levels'] << event['screen_brightness'].to_f if event['screen_brightness']
         self.data['stats']['all_orientations'] << event['orientation'] if event['orientation']
-        
-        if event['parts_of_speech'] && event['parts_of_speech']['types'] && event['button'] && event['button']['spoken']
-          part = event['parts_of_speech']['types'][0]
-          if part
-            self.data['stats']['parts_of_speech'][part] ||= 0
-            self.data['stats']['parts_of_speech'][part] += 1
+      
+        if !event['modeling']
+          if event['parts_of_speech'] && event['parts_of_speech']['types'] && event['button'] && event['button']['spoken']
+            part = event['parts_of_speech']['types'][0]
+            if part
+              self.data['stats']['parts_of_speech'][part] ||= 0
+              self.data['stats']['parts_of_speech'][part] += 1
+            end
           end
-        end
-        if event['core_word'] != nil
-          self.data['stats']['core_words'][event['core_word'] ? 'core' : 'not_core'] ||= 0
-          self.data['stats']['core_words'][event['core_word'] ? 'core' : 'not_core'] += 1
+          if event['core_word'] != nil
+            self.data['stats']['core_words'][event['core_word'] ? 'core' : 'not_core'] ||= 0
+            self.data['stats']['core_words'][event['core_word'] ? 'core' : 'not_core'] += 1
+          end
         end
       end
       self.generate_sensor_stats

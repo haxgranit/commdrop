@@ -19,7 +19,7 @@ describe('scanner', function() {
       });
     });
   });
-  
+
 //   start: function(options) {
 //     if(Ember.$("header #speak").length === 0) {
 //       console.debug("scanning currently only works in speak mode...");
@@ -31,12 +31,12 @@ describe('scanner', function() {
 //     this.last_options = options;
 //     options.scan_mode = options.scan_mode || "row";
 //     options.interval = options.interval || 1000;
-// 
+//
 //     if(modal.is_open() && !modal.is_open('highlight')) {
 //       return;
 //     } else {
 //       var row = {
-//         children: [], 
+//         children: [],
 //         dom: Ember.$("header"),
 //         label: i18n.t('header', "Header")
 //       };
@@ -58,7 +58,7 @@ describe('scanner', function() {
 //           });
 //         }
 //       });
-//     
+//
 //       var menu = {
 //         dom: Ember.$("#identity a.btn"),
 //         label: i18n.t('menu', "Menu"),
@@ -73,8 +73,8 @@ describe('scanner', function() {
 //       });
 //       console.log(menu);
 //       row.children.push(menu);
-//     
-//       // TODO: figure out sidebar, when teaser is visible and also when the 
+//
+//       // TODO: figure out sidebar, when teaser is visible and also when the
 //       // whole sidebar is visible, including toggling between the two
 //   //     if(Ember.$("#sidebar_tease:visible").length) {
 //   //       row.children.push({
@@ -235,7 +235,7 @@ describe('scanner', function() {
   describe("start", function() {
     it("should have specs");
   });
-  
+
   describe("reset", function() {
     it("should cancel any existing interval", function() {
       db_wait(function() {
@@ -252,7 +252,7 @@ describe('scanner', function() {
         });
       });
     });
-    
+
     it("should call 'start'", function() {
       db_wait(function() {
         var called = false;
@@ -263,7 +263,7 @@ describe('scanner', function() {
       });
     });
   });
-  
+
   describe("stop", function() {
     it("should cancel any existing interval", function() {
       db_wait(function() {
@@ -297,7 +297,7 @@ describe('scanner', function() {
       });
     });
   });
-  
+
   describe("scan_elements", function() {
     it("should reset scanning options", function() {
       db_wait(function() {
@@ -311,7 +311,7 @@ describe('scanner', function() {
         expect(scanner.element_index).toEqual(0);
       });
     });
-    
+
     it("should call next_element", function() {
       db_wait(function() {
         var called = false;
@@ -322,20 +322,51 @@ describe('scanner', function() {
       });
     });
   });
-  
+
+  describe("pick", function() {
+    it("should have specs");
+
+    it("should call buttonTrack.track_selection", function() {
+      scanner.current_element = {};
+      scanner.current_element.dom = document.createElement('div');
+
+      modal.highlight_controller = {};
+
+      var called = false;
+      stub(buttonTracker, 'track_selection', function(opts) {
+        expect(opts).toEqual({
+          event_type: 'click',
+          selection_type: 'scanner'
+        });
+        called = true;
+      });
+
+      scanner.pick();
+    });
+  });
+
 //   pick: function() {
 //     var elem = scanner.current_element;
 //     if(!modal.highlight_controller || !elem) { return; }
 //     if(!elem.higher_level && elem.children && elem.children.length == 1) {
 //       elem = elem.children[0];
 //     }
-//     
+//
+//     buttonTracker.track_selection({
+//       event_type: 'click',
+//       selection_type: 'scanner'
+//     });
+//
 //     if(elem.dom.hasClass('btn') && elem.dom.closest("#identity").length > 0) {
 //       var e = Ember.$.Event( "click" );
 //       e.pass_through = true;
+//       e.switch_activated = true;
 //       Ember.$(elem.dom).trigger(e);
+//       setTimeout(function() {
+//         Ember.$("#home_button").focus().select();
+//       }, 100);
 //     }
-// 
+//
 //     if(elem.higher_level) {
 //       scanner.elements = elem.higher_level;
 //       scanner.element_index = elem.higher_level_index;
@@ -344,19 +375,13 @@ describe('scanner', function() {
 //         scanner.next_element();
 //       });
 //     } else if(elem.children) {
-//       var parent = Ember.$.extend({higher_level: scanner.elements, higher_level_index: scanner.element_index}, elem);
-//       scanner.elements = elem.children.concat([parent]);
-//       scanner.element_index = 0;
-//       Ember.run.cancel(scanner.interval);
-//       scanner.interval = Ember.run.later(function() {
-//         scanner.next_element();
-//       });
+//       scanner.load_children(elem, scanner.elements, scanner.element_index);
 //     } else {
 //       if(elem.dom.hasClass('button') && elem.dom.attr('data-id')) {
 //         var id = elem.dom.attr('data-id');
 //         var button = editManager.find_button(id);
-//         var app = scanner.controller.get('controllers.application');
-//         var board = scanner.controller.get('controllers.board.model');
+//         var app = app_state.controller;
+//         var board = app.get('board.model');
 //         app.activateButton(button, {image: button.get('image'), sound: button.get('sound'), board: board});
 //       } else if(elem.dom.hasClass('button_list')) {
 //         elem.dom.select();
@@ -365,13 +390,12 @@ describe('scanner', function() {
 //         e.pass_through = true;
 //         Ember.$(elem.dom).trigger(e);
 //       }
-//       scanner.reset();
+//       Ember.run.later(function() {
+//         scanner.reset();
+//       });
 //     }
-//   },  
-  describe("pick", function() {
-    it("should have specs");
-  });
-  
+//   },
+
   describe("next", function() {
     it("should cancel any existing interval", function() {
       db_wait(function() {
@@ -390,7 +414,7 @@ describe('scanner', function() {
         });
       });
     });
-    
+
     it("should properly increment the element index", function() {
       db_wait(function() {
         scanner.elements = [{}, {}];
@@ -403,7 +427,7 @@ describe('scanner', function() {
       });
     });
   });
-  
+
 //   next_element: function() {
 //     var elem = this.elements[this.element_index];
 //     scanner.current_element = elem;
@@ -419,7 +443,7 @@ describe('scanner', function() {
 //       options.overlay = true;
 //       options.clear_overlay = false;
 //     }
-//     
+//
 //     if(this.options && this.options.audio) {
 //       if(elem && elem.sound) {
 //         speecher.speak_audio(elem.sound, 'text', false, {interrupt: false});

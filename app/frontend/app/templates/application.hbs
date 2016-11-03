@@ -60,10 +60,17 @@
         <span class="sr-only">{{t "backspace" key='backspace'}}</span>
         <img src="{{path "images/delete.svg"}}"/>
       </button>
-      <button class="btn btn-default access" id="clear_button" {{action "clear"}}>
-        <span class="sr-only">{{t "clear" key='clear'}}</span>
-        <span class="glyphicon glyphicon-remove button_icon" style="margin: 5px -5px 0;"></span>
-      </button>
+      {{#triple-click-listener triple_click='toggle_modeling'}}
+        <button class="btn btn-default access" id="clear_button" {{action "clear"}} style='position: relative;'>
+          <span class="sr-only">{{t "clear" key='clear'}}</span>
+          <span class="glyphicon glyphicon-remove button_icon" style="margin: 5px -5px 0;"></span>
+          {{#if app_state.modeling}}
+            <div style="position: absolute; bottom: 2px; left: 2px;">
+              <span class="glyphicon glyphicon-hand-up"></span>
+            </div>
+          {{/if}}
+        </button>
+      {{/triple-click-listener}}
     </span>
   {{else}}
     <span id="nav_header" class='no_beta'>

@@ -112,6 +112,9 @@ module JsonApi::Log
         entry['type'] = 'other'
         entry['summary'] = "unrecognized event"
       end
+      if event['modeling']
+        entry['modeling'] = true
+      end
       if event['notes']
         entry['notes'] = event['notes'].map do |n|
           {
