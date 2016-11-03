@@ -293,6 +293,8 @@
       <p>{{t "None found" key='none_found'}}</p>
     {{/if}}
   {{/if}}
+{{else if loading_org}}
+  {{t "Loading..." key='loading'}}
 {{else}}
   {{t "No information available" key='no_information_available'}}
 {{/if}}
