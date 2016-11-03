@@ -114,11 +114,13 @@ describe("persistence", function() {
         expect(error.error).toEqual("extras not ready");
       });
     });
+
     it("should return a promise", function() {
       var res = persistence.find('bob', 'ok');
       expect(res.then).not.toEqual(null);
       res.then(null, function() { });
     });
+
     it("should fail on invalid store types", function() {
       db_wait(function() {
         var error = null;

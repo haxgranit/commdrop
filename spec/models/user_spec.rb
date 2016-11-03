@@ -929,6 +929,25 @@ describe User, :type => :model do
     end
   end
   
+  describe "sidebar_boards" do
+    it "should return the default by default" do
+      u = User.new
+      expect(u.sidebar_boards).to eq(User.default_sidebar_boards)
+    end
+    
+    it "should return the default if the current setting is an empty list" do
+      u = User.new
+      u.settings = {'preferences' => {'sidebar_boards' => []}}
+      expect(u.sidebar_boards).to eq(User.default_sidebar_boards)
+    end
+    
+    it "should return the current setting if it's a non-empty list" do
+      u = User.new
+      u.settings = {'preferences' => {'sidebar_boards' => ['a', 'b', 'c']}}
+      expect(u.sidebar_boards).to eq(['a', 'b', 'c'])
+    end
+  end
+  
   describe "avatars" do
     describe "generated_avatar_url" do
       it "should use the fallback if specified" do

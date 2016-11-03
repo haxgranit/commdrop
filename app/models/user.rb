@@ -618,6 +618,12 @@ class User < ActiveRecord::Base
     end
   end
   
+  def sidebar_boards
+    res = (self.settings && self.settings['preferences'] && self.settings['preferences']['sidebar_boards']) || []
+    res = User.default_sidebar_boards if res.length == 0
+    res
+  end
+  
   def admin?
     self.settings['admin'] == true
   end

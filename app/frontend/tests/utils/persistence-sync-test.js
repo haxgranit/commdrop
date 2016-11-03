@@ -36,6 +36,16 @@ describe("persistence-sync", function() {
     app_state.set('currentBoardState', null);
     app_state.set('sessionUser', null);
     stub(speecher, 'load_beep', function() { return Ember.RSVP.resolve({}); });
+    var pajax = persistence.ajax;
+    stub(persistence, 'ajax', function(url, opts) {
+      if(url.match(/board_revisions$/)) {
+        var rej = Ember.RSVP.reject({});
+        rej.then(null, function() { });
+        return rej;
+      } else {
+        return pajax.apply(this, arguments);
+      }
+    });
     dbman = capabilities.dbman;
     capabilities.dbman = fake_dbman();
   });
@@ -64,13 +74,15 @@ describe("persistence-sync", function() {
   }
 
   it("should return a promise", function() {
-    var done = false;
-    var res = persistence.sync(1);
-    expect(persistence.get('sync_status')).toEqual('syncing');
-    expect(res.then).not.toEqual(null);
-    res.then(function() { done = true; }, function() { done = true; });
-    waitsFor(function() { return done; });
-    runs();
+    db_wait(function() {
+      var done = false;
+      var res = persistence.sync(1);
+      expect(persistence.get('sync_status')).toEqual('syncing');
+      expect(res.then).not.toEqual(null);
+      res.then(function() { done = true; }, function() { done = true; });
+      waitsFor(function() { return done; });
+      runs();
+    });
   });
 
   it("should make sure the local db is available and error if not", function() {
@@ -907,6 +919,7 @@ describe("persistence-sync", function() {
         id: '145',
         image_url: 'http://example.com/board.png',
         full_set_revision: 'not_current',
+        permissions: {},
         buttons: [
           {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
         ],
@@ -919,6 +932,7 @@ describe("persistence-sync", function() {
       var b2 = {
         id: '167',
         full_set_revision: 'not_current',
+        permissions: {},
         image_url: 'http://example.com/board.png',
         buttons: [
           {id: '1', image_id: '2', load_board: {id: '145'}},
@@ -933,6 +947,7 @@ describe("persistence-sync", function() {
       var b3 = {
         id: '178',
         full_set_revision: 'current',
+        permissions: {},
         image_url: 'http://example.com/board.png',
         buttons: [
           {id: '1', image_id: '2', load_board: {id: '145'}},
@@ -948,6 +963,7 @@ describe("persistence-sync", function() {
       var b4 = {
         id: '179',
         full_set_revision: 'whatever',
+        permissions: {},
         image_url: 'http://example.com/board.png',
         buttons: [
           {id: '1', image_id: '2'}
@@ -982,7 +998,7 @@ describe("persistence-sync", function() {
       Ember.RSVP.all_wait(store_promises).then(function() {
         Ember.run.later(function() {
           stored = true;
-        }, 100);
+        }, 50);
       }, function() {
         dbg();
       });
@@ -1042,6 +1058,7 @@ describe("persistence-sync", function() {
       var b1 = {
         id: '145',
         image_url: 'http://example.com/board.png',
+        permissions: {},
         full_set_revision: 'current',
         buttons: [
           {id: '1', image_id: '1', sound_id: '3', load_board: {id: '167'}}
@@ -1055,6 +1072,7 @@ describe("persistence-sync", function() {
       var b2 = {
         id: '167',
         full_set_revision: 'current',
+        permissions: {},
         image_url: 'http://example.com/board.png',
         buttons: [
           {id: '1', image_id: '2', load_board: {id: '168'}},
@@ -1069,6 +1087,7 @@ describe("persistence-sync", function() {
       var b3 = {
         id: '168',
         full_set_revision: 'current',
+        permissions: {},
         image_url: 'http://example.com/board.png',
         buttons: [
           {id: '1', image_id: '1'}
@@ -1171,6 +1190,7 @@ describe("persistence-sync", function() {
       var b1 = {
         id: '145',
         image_url: 'http://example.com/board.png',
+        permissions: {},
         full_set_revision: 'current',
         buttons: [
           {id: '1', image_id: '1', sound_id: '3', load_board: {id: '167'}}
@@ -1183,6 +1203,7 @@ describe("persistence-sync", function() {
       };
       var b2 = {
         id: '167',
+        permissions: {},
         full_set_revision: 'current',
         image_url: 'http://example.com/board.png',
         buttons: [
@@ -1197,6 +1218,7 @@ describe("persistence-sync", function() {
       };
       var b3 = {
         id: '168',
+        permissions: {},
         full_set_revision: 'current',
         image_url: 'http://example.com/board.png',
         buttons: [
@@ -1299,6 +1321,7 @@ describe("persistence-sync", function() {
       var b1 = {
         id: '145',
         image_url: 'http://example.com/board.png',
+        permissions: {},
         full_set_revision: 'current',
         buttons: [
           {id: '1', image_id: '1', sound_id: '3', load_board: {id: '167'}}
@@ -1311,6 +1334,7 @@ describe("persistence-sync", function() {
       };
       var b2 = {
         id: '167',
+        permissions: {},
         full_set_revision: 'current',
         image_url: 'http://example.com/board.png',
         buttons: [
@@ -1325,6 +1349,7 @@ describe("persistence-sync", function() {
       };
       var b3 = {
         id: '168',
+        permissions: {},
         full_set_revision: 'current',
         image_url: 'http://example.com/board.png',
         buttons: [
@@ -1442,6 +1467,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '145',
           image_url: 'http://example.com/board.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
           ],
@@ -1476,6 +1502,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '178',
           image_url: 'http://example.com/board.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: '2', load_board: {id: '145'}},
             {id: '2', image_id: '2', load_board: {id: '167'}},
@@ -1534,6 +1561,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '145',
           image_url: 'http://example.com/board.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}, link_disabled: true}
           ],
@@ -2543,6 +2571,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '145',
           image_url: 'http://example.com/board.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: 'i1', sound_id: 's1', load_board: {id: '167'}}
           ],
@@ -2567,6 +2596,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '167',
           image_url: 'http://example.com/board2.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: 'i2', load_board: {id: '178'}}
           ],
@@ -2588,6 +2618,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '178',
           image_url: 'http://example.com/board3.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: 'i3', load_board: {id: '178'}}
           ],
@@ -2609,6 +2640,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '177',
           image_url: 'http://example.com/board4.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: 'i4'}
           ],
@@ -2630,6 +2662,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '179',
           image_url: 'http://example.com/board5.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: 'i5'}
           ],
@@ -2718,6 +2751,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '145',
           image_url: 'http://example.com/board.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
           ],
@@ -2742,6 +2776,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '167',
           image_url: 'http://example.com/board.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: '2', load_board: {id: '178'}}
           ],
@@ -2763,6 +2798,7 @@ describe("persistence-sync", function() {
         response: Ember.RSVP.resolve({board: {
           id: '178',
           image_url: 'http://example.com/board.png',
+          permissions: {},
           buttons: [
             {id: '1', image_id: '2', load_board: {id: '178'}}
           ],
@@ -2848,6 +2884,784 @@ describe("persistence-sync", function() {
       runs(function() {
         expect(found1).toEqual(true);
         expect(found2).toEqual(true);
+      });
+    });
+  });
+
+  it("should query for fresh board_revisions", function() {
+    db_wait(function() {
+      var revisions_called = false;
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/users/1340/board_revisions') {
+          revisions_called = true;
+          return Ember.RSVP.resolve({
+          });
+        }
+      });
+
+      var stores = [];
+      stub(persistence, 'store_url', function(url, type) {
+        stores.push(url);
+        console.log(url);
+        return Ember.RSVP.resolve({url: url});
+      });
+      var b1 = {
+        id: '145',
+        image_url: 'http://example.com/board.png',
+        full_set_revision: 'not_current',
+        permissions: {},
+        buttons: [
+          {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b2 = {
+        id: '167',
+        full_set_revision: 'not_current',
+        permissions: {},
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2', load_board: {id: '145'}},
+          {id: '2', image_id: '2', load_board: {id: '178'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b3 = {
+        id: '178',
+        full_set_revision: 'current',
+        permissions: {},
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2', load_board: {id: '145'}},
+          {id: '2', image_id: '2', load_board: {id: '167'}},
+          {id: '3', image_id: '2', load_board: {id: '179'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b4 = {
+        id: '179',
+        full_set_revision: 'whatever',
+        permissions: {},
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2'}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+
+      var revisions = {};
+      revisions[b1.id] = b1.full_set_revision;
+      revisions[b2.id] = b2.full_set_revision;
+      revisions[b3.id] = b3.full_set_revision;
+      revisions[b4.id] = b4.full_set_revision;
+
+      persistence.url_uncache = {
+        'http://www.example.com/pic.png': true
+      };
+      var store_promises = [];
+      store_promises.push(persistence.store('board', b1, b1.id));
+      store_promises.push(persistence.store('board', b2, b2.id));
+      store_promises.push(persistence.store('board', b3, b3.id));
+      store_promises.push(persistence.store('board', b4, b4.id));
+      store_promises.push(persistence.store('image', {id: '2', url: 'http://www.example.com/pic.png'}, '2'));
+      store_promises.push(persistence.store('dataCache', {url: 'http://www.example.com/pic.png', content_type: 'image/png', data_uri: 'data:image/png;base64,a0a'}, 'http://www.example.com/pic.png'));
+      store_promises.push(persistence.store('settings', revisions, 'synced_full_set_revisions'));
+
+
+      var stored = false;
+      Ember.RSVP.all_wait(store_promises).then(function() {
+        Ember.run.later(function() {
+          stored = true;
+        }, 100);
+      }, function() {
+        dbg();
+      });
+
+      var done = false;
+      waitsFor(function() { return stored; });
+      runs(function() {
+        CoughDrop.all_wait = true;
+        queryLog.real_lookup = true;
+
+        b1.full_set_revision = 'current';
+        b2.full_set_revision = 'current';
+        b3.full_set_revision = 'current';
+        b4.full_set_revision = 'current';
+        stub(persistence, 'find_changed', function() { return Ember.RSVP.resolve([]); });
+        stub(Ember.$, 'realAjax', function(options) {
+          if(options.url === '/api/v1/users/1340') {
+            return Ember.RSVP.resolve({user: {
+              id: '1340',
+              user_name: 'fred',
+              avatar_url: 'http://example.com/pic.png',
+              preferences: {home_board: {id: '145'}}
+            }});
+          } else if(options.url == '/api/v1/boards/145') {
+            return Ember.RSVP.resolve({
+              board: b1
+            });
+          } else if(options.url == '/api/v1/boards/167') {
+            return Ember.RSVP.resolve({
+              board: b2
+            });
+          } else if(options.url == '/api/v1/boards/178') {
+            return Ember.RSVP.resolve({
+              board: b3
+            });
+          }
+          return Ember.RSVP.reject({});
+        });
+
+        persistence.sync(1340).then(function() {
+          done = true;
+        });
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(revisions_called).toEqual(true);
+      });
+    });
+  });
+
+  it("should not try to download boards that match the fresh revision from board_revisions", function() {
+    db_wait(function() {
+      var revisions_called = false;
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/users/1340/board_revisions') {
+          revisions_called = true;
+          return Ember.RSVP.resolve({
+            '145': 'current',
+            '167': 'current',
+            '178': 'current',
+            '179': 'current'
+          });
+        }
+      });
+
+      var stores = [];
+      stub(persistence, 'store_url', function(url, type) {
+        stores.push(url);
+        console.log(url);
+        return Ember.RSVP.resolve({url: url});
+      });
+      var b1 = {
+        id: '145',
+        image_url: 'http://example.com/board.png',
+        full_set_revision: 'not_current',
+        permissions: {},
+        current_revision: 'current',
+        buttons: [
+          {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b2 = {
+        id: '167',
+        full_set_revision: 'not_current',
+        permissions: {},
+        current_revision: 'current',
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2', load_board: {id: '145'}},
+          {id: '2', image_id: '2', load_board: {id: '178'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b3 = {
+        id: '178',
+        full_set_revision: 'current',
+        permissions: {},
+        current_revision: 'not_current',
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2', load_board: {id: '145'}},
+          {id: '2', image_id: '2', load_board: {id: '167'}},
+          {id: '3', image_id: '2', load_board: {id: '179'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b4 = {
+        id: '179',
+        full_set_revision: 'whatever',
+        permissions: {},
+        current_revision: 'current',
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2'}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+
+      var revisions = {};
+      revisions[b1.id] = b1.full_set_revision;
+      revisions[b2.id] = b2.full_set_revision;
+      revisions[b3.id] = b3.full_set_revision;
+      revisions[b4.id] = b4.full_set_revision;
+
+      persistence.url_uncache = {
+        'http://www.example.com/pic.png': true
+      };
+      var store_promises = [];
+      store_promises.push(persistence.store('board', b1, b1.id));
+      store_promises.push(persistence.store('board', b2, b2.id));
+      store_promises.push(persistence.store('board', b3, b3.id));
+      store_promises.push(persistence.store('board', b4, b4.id));
+      store_promises.push(persistence.store('image', {id: '2', url: 'http://www.example.com/pic.png'}, '2'));
+      store_promises.push(persistence.store('dataCache', {url: 'http://www.example.com/pic.png', content_type: 'image/png', data_uri: 'data:image/png;base64,a0a'}, 'http://www.example.com/pic.png'));
+      store_promises.push(persistence.store('settings', revisions, 'synced_full_set_revisions'));
+
+
+      var stored = false;
+      Ember.RSVP.all_wait(store_promises).then(function() {
+        Ember.run.later(function() {
+          stored = true;
+        }, 100);
+      }, function() {
+        dbg();
+      });
+
+      var done = false;
+      var reloads = {};
+      waitsFor(function() { return stored; });
+      runs(function() {
+        CoughDrop.all_wait = true;
+        queryLog.real_lookup = true;
+
+        b1.full_set_revision = 'current';
+        b2.full_set_revision = 'current';
+        b3.full_set_revision = 'current';
+        b4.full_set_revision = 'current';
+        stub(persistence, 'find_changed', function() { return Ember.RSVP.resolve([]); });
+        stub(Ember.$, 'realAjax', function(options) {
+          if(options.url === '/api/v1/users/1340') {
+            return Ember.RSVP.resolve({user: {
+              id: '1340',
+              user_name: 'fred',
+              avatar_url: 'http://example.com/pic.png',
+              preferences: {home_board: {id: '145'}}
+            }});
+          } else if(options.url == '/api/v1/boards/145') {
+            reloads['145'] = true;
+            return Ember.RSVP.resolve({
+              board: b1
+            });
+          } else if(options.url == '/api/v1/boards/167') {
+            reloads['167'] = true;
+            return Ember.RSVP.resolve({
+              board: b2
+            });
+          } else if(options.url == '/api/v1/boards/178') {
+            reloads['178'] = true;
+            return Ember.RSVP.resolve({
+              board: b3
+            });
+          } else if(options.url == '/api/v1/boards/179') {
+            reloads['179'] = true;
+            return Ember.RSVP.resolve({
+              board: b4
+            });
+          }
+          return Ember.RSVP.reject({});
+        });
+
+        persistence.sync(1340).then(function() {
+          done = true;
+        });
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(revisions_called).toEqual(true);
+        expect(reloads).toEqual({
+          '178': true
+        });
+      });
+    });
+  });
+
+  it("should try to download boards that don't match the fresh revision from board_revisions, even if they otherwise seem ok", function() {
+    db_wait(function() {
+      var revisions_called = false;
+      stub(persistence, 'ajax', function(url, opts) {
+        if(url == '/api/v1/users/1340/board_revisions') {
+          revisions_called = true;
+          return Ember.RSVP.resolve({
+            '145': 'current',
+            '167': 'current',
+            '178': 'current',
+            '179': 'current'
+          });
+        }
+      });
+
+      var stores = [];
+      stub(persistence, 'store_url', function(url, type) {
+        stores.push(url);
+        console.log(url);
+        return Ember.RSVP.resolve({url: url});
+      });
+      var b1 = {
+        id: '145',
+        image_url: 'http://example.com/board.png',
+        full_set_revision: 'not_current',
+        current_revision: 'not_current',
+        buttons: [
+          {id: '1', image_id: '2', sound_id: '3', load_board: {id: '167'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b2 = {
+        id: '167',
+        full_set_revision: 'not_current',
+        current_revision: 'not_current',
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2', load_board: {id: '145'}},
+          {id: '2', image_id: '2', load_board: {id: '178'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b3 = {
+        id: '178',
+        full_set_revision: 'current',
+        current_revision: 'not_current',
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2', load_board: {id: '145'}},
+          {id: '2', image_id: '2', load_board: {id: '167'}},
+          {id: '3', image_id: '2', load_board: {id: '179'}}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+      var b4 = {
+        id: '179',
+        full_set_revision: 'whatever',
+        current_revision: 'not_current',
+        image_url: 'http://example.com/board.png',
+        buttons: [
+          {id: '1', image_id: '2'}
+        ],
+        grid: {
+          rows: 1,
+          columns: 1,
+          order: [['1']]
+        }
+      };
+
+      var revisions = {};
+      revisions[b1.id] = b1.full_set_revision;
+      revisions[b2.id] = b2.full_set_revision;
+      revisions[b3.id] = b3.full_set_revision;
+      revisions[b4.id] = b4.full_set_revision;
+
+      persistence.url_uncache = {
+        'http://www.example.com/pic.png': true
+      };
+      var store_promises = [];
+      store_promises.push(persistence.store('board', b1, b1.id));
+      store_promises.push(persistence.store('board', b2, b2.id));
+      store_promises.push(persistence.store('board', b3, b3.id));
+      store_promises.push(persistence.store('board', b4, b4.id));
+      store_promises.push(persistence.store('image', {id: '2', url: 'http://www.example.com/pic.png'}, '2'));
+      store_promises.push(persistence.store('dataCache', {url: 'http://www.example.com/pic.png', content_type: 'image/png', data_uri: 'data:image/png;base64,a0a'}, 'http://www.example.com/pic.png'));
+      store_promises.push(persistence.store('settings', revisions, 'synced_full_set_revisions'));
+
+
+      var stored = false;
+      Ember.RSVP.all_wait(store_promises).then(function() {
+        Ember.run.later(function() {
+          stored = true;
+        }, 100);
+      }, function() {
+        dbg();
+      });
+
+      var done = false;
+      var reloads = {};
+      waitsFor(function() { return stored; });
+      runs(function() {
+        CoughDrop.all_wait = true;
+        queryLog.real_lookup = true;
+
+        b1.full_set_revision = 'current';
+        b2.full_set_revision = 'current';
+        b3.full_set_revision = 'current';
+        b4.full_set_revision = 'current';
+        stub(persistence, 'find_changed', function() { return Ember.RSVP.resolve([]); });
+        stub(Ember.$, 'realAjax', function(options) {
+          if(options.url === '/api/v1/users/1340') {
+            return Ember.RSVP.resolve({user: {
+              id: '1340',
+              user_name: 'fred',
+              avatar_url: 'http://example.com/pic.png',
+              preferences: {home_board: {id: '145'}}
+            }});
+          } else if(options.url == '/api/v1/boards/145') {
+            reloads['145'] = true;
+            return Ember.RSVP.resolve({
+              board: b1
+            });
+          } else if(options.url == '/api/v1/boards/167') {
+            reloads['167'] = true;
+            return Ember.RSVP.resolve({
+              board: b2
+            });
+          } else if(options.url == '/api/v1/boards/178') {
+            reloads['178'] = true;
+            return Ember.RSVP.resolve({
+              board: b3
+            });
+          } else if(options.url == '/api/v1/boards/179') {
+            reloads['179'] = true;
+            return Ember.RSVP.resolve({
+              board: b4
+            });
+          }
+          return Ember.RSVP.reject({});
+        });
+
+        persistence.sync(1340).then(function() {
+          done = true;
+        });
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(revisions_called).toEqual(true);
+        expect(reloads).toEqual({
+          '145': true,
+          '167': true,
+          '178': true,
+          '179': true
+        });
+      });
+    });
+  });
+
+  describe("board_lookup", function() {
+    it("should set lookups", function() {
+      var done = false;
+      persistence.set('sync_progress', {});
+      persistence.board_lookup('asdf', {}).then(null, function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['asdf']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([]);
+      });
+    });
+
+    it("should look up the same board only once", function() {
+      persistence.set('sync_progress', {});
+      var lookups = 0;
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          lookups++;
+          return Ember.RSVP.resolve(Ember.Object.create({
+            fresh: true,
+            permissions: {}
+          }));
+        }
+      });
+      var dones = 0;
+      var done_check = function() {
+        dones++;
+      };
+      for(var idx = 0; idx < 3; idx++) {
+        persistence.board_lookup('1_00', {}).then(done_check);
+      }
+      waitsFor(function() { return dones == 3; });
+      runs(function() {
+        expect(lookups).toEqual(1);
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 'downloaded'
+        }]);
+      });
+    });
+
+    it("should reload if peeked", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: true
+      });
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'peekRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          return rec;
+        }
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+      persistence.board_lookup('1_00', {}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 're-downloaded'
+        }]);
+        expect(rec.reloaded).toEqual(true);
+      });
+    });
+
+    it("should reload if a key passed as id", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: true,
+        key: 'as/df'
+      });
+      rec.set('id', '1_00');
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == 'as/df') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+
+      persistence.board_lookup('as/df', {}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['as/df']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: 'as/df', key: 'as/df', status: 're-downloaded'
+        }]);
+        expect(rec.reloaded).toEqual(true);
+      });
+    });
+
+    it("should reload if not fresh", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: false
+      });
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+      persistence.board_lookup('1_00', {}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 're-downloaded'
+        }]);
+        expect(rec.reloaded).toEqual(true);
+      });
+    });
+
+    it("should not reload if fresh, numerical id and not peeked", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: true
+      });
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+      persistence.board_lookup('1_00', {}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 'downloaded'
+        }]);
+        expect(rec.reloaded).toEqual(undefined);
+      });
+    });
+
+    it("should not reload if safely_cached without cache mismatch", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: false
+      });
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+      persistence.board_lookup('1_00', {'1_00': true}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 'cached'
+        }]);
+        expect(rec.reloaded).toEqual(undefined);
+      });
+    });
+
+    it("should reload if safely_cached with cache mismatch", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: false
+      });
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+      persistence.board_lookup('1_00', {'1_00': true}, {'1_00': 'asdf'}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 're-downloaded'
+        }]);
+        expect(rec.reloaded).toEqual(true);
+      });
+    });
+
+    it("should not reload if not safely_cached but has a cache match", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: false,
+        current_revision: 'asdf'
+      });
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+      persistence.board_lookup('1_00', {}, {'1_00': 'asdf'}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 'cached'
+        }]);
+        expect(rec.reloaded).toEqual(undefined);
+      });
+    });
+
+    it("should store board status on result", function() {
+      persistence.set('sync_progress', {});
+      var rec = Ember.Object.create({
+        fresh: false,
+        current_revision: 'asdf'
+      });
+      stub(rec, 'reload', function() {
+        rec.reloaded = true;
+        return Ember.RSVP.resolve(rec);
+      });
+      stub(CoughDrop.store, 'findRecord', function(type, id) {
+        if(type == 'board' && id == '1_00') {
+          rec.set('permissions', {});
+          return Ember.RSVP.resolve(rec);
+        }
+      });
+      var done = false;
+      persistence.board_lookup('1_00', {}, {'1_00': 'asdf'}).then(function() {
+        done = true;
+      });
+      waitsFor(function() { return done; });
+      runs(function() {
+        expect(persistence.get('sync_progress.key_lookups')['1_00']).toNotEqual(undefined);
+        expect(persistence.get('sync_progress.board_statuses')).toEqual([{
+          id: '1_00', key: undefined, status: 'cached'
+        }]);
+        expect(rec.reloaded).toEqual(undefined);
       });
     });
   });

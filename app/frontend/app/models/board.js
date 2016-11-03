@@ -22,6 +22,7 @@ CoughDrop.Board = DS.Model.extend({
   user_name: DS.attr('string'),
   locale: DS.attr('string'),
   full_set_revision: DS.attr('string'),
+  current_revision: DS.attr('string'),
   for_user_id: DS.attr('string'),
   could_be_in_use: function() {
     // no longer using (this.get('public') && this.get('brand_new'))

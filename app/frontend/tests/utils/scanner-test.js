@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, waitsFor, runs, stub } fro
 import { db_wait, fakeAudio } from 'frontend/tests/helpers/ember_helper';
 import scanner from '../../utils/scanner';
 import modal from '../../utils/modal';
+import buttonTracker from '../../utils/raw_events';
 import Ember from 'ember';
 
 describe('scanner', function() {

@@ -153,6 +153,7 @@ Coughdrop::Application.routes.draw do
       post 'activate_button' => 'users#activate_button'
       get 'sync_stamp' => 'users#sync_stamp'
       post 'translate' => 'users#translate'
+      get 'board_revisions' => 'users#board_revisions'
     end
     
     resources :images do

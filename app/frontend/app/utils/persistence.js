@@ -1109,7 +1109,7 @@ var persistence = Ember.Object.extend({
       });
     });
   },
-  board_lookup: function(id, safely_cached_boards) {
+  board_lookup: function(id, safely_cached_boards, fresh_board_revisions) {
     var lookups = persistence.get('sync_progress.key_lookups');
     var board_statuses = persistence.get('sync_progress.board_statuses');
     if(!lookups) {
@@ -1138,7 +1138,11 @@ var persistence = Ember.Object.extend({
         if(!record.get('fresh') || key_for_id || partial_load) {
           local_full_set_revision = record.get('full_set_revision');
           // If the board is in the list of already-up-to-date, don't call reload
-          if(safely_cached_boards[id]) {
+          var cache_mismatch = fresh_board_revisions && fresh_board_revisions[id] && fresh_board_revisions[id] != record.get('current_revision');
+          if(record.get('permissions') && safely_cached_boards[id] && !cache_mismatch) {
+            board_statuses.push({id: id, key: record.get('key'), status: 'cached'});
+            return record;
+          } else if(record.get('permissions') && fresh_board_revisions && fresh_board_revisions[id] && fresh_board_revisions[id] == record.get('current_revision')) {
             board_statuses.push({id: id, key: record.get('key'), status: 'cached'});
             return record;
           } else {
@@ -1164,13 +1168,26 @@ var persistence = Ember.Object.extend({
     });
   },
   sync_boards: function(user, importantIds, synced_boards, force) {
-    var get_revisions = persistence.find('settings', 'synced_full_set_revisions').then(function(res) {
+    var full_set_revisions = {};
+    var fresh_revisions = {};
+    var get_local_revisions = persistence.find('settings', 'synced_full_set_revisions').then(function(res) {
+      full_set_revisions = res;
       return res;
     }, function() {
       return Ember.RSVP.resolve({});
     });
 
-    var sync_all_boards = get_revisions.then(function(full_set_revisions) {
+    var get_remote_revisions = Ember.RSVP.resolve({});
+    if(user) {
+      get_remote_revisions = persistence.ajax('/api/v1/users/' + user.get('id') + '/board_revisions', {type: 'GET'}).then(function(res) {
+        fresh_revisions = res;
+        return res;
+      }, function() {
+        return Ember.RSVP.resolve({});
+      });
+    }
+
+    var sync_all_boards = get_remote_revisions.then(function() {
       return new Ember.RSVP.Promise(function(resolve, reject) {
         var to_visit_boards = [];
         if(user.get('preferences.home_board.id')) {
@@ -1216,7 +1233,7 @@ var persistence = Ember.Object.extend({
             var local_full_set_revision = null;
 
             // check if there's a local copy that's already been loaded
-            var find_board = persistence.board_lookup(id, safely_cached_boards);
+            var find_board = persistence.board_lookup(id, safely_cached_boards, fresh_revisions);
 
             find_board.then(function(board) {
               local_full_set_revision = board.get('local_full_set_revision');
@@ -1226,7 +1243,9 @@ var persistence = Ember.Object.extend({
               var safely_cached = !!safely_cached_boards[board.id];
               // If the retrieved board's revision matches the synced cache's revision,
               // then this board and all its children should be already in the db.
-              safely_cached = safely_cached || (full_set_revisions[board.get('id')] && board.get('full_set_revision') == full_set_revisions[board.get('id')]);
+              var cache_mismatch = fresh_revisions && fresh_revisions[board.get('id')] && fresh_revisions[board.get('id')] == board.get('current_revision');
+              safely_cached = safely_cached || (full_set_revisions[board.get('id')] && board.get('full_set_revision') == full_set_revisions[board.get('id')] && !cache_mismatch);
+              safely_cached = safely_cached || (fresh_revisions[board.get('id')] && board.get('current_revision') == fresh_revisions[board.get('id')]);
               if(force == 'all_reload') { safely_cached = false; }
               if(safely_cached) {
                 console.log("this board (" + board.get('key') + ") has already been cached locally");
@@ -1301,7 +1320,10 @@ var persistence = Ember.Object.extend({
                       }
                     });
                     return Ember.RSVP.all_wait(necessary_finds).then(function() {
-                      safely_cached_boards[board.id] = true;
+                      var cache_mismatch = fresh_revisions && fresh_revisions[board.id] && fresh_revisions[board.id] != b.current_revision;
+                      if(!cache_mismatch) {
+                        safely_cached_boards[board.id] = true;
+                      }
                     }, function(error) {
                       console.log(error);
                       console.error("should have been safely cached, but board content wasn't in db:" + board.id);

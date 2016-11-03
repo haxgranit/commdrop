@@ -30,6 +30,7 @@ module JsonApi::Board
     json['link'] = "#{JsonApi::Json.current_host}/#{board.key}"
     json['public'] = !!board.public
     json['full_set_revision'] = board.full_set_revision
+    json['current_revision'] = board.current_revision
     json['button_set_id'] = board.button_set_id
     json['brand_new'] = board.created_at < 1.hour.ago
     json['non_author_uses'] = board.settings['non_author_uses']

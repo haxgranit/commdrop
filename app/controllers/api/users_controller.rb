@@ -256,6 +256,29 @@ class Api::UsersController < ApplicationController
     render json: JsonApi::Progress.as_json(progress, :wrapper => true)
   end
   
+  def board_revisions
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    return unless allowed?(user, 'supervise')
+    roots = []
+    if user.settings['preferences']['home_board']
+      roots << Board.find_by_global_id(user.settings['preferences']['home_board']['id'])
+    end
+    roots += Board.find_all_by_path(user.sidebar_boards.map{|b| b['key'] })
+    all_ids = []
+    roots.compact.each do |root|
+      all_ids << root.global_id
+      all_ids += root.settings['downstream_board_ids'] || []
+    end
+    all_ids.uniq!
+    res = {}
+    Board.select('id, current_revision, key').find_all_by_global_id(all_ids).each do |brd|
+      res[brd.global_id] = brd.current_revision
+      res[brd.key] = brd.current_revision
+    end
+    render json: res.to_json
+  end
+  
   def confirm_registration
     user = User.find_by_path(params['user_id'])
     if params['resend']
