@@ -1908,7 +1908,15 @@ Ember.$(document).on('change', '#image_upload,#sound_upload,#board_upload,#avata
 }).on('paste', '#find_picture', function(event) {
   event = event.originalEvent || event;
   var data = event && event.clipboardData && event.clipboardData.items;
+  var found_file = false;
   if(data) {
+    for(var idx = 0; idx < data.length; idx++) {
+      if(data[idx] && data[idx].kind == 'file') {
+        found_file = true;
+      }
+    }
+  }
+  if(found_file) {
     contentGrabbers.file_pasted('image', data);
     event.preventDefault();
     event.stopPropagation();
