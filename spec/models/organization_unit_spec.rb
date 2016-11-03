@@ -391,6 +391,78 @@ describe OrganizationUnit, :type => :model do
       expect(ou.settings['something']).to eq([])
     end
   end  
+  
+  describe "assert_supervision!" do
+    it "should update missing connections" do
+      u1 = User.create
+      u2 = User.create
+      u3 = User.create
+      u4 = User.create
+      ou = OrganizationUnit.create
+      ou.settings = {
+        'communicators' => [{'user_id' => u1.global_id}, {'user_id' => u2.global_id}],
+        'supervisors' => [{'user_id' => u3.global_id}, {'user_id' => u4.global_id, 'edit_permission' => true}]
+      }
+      ou.save
+      ou.assert_supervision!
+      expect(u1.reload.settings['supervisors'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u3.global_id, 'user_name' => u3.user_name, 'edit_permission' => false, 'organization_unit_ids' => [ou.global_id]
+      }, {
+        'user_id' => u4.global_id, 'user_name' => u4.user_name, 'edit_permission' => true, 'organization_unit_ids' => [ou.global_id]
+      }])
+      expect(u2.reload.settings['supervisors'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u3.global_id, 'user_name' => u3.user_name, 'edit_permission' => false, 'organization_unit_ids' => [ou.global_id]
+      }, {
+        'user_id' => u4.global_id, 'user_name' => u4.user_name, 'edit_permission' => true, 'organization_unit_ids' => [ou.global_id]
+      }])
+      expect(u3.reload.settings['supervisees'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u1.global_id, 'user_name' => u1.user_name, 'edit_permission' => false
+      }, {
+        'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => false
+      }])
+      expect(u4.reload.settings['supervisees'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u1.global_id, 'user_name' => u1.user_name, 'edit_permission' => true
+      }, {
+        'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true
+      }])
+    end
+    
+    it "should not duplicate existing connections" do
+      u1 = User.create
+      u2 = User.create
+      u3 = User.create
+      u4 = User.create
+      ou = OrganizationUnit.create
+      User.link_supervisor_to_user(u3, u1)
+      User.link_supervisor_to_user(u3, u2)
+      ou.settings = {
+        'communicators' => [{'user_id' => u1.global_id}, {'user_id' => u2.global_id}],
+        'supervisors' => [{'user_id' => u3.global_id}, {'user_id' => u4.global_id, 'edit_permission' => true}]
+      }
+      ou.save
+      ou.assert_supervision!
+      expect(u1.reload.settings['supervisors'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u3.global_id, 'user_name' => u3.user_name, 'edit_permission' => false, 'organization_unit_ids' => [ou.global_id]
+      }, {
+        'user_id' => u4.global_id, 'user_name' => u4.user_name, 'edit_permission' => true, 'organization_unit_ids' => [ou.global_id]
+      }])
+      expect(u2.reload.settings['supervisors'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u3.global_id, 'user_name' => u3.user_name, 'edit_permission' => false, 'organization_unit_ids' => [ou.global_id]
+      }, {
+        'user_id' => u4.global_id, 'user_name' => u4.user_name, 'edit_permission' => true, 'organization_unit_ids' => [ou.global_id]
+      }])
+      expect(u3.reload.settings['supervisees'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u1.global_id, 'user_name' => u1.user_name, 'edit_permission' => false
+      }, {
+        'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => false
+      }])
+      expect(u4.reload.settings['supervisees'].sort_by{|s| s['user_id']}).to eq([{
+        'user_id' => u1.global_id, 'user_name' => u1.user_name, 'edit_permission' => true
+      }, {
+        'user_id' => u2.global_id, 'user_name' => u2.user_name, 'edit_permission' => true
+      }])
+    end
+  end
 
   describe "assert_supervision" do
     it "should return false if no user found" do

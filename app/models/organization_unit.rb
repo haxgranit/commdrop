@@ -136,6 +136,17 @@ class OrganizationUnit < ActiveRecord::Base
     self.settings[list] = (self.settings[list] || []).select{|s| s['user_id'] != exclude_user_id }
   end
   
+  def assert_supervision!
+    communicators = User.find_all_by_global_id((self.settings['communicators'] || []).map{|s| s['user_id'] })
+    supervisors = User.find_all_by_global_id((self.settings['supervisors'] || []).map{|s| s['user_id'] })
+    supervisors.each do |sup|
+      communicators.each do |comm|
+        sup_ref = self.settings['supervisors'].detect{|s| s['user_id'] == sup.global_id } || {}
+        User.link_supervisor_to_user(sup, comm, nil, !!sup_ref['edit_permission'], self.global_id)
+      end
+    end
+  end
+  
   def assert_supervision(opts={})
     communicators = User.find_all_by_global_id((self.settings['communicators'] || []).map{|s| s['user_id'] })
     supervisors = User.find_all_by_global_id((self.settings['supervisors'] || []).map{|s| s['user_id'] })
