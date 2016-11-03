@@ -209,12 +209,14 @@ import capabilities from './capabilities';
             // and expects a proper promise in response.
             return Ember.RSVP.resolve(null);
           } else {
-            return Ember.RSVP.reject({
+            var rej = Ember.RSVP.reject({
               stack: data.status + ": " + data.error + " (" + options.url + ")",
               fakeXHR: fakeXHR(xhr),
               message: message,
               result: data
             });
+            rej.then(null, function() { });
+            return rej;
            }
         } else {
           if(typeof(data) == 'string') {
@@ -239,11 +241,13 @@ import capabilities from './capabilities';
         if(error) {
           error.call(this, xhr, message, result);
         }
-        return Ember.RSVP.reject({
+        var rej = Ember.RSVP.reject({
           fakeXHR: fakeXHR(xhr),
           message: message,
           result: result
         });
+        rej.then(null, function() { });
+        return rej;
       });
       res.then(null, function() { });
       return res;
