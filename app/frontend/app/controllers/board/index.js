@@ -115,6 +115,7 @@ export default Ember.Controller.extend({
     app_state.set('window_inner_width', window.innerWidth);
     var show_description = !app_state.get('edit_mode') && !app_state.get('speak_mode') && this.get('long_description');
     var topHeight = app_state.get('header_height') + 5;
+    var sidebarTopHeight = topHeight;
     this.set('show_word_suggestions', this.get('model.word_suggestions') && app_state.get('speak_mode'));
     if(this.get('show_word_suggestions')) {
       topHeight = topHeight + 50;
@@ -129,7 +130,7 @@ export default Ember.Controller.extend({
       topHeight = topHeight + 30;
     }
     if(app_state.controller) {
-      app_state.controller.set('sidebar_style', new Ember.Handlebars.SafeString("height: " + (height - topHeight + 20) + "px;"));
+      app_state.controller.set('sidebar_style', new Ember.Handlebars.SafeString("height: " + (height - sidebarTopHeight + 20) + "px;"));
     }
     this.setProperties({
       'height': height - topHeight,
