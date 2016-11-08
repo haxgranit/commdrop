@@ -155,6 +155,7 @@
     </div>
   </div>
 </div>
+{{#if app_state.feature_flags.modeling}}
 <div class="form-group">
   <label for="dwell_modeling" class="col-sm-3 control-label">{{t "Modeling" key='modeling'}}</label>
   <div class="col-sm-5">
@@ -166,6 +167,7 @@
     </div>
   </div>
 </div>
+{{/if}}
 <div class="form-group">
   <label for="external_links" class="col-sm-3 control-label">{{t "External Links" key='external_links'}}</label>
   <div class="col-sm-5">
@@ -688,6 +690,7 @@
         {{bound-select select_class="form-control" select_id="scanning_mode" content=targetingList selection=model.preferences.device.dwell_targeting action=(action (mut model.preferences.device.dwell_targeting)) }}
       </div>
     </div>
+    {{#if app_state.feature_flags.modeling}}
     <div class="form-group">
       <label for="dwell_modeling" class="col-sm-3 control-label">{{t "Dwell Modeling" key='dwell_modeling'}}</label>
       <div class="col-sm-5">
@@ -699,6 +702,7 @@
         </div>
       </div>
     </div>
+    {{/if}}
   {{/if}}
 {{/if}}
 {{#if user_voice_list}}
