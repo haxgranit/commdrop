@@ -13,12 +13,49 @@ task "extras:clear_report_tallies" => :environment do
   RedisInit.default.del('missing_symbols')
 end
 
-task "extras:deploy_notification" => :environment do
-  str = File.read('./app/assets/javascripts/application-preload.js')
-  match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+\w*)\";/)
-  version = match && match[1]
-
-  `curl -X POST -H 'Content-type: application/json' --data '{"username": "deploy-bot", "icon_emoji": ":cuttlefish:", "text":"New version deployed, #{version}\n<https://github.com/CoughDrop/coughdrop/blob/master/CHANGELOG.md|change notes> | <https://github.com/CoughDrop/coughdrop/commits/master|detailed log>"}' #{ENV['SLACK_NOTIFICATION_URL']}`
+task "extras:deploy_notification", [:system, :level, :version] => :environment do |t, args|
+  message = "Something got deployed!"
+  if !args[:system] && ARGV.length > 1
+    ARGV.each { |a| task a.to_sym do ; end }    
+    args = {
+      :system => ARGV[1],
+      :level => ARGV[2],
+      :version => ARGV[3]
+    }
+  end
+  if args[:system].downcase == 'android'
+    if args[:level] && (args[:level].downcase == 'beta' || args[:level].downcase == 'alpha')
+      message = "#{args[:level]} version pushed out for testing on Android\nplease kick the tires when you have a chance"
+    else
+      message = "An update on the Google Play Store is going live"
+      message += " (#{args[:version]})" if args[:version]
+      message += "\nif people start reporting bugs, that is probably why"
+    end
+    message += "\n<https://play.google.com/store/apps/details?id=com.mycoughdrop.coughdrop|app store link>"
+  elsif args[:system].downcase == 'kindle'
+    if args[:level] && (args[:level].downcase == 'beta' || args[:level].downcase == 'alpha')
+      message "#{args[:level]} version submitted to the iOS App Store"
+    else
+      message "An update has been submitted to the iOS App Store"
+      message += " (#{args[:version]})" if args[:version]
+      message += "\nit typically takes 7-10 days to get approved, so sit tight"
+    end
+    message += "\n<https://www.amazon.com/CoughDrop-Inc-AAC/dp/B01BU8RUEY/ref=sr_1_1?s=mobile-apps&ie=UTF8&qid=1478539872&sr=1-1&keywords=coughdrop|app store link>"
+  elsif args[:system].downcase == 'ios'
+    message += "\n<https://itunes.apple.com/us/app/coughdrop/id1021384570|app store link>"
+  elsif args[:system].downcase == 'windows'
+    message = "New version of the Windows app is available"
+    message += " (#{args[:version]})" if args[:version]
+    message += "\n<https://www.mycoughdrop.com/download|download links>"
+  else
+    str = File.read('./app/assets/javascripts/application-preload.js')
+    match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+\w*)\";/)
+    version = match && match[1]
+    message = "New version deployed (#{version})"
+    message += "\n<https://github.com/CoughDrop/coughdrop/blob/master/CHANGELOG.md|change notes> | <https://github.com/CoughDrop/coughdrop/commits/master|detailed log>"
+  end
+  json = {"username": "deploy-bot", "icon_emoji": ":cuttlefish:", "text":message}
+  `curl -X POST -H 'Content-type: application/json' --data '#{json.to_json}' #{ENV['SLACK_NOTIFICATION_URL']}`
   #SLACK_NOTIFICATION_URL
 end
 
