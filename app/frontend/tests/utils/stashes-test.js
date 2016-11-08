@@ -10,7 +10,7 @@ describe('stashes', function() {
     window.localStorage.root_board_state = null;
       stashes.orientation = null;
       stashes.volume = null;
-      stashes.geo = null;
+      stashes.geo.latest = null;
       stashes.ambient_light = null;
       stashes.screen_brightness = null;
       stashes.set('referenced_user_id', null);
@@ -112,7 +112,30 @@ describe('stashes', function() {
 
   describe("geo", function() {
     // TODO
-    it("should properly start polling when enabled");
+    it("should properly start polling when enabled", function() {
+      var callback = null;
+      stashes.set('geo.latest', null);
+      stub(stashes, 'geolocation', {
+        clearWatch: function() {
+        },
+        getCurrentPosition: function(cb) {
+        },
+        watchPosition: function(cb) {
+          callback = cb;
+          return '12345';
+        }
+      });
+      stashes.geo.poll();
+      waitsFor(function() { return callback; });
+      runs(function() {
+        expect(stashes.geo.watching).toEqual('12345');
+        callback({coords: {latitude: 1, longitude: 2}});
+      });
+      waitsFor(function() { return stashes.get('geo.latest'); });
+      runs(function() {
+        expect(stashes.get('geo.latest.coords')).toEqual({latitude: 1, longitude: 2});
+      });
+    });
   });
 
   describe("log", function() {
@@ -172,8 +195,9 @@ describe('stashes', function() {
     });
     it("should include geo location if provided", function() {
       stashes.set('logging_enabled', true);
+      stashes.set('geo_logging_enabled', true);
       stashes.set('speaking_user_id', '12');
-      stashes.geo = {
+      stub(stashes, 'geo', {
         latest: {
           coords: {
             latitude: 1,
@@ -181,7 +205,7 @@ describe('stashes', function() {
             altitude: 123
           }
         }
-      };
+      });
       var event = stashes.log({
         'action': "backspace"
       });
@@ -279,7 +303,7 @@ describe('stashes', function() {
       stashes.volume = null;
       stashes.ambient_light = null;
       stashes.screen_brightness = null;
-      stashes.geo = {};
+      stub(stashes, 'geo', {});
       stashes.set('referenced_user_id', null);
       stub(window, 'outerWidth', 1234);
       stub(window, 'outerHeight', 2345);
@@ -351,6 +375,26 @@ describe('stashes', function() {
       });
     });
 
+    it("should not include geo data if not enabled, even if available", function() {
+      stashes.set('logging_enabled', true);
+      stashes.set('geo_logging_enabled', false);
+      stashes.set('speaking_user_id', '12');
+      stub(stashes, 'geo', {
+        latest: {
+          coords: {
+            latitude: 1,
+            longitude: 2,
+            altitude: 123
+          }
+        }
+      });
+      var event = stashes.log({
+        'action': "backspace"
+      });
+      expect(event.type).toEqual('action');
+      expect(event.geo).toEqual(null);
+    });
+
     it("should include sensor data if defined", function() {
       var log_pushed = false;
       stub(stashes, 'push_log', function() {
@@ -365,7 +409,7 @@ describe('stashes', function() {
 
       stashes.orientation = {};
       stashes.volume = 90;
-      stashes.geo = {};
+      stub(stashes, 'geo', {});
       stashes.ambient_light = 1200;
       stashes.screen_brightness = 88;
       stashes.set('referenced_user_id', '1234');

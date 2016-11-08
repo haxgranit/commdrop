@@ -11,6 +11,7 @@ import scanner from '../../utils/scanner';
 import session from '../../utils/session';
 import capabilities from '../../utils/capabilities';
 import utterance from '../../utils/utterance';
+import geo from '../../utils/geo';
 import CoughDrop from '../../app';
 
 describe('app_state', function() {
@@ -153,6 +154,18 @@ describe('app_state', function() {
       runs(function() {
         expect(warnings).toEqual(2);
       });
+    });
+
+    it("should poll for geo when in speak mode", function() {
+      var polling = false;
+      stub(stashes.geo, 'poll', function() {
+        polling = true;
+      });
+      stashes.set('current_mode', 'speak');
+      app_state.set('currentUser', Ember.Object.create({preferences: {geo_logging: true}}));
+      app_state.set('currentBoardState', {key: 'trade', id: '1_1'});
+      waitsFor(function() { return polling; });
+      runs();
     });
   });
 
@@ -622,6 +635,7 @@ describe('app_state', function() {
         preferences: {geo_logging: true}
       });
       u.set('premium_enabled', true);
+      app_state.set('currentBoardState', {key: 'trade', id: '1_1'});
       app_state.set('sessionUser', u);
       app_state.toggle_mode('speak');
       expect(polling).toEqual(true);
@@ -1785,6 +1799,117 @@ describe('app_state', function() {
         expect(o.get('last_sync_stamp_interval')).toEqual(10000);
         expect(called).toEqual(true);
       });
+    });
+  });
+
+  describe("fenced_sidebar_board", function() {
+    beforeEach(function() {
+      app_state.set('last_fenced_board', null);
+    });
+
+    it("should return nothing by default", function() {
+      expect(app_state.get('fenced_sidebar_board')).toEqual(undefined);
+    });
+
+    it("should return the closest geolocated board", function() {
+      stashes.set('geo.latest', {coords: {latitude: 1, longitude: 1}});
+      app_state.set('currentUser', Ember.Object.extend({
+        sidebar_boards_with_fallbacks: function() {
+          return [
+            {key: 'a', highlight_type: 'locations', geos: [[1.0001, 1.0001]]},
+            {key: 'b', highlight_type: 'locations', geos: [[1.0001, 1.0001]]},
+            {key: 'c', highlight_type: 'locations', geos: [[1.0001, 1]]}
+          ];
+        }.property()
+      }).create());
+      expect(app_state.get('fenced_sidebar_board')).toNotEqual(undefined);
+      expect(app_state.get('fenced_sidebar_board.key')).toEqual('c');
+    });
+
+    it("should return a time-matched board if found", function() {
+      stashes.set('geo.latest', {coords: {latitude: 1, longitude: 1}});
+      var now = (new Date()).getTime();
+      var str1 = app_state.time_string(now - (5*60*1000));
+      var str2 = app_state.time_string(now + (5*60*1000));
+      app_state.set('currentUser', Ember.Object.extend({
+        sidebar_boards_with_fallbacks: function() {
+          return [
+            {key: 'a', highlight_type: 'locations', geos: [[1.1, 1.1]]},
+            {key: 'b', highlight_type: 'locations', geos: [[1.1, 1.1]]},
+            {key: 'c', highlight_type: 'times', times: [[str1, str2]]}
+          ];
+        }.property()
+      }).create());
+      expect(app_state.get('fenced_sidebar_board')).toNotEqual(undefined);
+      expect(app_state.get('fenced_sidebar_board.key')).toEqual('c');
+    });
+
+    it("should return an ssid-matched board if found", function() {
+      stashes.set('geo.latest', {coords: {latitude: 1, longitude: 1}});
+      var now = (new Date()).getTime();
+      app_state.set('current_ssid', 'asdfqwer');
+      app_state.set('currentUser', Ember.Object.extend({
+        sidebar_boards_with_fallbacks: function() {
+          return [
+            {key: 'a', highlight_type: 'locations', geos: [[1.1, 1.1]]},
+            {key: 'b', highlight_type: 'locations', ssids: ['asdf', 'asdfqwer']},
+            {key: 'c', highlight_type: 'locations', ssids: ['tyui', 'tyihgjk']},
+          ];
+        }.property()
+      }).create());
+      expect(app_state.get('fenced_sidebar_board')).toNotEqual(undefined);
+      expect(app_state.get('fenced_sidebar_board.key')).toEqual('b');
+    });
+
+//     it("should return a place-matched board if found and matching a geo place", function() {
+//     });
+
+    it("should return the last-found result if not too old and nothing else found", function() {
+      var last = {
+        key: 'asdf',
+        shown_at: (new Date()).getTime() - (1*60*1000)
+      };
+      app_state.set('last_fenced_board', last);
+      expect(app_state.get('fenced_sidebar_board')).toEqual(last);
+    });
+
+    it("should not return the last-found result if too old and nothing else found", function() {
+      app_state.set('last_fenced_board', {
+        key: 'qwer',
+        shown_at: (new Date()).getTime() - (3*60*1000)
+      });
+      expect(app_state.get('fenced_sidebar_board')).toEqual(undefined);
+    });
+  });
+
+  describe("check_locations", function() {
+    it("should only call if the user has a place-based sidebar board", function() {
+      var checked = false;
+      stub(geo, 'check_locations', function() {
+        checked = true;
+        return Ember.RSVP.resolve();
+      });
+      stashes.set('geo.latest', {});
+      app_state.set('currentUser', Ember.Object.extend({
+        sidebar_boards_with_fallbacks: function() {
+          return [{places: [1, 2, 3]}];
+        }.property()
+      }).create());
+      waitsFor(function() { return checked; });
+      runs();
+    });
+
+    it("should not call if the user has no place-based sidebar board", function() {
+      var checked = false;
+      stashes.set('geo.latest', {});
+      app_state.set('currentUser', Ember.Object.extend({
+        sidebar_boards_with_fallbacks: function() {
+          return [{}];
+        }.property()
+      }).create());
+      app_state.check_locations().then(null, function() { checked = true; });
+      waitsFor(function() { return checked; });
+      runs();
     });
   });
 });

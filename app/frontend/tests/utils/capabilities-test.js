@@ -321,4 +321,8 @@ describe("capabilities", function() {
       expect(capabilities.last_lux).toEqual(510);
     });
   });
+
+  describe("ssid", function() {
+    it("should have specs");
+  });
 });

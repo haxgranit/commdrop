@@ -154,6 +154,7 @@ Coughdrop::Application.routes.draw do
       get 'sync_stamp' => 'users#sync_stamp'
       post 'translate' => 'users#translate'
       get 'board_revisions' => 'users#board_revisions'
+      get 'places' => 'users#places'
     end
     
     resources :images do

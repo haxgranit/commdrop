@@ -183,14 +183,17 @@ var stashes = Ember.Object.extend({
   },
   geo: {
     poll: function() {
-      if(navigator.geolocation) {
+      if(stashes.geolocation) {
         if(stashes.geo.watching) {
-          navigator.geolocation.clearWatch(stashes.geo.watching);
+          stashes.geolocation.clearWatch(stashes.geo.watching);
         }
-        stashes.geo.watching = navigator.geolocation.watchPosition(function(position) {
-          stashes.geo.latest = position;
+        stashes.geolocation.getCurrentPosition(function(position) {
+          stashes.set('geo.latest', position);
+        });
+        stashes.geo.watching = stashes.geolocation.watchPosition(function(position) {
+          stashes.set('geo.latest', position);
         }, function(error) {
-          stashes.geo.latest = null;
+          stashes.set('geo.latest', null);
         });
       }
     }
@@ -215,8 +218,8 @@ var stashes = Ember.Object.extend({
   log_event: function(obj, user_id) {
     var timestamp = stashes.current_timestamp();
     var geo = null;
-    if(stashes.geo && stashes.geo.latest) { // TODO: timeout if it's been too long?
-      geo = [stashes.geo.latest.coords.latitude, stashes.geo.latest.coords.longitude, stashes.geo.latest.coords.altitude];
+    if(stashes.geo && stashes.get('geo.latest') && stashes.get('geo_logging_enabled')) { // TODO: timeout if it's been too long?
+      geo = [stashes.get('geo.latest').coords.latitude, stashes.get('geo.latest').coords.longitude, stashes.get('geo.latest').coords.altitude];
     }
     var log_event = null;
     var usage_log = stashes.get('usage_log');
@@ -355,6 +358,7 @@ var stashes = Ember.Object.extend({
   }
 }).create({logging_enabled: false});
 stashes.setup();
+stashes.geolocation = navigator.geolocation;
 
 window.stashes = stashes;
 

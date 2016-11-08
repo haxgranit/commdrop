@@ -543,6 +543,9 @@
           {{#if board.home_lock}}
             <span class="glyphicon glyphicon-home"></span>
           {{/if}}
+          {{#if board.fenced}}
+            <span class="glyphicon glyphicon-map-marker"></span>
+          {{/if}}
           <img src={{board.image}} style="width: 50px;" alt=""/>
           {{board.name}}
         </a>
@@ -560,6 +563,9 @@
   {{#if app_state.speak_mode}}
     {{#unless app_state.currentUser.preferences.disable_quick_sidebar}}
       <div id="sidebar_tease" class="advanced_selection" {{action "toggleSidebar"}}>
+        {{#if app_state.fenced_sidebar_board}}
+          <span class='glyphicon glyphicon-map-marker' style='font-size: 20px; vertical-align: middle;'></span>
+        {{/if}}
         {{t "sidebar" key='sidebar'}}
       </div>
     {{/unless}}

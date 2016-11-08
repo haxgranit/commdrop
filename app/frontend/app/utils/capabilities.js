@@ -670,6 +670,29 @@ var capabilities;
         },
         show: function() { }
       },
+      ssid: {
+        listen: function(callback) {
+          capabilities.ssid_callbacks = capabilities.ssid_callbacks || [];
+          var start_listening = capabilities.ssid_callbacks.length === 0;
+          capabilities.ssid_callbacks.push(callback);
+          var notify_all = function(ssid) {
+            ssid = ssid || null;
+            if(capabilities.ssid_callbacks) {
+              capabilities.ssid_callbacks.forEach(function(cb) {
+                if(cb.last_result === undefined || cb.last_result != ssid) {
+                  cb(ssid);
+                }
+              });
+            }
+          };
+          if(start_listening) {
+            setInterval(function() {
+              // poll
+              notify_all(null);
+            }, 3000);
+          }
+        }
+      },
       battery: {
         listen: function(callback) {
           capabilities.battery_callbacks = capabilities.battery_callbacks || [];

@@ -927,6 +927,163 @@ describe User, :type => :model do
       ], {})
       expect(u.settings['preferences']['prior_sidebar_boards'].length).to eq(3)
     end
+    
+    it "should allow location-based filtered boards" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b3 = Board.create(:user => u)
+      u.process_sidebar_boards([
+        {
+          'key' => b1.key,
+          'highlight_type' => 'locations',
+          'geos' => [[5.1, 3.001], [6.11, 8888.34]]
+        },
+        {
+          'key' => b2.key,
+          'highlight_type' => 'locations',
+          'ssids' => ['MonkeyBrains', 'whatever']
+        },
+        {
+          'key' => b3.key,
+          'highlight_type' => 'locations',
+          'geos' => '1.1,2.2;3.3,4.4;5.5,6.6',
+          'ssids' => 'Cooolness,Home Wifi'
+        }
+      ], {})
+      expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'].length).to eq(3)
+      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][2]).to eq({})
+    end
+    
+    it "should allow time-based filtered boards" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      u.process_sidebar_boards([
+        {
+          'key' => b1.key,
+          'highlight_type' => 'times',
+          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+        },
+        {
+          'key' => b2.key,
+          'highlight_type' => 'times',
+          'times' => "21:00:04.1234-22:00;4:45pm-7:00pm"
+        }
+      ], {})
+      expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'].length).to eq(2)
+      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+    end
+    
+    it "should allow place-based filtered boards" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      u.process_sidebar_boards([
+        {
+          'key' => b1.key,
+          'highlight_type' => 'places',
+          'places' => ['accountant', 'grocery_store']
+        },
+        {
+          'key' => b2.key,
+          'highlight_type' => 'times',
+          'places' => "zoo,coffee_shop,laundromat"
+        }
+      ], {})
+      expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'].length).to eq(2)
+      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+    end
+    
+    it "should allow custom filtered boards" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      u.process_sidebar_boards([
+        {
+          'key' => b1.key,
+          'highlight_type' => 'custom',
+          'places' => ['accountant', 'grocery_store'],
+          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+        },
+        {
+          'key' => b2.key,
+          'highlight_type' => 'custom',
+          'geos' => [[5.1, 3.001], [6.11, 8888.34]],
+          'ssids' => ['MonkeyBrains', 'whatever'],
+          'places' => "zoo,coffee_shop,laundromat"
+        }
+      ], {})
+      expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'].length).to eq(2)
+      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+    end
+    
+    it "should clear unnecessary board highlighting attributes" do
+      u = User.create
+      b1 = Board.create(:user => u)
+      b2 = Board.create(:user => u)
+      b3 = Board.create(:user => u)
+      b4 = Board.create(:user => u)
+      b5 = Board.create(:user => u)
+      u.process_sidebar_boards([
+        {
+          'key' => b1.key,
+          'highlight_type' => 'locations',
+          'geos' => [[5.1, 3.001], [6.11, 8888.34]],
+          'ssids' => ['MonkeyBrains', 'whatever'],
+          'places' => ['accountant', 'grocery_store'],
+          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+        },
+        {
+          'key' => b2.key,
+          'highlight_type' => 'times',
+          'geos' => [[5.1, 3.001], [6.11, 8888.34]],
+          'ssids' => ['MonkeyBrains', 'whatever'],
+          'places' => ['accountant', 'grocery_store'],
+          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+        },
+        {
+          'key' => b3.key,
+          'highlight_type' => 'places',
+          'geos' => [[5.1, 3.001], [6.11, 8888.34]],
+          'ssids' => ['MonkeyBrains', 'whatever'],
+          'places' => ['accountant', 'grocery_store'],
+          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+        },
+        {
+          'key' => b4.key,
+          'highlight_type' => 'custom',
+          'geos' => [[5.1, 3.001], [6.11, 8888.34]],
+          'ssids' => ['MonkeyBrains', 'whatever'],
+          'places' => ['accountant', 'grocery_store'],
+          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+        },
+        {
+          'key' => b5.key,
+          'highlight_type' => 'none',
+          'geos' => [[5.1, 3.001], [6.11, 8888.34]],
+          'ssids' => ['MonkeyBrains', 'whatever'],
+          'places' => ['accountant', 'grocery_store'],
+          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+        }
+      ], {})
+      expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'].length).to eq(5)
+      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][2]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][3]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][4]).to eq({})
+    end
   end
   
   describe "sidebar_boards" do

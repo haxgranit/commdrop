@@ -10,8 +10,8 @@ import buttonTracker from './raw_events';
 import capabilities from './capabilities';
 import scanner from './scanner';
 import session from './session';
+import geolocation from './geo';
 import i18n from './i18n';
-
 
 // tracks:
 // current mode (edit mode, speak mode, default)
@@ -29,6 +29,7 @@ var app_state = Ember.Object.extend({
     });
     this.set('button_list', []);
     this.set('stashes', stashes);
+    this.set('geolocation', geolocation);
     this.set('installed_app', capabilities.installed_app);
     this.set('no_linky', capabilities.installed_app && capabilities.system == 'iOS');
     this.set('licenseOptions', CoughDrop.licenseOptions);
@@ -51,6 +52,9 @@ var app_state = Ember.Object.extend({
           _this.set('battery.progress_class', "progress-bar progress-bar-success");
         }
       }
+    });
+    capabilities.ssid.listen(function(ssid) {
+      _this.set('current_ssid', ssid);
     });
     this.refresh_user();
   },
@@ -413,11 +417,6 @@ var app_state = Ember.Object.extend({
           }
           $elem.select().focus();
         }
-
-        var geo_enabled = app_state.get('currentUser.preferences.geo_logging');
-        if(geo_enabled) {
-          stashes.geo.poll();
-        }
       }
       stashes.persist('current_mode', mode);
     }
@@ -663,7 +662,14 @@ var app_state = Ember.Object.extend({
   speak_mode_handlers: function() {
     if(this.get('speak_mode')) {
       stashes.set('logging_enabled', !!(this.get('speak_mode') && this.get('currentUser.preferences.logging')));
+      stashes.set('geo_logging_enabled', !!(this.get('speak_mode') && this.get('currentUser.preferences.geo_logging')));
       stashes.set('speaking_user_id', this.get('currentUser.id'));
+
+      var geo_enabled = app_state.get('currentUser.preferences.geo_logging') || app_state.get('sidebar_boards').find(function(b) { return b.highlight_type == 'locations' || b.highlight_type == 'custom'; });
+      if(geo_enabled) {
+        stashes.geo.poll();
+      }
+
       // this method is getting called again on every board load, even if already in speak mode. This check
       // limits the following block to once per speak-mode-activation.
       if(!this.get('last_speak_mode')) {
@@ -785,14 +791,124 @@ var app_state = Ember.Object.extend({
     // TODO: does this need to trigger board resize event? maybe...
     return this.get('speak_mode') && (stashes.get('sidebarEnabled') || this.get('currentUser.preferences.quick_sidebar'));
   }.property('speak_mode', 'stashes.sidebarEnabled', 'currentUser', 'currentUser.preferences.quick_sidebar'),
+  time_string: function(timestamp) {
+    return window.moment(timestamp).format("HH:mm");
+  },
+  fenced_sidebar_board: function() {
+    var _this = this;
+    var loose_tolerance = 1000; // 1000 ft
+    var boards = this.get('currentUser.sidebar_boards_with_fallbacks') || [];
+    var all_matches = [];
+    var now_time_string = _this.time_string((new Date()).getTime());
+    var any_places = false;
+    boards.forEach(function(b) { if(b.places) { any_places = true; } });
+    var place_types = [];
+    if(_this.get('nearby_places') && any_places) {
+      // set place_types to the list of places for the closest-retrieved place
+    }
+    boards.forEach(function(brd) {
+      var do_add = false;
+      // add all sidebar boards that match any of the criteria
+      var ssids = brd.ssids || [];
+      if(ssids.split) { ssids = ssids.split(/,/); }
+      var matches = {};
+      if(ssids && ssids.indexOf(_this.get('current_ssid')) != -1) {
+        matches['ssid'] = true;
+      }
+      if(brd.geos && stashes.get('geo.latest.coords')) {
+        var geos = brd.geos || [];
+        if(geos.split) { geos = geos.split(/;/).map(function(g) { return g.split(/,/).map(function(n) { return parseFloat(n); }); }); }
+        brd.geo_distance = -1;
+        geos.forEach(function(geo) {
+          var d = geolocation.distance(stashes.get('geo.latest.coords.latitude'), stashes.get('geo.latest.coords.longitude'), geo[0], geo[1]);
+          if(d && d < loose_tolerance && (brd.geo_distance == -1 || d < brd.geo_distance)) {
+            brd.geo_distance = d;
+            matches['geo'] = true;
+          }
+        });
+      }
+      if(brd.times) {
+        var all_times = brd.times || [];
+
+        all_times.forEach(function(times) {
+          if(times[0] > times[1]) {
+            if(now_time_string >= times[0] || now_time_string <= times[1]) {
+              matches['time'] = true;
+            }
+          } else {
+            if(now_time_string >= times[0] && now_time_string <= times[1]) {
+              matches['time'] = true;
+            }
+          }
+        });
+      }
+      if(brd.places && place_types && place_types.length > 0) {
+        var places = brd.places || [];
+        if(places.split) { places = places.split(/,/); }
+        var any_match = places.find(function(p) { return place_types.indexOf(p) !== -1; });
+        if(any_match) {
+          matches['place'] = true;
+        }
+      }
+
+      if(brd.highlight_type == 'locations' && (matches['geo'] || matches['ssid'])) {
+        all_matches.push(brd);
+      } else if(brd.highlight_type == 'places' && matches['place']) {
+        all_matches.push(brd);
+      } else if(brd.highlight_type == 'times' && matches['time']) {
+        all_matches.push(brd);
+      } else if(brd.highlight_type == 'custom') {
+        if(!brd.ssids || matches['ssid']) {
+          if(!brd.geos || matches['geo']) {
+            if(!brd.places || matches['place']) {
+              if(!brd.times || matches['time']) {
+                all_matches.push(brd);
+              }
+            }
+          }
+        }
+      }
+    });
+    var res = all_matches[0];
+    if(all_matches.length > 1) {
+      if(!all_matches.find(function(m) { return !m.geo_distance; })) {
+        // if it's location-based just return the closest one
+        res = all_matches.sort(function(a, b) { return a.geo_distance - b.geo_distance; })[0];
+      } else {
+        // otherwise craft a special button that pops up the list of matches
+      }
+    }
+    if(res) {
+      res = Ember.$.extend({}, res);
+      res.fenced = true;
+      res.shown_at = (new Date()).getTime();
+      _this.set('last_fenced_board', res);
+    } else if(_this.get('last_fenced_board') && _this.get('last_fenced_board').shown_at && _this.get('last_fenced_board').shown_at > (new Date()).getTime() - (2*60*1000)) {
+      // if there is no fenced board but there was one, go ahead and keep that one around
+      // for an extra minute or so
+      res = _this.get('last_fenced_board');
+    }
+    return res;
+  }.property('last_fenced_board', 'medium_refresh_stamp', 'current_ssid', 'stashes.geo.latest', 'nearby_places', 'currentUser', 'currentUser.sidebar_boards_with_fallbacks'),
+  check_locations: function() {
+    var boards = this.get('currentUser.sidebar_boards_with_fallbacks') || [];
+    if(!boards.find(function(b) { return b.places; })) { return Ember.RSVP.reject(); }
+    var res = geolocation.check_locations();
+    res.then(null, function() { });
+    return res;
+  }.observes('persistence.online', 'stashes.geo.latest', 'currentUser.sidebar_boards_with_fallbacks'),
   sidebar_boards: function() {
     var res = this.get('currentUser.sidebar_boards_with_fallbacks');
     if(!res && window.user_preferences && window.user_preferences.any_user && window.user_preferences.any_user.default_sidebar_boards) {
       res = window.user_preferences.any_user.default_sidebar_boards;
     }
     res = res || [];
+    var sb = this.get('fenced_sidebar_board');
+    if(!sb) { return res; }
+    res = res.filter(function(b) { return b.key != sb.key; });
+    res.unshift(sb);
     return res;
-  }.property('currentUser', 'currentUser.sidebar_boards_with_fallbacks'),
+  }.property('fenced_sidebar_board', 'currentUser', 'currentUser.sidebar_boards_with_fallbacks'),
   sidebar_pinned: function() {
     return this.get('speak_mode') && this.get('currentUser.preferences.quick_sidebar');
   }.property('speak_mode', 'currentUser', 'currentUser.preferences.quick_sidebar'),
@@ -926,6 +1042,9 @@ if(!app_state.get('testing')) {
   setInterval(function() {
     app_state.set('refresh_stamp', (new Date()).getTime());
   }, 5*60*1000);
+  setInterval(function() {
+    app_state.set('medium_refresh_stamp', (new Date()).getTime());
+  }, 60*1000);
   setInterval(function() {
     app_state.set('short_refresh_stamp', (new Date()).getTime());
     if(window.persistence) {

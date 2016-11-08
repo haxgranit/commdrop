@@ -1324,4 +1324,32 @@ describe Api::UsersController, :type => :controller do
       expect(json).to eq(hash)
     end
   end
+  
+  describe "places" do
+    it "should require an access token" do
+      get 'places', :user_id => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should require a valid user" do
+      token_user
+      get 'places', :user_id => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      get 'places', :user_id => u.global_id
+      assert_unauthorized
+    end
+    
+    it "should return a list of places" do
+      token_user
+      get 'places', :user_id => @user.global_id
+      expect(respose).to be_success
+      json = JSON.parse(response.body)
+      expect(json).to eq([])
+    end
+  end
 end

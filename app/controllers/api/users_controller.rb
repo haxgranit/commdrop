@@ -27,6 +27,13 @@ class Api::UsersController < ApplicationController
     render json: {sync_stamp: user.updated_at.utc.iso8601 }
   end
   
+  def places
+    user = User.find_by_path(params['user_id'])
+    return unless exists?(user, params['user_id'])
+    return unless allowed?(user, 'supervise')
+    render json: Geolocation.find_places(params['latitude'], params['longitude'])
+  end
+  
   def index
     if !Organization.admin_manager?(@api_user)
       return api_error 400, {error: 'admins only'}

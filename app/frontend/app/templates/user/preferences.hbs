@@ -329,6 +329,9 @@
                 {{else if option.home_lock}}
                   <span class="glyphicon glyphicon-home"></span>
                 {{/if}}
+                {{#if option.highlight_type}}
+                  <span class="glyphicon glyphicon-map-marker"></span>
+                {{/if}}
                 {{option.name}}
               </span>
               <span style="clear: both;"></span>

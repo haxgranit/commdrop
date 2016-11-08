@@ -597,12 +597,70 @@ class User < ActiveRecord::Base
           allowed = true
         end
         if record && allowed
-          result.push({
+          brd = {
             'name' => board['name'] || record.settings['name'] || 'Board',
             'key' => board['key'],
             'image' => board['image'] || record.settings['image_url'] || 'https://s3.amazonaws.com/opensymbols/libraries/arasaac/board_3.png',
             'home_lock' => !!board['home_lock']
-          })
+          }
+          valid_types = []
+          if board['highlight_type'] == 'custom'
+            valid_types = ['geos', 'ssids', 'times', 'places']
+          elsif board['highlight_type'] == 'locations'
+            valid_types = ['geos', 'ssids']
+          elsif board['highlight_type'] == 'times'
+            valid_types = ['times']
+          elsif board['highlight_type'] == 'places'
+            valid_types = ['places']
+          else
+            board.delete('highlight_type')
+          end
+          brd['highlight_type'] = board['highlight_type'] if board['highlight_type']
+          if board['ssids'] && valid_types.include?('ssids')
+            board['ssids'] = board['ssids'].split(/,/) if board['ssids'].is_a?(String)
+            ssids = board['ssids'].map{|s| process_string(s) } 
+            brd['ssids'] = ssids if ssids.length > 0
+          end
+          if board['geos'] && valid_types.include?('geos')
+            geos = []
+            board['geos'] = board['geos'].split(/;/) if board['geos'].is_a?(String)
+            board['geos'].each do |geo|
+              geo = geo.split(',') if geo.is_a?(String)
+              if geo[0] && geo[1]
+                geos << [geo[0].to_f, geo[1].to_f]
+              end
+            end
+            brd['geos'] = geos if geos.length > 0
+          end
+          if board['times'] && valid_types.include?('times')
+            board['times'] = board['times'].split(/;/).map{|t| t.split(/-/) } if board['times'].is_a?(String)
+            times = []
+            board['times'].each do |start_time, end_time|
+              parts = [start_time, end_time].map do |time|
+                time_pieces = time.sub(/[ap]m$/, '').split(/:/).map{|p| p.to_i }
+                if time.match(/[ap]m$/)
+                  if time_pieces[0] == 12 && time.match(/am$/)
+                    time_pieces[0] = 0
+                  elsif time_pieces[0] > 12 && time.match(/pm$/)
+                    time_pieces[0] += 12
+                  end
+                end
+                res = time_pieces[0] < 10 ? "0" : ""
+                res += time_pieces[0]
+                res += time_pieces[1] < 10 ? ":0" : ":"
+                res += time_pieces[1]
+              end              
+              times.push([parts[0], parts[1]]) if parts[0] && parts[1]
+            end
+            brd['times'] = times if times.length > 0
+          end
+          if board['places'] && valid_types.include?('places')
+            board['places'] = board['places'].split(/,/) if board['places'].is_a?(String)
+            places = board['places'].map{|p| process_string(p) }
+            brd['places'] = places if places.length > 0
+          end
+          brd.delete('highlight_type') unless brd['geos'] || brd['ssids'] || brd['times'] || brd['places']
+          result.push(brd)
         end
       end
     end
