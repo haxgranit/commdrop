@@ -953,9 +953,18 @@ describe User, :type => :model do
       ], {})
       expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
       expect(u.settings['preferences']['sidebar_boards'].length).to eq(3)
-      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][2]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][0]['key']).to eq(b1.key)
+      expect(u.settings['preferences']['sidebar_boards'][0]['highlight_type']).to eq('locations')
+      expect(u.settings['preferences']['sidebar_boards'][0]['geos']).to eq([[5.1, 3.001], [6.11, 8888.34]])
+      expect(u.settings['preferences']['sidebar_boards'][0]['ssids']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][1]['key']).to eq(b2.key)
+      expect(u.settings['preferences']['sidebar_boards'][1]['highlight_type']).to eq('locations')
+      expect(u.settings['preferences']['sidebar_boards'][1]['geos']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][1]['ssids']).to eq(['MonkeyBrains', 'whatever'])
+      expect(u.settings['preferences']['sidebar_boards'][2]['key']).to eq(b3.key)
+      expect(u.settings['preferences']['sidebar_boards'][2]['highlight_type']).to eq('locations')
+      expect(u.settings['preferences']['sidebar_boards'][2]['geos']).to eq([[1.1,2.2],[3.3,4.4],[5.5,6.6]])
+      expect(u.settings['preferences']['sidebar_boards'][2]['ssids']).to eq(['Cooolness','Home Wifi'])
     end
     
     it "should allow time-based filtered boards" do
@@ -966,7 +975,7 @@ describe User, :type => :model do
         {
           'key' => b1.key,
           'highlight_type' => 'times',
-          'times' => [["05:00:12.1", "06:35"], ["12:00am", "4:14pm"]]
+          'times' => [["05:00:12.1", "6:35"], ["12:00am", "4:14pm"]]
         },
         {
           'key' => b2.key,
@@ -976,8 +985,12 @@ describe User, :type => :model do
       ], {})
       expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
       expect(u.settings['preferences']['sidebar_boards'].length).to eq(2)
-      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][0]['key']).to eq(b1.key)
+      expect(u.settings['preferences']['sidebar_boards'][0]['highlight_type']).to eq('times')
+      expect(u.settings['preferences']['sidebar_boards'][0]['times']).to eq([["05:00", "06:35"], ["00:00", "16:14"]])
+      expect(u.settings['preferences']['sidebar_boards'][1]['key']).to eq(b2.key)
+      expect(u.settings['preferences']['sidebar_boards'][1]['highlight_type']).to eq('times')
+      expect(u.settings['preferences']['sidebar_boards'][1]['times']).to eq([["21:00","22:00"],["16:45","19:00"]])
     end
     
     it "should allow place-based filtered boards" do
@@ -992,14 +1005,18 @@ describe User, :type => :model do
         },
         {
           'key' => b2.key,
-          'highlight_type' => 'times',
+          'highlight_type' => 'places',
           'places' => "zoo,coffee_shop,laundromat"
         }
       ], {})
       expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
       expect(u.settings['preferences']['sidebar_boards'].length).to eq(2)
-      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][0]['key']).to eq(b1.key)
+      expect(u.settings['preferences']['sidebar_boards'][0]['highlight_type']).to eq('places')
+      expect(u.settings['preferences']['sidebar_boards'][0]['places']).to eq(["accountant", "grocery_store"])
+      expect(u.settings['preferences']['sidebar_boards'][1]['key']).to eq(b2.key)
+      expect(u.settings['preferences']['sidebar_boards'][1]['highlight_type']).to eq('places')
+      expect(u.settings['preferences']['sidebar_boards'][1]['places']).to eq(['zoo', 'coffee_shop', 'laundromat'])
     end
     
     it "should allow custom filtered boards" do
@@ -1023,8 +1040,18 @@ describe User, :type => :model do
       ], {})
       expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
       expect(u.settings['preferences']['sidebar_boards'].length).to eq(2)
-      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][0]['key']).to eq(b1.key)
+      expect(u.settings['preferences']['sidebar_boards'][0]['highlight_type']).to eq('custom')
+      expect(u.settings['preferences']['sidebar_boards'][0]['geos']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][0]['ssids']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][0]['times']).to eq([["05:00", "06:35"], ["00:00", "16:14"]])
+      expect(u.settings['preferences']['sidebar_boards'][0]['places']).to eq(['accountant', 'grocery_store'])
+      expect(u.settings['preferences']['sidebar_boards'][1]['key']).to eq(b2.key)
+      expect(u.settings['preferences']['sidebar_boards'][1]['highlight_type']).to eq('custom')
+      expect(u.settings['preferences']['sidebar_boards'][1]['geos']).to eq([[5.1, 3.001], [6.11, 8888.34]])
+      expect(u.settings['preferences']['sidebar_boards'][1]['ssids']).to eq(['MonkeyBrains', 'whatever'])
+      expect(u.settings['preferences']['sidebar_boards'][1]['times']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][1]['places']).to eq(['zoo','coffee_shop','laundromat'])
     end
     
     it "should clear unnecessary board highlighting attributes" do
@@ -1078,11 +1105,36 @@ describe User, :type => :model do
       ], {})
       expect(u.settings['preferences']['sidebar_boards']).to_not eq(nil)
       expect(u.settings['preferences']['sidebar_boards'].length).to eq(5)
-      expect(u.settings['preferences']['sidebar_boards'][0]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][1]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][2]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][3]).to eq({})
-      expect(u.settings['preferences']['sidebar_boards'][4]).to eq({})
+      expect(u.settings['preferences']['sidebar_boards'][0]['key']).to eq(b1.key)
+      expect(u.settings['preferences']['sidebar_boards'][0]['highlight_type']).to eq('locations')
+      expect(u.settings['preferences']['sidebar_boards'][0]['geos']).to eq([[5.1, 3.001], [6.11, 8888.34]])
+      expect(u.settings['preferences']['sidebar_boards'][0]['ssids']).to eq(['MonkeyBrains', 'whatever'])
+      expect(u.settings['preferences']['sidebar_boards'][0]['times']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][0]['places']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][1]['key']).to eq(b2.key)
+      expect(u.settings['preferences']['sidebar_boards'][1]['highlight_type']).to eq('times')
+      expect(u.settings['preferences']['sidebar_boards'][1]['geos']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][1]['ssids']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][1]['times']).to eq([["05:00", "06:35"], ["00:00", "16:14"]])
+      expect(u.settings['preferences']['sidebar_boards'][1]['places']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][2]['key']).to eq(b3.key)
+      expect(u.settings['preferences']['sidebar_boards'][2]['highlight_type']).to eq('places')
+      expect(u.settings['preferences']['sidebar_boards'][2]['geos']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][2]['ssids']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][2]['times']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][2]['places']).to eq(['accountant', 'grocery_store'])
+      expect(u.settings['preferences']['sidebar_boards'][3]['key']).to eq(b4.key)
+      expect(u.settings['preferences']['sidebar_boards'][3]['highlight_type']).to eq('custom')
+      expect(u.settings['preferences']['sidebar_boards'][3]['geos']).to eq([[5.1, 3.001], [6.11, 8888.34]])
+      expect(u.settings['preferences']['sidebar_boards'][3]['ssids']).to eq(['MonkeyBrains', 'whatever'])
+      expect(u.settings['preferences']['sidebar_boards'][3]['times']).to eq([["05:00", "06:35"], ["00:00", "16:14"]])
+      expect(u.settings['preferences']['sidebar_boards'][3]['places']).to eq(['accountant', 'grocery_store'])
+      expect(u.settings['preferences']['sidebar_boards'][4]['key']).to eq(b5.key)
+      expect(u.settings['preferences']['sidebar_boards'][4]['highlight_type']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][4]['geos']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][4]['ssids']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][4]['times']).to eq(nil)
+      expect(u.settings['preferences']['sidebar_boards'][4]['places']).to eq(nil)
     end
   end
   

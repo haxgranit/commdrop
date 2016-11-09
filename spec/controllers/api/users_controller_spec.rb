@@ -1347,7 +1347,7 @@ describe Api::UsersController, :type => :controller do
     it "should return a list of places" do
       token_user
       get 'places', :user_id => @user.global_id
-      expect(respose).to be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq([])
     end

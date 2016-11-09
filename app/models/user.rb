@@ -641,14 +641,14 @@ class User < ActiveRecord::Base
                 if time.match(/[ap]m$/)
                   if time_pieces[0] == 12 && time.match(/am$/)
                     time_pieces[0] = 0
-                  elsif time_pieces[0] > 12 && time.match(/pm$/)
+                  elsif time_pieces[0] < 12 && time.match(/pm$/)
                     time_pieces[0] += 12
                   end
                 end
                 res = time_pieces[0] < 10 ? "0" : ""
-                res += time_pieces[0]
+                res += time_pieces[0].to_s
                 res += time_pieces[1] < 10 ? ":0" : ":"
-                res += time_pieces[1]
+                res += time_pieces[1].to_s
               end              
               times.push([parts[0], parts[1]]) if parts[0] && parts[1]
             end
