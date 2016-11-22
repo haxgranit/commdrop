@@ -67,6 +67,17 @@ describe Api::GoalsController, type: :controller do
       expect(json['goal'].length).to eq(1)
       expect(json['goal'][0]['id']).to eq(g.global_id)
     end
+    
+    it "should allow filtering to global goals" do
+      token_user
+      g = UserGoal.create(:user => @user, :global => true)
+      g2 = UserGoal.create(:user => @user)
+      get :index, :global => true
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['goal'].length).to eq(1)
+      expect(json['goal'][0]['id']).to eq(g.global_id)
+    end
   end
   
   describe "show" do

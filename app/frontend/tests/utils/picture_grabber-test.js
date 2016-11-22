@@ -658,4 +658,29 @@ describe('pictureGrabber', function() {
     });
   });
 
+  describe('save_image', function() {
+    it('should create and save an image record for the data uri', function() {
+      queryLog.defineFixture({
+        method: 'POST',
+        type: 'image',
+        compare: function(s) { debugger; return s.get('data_url') == 'data:image/png;base64,MA=='; },
+        response: Ember.RSVP.resolve({image: {id: '123', url: null, pending: true}})
+      });
+      stub(contentGrabbers, 'save_record', function(img) {
+        return Ember.RSVP.resolve(img);
+      });
+      var record = null;
+      pictureGrabber.save_image('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==').then(function(res) {
+        record = res;
+      }, function(err) {
+        debugger;
+      });
+      waitsFor(function() { return record; });
+      runs(function() {
+        expect(record.get('height')).toEqual(5);
+        expect(record.get('content_type')).toEqual('image/png');
+        expect(record.get('url')).toNotEqual(undefined);
+      });
+    });
+  });
 });

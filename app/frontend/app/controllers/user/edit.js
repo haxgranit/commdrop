@@ -19,6 +19,10 @@ export default Ember.Controller.extend({
     {name: i18n.t('text_shares', "Email Me Communicator Reports Every Two Weeks"), id: '2_weeks'},
     {name: i18n.t('app_shares', "Email Me Monthly Communicator Reports"), id: '1_month'}
   ],
+  goal_notification_options: [
+    {name: i18n.t('email_goal_completion', "Email Me When Goals are Completed"), id: 'enabled'},
+    {name: i18n.t('dont_email_goal_completion', "Don't Email Me When Goals are Completed"), id: 'disabled'}
+  ],
   title: function() {
     return "Edit " + this.get('model.user_name');
   }.property('model.user_name'),

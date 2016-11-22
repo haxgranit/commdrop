@@ -15,6 +15,7 @@ export default Ember.Route.extend({
     controller.set('password', null);
     controller.update_selected();
     controller.reload_logs();
+    controller.load_badges();
   },
   actions: {
     recordNote: function(type) {

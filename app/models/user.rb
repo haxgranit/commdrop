@@ -409,7 +409,8 @@ class User < ActiveRecord::Base
       'silence_spelling_buttons', 'stretch_buttons', 'registration_type',
       'board_background', 'vocalization_height', 'role', 'auto_open_speak_mode',
       'canvas_render', 'blank_status', 'share_notifications', 'notification_frequency',
-      'skip_supervisee_sync', 'sync_refresh_interval', 'multi_touch_modeling']
+      'skip_supervisee_sync', 'sync_refresh_interval', 'multi_touch_modeling',
+      'goal_notifications']
 
   PROGRESS_PARAMS = ['setup_done', 'intro_watched', 'profile_edited', 'preferences_edited', 'home_board_set', 'app_added', 'skipped_subscribe_modal']
   def process_params(params, non_user_params)
@@ -787,12 +788,25 @@ class User < ActiveRecord::Base
         :type => notification_type,
         :occurred_at => record.updated_at.iso8601,
         :sharer_user_name => args['sharer']['user_name'],
-        :text => args['text']
+        :text => args['text'],
+        :id => record.global_id
       })
     elsif notification_type == 'log_summary'
       self.next_notification_at = self.next_notification_schedule
       self.save
       UserMailer.schedule_delivery(:log_summary, self.global_id)
+    elsif notification_type == 'badge_awarded'
+      self.add_user_notification({
+        :type => 'badge_awarded',
+        :occurred_at => record.awarded_at,
+        :user_name => record.user.user_name,
+        :badge_name => record.data['name'],
+        :badge_level => record.level,
+        :id => record.global_id
+      })
+      if self.settings['preferences'] && self.settings['preferences']['goal_notifications'] != 'disabled'
+        UserMailer.schedule_delivery(:badge_awarded, self.global_id, record.global_id)
+      end
     end
   end
   

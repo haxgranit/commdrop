@@ -79,6 +79,7 @@ class ButtonImage < ActiveRecord::Base
     self.settings['height'] = params['height'].to_i if params['height']
     # TODO: when cleaning up orphan images, don't delete avatar images
     self.settings['avatar'] = !!params['avatar'] if params['avatar'] != nil
+    self.settings['badge'] = !!params['badge'] if params['badge'] != nil
     # TODO: raise a stink if content_type, width or height are not provided
     process_license(params['license']) if params['license']
     self.settings['suggestion'] = params['suggestion'] if params['suggestion']

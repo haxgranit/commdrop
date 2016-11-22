@@ -16,6 +16,9 @@ class Api::GoalsController < ApplicationController
     if params['template_header']
       goals = goals.where(:template_header => true)
       goals = goals.order('id ASC')
+    elsif params['global']
+      goals = goals.where(:global => true)
+      goals = goals.order('id ASC')
     elsif params['template_header_id']
       header = UserGoal.find_by_path(params['template_header_id'])
       header = nil unless header.template_header

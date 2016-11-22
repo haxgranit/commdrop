@@ -122,14 +122,29 @@ export default Ember.Controller.extend({
     if(!(_this.get('model.logs') || {}).length) {
       this.set('model.logs', {loading: true});
     }
-    this.store.query('log', {user_id: this.get('model.id')}).then(function(logs) {
-      _this.set('model.logs', logs.slice(0,6));
+    this.store.query('log', {user_id: this.get('model.id'), per_page: 4}).then(function(logs) {
+      _this.set('model.logs', logs.slice(0,4));
     }, function() {
       if(!(_this.get('model.logs') || {}).length) {
         _this.set('model.logs', {error: true});
       }
     });
   }.observes('persistence.online'),
+  load_badges: function() {
+    if(this.get('model.permissions')) {
+      var _this = this;
+      if(!(_this.get('model.badges') || {}).length) {
+        _this.set('model.badges', {loading: true});
+      }
+      this.store.query('badge', {user_id: this.get('model.id'), earned: true, per_page: 4}).then(function(badges) {
+        _this.set('model.badges', badges);
+      }, function(err) {
+        if(!(!this.get('model.badges') || {}).length) {
+          _this.set('model.badges', {error: true});
+        }
+      });
+    }
+  }.observes('model.permissions'),
   subscription: function() {
     if(this.get('model.permissions.admin_support_actions') && this.get('model.subscription')) {
       var sub = Subscription.create({user: this.get('model')});

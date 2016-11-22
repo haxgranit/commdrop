@@ -24,7 +24,7 @@ export default Ember.Component.extend({
         var data = window.google.visualization.arrayToDataTable(raw_data);
 
         var options = {
-          curveType: 'function',
+//          curveType: 'function',
           legend: { position: 'bottom' },
           chartArea: {
             left: 60, top: 20, height: '70%', width: '80%'
@@ -40,7 +40,7 @@ export default Ember.Component.extend({
           pointSize: 3
         };
 
-        var chart = new window.google.visualization.LineChart(elem);
+        var chart = new window.google.visualization.AreaChart(elem);
         window.google.visualization.events.addListener(chart, 'select', function() {
           var selection = chart.getSelection()[0];
           var row = raw_data[selection.row + 1];

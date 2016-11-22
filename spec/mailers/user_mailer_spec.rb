@@ -375,6 +375,63 @@ describe UserMailer, :type => :mailer do
     end
   end
   
+  describe "badge_awarded" do
+    it "should generate a message to the badge recipient" do
+      u = User.create(:settings => {'email' => 'amanda@example.com'})
+      b = UserBadge.create(:user => u)
+      b.data['name'] = 'Awesome Badge'
+      b.level = 1
+      b.save
+      m = UserMailer.badge_awarded(u.global_id, b.global_id)
+      expect(m.to).to eq(['amanda@example.com'])
+      expect(m.subject).to eq("CoughDrop - Badge Awarded")
+      
+      html = message_body(m, :html)
+      expect(html).to match(/Level 1/)
+      expect(html).to match(/Awesome Badge/)
+      expect(html).to match(/You have earned a CoughDrop badge!/)
+      expect(html).to match(/part of a set, so keep at it/)
+
+      text = message_body(m, :text)
+      expect(text).to match(/Level 1/)
+      expect(text).to match(/You have earned a CoughDrop badge!/)
+      expect(text).to match(/part of a set, so keep at it/)
+    end
+
+    it "should generate a message to the badge recipient's supervisors" do
+      u = User.create
+      u2 = User.create(:settings => {'email' => 'betty@example.com'})
+      User.link_supervisor_to_user(u2, u)
+      g = UserGoal.create(:user => u, :settings => {'summary' => 'best goal ever'})
+      
+      b = UserBadge.create(:user => u)
+      b.data['name'] = 'Awesome Badge'
+      b.data['max_level'] = true
+      b.user_goal = g
+      b.level = 1
+      b.save
+      m = UserMailer.badge_awarded(u2.global_id, b.global_id)
+      expect(m.to).to eq(['betty@example.com'])
+      expect(m.subject).to eq("CoughDrop - Badge Awarded")
+      
+      html = message_body(m, :html)
+      expect(html).to match(/Level 1/)
+      expect(html).to match(/Awesome Badge/)
+      expect(html).to match(/part of the goal,/)
+      expect(html).to match(/best goal ever/)
+      expect(html).to_not match(/part of a set, so keep at it/)
+      expect(html).to match(/#{u.user_name} has earned a CoughDrop badge!/)
+
+      text = message_body(m, :text)
+      expect(text).to match(/Level 1/)
+      expect(text).to match(/Awesome Badge/)
+      expect(text).to match(/part of the goal,/)
+      expect(text).to match(/best goal ever/)
+      expect(text).to_not match(/part of a set, so keep at it/)
+      expect(text).to match(/#{u.user_name} has earned a CoughDrop badge!/)
+    end
+  end
+  
   describe "log_summary" do
     it "should generate a message to the intended user" do
       u = User.create(:settings => {'name' => 'stacy', 'email' => 'stacy@example.com'})

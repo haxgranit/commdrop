@@ -175,9 +175,11 @@ var i18n = Ember.Object.extend({
       var word = terms[idx + 1];
       if(options[word] !== undefined && options[word] !== null) {
         value = options[word];
+        if(options.increment == word || options.hash.increment == word) { value++; }
         str = str.replace(terms[idx], value);
       } else if(options.hash && options.hash[word] !== undefined && options.hash[word] !== null) {
         value = options.hash[word];
+        if(options.increment == word || options.hash.increment == word) { value++; }
         if(options.hashTypes) {
           // TODO: pretty sure this isn't used anymore
           if(options.hashTypes[word] == 'ID') {
@@ -192,6 +194,7 @@ var i18n = Ember.Object.extend({
     if(options && options.hash && options.hash.count !== undefined) {
       var count = options.hash.count;
       if(count && count.length) { count = count.length; }
+      if(options.increment == 'count' || options.hash.increment == 'count') { count++; }
       if(count != 1) {
         str = count + " " + this.pluralize(str);
       } else {

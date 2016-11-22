@@ -43,6 +43,15 @@ class UserMailer < ActionMailer::Base
     mail_message(@user, "Email Changed", 'email_changed_prior_address')
   end
   
+  def badge_awarded(user_id, badge_id)
+    @recipient = User.find_by_global_id(user_id)
+    @badge = UserBadge.find_by_global_id(badge_id)
+    @user = @badge.user
+    @goal = @badge.user_goal
+    @for_self = @badge.user_id == @recipient.id
+    mail_message(@recipient, "Badge Awarded")
+  end
+  
   def confirm_registration(user_id)
     @user = User.find_by_global_id(user_id)
     mail_message(@user, "Welcome!")

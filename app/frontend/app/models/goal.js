@@ -5,6 +5,9 @@ import i18n from '../utils/i18n';
 import Utils from '../utils/misc';
 
 CoughDrop.Goal = DS.Model.extend({
+  didLoad: function() {
+    this.set('badges_enabled', !!this.get('badges'));
+  },
   user_id: DS.attr('string'),
   video_id: DS.attr('string'),
   has_video: DS.attr('boolean'),
@@ -13,6 +16,7 @@ CoughDrop.Goal = DS.Model.extend({
   template_id: DS.attr('string'),
   template: DS.attr('boolean'),
   template_header: DS.attr('boolean'),
+  global: DS.attr('boolean'),
   summary: DS.attr('string'),
   sequence_summary: DS.attr('string'),
   description: DS.attr('string'),
@@ -35,6 +39,9 @@ CoughDrop.Goal = DS.Model.extend({
   next_template_id: DS.attr('string'),
   template_header_id: DS.attr('string'),
   template_stats: DS.attr('raw'),
+  badge_name: DS.attr('string'),
+  badges: DS.attr('raw'),
+  assessment_badge: DS.attr('raw'),
   goal_advances_at: DS.attr('string'),
   goal_duration_unit: DS.attr('string'),
   goal_duration_number: DS.attr('string'),
@@ -166,6 +173,15 @@ CoughDrop.Goal = DS.Model.extend({
   time_unit_measurements: function() {
     return this.get('stats')[this.get('best_time_level')] || {};
   }.property('stats', 'best_time_level'),
+  any_statuses: function() {
+    var any_found = false;
+    (this.get('time_unit_status_rows') || []).forEach(function(row) {
+      (row.time_blocks || []).forEach(function(block) {
+        if(block && block.score > 0) { any_found = true; }
+      });
+    });
+    return any_found;
+  }.property('time_unit_status_rows'),
   time_unit_status_rows: function() {
     if(this.get('best_time_level') == 'none') { return []; }
     var units = this.get('time_units');
@@ -274,7 +290,37 @@ CoughDrop.Goal = DS.Model.extend({
     } else {
       return this;
     }
-  }.property('currently_running_template')
+  }.property('currently_running_template'),
+  remove_badge: function(badge) {
+    var badges = (this.get('badges') || []).filter(function(b) { return b != badge; });
+    this.set('badges', badges);
+  },
+  add_badge_level: function() {
+    this.set('badges', this.get('badges') || []);
+    var badges = this.get('badges') || [];
+    var badge = {};
+    if(badges.length > 0) {
+      badge = Ember.$.extend({}, badges[badges.length - 1]);
+    }
+    badge.level = null;
+    badge.image_url = badge.image_url || "https://coughdrop-usercontent.s3.amazonaws.com/images/6/8/8/5/1_6885_5781b0671b2b65ad0b53f2fe-980af0f90c67ef293e98f871270e4bc0096493b2863245a3cff541792acf01050e534135fb96262c22d691132e2721b37b047a02ccaf6931549278719ec8fa08.png";
+    badge.id = Math.random();
+    this.get('badges').pushObject(badge);
+  },
+  set_zero_badge: function(obj, changed) {
+    if(changed == 'auto_assessment' && this.get('auto_assessment') === false) {
+      this.set('assessment_badge', null);
+    }
+    if(this.get('auto_assessment') || this.get('assessment_badge')) {
+      this.set('auto_assessment', true);
+      if(!this.get('assessment_badge')) {
+        this.set('assessment_badge', {assessment: true});
+      }
+    } else {
+      this.set('auto_assessment', false);
+      this.set('assessment_badge', null);
+    }
+  }.observes('auto_assessment', 'assessment_badge')
 });
 
 export default CoughDrop.Goal;

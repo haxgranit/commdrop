@@ -687,6 +687,88 @@ footer .wide_links {
     font-size: 12px;
   }
 }
+.listed_badge {
+  width: 100%;
+  padding: 5px;
+  .basics {
+    text-align: center;
+    width: 150px;
+    float: left;
+    position: relative;
+    .badge_image {
+      width: 90%;
+    }
+    .sparkle {
+      font-size: 20px;
+    }
+  }
+  .details {
+  }
+}
+.sparkle {
+  font-size: 20px;
+  color: #fff;
+  position: absolute;
+  animation: sparkle 2s infinite linear, sink-margin 2s infinite linear, jump-around 10s infinite steps(1);
+}
+.sparkle_list_item:nth-of-type(6n+2) .sparkle {
+  animation-delay: 2.8s;
+}
+.sparkle_list_item:nth-of-type(6n+3) .sparkle {
+  animation-delay: 4.3s;
+}
+.sparkle_list_item:nth-of-type(6n+4) .sparkle {
+  animation-delay: 0.4s;
+}
+.sparkle_list_item:nth-of-type(6n+5) .sparkle {
+  animation-delay: 3.3s;
+}
+.sparkle_list_item:nth-of-type(6n) .sparkle {
+  animation-delay: 1.4s;
+}
+.goal_badges {
+  min-width: 50%; 
+  max-width: 100%;
+  margin-bottom: 10px;
+  .goal_badge {
+    text-align: center; 
+    padding: 0 15px;
+    &.dim {
+      opacity: 0.5;
+    }
+    .sparkle {
+      font-size: 10px;
+    }
+    .text {
+      overflow: hidden; 
+      white-space: nowrap; 
+      max-width: 100px; 
+      margin: 0 auto;
+    }
+  }
+}
+@keyframes fade-in {
+  0% { background-color: #000; }
+  100% { background-color: #f00; }
+}
+@keyframes sink-margin {
+  0% { margin-top: 0; }
+  100% { margin-top: 10%; }
+}
+@keyframes sparkle {
+  0% { opacity: 0.0; }
+  40% { opacity: 1.0; }
+  60% { opacity: 1.0; }
+  100% { opacity: 0.0; }
+}
+@keyframes jump-around {
+  0% { top: 20%; left: 20%; }
+  20% { top: 30%; left: 70%; }
+  40% { top: 60%; left: 30%; }
+  60% { top: 50%; left: 60%; }
+  80% { top: 15%; left: 70%; }
+  100% { top: 20%; left: 20%; }
+}
 .text_sample {
   &.upper {
     text-transform: uppercase;

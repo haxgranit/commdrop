@@ -1,0 +1,16 @@
+<div style='float: left; padding: 5px; width: 25%; text-align: center;'>
+  {{#if badge.global}}
+    <img src={{badge.image_url}} style='width: 70%;' />
+  {{else}}
+    {{#link-to 'user.goal' model.user_name badge.goal_id}}
+      <img src={{badge.image_url}} style='width: 70%;' />
+    {{/link-to}}
+  {{/if}}
+  <div style='height: 30px; overflow: hidden; line-height: 14px;'>
+    {{#if badge.global}}
+      {{badge.name}}
+    {{else}}
+      {{#link-to 'user.goal' model.user_name badge.goal_id}}{{badge.name}}{{/link-to}}
+    {{/if}}
+  </div>
+</div>

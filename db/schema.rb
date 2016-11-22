@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160908200144) do
+ActiveRecord::Schema.define(version: 20161121192204) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -300,6 +300,21 @@ ActiveRecord::Schema.define(version: 20160908200144) do
 
   add_index "settings", ["key"], name: "index_settings_on_key", unique: true, using: :btree
 
+  create_table "user_badges", force: :cascade do |t|
+    t.integer  "user_id"
+    t.integer  "user_goal_id"
+    t.boolean  "superseded"
+    t.integer  "level"
+    t.text     "data"
+    t.boolean  "highlighted"
+    t.boolean  "earned"
+    t.datetime "created_at",   null: false
+    t.datetime "updated_at",   null: false
+    t.boolean  "disabled"
+  end
+
+  add_index "user_badges", ["disabled"], name: "index_user_badges_on_disabled", using: :btree
+
   create_table "user_board_connections", force: :cascade do |t|
     t.integer  "user_id"
     t.integer  "board_id"
@@ -320,9 +335,11 @@ ActiveRecord::Schema.define(version: 20160908200144) do
     t.datetime "created_at",      null: false
     t.datetime "updated_at",      null: false
     t.boolean  "primary"
+    t.boolean  "global"
   end
 
   add_index "user_goals", ["advance_at"], name: "index_user_goals_on_advance_at", using: :btree
+  add_index "user_goals", ["global"], name: "index_user_goals_on_global", using: :btree
   add_index "user_goals", ["template_header"], name: "index_user_goals_on_template_header", using: :btree
   add_index "user_goals", ["user_id", "active"], name: "index_user_goals_on_user_id_and_active", using: :btree
 
@@ -372,6 +389,7 @@ ActiveRecord::Schema.define(version: 20160908200144) do
     t.integer  "managed_organization_id"
     t.datetime "next_notification_at"
     t.boolean  "possibly_full_premium"
+    t.datetime "badges_updated_at"
   end
 
   add_index "users", ["email_hash"], name: "index_users_on_email_hash", using: :btree

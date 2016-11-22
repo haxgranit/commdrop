@@ -24,7 +24,7 @@ class Api::UsersController < ApplicationController
     if user != @api_user
       return unless allowed?(user, 'never_allow')
     end
-    render json: {sync_stamp: user.updated_at.utc.iso8601 }
+    render json: {sync_stamp: user.updated_at.utc.iso8601, badges_updated_at: (user.badges_updated_at || user.created_at).utc.iso8601 }
   end
   
   def places

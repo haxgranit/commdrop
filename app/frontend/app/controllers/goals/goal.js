@@ -93,6 +93,14 @@ export default Ember.Controller.extend({
       }, function(err) {
         _this.set('status', {delete_error: true});
       });
+    },
+    remove_badge: function(badge) {
+      this.get('model').remove_badge(badge);
+    },
+    add_badge_level: function() {
+      if(this.get('model')) {
+        this.get('model').add_badge_level();
+      }
     }
   }
 });

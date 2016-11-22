@@ -39,6 +39,7 @@ module JsonApi::Goal
         json[key] = goal.send(key)
       end
     end
+    json['global'] = true if goal.global
 
     ['summary', 'description'].each do |key|
       json[key] = goal.settings[key]
@@ -62,6 +63,9 @@ module JsonApi::Goal
 
     if args[:permissions]
       json['permissions'] = goal.permissions_for(args[:permissions])
+      json['badge_name'] = goal.settings['badge_name'] if goal.settings['badge_name']
+      json['badges'] = goal.settings['badges'] if goal.settings['badges']
+      json['assessment_badge'] = goal.settings['assessment_badge'] if goal.settings['assessment_badge']
       if goal.template
         if goal.settings['template_header_id']
           header = goal if goal.settings['template_header_id'] == goal.global_id

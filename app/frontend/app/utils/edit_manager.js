@@ -729,6 +729,9 @@ var editManager = Ember.Object.extend({
   stash_image: function(data) {
     this.stashedImage = data;
   },
+  done_editing_image: function() {
+    this.imageEditingCallback = null;
+  },
   get_edited_image: function() {
     var _this = this;
     return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -752,6 +755,8 @@ var editManager = Ember.Object.extend({
   edited_image_received: function(data) {
     if(this.imageEditingCallback) {
       this.imageEditingCallback(data);
+    } else if(this.stashedBadge && this.badgeEditingCallback) {
+      this.badgeEditingCallback(data);
     }
   },
   copy_board: function(old_board, decision, user, make_public) {
@@ -817,6 +822,39 @@ var editManager = Ember.Object.extend({
         reject(i18n.t('copying_failed', "Board copy failed unexpectedly"));
       });
     });
+  },
+  retrieve_badge: function() {
+    var _this = this;
+    return new Ember.RSVP.Promise(function(resolve, reject) {
+      var state = null, data_url = null;
+      if(_this.badgeEditorSource) {
+        var resolved = false;
+        _this.badgeEditingCallback = function(data) {
+          if(data.match && data.match(/^data:/)) {
+            data_url = data;
+          }
+          if(data && data.zoom) {
+            state = data;
+          }
+          if(state && data_url) {
+            _this.badgeEditingCallback.state = state;
+            resolved = true;
+            resolve(data_url);
+          }
+        };
+        Ember.run.later(function() {
+          if(!resolved && data_url) {
+            resolve(data_url);
+          } else if(!resolved) {
+            reject({error: 'editor response timeout'});
+          }
+        }, 500);
+        _this.badgeEditorSource.postMessage('imageDataRequest', '*');
+        _this.badgeEditorSource.postMessage('imageStateRequest', '*');
+      } else {
+        reject({editor: 'no editor found'});
+      }
+    });
   }
 }).create({
   history: [],
@@ -829,9 +867,27 @@ Ember.$(window).bind('message', function(event) {
   event = event.originalEvent;
   if(event.data && event.data.match && event.data.match(/^data:image/)) {
     editManager.edited_image_received(event.data);
+  } else if(event.data && event.data.match(/state:{/)) {
+    var str = event.data.replace(/^state:/, '');
+    try {
+      var json = JSON.parse(str);
+      if(editManager.stashedBadge && editManager.badgeEditingCallback) {
+        editManager.badgeEditingCallback(json);
+      }
+    } catch(e) { }
   } else if(event.data == 'imageDataRequest' && editManager.stashedImage) {
     editManager.imageEditorSource = event.source;
     event.source.postMessage(editManager.stashedImage.url, '*');
+  } else if(event.data == 'imageURLRequest' && editManager.stashedBadge) {
+    editManager.badgeEditorSource = event.source;
+    if(editManager.stashedBadge && editManager.stashedBadge.image_url) {
+      event.source.postMessage('https://s3.amazonaws.com/opensymbols/libraries/mulberry/bright.svg', '*');
+    }
+  } else if(event.data == 'imageStateRequest' && editManager.stashedBadge) {
+    editManager.badgeEditorSource = event.source;
+    if(editManager.stashedBadge && editManager.stashedBadge.state) {
+      event.source.postMessage('state:' + JSON.stringify(editManager.stashedBadge.state));
+    }
   }
 });
 

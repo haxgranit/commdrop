@@ -2,17 +2,38 @@ import Ember from 'ember';
 import modal from '../../utils/modal';
 import CoughDrop from '../../app';
 import app_state from '../../utils/app_state';
+import Utils from '../../utils/misc';
 
 export default Ember.Controller.extend({
   load_goals: function() {
     var controller = this;
     controller.set('goals', {loading: true});
-    this.store.query('goal', {user_id: this.get('model.id')}).then(function(list) {
-      controller.set('goals', {list: list.content.mapBy('record')});
+    Utils.all_pages('goal', {user_id: this.get('model.id')}, function() { }).then(function(list) {
+      controller.set('goals', {list: list});
     }, function() {
       controller.set('goals', {error: true});
     });
   },
+  load_badges: function() {
+    var _this = this;
+    this.set('badges', {loading: true});
+    Utils.all_pages('badge', {user_id: this.get('model.id')}, function() { }).then(function(badges) {
+      _this.set('badges', {list: badges});
+    }, function(err) {
+      _this.set('badges', {error: true});
+    });
+  },
+  map_badges_to_goals: function() {
+    if(this.get('goals.list.length') !== undefined && this.get('badges.list.length') !== undefined) {
+      var _this = this;
+      this.get('goals.list').forEach(function(goal) {
+        var badge = _this.get('badges.list').find(function(b) { return b.goal_id == goal.get('id') && b.get('earned'); });
+        badge = badge || _this.get('badges.list').find(function(b) { return b.get('goal_id') == goal.get('id'); });
+        goal.set('current_badge', badge);
+      });
+      this.set('badges_loaded', true);
+    }
+  }.observes('goals.list', 'badges.list'),
   any_goal: function() {
     return this.get('primary_goal') || this.get('secondary_goals').length > 0 || this.get('past_goals').length > 0;
   }.property('primary_goal', 'secondary_goals', 'past_goals'),

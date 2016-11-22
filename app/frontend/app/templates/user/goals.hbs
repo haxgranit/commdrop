@@ -8,7 +8,7 @@
   {{else}}
     {{#if primary_goal}}
       {{#with primary_goal as |goal|}}
-        {{partial "goal"}}
+        {{partial "goal_in_list"}}
       {{/with}}
     {{else}}
       <div style='max-width: 600px;'>
@@ -43,7 +43,7 @@
       <h3>{{t "Secondary Goals" key='secondary_goals'}}</h3>
       {{#if secondary_goals}}
         {{#each secondary_goals as |goal|}}
-          {{partial "goal"}}
+          {{partial "goal_in_list"}}
         {{/each}}
       {{else}}
         {{t "None set" key='none_set'}}

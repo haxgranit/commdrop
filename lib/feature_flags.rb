@@ -19,4 +19,9 @@ module FeatureFlags
     end
     flags
   end
+  
+  def self.feature_enabled_for?(feature, user)
+    flags = frontend_flags_for(user)
+    !!flags[feature]
+  end
 end

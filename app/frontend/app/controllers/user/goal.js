@@ -19,6 +19,34 @@ export default Ember.Controller.extend({
   messages_only: function() {
     return true;
   }.property(),
+  save_disabled: function() {
+    return this.get('pending_save') || this.get('saving');
+  }.property('pending_save', 'saving'),
+  pending_save: function() {
+    return !!this.get('video_pending');
+  }.property('video_pending'),
+  load_user_badges: function() {
+    var _this = this;
+    this.store.query('badge', {user_id: this.get('user.id'), goal_id: this.get('model.id')}).then(function(badges) {
+      _this.set('user_badges', badges.content.mapProperty('record'));
+    }, function(err) {
+    });
+
+  }.observes('user.id', 'model.id', 'model.badges'),
+  mapped_badges: function() {
+    var user_badges = this.get('user_badges');
+    if(user_badges) {
+      var res = [];
+      (this.get('model.badges') || []).forEach(function(badge) {
+        var new_badge = Ember.$.extend({}, badge);
+        new_badge.user_badge = user_badges.find(function(b) { return b.get('level') == badge.level; });
+        res.push(new_badge);
+      });
+      return res;
+    } else {
+      return this.get('model.badges');
+    }
+  }.property('model.badges', 'user_badges'),
   actions: {
     more_results: function() {
       var _this = this;
@@ -45,6 +73,54 @@ export default Ember.Controller.extend({
       modal.open('quick-assessment', {user: this.get('user'), goal: this.get('model')}).then(function(res) {
         _this.load_logs();
       }, function() { });
+    },
+    edit_goal: function() {
+      this.set('editing', true);
+    },
+    cancel_edit: function() {
+      this.set('editing', false);
+    },
+    save_goal: function() {
+      var _this = this;
+      var goal = this.get('model');
+      if(this.get('selected_goal')) {
+        goal = this.store.createRecord('goal');
+      }
+      _this.set('saving', true);
+      _this.set('error', false);
+      goal.save().then(function() {
+        _this.set('saving', false);
+        _this.set('editing', false);
+      }, function() {
+        _this.set('saving', false);
+        _this.set('error', true);
+      });
+    },
+    video_ready: function(id) {
+      this.set('video_pending', false);
+      if(this.get('model')) {
+        this.set('model.video_id', id);
+      }
+    },
+    video_not_ready: function() {
+      this.set('video_pending', false);
+      if(this.get('model')) {
+        this.set('model.video_id', null);
+      }
+    },
+    video_pending: function() {
+      this.set('video_pending', true);
+      if(this.get('model')) {
+        this.set('model.video_id', null);
+      }
+    },
+    remove_badge: function(badge) {
+      this.get('model').remove_badge(badge);
+    },
+    add_badge_level: function() {
+      if(this.get('model')) {
+        this.get('model').add_badge_level();
+      }
     }
   }
 });

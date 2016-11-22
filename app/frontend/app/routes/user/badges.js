@@ -9,7 +9,7 @@ export default Ember.Route.extend({
   },
   setupController: function(controller, model) {
     controller.set('model', model);
-    controller.load_goals();
+    controller.set('user', this.modelFor('user'));
     controller.load_badges();
   }
 });

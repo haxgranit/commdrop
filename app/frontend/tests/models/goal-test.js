@@ -588,4 +588,59 @@ describe('Goal', function() {
       expect(goal.get('current_template.summary')).toEqual('cheese');
     });
   });
+
+  describe('any_statuses', function() {
+    it('should return correct values', function() {
+      var g = CoughDrop.store.createRecord('goal');
+      expect(g.get('any_statuses')).toEqual(false);
+      g.set('time_unit_status_rows', []);
+      expect(g.get('any_statuses')).toEqual(false);
+      g.set('time_unit_status_rows', [{time_blocks: []}]);
+      expect(g.get('any_statuses')).toEqual(false);
+      g.set('time_unit_status_rows', [{time_blocks: [{score: 1}]}]);
+      expect(g.get('any_statuses')).toEqual(true);
+    });
+  });
+
+  describe('remove_badge', function() {
+    it('should remove the specified badge', function() {
+      var g = CoughDrop.store.createRecord('goal');
+      g.remove_badge(null);
+      expect(g.get('badges')).toEqual([]);
+      var obj = {a: 1};
+      g.set('badges', [{a: 1}, {}, obj, obj]);
+      g.remove_badge(obj);
+      expect(g.get('badges')).toEqual([{a: 1}, {}]);
+    });
+  });
+
+  describe('add_badge_level', function() {
+    it('should a badge cloned from the previous level', function() {
+      var g = CoughDrop.store.createRecord('goal');
+      g.add_badge_level();
+      expect(g.get('badges').length).toEqual(1);
+      expect(g.get('badges')[0].id).toNotEqual(undefined);
+      g.set('badges', [{a: 1}, {b: 1}]);
+      g.add_badge_level();
+      expect(g.get('badges').length).toEqual(3);
+      expect(g.get('badges')[2]['b']).toEqual(1);
+    });
+  });
+
+  describe('set_zero_badge', function() {
+    it('should automatically set up the zero badge', function() {
+      var g = CoughDrop.store.createRecord('goal');
+      expect(g.get('assessment_badge')).toEqual(undefined);
+      expect(g.get('auto_assessment')).toEqual(undefined);
+      g.set('auto_assessment', true);
+      expect(g.get('assessment_badge')).toEqual({assessment: true});
+      expect(g.get('auto_assessment')).toEqual(true);
+      g.set('auto_assessment', false);
+      expect(g.get('assessment_badge')).toEqual(null);
+      expect(g.get('auto_assessment')).toEqual(false);
+      g.set('assessment_badge', {a: 1});
+      expect(g.get('assessment_badge')).toEqual({a: 1});
+      expect(g.get('auto_assessment')).toEqual(true);
+    });
+  });
 });

@@ -2592,4 +2592,58 @@ describe('editManager', function() {
       });
     });
   });
+
+  describe('retrieve_badge', function() {
+    afterEach(function() {
+      editManager.badgeEditorSource = null;
+    });
+
+    it('should error on timeout', function() {
+      var errored = false;
+      editManager.retrieve_badge().then(function(res) {
+      }, function(err) {
+        errored = true;
+      });
+      waitsFor(function() { return errored; });
+      runs();
+    });
+    it('should return the data uri for the currently-edited badge', function() {
+      var badge = null;
+      editManager.badgeEditorSource = {
+        postMessage: function(message, recipient) {
+          if(recipient == '*' && message == 'imageDataRequest') {
+            editManager.badgeEditingCallback('data:asdf');
+          }
+        }
+      };
+      editManager.retrieve_badge().then(function(res) {
+        badge = res;
+      });
+      waitsFor(function() { return badge; });
+      runs(function() {
+        expect(badge).toEqual("data:asdf");
+      });
+    });
+
+    it('should return settings data as well to be persisted on the badge record', function() {
+      var badge = null;
+      editManager.badgeEditorSource = {
+        postMessage: function(message, recipient) {
+          if(recipient == '*' && message == 'imageDataRequest') {
+            editManager.badgeEditingCallback('data:asdf');
+          } else if(recipient == '*' && message == 'imageStateRequest') {
+            editManager.badgeEditingCallback({zoom: 1});
+          }
+        }
+      };
+      editManager.retrieve_badge().then(function(res) {
+        badge = res;
+      });
+      waitsFor(function() { return badge; });
+      runs(function() {
+        expect(badge).toEqual("data:asdf");
+        expect(editManager.badgeEditingCallback.state).toEqual({zoom: 1});
+      });
+    });
+  });
 });

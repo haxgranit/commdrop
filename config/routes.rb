@@ -96,6 +96,7 @@ Coughdrop::Application.routes.draw do
   get 'profile' => ember_handler
   get 'search/:query' => ember_handler
   get ':id/logs/:log_id' => ember_handler, :constraints => {:id => user_id_regex}
+  get ':id/goals/:goal_id' => ember_handler, :constraints => {:id => user_id_regex}
   
   get 'oauth2/token' => 'session#oauth'
   post 'oauth2/token/login' => 'session#oauth_login'
@@ -176,6 +177,8 @@ Coughdrop::Application.routes.draw do
     end
     
     resources :goals
+    
+    resources :badges
     
     resources :units do
       get 'stats'

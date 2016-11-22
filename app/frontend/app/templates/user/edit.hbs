@@ -32,6 +32,14 @@
     {{bound-select select_class="form-control" select_id="notification_frequency" content=notification_frequency_options selection=model.preferences.notification_frequency action=(action (mut model.preferences.notification_frequency)) }}
   </div>
 </div>
+{{#if app_state.feature_flags.goals}}
+  <div class="form-group">
+    <label for="goal_notifications" class="col-sm-3 control-label">{{t "Goal Updates" key='goal_notifications'}}</label>
+    <div class="col-sm-5">
+      {{bound-select select_class="form-control" select_id="goal_notifications" content=goal_notification_options selection=model.preferences.goal_notifications action=(action (mut model.preferences.goal_notifications)) }}
+    </div>
+  </div>
+{{/if}}
 <div class="form-group">
   <label for="registration_type" class="col-sm-3 control-label">{{t "Notifying of Shares" key='share_notifications'}}</label>
   <div class="col-sm-5">

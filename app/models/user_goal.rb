@@ -31,6 +31,11 @@ class UserGoal < ActiveRecord::Base
     self.primary = false if active == false
     self.template = true if self.template_header
     self.template_header = false if !self.template
+    if self.global
+      self.template_header = false 
+      self.settings['template_header_id'] = nil
+    end
+    self.settings['max_badge_level'] = self.settings['badges'].length if self.settings['badges']
     self.settings['old_template_header_id'] = self.settings['template_header_id'] if self.settings['template_header_id']
     if self.active && !self.settings['started_at']
       self.settings['started_at'] = Time.now.iso8601
@@ -279,6 +284,14 @@ class UserGoal < ActiveRecord::Base
     !!(self.user && self.user.settings && self.user.settings['primary_goal'] && self.user.settings['primary_goal']['id'] == self.global_id)
   end
   
+  def badged?
+    !!(self.settings && self.settings['badges'])
+  end
+  
+  def badge_level(level)
+    self.settings && self.settings['badges'] && self.settings['badges'][level - 1]
+  end
+  
   def process_params(params, non_user_params)
     raise "user required as goal target" unless self.user_id || non_user_params[:user]
     raise "user required as update author" unless non_user_params[:author]
@@ -286,10 +299,15 @@ class UserGoal < ActiveRecord::Base
     self.settings ||= {}
     self.settings['author_id'] ||= non_user_params[:author].global_id
     self.active = !!params[:active] if params[:active] != nil
+    self.global = !!params[:global] if params[:global] != nil
     self.settings['summary'] = process_string(params['summary']) if params['summary']
     self.settings['description'] = process_html(params['description']) if params['description']
     self.template = !!params['template'] if params['template'] != nil
     self.template_header = !!params['template_header'] if params['template_header'] && self.template_header == nil
+    self.settings['badge_name']  = params['badge_name'] if params['badge_name']
+    badges = UserBadge.process_goal_badges(params['badges'], params['assessment_badge']) if params['badges'] || params['assessment_badge']
+    self.settings['badges'] = badges.select{|b| b['level']} if badges
+    self.settings['assessment_badge'] = badges.detect{|b| b['assessment'] } if badges
     if self.template_header
       self.template = true
       self.settings['template_header_id'] ||= 'self'

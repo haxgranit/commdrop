@@ -1,10 +1,17 @@
 class WeeklyStatsSummary < ActiveRecord::Base
   include SecureSerialize
+  include GlobalId
   include Async
   replicated_model  
   
   secure_serialize :data  
   before_save :generate_defaults  
+  after_save :schedule_badge_check
+  
+  def schedule_badge_check
+    UserBadge.schedule_once(:check_for, self.related_global_id(self.user_id), self.global_id)
+    true
+  end
   
   def generate_defaults
     found_ids = [self.user_id, self.board_id].compact.length

@@ -1376,6 +1376,42 @@ describe User, :type => :model do
       expect(u.settings['user_notifications'][0]['text']).to eq('alternate pantsuit')
       expect(u.settings['user_notifications'][0]['type']).to eq('utterance_shared')
     end
+    
+    it "should schedule email for badge awards if not disabled" do
+      u = User.create
+      u.settings['preferences']['goal_notifications'] = 'enabled'
+      u.save
+      b = UserBadge.create(:user => u, :data => {'name' => 'badgy wadgy'})
+      expect(UserMailer).to receive(:schedule_delivery).with(:badge_awarded, u.global_id, b.global_id)
+      u.handle_notification('badge_awarded', b, {})
+    end
+    
+    it "should not schedule email for badge awards if disabled" do
+      u = User.create
+      u.settings['preferences']['goal_notifications'] = 'disabled'
+      u.save
+      b = UserBadge.create(:user => u, :data => {'name' => 'badgy wadgy'})
+      expect(UserMailer).to_not receive(:schedule_delivery).with(:badge_awarded, u.global_id, b.global_id)
+      u.handle_notification('badge_awarded', b, {})
+    end
+    
+    it "should add a user notification for badge awards" do
+      u = User.create
+      u.settings['preferences']['goal_notifications'] = 'disabled'
+      u.save
+      b = UserBadge.create(:user => u, :data => {'name' => 'badgy wadgy'}, :level => 1)
+      u.handle_notification('badge_awarded', b, {})
+      expect(u.settings['user_notifications'].length).to eq(1)
+      expect(u.settings['user_notifications'][0]).to eq({
+        'type' => 'badge_awarded',
+        'occurred_at' => b.awarded_at,
+        'user_name' => u.user_name,
+        'badge_name' => 'badgy wadgy',
+        'badge_level' => 1,
+        'id' => b.global_id,
+        'added_at' => Time.now.iso8601
+      })
+    end
   end
 
   it "should securely serialize settings" do

@@ -7,7 +7,7 @@ import editManager from '../utils/edit_manager';
 
 export default modal.ModalController.extend({
   opening: function() {
-    this.set('goal', this.store.createRecord('goal'));
+    this.set('goal', this.get('model.goal') || this.store.createRecord('goal'));
     this.set('error', false);
     this.set('saving', false);
     this.set('browse_goals', false);
@@ -17,8 +17,8 @@ export default modal.ModalController.extend({
     }
   },
   save_disabled: function() {
-    return this.get('pending_save') || (this.get('browse_goals') && !this.get('selected_goal'));
-  }.property('pending_save', 'browse_goals', 'selected_goal'),
+    return this.get('pending_save') || (this.get('browse_goals') && !this.get('selected_goal')) || this.get('saving');
+  }.property('pending_save', 'browse_goals', 'selected_goal', 'saving'),
   pending_save: function() {
     return !!this.get('video_pending');
   }.property('video_pending'),
@@ -82,6 +82,9 @@ export default modal.ModalController.extend({
     },
     clear_selected_goal: function() {
       this.set('selected_goal', null);
+    },
+    reset_video: function() {
+      this.set('model.video', null);
     },
     more_goals: function() {
       if(this.get('goals.meta')) {

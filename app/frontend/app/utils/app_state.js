@@ -463,6 +463,8 @@ var app_state = Ember.Object.extend({
         }
       }
       buttonTracker.multi_touch_modeling = _this.get('currentUser.preferences.multi_touch_modeling');
+      buttonTracker.dwell_modeling = false;
+      buttonTracker.dwell_enabled = false;
 
       if(app_state.get('speak_mode') && _this.get('currentUser.preferences.device.dwell')) {
         buttonTracker.dwell_enabled = true;

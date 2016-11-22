@@ -459,7 +459,7 @@ class LogSession < ActiveRecord::Base
   end
   
   def schedule_summary
-    if self.log_type == 'session'
+    if self.log_type == 'session' || self.goal
       WeeklyStatsSummary.schedule(:update_for, self.global_id)
     end
     if self.goal && self.goal.primary && self.ended_at
@@ -720,6 +720,9 @@ class LogSession < ActiveRecord::Base
         end
       end
       self.data['assessment'] = params['assessment'] if params['assessment']
+      if self.data['assessment']
+        self.data['assessment']['manual'] = true
+      end
     end
     true
   end

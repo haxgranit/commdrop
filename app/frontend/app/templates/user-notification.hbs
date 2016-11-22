@@ -44,6 +44,20 @@
         {{date_ago notif.occurred_at}}
       </span>
     </span>
+  {{else if notif.badge_awarded}}
+    {{#link-to 'user' notif.user_name}}
+      {{notif.user_name}}
+    {{/link-to}}
+    {{t " - new badge," key='new_badge_awarded'}}
+    {{#link-to 'user.badges' notif.user_name}}{{notif.badge_name}}{{/link-to}}
+
+    <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
+      <span title="{{unbound date notif.occurred_at}}">
+        {{date_ago notif.occurred_at}}
+      </span>
+      {{t " - " key='dash'}}
+      {{t "level %{level}" key='level_n' level=notif.badge_level}}
+    </span>
   {{else if notif.board_buttons_changed}}
     {{#link-to 'board' notif.key}}
       {{notif.name}}

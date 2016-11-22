@@ -123,42 +123,9 @@
   {{#if model.permissions.supervise}}
     <div class="row">
       <div class="col-sm-3 col-xs-6">
-        {{#if sync_able}}
-          <div class="panel panel-default summary smaller">
-            <div class="panel-heading">
-              {{t "Sync status" key='sync_status'}}
-            </div>
-            <div class="panel-body">
-              {{#if needs_sync}}
-                {{t "Needs update" key='needs_update'}}
-              {{else}}
-                {{t "Up-to-Date" key='up_to_date'}}
-              {{/if}}
-              {{#if persistence.online}}
-                <div class="sub_link">
-                  {{#if persistence.syncing}}
-                    <span class='link'>
-                      {{t "Syncing..." key='syncing'}}
-                    </span>
-                  {{else}}
-                    <a href="#" {{action "sync"}}>
-                      {{#if persistence.sync_failed}}
-                        {{t "Sync Failed" key='sync_failed'}}
-                      {{else}}
-                        {{#if persistence.sync_succeeded}}
-                          {{t "Sync Done!" key='sync_done'}}
-                        {{else}}
-                          {{t "Sync Now" key='sync_now'}}
-                        {{/if}}
-                      {{/if}}
-                    </a>
-                  {{/if}}
-                </div>
-              {{else}}
-                <div class="sub_link">&nbsp;</div>
-              {{/if}}
-            </div>
-          </div>
+        <button style='width: 100%; height: 38px;' class='btn btn-small btn-default' {{action "recordNote" "text"}}>{{t "New Note" key='text_note'}}</button>
+        {{#if app_state.feature_flags.assessments}}
+          <button style='width: 100%; height: 38px; margin-top: 5px;' class='btn btn-small btn-default' {{action "quick_assessment"}}>{{t "Quick Assessment" key='quick_assessment'}}</button>
         {{/if}}
       </div>
       <div class="col-sm-3 col-xs-6">
@@ -219,53 +186,87 @@
     </div>
   {{/if}}
   <div class="row">
-    <div class="col-sm-6">
+    <div class="col-sm-3 col-xs-6">
       {{#if model.permissions.edit}}
-        <dl>
-          <dt>{{t "Recent Sessions:" key='log_colon'}}</dt>
-            <dd>
-              <div style="margin-left: 20px;">
-                {{#if model.logs.loading}}
-                  <p>
-                    {{t "Loading..." key='loading'}}
-                  </p>
-                {{else if model.logs.error}}
-                  <p>
-                    {{t "Failed to load" key='failed to load'}}
-                  </p>
-                {{else if model.logs}}
-                  {{#each model.logs as |log|}}
-                    <p>
-                      <span title="{{unbound date log.started_at}}">
-                        {{date_ago log.started_at}}
-                      </span>
-                      {{#link-to 'user.log' model.user_name log.id}}
-                        {{#if log.assessment}}
-                          {{t "assessment" key='assessment'}}
-                        {{else if log.note}}
-                          {{t "note" key='note'}}
-                        {{else}}
-                          {{t "button" count=log.button_count key='button_count'}}
-                        {{/if}}
-                      {{/link-to}}
-                      <br/>
-                      <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">{{log.summary}}</span>
-                    </p>
-                  {{/each}}
-                {{else}}
-                  <p>
-                    {{t "No sessions currently available" key='no_sessions_found'}}
-                  </p>
-                {{/if}}
-              </div>
-              <button class='btn btn-small btn-default' {{action "recordNote" "text"}}>{{t "New Note" key='text_note'}}</button>
-              {{#if app_state.feature_flags.assessments}}
-                <button class='btn btn-small btn-default' {{action "quick_assessment"}}>{{t "Quick Assessment" key='quick_assessment'}}</button>
-              {{/if}}
-            </dd>
-        </dl>
+        <strong>{{t "Recent Sessions:" key='log_colon'}}</strong><br/>
+        <div style="margin-left: 20px;">
+          {{#if model.logs.loading}}
+            <p>
+              {{t "Loading..." key='loading'}}
+            </p>
+          {{else if model.logs.error}}
+            <p>
+              {{t "Failed to load" key='failed to load'}}
+            </p>
+          {{else if model.logs}}
+            {{#each model.logs as |log|}}
+              <p>
+                <span title="{{unbound date log.started_at}}">
+                  {{date_ago log.started_at}}
+                </span>
+                {{#link-to 'user.log' model.user_name log.id}}
+                  {{#if log.assessment}}
+                    {{t "assessment" key='assessment'}}
+                  {{else if log.note}}
+                    {{t "note" key='note'}}
+                  {{else}}
+                    {{t "button" count=log.button_count key='button_count'}}
+                  {{/if}}
+                {{/link-to}}
+                <br/>
+                <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">{{log.summary}}</span>
+              </p>
+            {{/each}}
+          {{else}}
+            <p>
+              {{t "No sessions currently available" key='no_sessions_found'}}
+            </p>
+          {{/if}}
+        </div>
       {{/if}}
     </div>
+    {{#if app_state.feature_flags.goals}}
+      <div class="col-sm-3 col-sx-6">
+        {{#if model.permissions.edit}}
+          <strong>{{t "Current Goals:" key='current_goals'}}</strong><br/>
+          <div style="margin-left: 20px;">
+            Goals and stuff!
+          </div>
+        {{/if}}
+      </div>
+      <div class="col-sm-6">
+        {{#if model.badges}}
+          <strong>{{t "Badges:" key='badges_colon'}}</strong>
+          <div style="margin-left: 20px;">
+            {{#if model.badges.loading}}
+              <p>
+                {{t "Loading..." key='loading'}}
+              </p>
+            {{else if model.badges.error}}
+              <p>
+                {{t "Failed to load" key='failed to load'}}
+              </p>
+            {{else if model.badges}}
+              <div>
+              {{#each model.badges as |badge|}}
+                {{partial 'badge-in-list'}}
+              {{/each}}
+              </div>
+              <div style='clear: left;'></div>
+              {{#if model.permissions.supervise}}
+                <div style='margin-top: 5px;'>
+                  {{#link-to 'user.badges' model.user_name}}{{t "see all user badges" key='see_all_user_badges'}}{{/link-to}}
+                </div>
+              {{/if}}
+            {{else}}
+              <p>
+                {{t "No badges currently available" key='no_badges_found'}}
+              </p>
+            {{/if}}
+          </div>
+        {{/if}}
+      </div>
+    {{/if}}
   </div>
     <div class="row">
       <div class="col-sm-12">

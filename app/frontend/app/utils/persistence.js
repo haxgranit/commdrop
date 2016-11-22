@@ -1290,6 +1290,7 @@ var persistence = Ember.Object.extend({
                   importantIds.push("dataCache_" + sound.get('url'));
                 }
               });
+              var prior_board = board;
               board.get('linked_boards').forEach(function(board) {
                 // don't re-visit if we've already grabbed it for this sync
                 var already_visited = visited_boards.find(function(i) { return i == board.id || i == board.key; });
@@ -1299,7 +1300,7 @@ var persistence = Ember.Object.extend({
                 var already_going_to_visit = to_visit_boards.find(function(b) { return (b.id == board.id || b.key == board.key) && (!board.link_disabled || board.link_disabled == b.link_disabled); });
 
                 if(!already_visited && !already_going_to_visit) {
-                  to_visit_boards.push({id: board.id, key: board.key, depth: next.depth + 1, link_disabled: board.link_disabled, visit_source: (board.key || board.id)});
+                  to_visit_boards.push({id: board.id, key: board.key, depth: next.depth + 1, link_disabled: board.link_disabled, visit_source: (prior_board.key || prior_board.id)});
                 }
                 if(safely_cached) {
                   // (this check is hypothesizing it's possible to lose some data via leakage
