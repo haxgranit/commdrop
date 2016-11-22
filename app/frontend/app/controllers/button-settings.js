@@ -49,6 +49,7 @@ export default modal.ModalController.extend({
   },
   closing: function() {
     stashes.set('last_board_search_type', this.get('board_search_type'));
+//    editManager.done_editing_image();
     contentGrabbers.clear();
   },
   labelChanged: function() {
