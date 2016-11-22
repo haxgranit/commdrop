@@ -2264,6 +2264,9 @@ table tr.long_delay td {
   }
   td.dim {
     background: #fafafa;
+    div.middle {
+      background: #fafafa;
+    }
   }
   td:last-child {
     border-right-width: 1px;
@@ -2272,8 +2275,23 @@ table tr.long_delay td {
   td:first-child {
     border-left-color: #aaa;
   }
+  div.middle {
+    background: #fff;
+    position: absolute;
+    right: -25px;
+    background: #fff;
+    width: 50px;
+    height: 40px;
+    padding-top: 5px;
+    z-index: 2;
+    top: 50px;
+    font-size: 20px;
+  }
   tr:hover {
     td {
+      background: #eee;
+    }
+    div.middle {
       background: #eee;
     }
   }

@@ -21,6 +21,7 @@
           {{else}}
             $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>6</span>
           {{/if}}
+          <div class='middle'>{{t "- or -" key='dash_or_dash'}}</div>
           <div style='margin-top: -5px; line-height: 17px;'>{{t "per month" key='per_month'}}</div>
         </td>
         <td style='width: 25%; vertical-align: top; padding-top: 40px; color: #888; position: relative;'>
@@ -39,11 +40,11 @@
           {{else}}
             $<span style='font-size: 40px; vertical-align: middle; color: #000; padding-left: 3px;'>200</span>
           {{/if}}
-
           <div style='margin-top: -5px; line-height: 17px;'>{{t "one-time purchase" key='one_time_purchase'}}</div>
         </td>
-        <td class='separator dim' style='width: 25%; vertical-align: top; padding-top: 40px; color: #888;'>
+        <td class='separator dim' style='position: relative; width: 25%; vertical-align: top; padding-top: 40px; color: #888;'>
           <span style='font-size: 40px; vertical-align: middle; color: #000;'>free</span>
+          <div class='middle'>{{t "- or -" key='dash_or_dash'}}</div>
           <div style='margin-top: -5px; line-height: 17px;'>{{t "when supporting communicators" key='when_supporting_communicators'}}</div>
         </td>
         <td class='dim' style='width: 25%; vertical-align: top; padding-top: 40px; color: #888;'>
@@ -107,6 +108,12 @@
         </tr>
         <tr>
           <td colspan="2" style='text-align: right;'>
+            {{#if move_gift_option}}
+              {{#if trial_option}}
+                <button class='btn btn-default' {{action 'skip_subscription'}}>{{t "Start with a 2-month trial" key='two_month_trial'}}</button>
+              {{/if}}
+            {{else}}
+
             {{#if subscription.gift_type}}
               <button class='btn btn-primary btn-sm'>{{t "I have a gift code" key='have_a_gift_code'}}</button>
               <div style='margin-top: 5px; text-align: center;'>
@@ -114,14 +121,26 @@
                 <span style="display: inline-block; width: 150px; margin-left: 5px;">
                   {{input type='text' value=subscription.gift_code class='form-control input-lg' placeholder='CODE'}}
                 </span>
+                {{#if trial_moves_gift_option}}
+                  <button class='btn btn-default'>cancel gift</button>
+                {{/if}}
               </div>
+            {{else if trial_moves_gift_option}}
+              <button class='btn btn-default' {{action 'skip_subscription'}}>{{t "Start with a 2-month trial" key='two_month_trial'}}</button>
             {{else}}
               <a href="#" {{action 'set_subscription_type' 'gift_code'}}>
                 {{t "I have a gift code" key='have_a_gift_code'}}
               </a>
             {{/if}}
+            {{/if}}
           </td>
-          <td colspan="2" class='separator dim'></td>
+          <td colspan="2" class='separator dim'>
+            {{#if trial_moves_gift_option}}
+              <a href="#" {{action 'set_subscription_type' 'gift_code'}}>
+                {{t "I have a gift code" key='have_a_gift_code'}}
+              </a>
+            {{/if}}
+          </td>
         </tr>
       {{/unless}}
     </tbody>
