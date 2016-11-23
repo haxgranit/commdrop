@@ -177,11 +177,11 @@
         </button>
         {{#if trial_option}}
           {{#if subscription.user.really_expired}}
-            &nbsp;&nbsp;<a href="#" {{action 'skip_subscription'}}>{{t "I need more time" key='i_need_more_time'}}</a>
+            &nbsp;&nbsp;<a href="#" class='btn btn-default btn-lg' {{action 'skip_subscription'}}>{{t "I need more time" key='i_need_more_time'}}</a>
           {{else if subscription.user.really_really_expired}}
-            &nbsp;&nbsp;<a href="#" {{action 'reload'}}>{{t "Reload, I've updated by subscription" key='reload_subscription_updated'}}</a>
+            &nbsp;&nbsp;<a href="#" class='btn btn-default btn-lg' {{action 'reload'}}>{{t "Reload, I've updated by subscription" key='reload_subscription_updated'}}</a>
           {{else}}
-            &nbsp;&nbsp;<a href="#" {{action 'skip_subscription'}}>{{t "Start with a 2-month trial" key='two_month_trial'}}</a>
+            &nbsp;&nbsp;<a href="#" class='btn btn-default btn-lg' {{action 'skip_subscription'}}>{{t "Start with a 2-month trial" key='two_month_trial'}}</a>
           {{/if}}
         {{else}}
           <button type="button" class="btn btn-lg btn-default" {{action "reset"}}>{{t "Cancel Changes" key='cancel_changes'}}</button>
