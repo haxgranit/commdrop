@@ -1,0 +1,37 @@
+{{#modal-dialog action="close" opening='opening' closing='closing'}}
+  <div class="modal-header">
+    <button type="button" class="close" {{action 'close'}}>&times;</button>
+    <h3>
+      {{t "Badge Awarded!" key='badge_awarded'}}
+    </h3>
+  </div>
+  <div class="modal-body">
+    <div style='text-align: center;'>
+      <div class='medal-holder'>
+        <div class='medal'>
+          <img src={{model.badge.image_url}} style='width: 200px;'/>
+          <div class='sparkle'>&#10022;</div>
+        </div>
+        <div class="medal-ribbon">
+          <div style="width: 34px;height: 0;border-left: 11px solid transparent;border-right: 11px solid transparent;border-top: 111px solid #444;top: 0;left: 0;transform: rotate(-33deg) translate(44px,24px);position: absolute;"></div>
+          <div style="width: 30px;height: 0;border-left: 10px solid transparent;border-right: 10px solid transparent;border-top: 112px solid red;top: 0;left: 0;transform: rotate(-33deg) translate(46px,27px);position: absolute;"></div>
+          <div style="width: 35px;height: 0;border-left: 11px solid transparent;border-right: 11px solid transparent;border-top: 111px solid #444;top: 0;left: 0;transform: rotate(36deg) translate(96px,-72px);position: absolute;"></div>
+          <div style="width: 30px;height: 0;border-left: 10px solid transparent;border-right: 10px solid transparent;border-top: 112px solid red;top: 0;left: 0;transform: rotate(36deg) translate(98px,-72px);position: absolute;"></div>
+        </div>
+        <div class='medal-hanger'>
+          <div style='border: 2px solid #444; background: #ff0; width: 30px; height: 30px; border-radius: 15px; position: absolute; top: 95px; left: 85px;'></div>
+        </div>
+      </div>
+      <div style='font-weight: bold; font-size: 30px;'>{{model.badge.name}}</div>
+      {{#if model.badge.level}}
+        <div style='color: #888; font-size: 16px;'>{{t "Level %{n}" n=model.badge.level key='level_n'}}</div>
+      {{/if}}
+    </div>
+    {{#each confettis as |confetti|}}
+      <div class='confetti' style={{confetti.style}}></div>
+    {{/each}}
+  </div>
+  <div class="modal-footer">
+    <button {{action "close"}} class="btn btn-lg btn-default">{{t "Close" key='close'}}</button>
+  </div>
+{{/modal-dialog}}

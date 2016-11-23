@@ -22,16 +22,16 @@
           {{/if}}
         </div>
         <div class='basics'>
-          {{#if badge.global}}
-            <img src={{badge.image_url}} class='badge_image'/>
-          {{else}}
-            {{#link-to 'user.goal' model.user_name badge.goal_id}}
+          <span {{action 'badge_popup' badge}} style={{if badge.earned 'cursor: pointer;'}}>
+            {{#if badge.global}}
               <img src={{badge.image_url}} class='badge_image'/>
-            {{/link-to}}
-          {{/if}}
+            {{else}}
+              <img src={{badge.image_url}} class='badge_image'/>
+            {{/if}}
           {{#if badge.earned}}
             <div class='sparkle'>&#10022;</div>
           {{/if}}
+          </span>
         </div>
         <div class='details'>
           <div>

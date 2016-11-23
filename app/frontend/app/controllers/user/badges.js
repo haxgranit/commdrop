@@ -33,6 +33,11 @@ export default Ember.Controller.extend({
       }, function() {
         modal.error(i18n.t('badge_update_failed', "Badge Update Failed"));
       });
+    },
+    badge_popup: function(badge) {
+      if(badge.earned) {
+        modal.open('badge-awarded', {badge: badge});
+      }
     }
   }
 });
