@@ -194,10 +194,12 @@
         {{#each mapped_badges as |badge|}}
             <td class={{if badge.user_badge 'sparkle_list_item goal_badge' 'sparkle_list_item goal_badge dim'}}>
               <span style='display: inline-block; position: relative;'>
-                <img src={{badge.image_url}} style='width: 80px;' />
-                {{#if badge.user_badge.earned}}
-                  <div class='sparkle'>&#10022;</div>
-                {{/if}}
+                <span {{action 'badge_popup' badge}} style={{if badge.user_badge.earned 'cursor: pointer;'}}>
+                  <img src={{badge.image_url}} style='width: 80px;' />
+                  {{#if badge.user_badge.earned}}
+                    <div class='sparkle'>&#10022;</div>
+                  {{/if}}
+                </span>
               </span>
               <div class='text'>
                 {{t "Level %{level}" level=badge.level key='level_n'}}<br/>

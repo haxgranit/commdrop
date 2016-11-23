@@ -121,6 +121,11 @@ export default Ember.Controller.extend({
       if(this.get('model')) {
         this.get('model').add_badge_level();
       }
+    },
+    badge_popup: function(badge) {
+      if(badge.user_badge.earned) {
+        modal.open('badge-awarded', {badge: badge.user_badge});
+      }
     }
   }
 });

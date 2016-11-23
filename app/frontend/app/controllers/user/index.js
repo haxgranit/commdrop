@@ -145,6 +145,21 @@ export default Ember.Controller.extend({
       });
     }
   }.observes('model.permissions'),
+  load_goals: function() {
+    if(this.get('model.permissions')) {
+      var _this = this;
+      if(!(_this.get('model.goals') || {}).length) {
+        _this.set('model.goals', {loading: true});
+      }
+      this.store.query('goal', {user_id: this.get('model.id'), per_page: 3}).then(function(badges) {
+        _this.set('model.goals', badges);
+      }, function(err) {
+        if(!(!this.get('model.goals') || {}).length) {
+          _this.set('model.goals', {error: true});
+        }
+      });
+    }
+  }.observes('model.permissions'),
   subscription: function() {
     if(this.get('model.permissions.admin_support_actions') && this.get('model.subscription')) {
       var sub = Subscription.create({user: this.get('model')});
