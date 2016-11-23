@@ -132,6 +132,14 @@ describe("i18n", function() {
       var str = Ember.templateHelpers.t("happi<b>ness</b>", {});
       expect(str.string).toEqual("happi<b>ness</b>");
     });
+    it("should increment t number value if specified", function() {
+      var str = Ember.templateHelpers.t("%{hat} cow", {hash: {hat: 0, increment: 'hat'}, hashTypes: {}});
+      expect(str.string).toEqual("1 cow");
+
+      str = Ember.templateHelpers.t("cow", {hash: {count: 1, increment: 'count'}, hashTypes: {}});
+      expect(str.string).toEqual("2 cows");
+    });
+
     it("should format time strings", function() {
       var str = Ember.templateHelpers.duration(null);
       expect(str).toEqual("");
