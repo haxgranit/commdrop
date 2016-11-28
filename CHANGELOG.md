@@ -2,6 +2,13 @@
 
 ## Master
 
+### 2016-11-28
+- improved goals, including badge generation (feature flag)
+- got rid of "subscription" wording most places
+- support for modeling actions that don't affect user logs (feature flag)
+- location-based sidebar updates (feature flag)
+- filter profanity on keyboard word suggestions
+
 ### 2016-10-27
 - improved goal management interface
 - room-level usage stats page
