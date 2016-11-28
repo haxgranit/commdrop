@@ -35,7 +35,7 @@ class Api::GoalsController < ApplicationController
         return unless allowed?(user, 'delete')
         goals = goals.where(:template => true)
       end
-      goals = goals.order('user_goals.primary DESC, active, id DESC')
+      goals = goals.order('user_goals.primary DESC, active DESC, id DESC')
     end
     
     render json: JsonApi::Goal.paginate(params, goals)

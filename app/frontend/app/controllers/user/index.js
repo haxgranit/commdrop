@@ -151,8 +151,8 @@ export default Ember.Controller.extend({
       if(!(_this.get('model.goals') || {}).length) {
         _this.set('model.goals', {loading: true});
       }
-      this.store.query('goal', {user_id: this.get('model.id'), per_page: 3}).then(function(badges) {
-        _this.set('model.goals', badges);
+      this.store.query('goal', {user_id: this.get('model.id'), per_page: 3}).then(function(goals) {
+        _this.set('model.goals', goals.content.mapProperty('record').filter(function(g) { return g.get('active'); }));
       }, function(err) {
         if(!(!this.get('model.goals') || {}).length) {
           _this.set('model.goals', {error: true});

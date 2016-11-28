@@ -23,20 +23,16 @@
         </div>
         <div class='basics'>
           <span {{action 'badge_popup' badge}} style={{if badge.earned 'cursor: pointer;'}}>
-            {{#if badge.global}}
-              <img src={{badge.image_url}} class='badge_image'/>
-            {{else}}
-              <img src={{badge.image_url}} class='badge_image'/>
+            <img src={{badge.image_url}} class='badge_image'/>
+            {{#if badge.earned}}
+              <div class='sparkle'>&#10022;</div>
             {{/if}}
-          {{#if badge.earned}}
-            <div class='sparkle'>&#10022;</div>
-          {{/if}}
           </span>
         </div>
         <div class='details'>
           <div>
             {{#if badge.global}}
-              {{badge.name}}
+              {{#link-to 'goal' badge.goal_id}}{{badge.name}}{{/link-to}}
             {{else}}
               {{#link-to 'user.goal' model.user_name badge.goal_id}}{{badge.name}}{{/link-to}}
             {{/if}}
@@ -60,10 +56,12 @@
             {{/if}}
           </div>
           {{t "Level %{level}" level=badge.level key='level_n'}}<br/>
-          {{#if badge.max_level}}
-            {{t "Great job, you've completed all levels of this badge!" key='all_levels_completed'}}
-          {{else if badge.earned}}
-            {{t "Keep at it, there's another level of this badge to unlock!" key='more_levels_to_unlock'}}
+          {{#if badge.earned}}
+            {{#if badge.max_level}}
+              {{t "Great job, you've completed all levels of this badge!" key='all_levels_completed'}}
+            {{else}}
+              {{t "Keep at it, there's another level of this badge to unlock!" key='more_levels_to_unlock'}}
+            {{/if}}
           {{else}}
             {{t "Keep working to unlock this badge!" key='keep_working_on_badge'}}
           {{/if}}

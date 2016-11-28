@@ -37,10 +37,10 @@ class UserGoal < ActiveRecord::Base
     end
     self.settings['max_badge_level'] = self.settings['badges'].length if self.settings['badges']
     self.settings['old_template_header_id'] = self.settings['template_header_id'] if self.settings['template_header_id']
-    if self.active && !self.settings['started_at']
+    if (self.active || self.global) && !self.settings['started_at']
       self.settings['started_at'] = Time.now.iso8601
     end
-    if !self.active && !self.settings['ended_at'] && self.settings['started_at']
+    if !self.active && !self.global && !self.settings['ended_at'] && self.settings['started_at']
       self.settings['ended_at'] = Time.now.iso8601
     end
   end

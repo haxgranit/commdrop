@@ -6,6 +6,7 @@ CoughDrop.Badge = DS.Model.extend({
   name: DS.attr('string'),
   highlighted: DS.attr('boolean'),
   disabled: DS.attr('boolean'),
+  global: DS.attr('boolean'),
   image_url: DS.attr('string'),
   level: DS.attr('number'),
   goal_id: DS.attr('string'),
