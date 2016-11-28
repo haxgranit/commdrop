@@ -180,8 +180,16 @@ export default Ember.Controller.extend({
         name: i18n.t('select_a_voice', '[ Select A Voice ]')
       });
     }
+    // this is a weird hack because the the voice uri needs to be set *after* the
+    // voice list is generated in order to make sure the correct default is selected
+    var val = this.get('model.preferences.device.voice.voice_uri');
+    this.set('model.preferences.device.voice.voice_uri', 'tmp_needs_changing');
+    var _this = this;
+    Ember.run.later(function() {
+      _this.set('model.preferences.device.voice.voice_uri', val);
+    });
     return result;
-  }.property('application.voiceList', 'model.premium_voices.claimed'),
+  }.property('application.voiceList', 'model.premium_voices.claimed', 'model.preferences.device.voice.voice_uris'),
   active_sidebar_options: function() {
     var res = this.get('model.preferences.sidebar_boards');
     if(!res || res.length === 0) {

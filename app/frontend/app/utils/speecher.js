@@ -73,6 +73,8 @@ var speecher = Ember.Object.extend({
       var found_voice = voices.find(function(v) { return v.voiceURI == voice.voice_uri; });
       if(found_voice) {
         this.voiceURI = found_voice.voiceURI;
+      } else if(voice.voice_uri == 'force_default') {
+        this.voiceURI = 'force_default';
       } else if(!this.voiceURI && voices.length > 0) {
         this.voiceURI = voices[0].voiceURI;
       }

@@ -118,6 +118,9 @@ CoughDrop.User = DS.Model.extend({
     for(var idx = 0; idx < voiceURIs.length && !voice; idx++) {
       var voiceURI = voiceURIs[idx];
       voice = voices.find(finder);
+      if(voiceURI == 'force_default') {
+        voice = {voiceURI: 'force_default'};
+      }
     }
     this.set('preferences.device.voice.voice_uri', voice && voice.voiceURI);
   }.observes('preferences.device.voice.voice_uris'),
