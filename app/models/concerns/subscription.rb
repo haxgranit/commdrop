@@ -284,6 +284,7 @@ module Subscription
           SubscriptionMailer.schedule_delivery(:gift_redeemed, args['gift_id'])
           self.log_subscription_event(:log => 'gift notification triggered')
           SubscriptionMailer.schedule_delivery(:gift_seconds_added, args['gift_id'])
+          SubscriptionMailer.schedule_delivery(:gift_updated, args['gift_id'], 'redeem')
         else
           SubscriptionMailer.schedule_delivery(:purchase_confirmed, self.global_id)
           self.log_subscription_event(:log => 'purchase notification triggered')

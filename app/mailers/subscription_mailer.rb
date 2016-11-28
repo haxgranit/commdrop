@@ -81,4 +81,13 @@ class SubscriptionMailer < ActionMailer::Base
     @recipient = @gift.receiver
     mail_message(@recipient, "Gift Purchase Received")
   end
+  
+  def gift_updated(gift_id, action)
+    @action_type = "Purchased"
+    @action_type = "Redeemed" if action == 'redeem'
+    @gift = GiftPurchase.find_by_global_id(gift_id)
+    if ENV['NEW_REGISTRATION_EMAIL']
+      mail(to: ENV['NEW_REGISTRATION_EMAIL'], subject: "CoughDrop - Gift #{@action_type}")
+    end
+  end
 end

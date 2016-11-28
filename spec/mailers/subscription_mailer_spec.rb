@@ -272,4 +272,52 @@ describe SubscriptionMailer, :type => :mailer do
       expect(text).to match(/3 years/)
     end
   end
+  
+  describe "gift_updated" do
+    it "should generate the creation message when specified" do
+      ENV['NEW_REGISTRATION_EMAIL'] = "nobody@example.com"
+      giver = User.create(:settings => {'email' => 'fred@example.com'})
+      recipient = User.create(:settings => {'email' => 'susan@example.com'})
+      
+      gift = GiftPurchase.process_new({}, {
+        'giver' => giver,
+        'email' => 'bob@example.com',
+        'seconds' => 3.years.to_i
+      })
+      gift.save
+      
+      m = SubscriptionMailer.gift_updated(gift.global_id, 'purchase')
+      expect(m.to).to eq(['nobody@example.com'])
+      expect(m.subject).to eq("CoughDrop - Gift Purchased")
+
+      html = m.body.to_s
+      expect(html).to match(/Giver: #{giver.user_name}/)
+      expect(html).to_not match(/Recipient:/)
+      expect(html).to match(/<b>#{gift.code}<\/b>/)
+      expect(html).to match(/Duration: 3 years/)
+    end
+    
+    it "should generate the redeemed message when specified" do
+      ENV['NEW_REGISTRATION_EMAIL'] = "nobody@example.com"
+      giver = User.create(:settings => {'email' => 'fred@example.com'})
+      recipient = User.create(:settings => {'email' => 'susan@example.com'})
+      
+      gift = GiftPurchase.process_new({}, {
+        'email' => 'bob@example.com',
+        'seconds' => 3.years.to_i
+      })
+      gift.settings['receiver_id'] = recipient.global_id
+      gift.save
+      
+      m = SubscriptionMailer.gift_updated(gift.global_id, 'redeem')
+      expect(m.to).to eq(['nobody@example.com'])
+      expect(m.subject).to eq("CoughDrop - Gift Redeemed")
+
+      html = m.body.to_s
+      expect(html).to match(/Giver: bob@example.com/)
+      expect(html).to match(/Recipient: #{recipient.user_name}/)
+      expect(html).to match(/<b>#{gift.code}<\/b>/)
+      expect(html).to match(/Duration: 3 years/)
+    end
+  end
 end

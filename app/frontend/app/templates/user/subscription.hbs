@@ -29,7 +29,7 @@
   {{else if subscription.user.subscription.purchased}}
     {{# if subscription.user_expiring}}
       <span class='glyphicon glyphicon-time' style="float: left; font-size: 30px; margin-right: 10px;"></span>
-      {{t "You've purchased a CoughDrop license, <b>%{plan}</b>. This plan is going to expire soon, and you should update your subscription. Your account will continue working for communication, but access to cloud extras like reporting and team communication will expire " key='long_term_expiring' plan=subscription.subscription_plan_description}}<span style='white-space: nowrap;'>{{date subscription.user.subscription.expires}}</span>
+      {{t "You've purchased a CoughDrop license, <b>%{plan}</b>. You've had access to cloud extras like reporting and team communication, but those will be expiring soon unless you update your purchase. Your account will continue working for communication, but access to cloud extras like reporting and team communication will expire " key='long_term_expiring' plan=subscription.subscription_plan_description}}<span style='white-space: nowrap;'>{{date subscription.user.subscription.expires}}</span>
     {{else}}
       <span class='glyphicon glyphicon-calendar' style="float: left; font-size: 30px; margin-right: 10px;"></span>
       {{t "You've purchased a CoughDrop license, <b>%{plan}</b>. We hope everything is going well for you and CoughDrop is making a difference! You can use CoughDrop as long as you like, but keep in mind that access to cloud extras like reporting and team communication are set to expire " key='long_term_explanation' plan=subscription.subscription_plan_description}} <span style='white-space: nowrap;'>{{date subscription.user.subscription.expires}}</span>
@@ -40,7 +40,7 @@
   {{/if}}
   <div style="clear: left;"></div>
   <p style="margin-top: 10px;">
-    <a href="#" {{action 'show_expiration_notes'}}>{{t "what happens if my subscription expires?" key='what_happens_expires'}}</a>
+    <a href="#" {{action 'show_expiration_notes'}}>{{t "what happens if my \"cloud extras\" access expires?" key='what_happens_expires'}}</a>
   </p>
   {{#if show_expiration_notes}}
     <p class="explanation" style="margin-top: 10px;">

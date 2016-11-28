@@ -776,13 +776,22 @@ describe Purchasing do
         'seconds' => 5.years.to_i
       }).and_return(true)
       res = Purchasing.purchase_gift({'id' => 'token'}, {'type' => 'long_term_custom_500', 'user_id' => u.global_id, 'email' => 'bob@example.com'})
+      expect(res).to eq({:success => true, :type => 'long_term_custom_500'})
     end
     
     it "should trigger a notification on success" do
       u = User.create
-      expect(SubscriptionMailer).to receive(:schedule_delivery) do |type|
-        expect(type).to eq(:gift_created)
-      end
+      notifications = []
+      expect(SubscriptionMailer).to receive(:schedule_delivery){ |type, id, action|
+        notifications << type
+        if type == :gift_created
+          expect(id).to_not eq(nil)
+          expect(action).to eq(nil)
+        elsif type == :gift_updated
+          expect(id).to_not eq(nil)
+          expect(action).to eq('purchase')
+        end
+      }.exactly(2).times
       expect(Stripe::Charge).to receive(:create).with({
         :amount => 15000,
         :currency => 'usd',
@@ -807,6 +816,7 @@ describe Purchasing do
       expect(g.settings['token_summary']).to eq('Unknown Card')
       expect(g.settings['giver_email']).to eq('bob@example.com')
       expect(g.settings['seconds_to_add']).to eq(5.years.to_i)
+      expect(notifications).to eq([:gift_created, :gift_updated])
     end
   end
 
@@ -855,6 +865,7 @@ describe Purchasing do
       u = User.create
       expect(SubscriptionMailer).to receive(:schedule_delivery).with(:gift_redeemed, g.global_id)
       expect(SubscriptionMailer).to receive(:schedule_delivery).with(:gift_seconds_added, g.global_id)
+      expect(SubscriptionMailer).to receive(:schedule_delivery).with(:gift_updated, g.global_id, 'redeem')
       res = Purchasing.redeem_gift(g.code, u)
       expect(res[:success]).to eq(true)
       expect(res[:code]).to eq(g.code)

@@ -17,9 +17,20 @@ describe GiftPurchase, :type => :model do
   end
   
   it "should trigger a notification on create with a giver specified" do
-    expect(SubscriptionMailer).not_to receive(:schedule_delivery).exactly(1).times
+    methods = []
+    expect(SubscriptionMailer).to receive(:schedule_delivery){|method, id, action|
+      methods << method
+      if method == :gift_created
+        expect(id).to_not be_nil
+        expect(action).to be_nil
+      elsif method == :gift_updated
+        expect(id).to_not be_nil
+        expect(action).to eq('purchase')
+      end
+    }.exactly(2).times
     g = GiftPurchase.create
     g2 = GiftPurchase.create(:settings => {'giver_email' => 'bob@example.com'})
+    expect(methods).to eq([:gift_created, :gift_updated])
   end
   
   describe "duration" do

@@ -33,6 +33,7 @@ class GiftPurchase < ActiveRecord::Base
   def notify_of_creation
     if self.settings && self.settings['giver_email']
       SubscriptionMailer.schedule_delivery(:gift_created, self.global_id)
+      SubscriptionMailer.schedule_delivery(:gift_updated, self.global_id, 'purchase')
     end
     true
   end
@@ -75,6 +76,7 @@ class GiftPurchase < ActiveRecord::Base
     self.settings['giver_email'] = non_user_params['email'] if non_user_params['email']
     if non_user_params['giver']
       self.settings['giver_id'] = non_user_params['giver'].global_id
+      self.settings['giver_email'] ||= non_user_params['giver'].settings['email']
     end
     ['customer_id', 'token_summary', 'plan_id', 'purchase_id'].each do |arg|
       self.settings[arg] = non_user_params[arg] if non_user_params[arg]
