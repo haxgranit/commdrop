@@ -196,6 +196,11 @@ class Board < ActiveRecord::Base
     @edit_description = nil
 
     self.settings['buttons'] ||= []
+    self.settings['buttons'].each do |button|
+      if button['load_board'] && button['load_board']['id'] && button['load_board']['id'] == self.related_global_id(self.parent_board_id) && @update_self_references == nil && !self.settings['self_references_updated']
+        @update_self_references = true
+      end
+    end
     self.settings['grid'] ||= {}
     self.settings['grid']['rows'] = (self.settings['grid']['rows'] || 2).to_i
     self.settings['grid']['columns'] = (self.settings['grid']['columns'] || 4).to_i
@@ -316,6 +321,10 @@ class Board < ActiveRecord::Base
       self.schedule(:check_image_url)
     end
     
+    if @update_self_references
+      self.update_self_references
+    end
+    
     if @check_for_parts_of_speech
       self.schedule(:check_for_parts_of_speech)
       @check_for_parts_of_speech = nil
@@ -323,6 +332,21 @@ class Board < ActiveRecord::Base
     schedule(:update_affected_users, @brand_new) if @buttons_changed || @brand_new
 
     schedule_downstream_checks
+  end
+  
+  def update_self_references
+    @update_self_references = false
+    buttons = self.settings['buttons'] || []
+    self.settings['self_references_updated'] = true
+    buttons.each do |button|
+      if button['load_board'] && button['load_board']['id'] && button['load_board']['id'] == self.related_global_id(self.parent_board_id)
+        button['load_board']['id'] = self.global_id
+        button['load_board']['key'] = self.key
+        @buttons_changed = true
+      end
+    end
+    self.settings['buttons'] = buttons
+    self.save
   end
   
   def update_affected_users(is_new_board)

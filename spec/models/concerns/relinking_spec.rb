@@ -73,6 +73,26 @@ describe Relinking, :type => :model do
       res = b.copy_for(u, true)
       expect(res.public).to eq(true)
     end
+    
+    it "should update self-referential links" do
+      u = User.create
+      b = Board.create(:user => u)
+      b.process({'buttons' => [{'id' => '1', 'load_board' => {'id' => b.global_id, 'key' => b.key}}]}, {'user' => u})
+      expect(b.settings['buttons'][0]['load_board']['id']).to eq(b.global_id)
+      res = b.copy_for(u, true)
+      expect(res.settings['buttons'][0]['load_board']['id']).to eq(res.global_id)
+    end
+    
+    it "should not keep updating parent links if re-added" do
+      u = User.create
+      b = Board.create(:user => u)
+      b.process({'buttons' => [{'id' => '1', 'load_board' => {'id' => b.global_id, 'key' => b.key}}]}, {'user' => u})
+      expect(b.settings['buttons'][0]['load_board']['id']).to eq(b.global_id)
+      res = b.copy_for(u, true)
+      expect(res.settings['buttons'][0]['load_board']['id']).to eq(res.global_id)
+      b.process({'buttons' => [{'id' => '1', 'load_board' => {'id' => b.global_id, 'key' => b.key}}]}, {'user' => u})
+      expect(b.settings['buttons'][0]['load_board']['id']).to eq(b.global_id)
+    end
   end
   
   describe "replace_links!" do
