@@ -23,7 +23,7 @@ task "extras:deploy_notification", [:system, :level, :version] => :environment d
       :version => ARGV[3]
     }
   end
-  if args[:system].downcase == 'android'
+  if args[:system] && args[:system].downcase == 'android'
     if args[:level] && (args[:level].downcase == 'beta' || args[:level].downcase == 'alpha')
       message = "#{args[:level]} version pushed out for testing on Android\nplease kick the tires when you have a chance"
     else
@@ -32,7 +32,7 @@ task "extras:deploy_notification", [:system, :level, :version] => :environment d
       message += "\nif people start reporting bugs, that is probably why"
     end
     message += "\n<https://play.google.com/store/apps/details?id=com.mycoughdrop.coughdrop|app store link>"
-  elsif args[:system].downcase == 'kindle'
+  elsif args[:system] && args[:system].downcase == 'kindle'
     if args[:level] && (args[:level].downcase == 'beta' || args[:level].downcase == 'alpha')
       message "#{args[:level]} version submitted to the iOS App Store"
     else
@@ -41,9 +41,9 @@ task "extras:deploy_notification", [:system, :level, :version] => :environment d
       message += "\nit typically takes 7-10 days to get approved, so sit tight"
     end
     message += "\n<https://www.amazon.com/CoughDrop-Inc-AAC/dp/B01BU8RUEY/ref=sr_1_1?s=mobile-apps&ie=UTF8&qid=1478539872&sr=1-1&keywords=coughdrop|app store link>"
-  elsif args[:system].downcase == 'ios'
+  elsif args[:system] && args[:system].downcase == 'ios'
     message += "\n<https://itunes.apple.com/us/app/coughdrop/id1021384570|app store link>"
-  elsif args[:system].downcase == 'windows'
+  elsif args[:system] && args[:system].downcase == 'windows'
     message = "New version of the Windows app is available"
     message += " (#{args[:version]})" if args[:version]
     message += "\n<https://www.mycoughdrop.com/download|download links>"
