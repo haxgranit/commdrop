@@ -25,5 +25,9 @@
 <% end %>
 <% if !@badge.data['max_level'] %>This badge is part of a set, so keep at it and see if you can move up to the next level!<% end %>
 <br/><br/>
+<% if @badge.global %>
+  <span style='font-size: 0.8em;'>Did you know you can create your own badges in CoughDrop? Go to the "Goals" section of a user's account and you can set personalized goals, track them, and even build badges they can earn as they make progress on the goal!</span>
+  <br/><br/>
+<% end %>
 Thanks!<br/>
 - The CoughDrop Team
