@@ -27,6 +27,9 @@ export default modal.ModalController.extend({
         if(!this.get('include_header') && !this.get('download_type')) {
           url = url + "&headerless=1";
         }
+        if(!this.get('text_below') && !this.get('download_type')) {
+          url = url + "&text_on_top=1";
+        }
         var download = persistence.ajax(url, {type: 'POST'});
         var _this = this;
         this.set('progress', {
