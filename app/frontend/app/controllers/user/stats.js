@@ -173,8 +173,9 @@ export default Ember.Controller.extend({
         args[key] = controller.get(lookup);
       }
     });
-    if(side == 'right' && this.get('usage_stats.filter') == 'last_2_months' && !args.start2 && !args.end2) {
-      var dates = this.get('usage_stats').date_strings();
+    if(side == 'right' && (!this.get('usage_stats.filter') || this.get('usage_stats.filter') == 'last_2_months') && !args.start && !args.end) {
+      var tmp_stats = this.get('usage_state') || (Stats.create({}));
+      var dates = tmp_stats.date_strings();
       args.start = dates.four_months_ago;
       args.end = dates.two_months_ago;
     }
