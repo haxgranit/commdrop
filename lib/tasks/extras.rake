@@ -32,26 +32,31 @@ task "extras:deploy_notification", [:system, :level, :version] => :environment d
       message += "\nif people start reporting bugs, that is probably why"
     end
     message += "\n<https://play.google.com/store/apps/details?id=com.mycoughdrop.coughdrop|app store link>"
-  elsif args[:system] && args[:system].downcase == 'kindle'
+  elsif args[:system] && args[:system].downcase == 'ios'
     if args[:level] && (args[:level].downcase == 'beta' || args[:level].downcase == 'alpha')
       message "#{args[:level]} version submitted to the iOS App Store"
     else
-      message "An update has been submitted to the iOS App Store"
+      message = "An update has been submitted to the iOS App Store"
       message += " (#{args[:version]})" if args[:version]
       message += "\nit typically takes 7-10 days to get approved, so sit tight"
     end
-    message += "\n<https://www.amazon.com/CoughDrop-Inc-AAC/dp/B01BU8RUEY/ref=sr_1_1?s=mobile-apps&ie=UTF8&qid=1478539872&sr=1-1&keywords=coughdrop|app store link>"
-  elsif args[:system] && args[:system].downcase == 'ios'
     message += "\n<https://itunes.apple.com/us/app/coughdrop/id1021384570|app store link>"
+  elsif args[:system] && args[:system].downcase == 'kindle'
+    message = "An update on the Amazon App Store is going live"
+    message += " (#{args[:version]})" if args[:version]
+    message += "\nif people start reporting bugs, that is probably why"
+    message += "\n<https://www.amazon.com/CoughDrop-Inc-AAC/dp/B01BU8RUEY/ref=sr_1_1?s=mobile-apps&ie=UTF8&qid=1478539872&sr=1-1&keywords=coughdrop|app store link>"
   elsif args[:system] && args[:system].downcase == 'windows'
     message = "New version of the Windows app is available"
     message += " (#{args[:version]})" if args[:version]
     message += "\n<https://www.mycoughdrop.com/download|download links>"
+  elsif args[:system]
+    raise "unrecognized system, #{args[:system]}"
   else
     str = File.read('./app/assets/javascripts/application-preload.js')
     match = str.match(/window\.app_version\s+=\s+\"([0-9\.]+\w*)\";/)
     version = match && match[1]
-    message = "New version deployed (#{version})"
+    message = "New version deployed to servers (#{version})"
     message += "\n<https://github.com/CoughDrop/coughdrop/blob/master/CHANGELOG.md|change notes> | <https://github.com/CoughDrop/coughdrop/commits/master|detailed log>"
   end
   json = {"username": "deploy-bot", "icon_emoji": ":cuttlefish:", "text":message}
