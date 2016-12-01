@@ -1,5 +1,5 @@
 unless ENV['SKIP_VALIDATIONS']
-  if Octopus.enabled?
+  if defined?(Octopus) && Octopus.enabled?
     count = case (Octopus.config[Rails.env].values[0].values[0] rescue nil)
     when Hash
       Octopus.config[Rails.env].map{|group, configs| configs.count}.sum rescue 0

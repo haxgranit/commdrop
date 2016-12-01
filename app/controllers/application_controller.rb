@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   before_filter :set_host
   before_filter :check_api_token
   before_filter :replace_helper_params
+  before_filter :set_paper_trail_whodunnit
   after_filter :log_api_call
   
   # TODO: do we need a cache buster? Not for ember renders obviously, but for APIs?
