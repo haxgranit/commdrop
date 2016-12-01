@@ -83,6 +83,37 @@ describe Api::BadgesController, :type => :controller do
     it "should filter by earned if specified" do
     end
   end
+  
+  describe "show" do
+    it "should require an api token" do
+      get 'show', :id => 'asdf'
+      assert_missing_token
+    end
+    
+    it "should require a valid record" do
+      token_user
+      get 'show', :id => 'asdf'
+      assert_not_found('asdf')
+    end
+    
+    it "should require authorization" do
+      token_user
+      u = User.create
+      b = UserBadge.create(:user => u)
+      get 'show', :id => b.global_id
+      assert_unauthorized
+    end
+    
+    it "should return a record" do
+      token_user
+      b = UserBadge.create(:user => @user)
+      get 'show', :id => b.global_id
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['badge']).to_not eq(nil)
+      expect(json['badge']['id']).to eq(b.global_id)
+    end
+  end
 
   describe "update" do
     it "should require an api token" do

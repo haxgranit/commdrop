@@ -183,6 +183,9 @@ describe("i18n", function() {
       var context = Ember.Object.create({crab_color: "white"});
       expect(i18n.t('crab', "The crab is %{color}", {hash: {color: "crab_color"}, hashTypes: {color: 'ID'}, hashContexts: {color: context}})).toEqual("The crab is white");
     });
+    it("should handle multiple parameters", function() {
+      expect(i18n.t('something', "This is %{n} of %{m} for me!", {n: 5, m: 'ice cream'})).toEqual("This is 5 of ice cream for me!");
+    });
   });
 
   describe("verb negation", function() {

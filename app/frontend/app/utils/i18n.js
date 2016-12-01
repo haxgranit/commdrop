@@ -168,11 +168,11 @@ var i18n = Ember.Object.extend({
     }
   },
   t: function(key, str, options) {
-    var terms = str.match(/%{(\w+)}/);
+    var terms = str.match(/%{(\w+)}/g);
     var value;
     if(options && !options.hash) { options.hash = options; }
-    for(var idx = 0; terms && idx < terms.length; idx+= 2) {
-      var word = terms[idx + 1];
+    for(var idx = 0; terms && idx < terms.length; idx++) {
+      var word = terms[idx].match(/%{(\w+)}/)[1];
       if(options[word] !== undefined && options[word] !== null) {
         value = options[word];
         if(options.increment == word || options.hash.increment == word) { value++; }

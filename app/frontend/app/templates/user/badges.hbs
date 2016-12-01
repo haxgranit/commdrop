@@ -22,7 +22,7 @@
           {{/if}}
         </div>
         <div class='basics'>
-          <span {{action 'badge_popup' badge}} style={{if badge.earned 'cursor: pointer;'}}>
+          <span {{action 'badge_popup' badge}} style='cursor: pointer;'>
             <img src={{badge.image_url}} class='badge_image'/>
             {{#if badge.earned}}
               <div class='sparkle'>&#10022;</div>
@@ -32,7 +32,7 @@
         <div class='details'>
           <div>
             {{#if badge.global}}
-              {{#link-to 'goal' badge.goal_id}}{{badge.name}}{{/link-to}}
+              {{#link-to 'goals.goal' badge.goal_id}}{{badge.name}}{{/link-to}}
             {{else}}
               {{#link-to 'user.goal' model.user_name badge.goal_id}}{{badge.name}}{{/link-to}}
             {{/if}}

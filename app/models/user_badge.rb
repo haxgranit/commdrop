@@ -77,7 +77,7 @@ class UserBadge < ActiveRecord::Base
     (self.data && self.data['earn_recorded'] && Time.parse(self.data['earn_recorded'])) || self.updated_at
   end
   
-  def award!(earned)
+  def award!(earned, badge_level)
     return if self.earned
     # {:started, :ended, :tally, :streak}
     self.earned = true
@@ -90,6 +90,7 @@ class UserBadge < ActiveRecord::Base
     self.data['tally'] = earned[:tally] if earned[:tally]
     self.data['streak'] = earned[:streak] if earned[:streak]
     self.data['percent'] = 1.0
+    self.data['badge_level'] = badge_level
     self.update_badge_data
     self.save!
     UserBadge.where(:user_id => self.user_id, :user_goal_id => self.user_goal_id).where(['level < ?', self.level]).update_all(:superseded => true)
@@ -125,12 +126,13 @@ class UserBadge < ActiveRecord::Base
     end
   end
   
-  def mark_progress!(percent, progress_expires_at=nil)
+  def mark_progress!(percent, progress_expires_at=nil, badge_level)
     return if self.earned
     self.data ||= {}
     raise "invalid percent" if percent >= 1.0 || percent < 0.0
     self.data['percent'] = percent.to_f
     self.data['progress_expires'] = progress_expires_at.utc.iso8601 if progress_expires_at
+    self.data['badge_level'] = badge_level
     self.update_badge_data
     self.save!
   end
@@ -447,11 +449,11 @@ class UserBadge < ActiveRecord::Base
       if badge && !badge.earned
         if earned
           earns += 1
-          badge.award!(earned)
+          badge.award!(earned, badge_level)
           level += 1
           prior_earned = true
         else
-          badge.mark_progress!(progress)
+          badge.mark_progress!(progress, badge_level)
           prior_earned = false
         end
       else

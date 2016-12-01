@@ -35,9 +35,7 @@ export default Ember.Controller.extend({
       });
     },
     badge_popup: function(badge) {
-      if(badge.earned) {
-        modal.open('badge-awarded', {badge: badge});
-      }
+      modal.open('badge-awarded', {badge: badge});
     }
   }
 });

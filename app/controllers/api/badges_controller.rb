@@ -30,6 +30,13 @@ class Api::BadgesController < ApplicationController
     render json: JsonApi::Badge.paginate(params, badges)
   end
   
+  def show
+    badge = UserBadge.find_by_path(params['id'])
+    return unless exists?(badge, params['id'])
+    return unless allowed?(badge, 'view')
+    render json: JsonApi::Badge.as_json(badge, :wrapper => true, :permissions => @api_user).to_json
+  end
+  
   def update
     badge = UserBadge.find_by_path(params['id'])
     return unless exists?(badge, params['id'])

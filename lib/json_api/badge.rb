@@ -26,6 +26,7 @@ module JsonApi::Badge
     
     if args[:permissions]
       json['permissions'] = badge.permissions_for(args[:permissions])
+      json['completion_settings'] = badge.data['badge_level']
     end
     json
   end
