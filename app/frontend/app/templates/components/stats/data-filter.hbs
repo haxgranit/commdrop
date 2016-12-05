@@ -1,6 +1,6 @@
-<div class={{if side_by_side "col-xs-6" "col-xs-12"}} style={{if right_side "border-left: 1px solid #eee; padding-top: 20px; padding-bottom: 20px;" "padding-top: 20px; padding-bottom: 20px;"}}>
+<div class={{elem_class}} style={{elem_style}}>
   {{#if usage_stats}}
-    <form class="form-inline" style={{if tall_filter 'height: 110px; line-height: 37px; margin-top: -20px;' 'line-height: 37px; margin-top: -20px;'}}>
+    <form class="form-inline" style={{inner_elem_style}}>
       <div class="form-group">
         {{bound-select select_class="form-control" select_id="filter" content=filter_list selection=usage_stats.filter action=(action (mut usage_stats.filter)) }}
       </div>

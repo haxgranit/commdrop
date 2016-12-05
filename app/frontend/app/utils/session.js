@@ -8,7 +8,7 @@ import app_state from './app_state';
 
 
 var session = Ember.Object.extend({
-  setup: function(container, application) {
+  setup: function(application) {
     application.register('cough_drop:session', session, { instantiate: false, singleton: true });
     Ember.$.each(['model', 'controller', 'view', 'route'], function(i, component) {
       application.inject(component, 'session', 'cough_drop:session');

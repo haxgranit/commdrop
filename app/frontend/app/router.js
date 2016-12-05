@@ -20,7 +20,8 @@ if(Ember.testing) {
   config.locationType = 'history';
 }
 var Router = Ember.Router.extend({
-  location: config.locationType
+  location: config.locationType,
+  rootURL: config.rootURL
 });
 
 Router.reopen({
@@ -69,7 +70,7 @@ Router.map(function() {
   this.route('redeem_with_code', { path: '/redeem/:code' });
   this.route('gift_purchase', { path: '/gift' });
   this.route('troubleshooting', { path: '/troubleshooting' });
-  this.resource('user', { path: '/:user_id' }, function() {
+  this.route('user', { resetNamespalce: true, path: '/:user_id' }, function() {
     this.route('edit');
     this.route('preferences');
     this.route('subscription');
@@ -83,12 +84,12 @@ Router.map(function() {
     this.route('confirm_registration', { path: '/confirm_registration/:code' });
     this.route('password_reset', { path: '/password_reset/:code' });
   });
-  this.resource('board', { path: '/*key'}, function() {
-    this.route('error');
+  this.route('board', { resetNamespace: true, path: '/*key'}, function() {
+//    this.route('error');
     this.route('stats');
     this.route('history');
   });
-  this.route('board_error');
+//  this.route('board_error');
 });
 
 export default Router;

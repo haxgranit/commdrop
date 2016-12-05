@@ -41,7 +41,7 @@
             <span class="glyphicon glyphicon-user"></span>
             <span style="display: inline-block; width: 200px; width: calc(100% - 60px);">
               {{t "supervisees:" key='supervisees_colon'}}<br/>
-              <ul class={{if many_supervisees "list-unstyled supervisee_list tall" "list-unstyled supervisee_list"}} style="margin-bottom: 0;">
+              <ul class={{if many_supervisees "list-unstyled supervisee_list tall" "list-unstyled supervisee_list"}} style="margin-bottom: -15px;">
               {{#if app_state.currentUser.supervisees}}
                 {{#each app_state.currentUser.supervisees as |supervisee|}}
                   <li style="margin: 5px 0; font-size: 20px;">
@@ -238,10 +238,14 @@
               {{/each}}
             </a>
           {{else}}
-            {{#link-to 'admin' class="list-group-item half_size"}}
-              <span class="glyphicon glyphicon-paperclip"></span>
-              {{t "Organization Management" key='org_management'}}<br/>
-            {{/link-to}}
+            {{#each app_state.currentUser.managed_orgs as |org|}}
+              {{#link-to 'organization' org.id class="list-group-item half_size"}}
+                <span class="glyphicon glyphicon-paperclip"></span>
+                <span style="margin-right: 10px;">
+                  {{t "Organization Management" key='org_management'}}
+                </span>
+              {{/link-to}}
+            {{/each}}
           {{/if}}
         {{/if}}
 
@@ -387,7 +391,7 @@
           {{else if logs}}
             {{#each logs as |log|}}
               <p>
-                <span title="{{unbound date log.started_at}}">
+                <span title={{date log.started_at}}>
                   {{date_ago log.started_at}}
                 </span>
                 {{#link-to 'user.log' log.user.user_name log.id}}

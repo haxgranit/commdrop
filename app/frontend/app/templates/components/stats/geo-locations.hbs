@@ -1,4 +1,4 @@
-<div class={{if side_by_side "col-sm-6" "col-sm-8"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+<div class={{elem_class}} style={{elem_style}}>
   <h3>{{t "Locations" key='maps'}}</h3>
   {{#if usage_stats.geo_locations}}
     {{map-with-markers action="marker_link_select"}}

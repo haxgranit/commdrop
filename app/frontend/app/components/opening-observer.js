@@ -3,8 +3,13 @@ import Ember from 'ember';
 export default Ember.Component.extend({
   willInsertElement: function() {
     if(!this.get('already_opened')) {
-      this.set('already_opened', true);
-      this.sendAction('opening');
+      var _this = this;
+      Ember.run.later(function() {
+        // TODO: this is considered bad behavior. an error was being triggered after upgrading
+        // because we're setting an attribute before the rendering has finished
+        _this.set('already_opened', true);
+        _this.sendAction('opening');
+      });
     }
   },
   didInsertElement: function() {

@@ -175,16 +175,16 @@ var Button = Ember.Object.extend({
   image_holder_style: function() {
     var pos = this.get('positioning');
     if(!pos || !pos.image_height) { return ""; }
-    return new Ember.Handlebars.SafeString("margin-top: " + pos.image_top_margin + "px; vertical-align: top; display: inline-block; width: " + pos.image_square + "px; height: " + pos.image_height + "px; line-height: " + pos.image_height + "px;");
+    return new Ember.String.htmlSafe("margin-top: " + pos.image_top_margin + "px; vertical-align: top; display: inline-block; width: " + pos.image_square + "px; height: " + pos.image_height + "px; line-height: " + pos.image_height + "px;");
   }.property('positioning'),
   image_style: function() {
     var pos = this.get('positioning');
     if(!pos || !pos.image_height) { return ""; }
-    return new Ember.Handlebars.SafeString("width: 100%; vertical-align: middle; max-height: " + pos.image_square + "px;");
+    return new Ember.String.htmlSafe("width: 100%; vertical-align: middle; max-height: " + pos.image_square + "px;");
   }.property('positioning'),
   computed_style: function() {
     var pos = this.get('positioning');
-    if(!pos) { return new Ember.Handlebars.SafeString(""); }
+    if(!pos) { return new Ember.String.htmlSafe(""); }
     var str = "";
     if(pos && pos.top !== undefined && pos.left !== undefined) {
       str = str + "position: absolute;";
@@ -197,7 +197,7 @@ var Button = Ember.Object.extend({
     if(pos.height) {
       str = str + "height: " + Math.max(pos.height, 20) + "px;";
     }
-    return new Ember.Handlebars.SafeString(str);
+    return new Ember.String.htmlSafe(str);
   }.property('positioning'),
   computed_class: function() {
     var res = this.get('display_class') + " ";
@@ -339,7 +339,7 @@ var Button = Ember.Object.extend({
 
       if (this.constructor.prototype[key]) { continue; }
 
-      if (Button.attributes.contains(key)) {
+      if (Button.attributes.includes(key)) {
         ret[key] = this.get(key);
       }
     }

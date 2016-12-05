@@ -9,7 +9,7 @@ import CoughDrop from '../app';
 var memory_stash = {};
 var stash_capabilities = null;
 var stashes = Ember.Object.extend({
-  connect: function(container, application) {
+  connect: function(application) {
     application.register('cough_drop:stashes', stashes, { instantiate: false, singleton: true });
     Ember.$.each(['model', 'controller', 'view', 'route'], function(i, component) {
       application.inject(component, 'stashes', 'cough_drop:stashes');

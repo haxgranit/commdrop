@@ -175,18 +175,6 @@ var modal = Ember.Object.extend({
   }
 }).create();
 
-modal.ModalView = Ember.View.extend({
-//   willInsertElement: function() {
-//     var template = this.get('templateName') || this.get('renderedName') || this.constructor.toString().split(/:/)[1];
-//     var settings = modal.settings_for[template] || {};
-//     var controller = this.get('controller');
-//     modal.last_controller = controller;
-//     controller.set('model', settings);
-//     if(controller.opening) {
-//       controller.opening();
-//     }
-//   }
-});
 modal.ModalController = Ember.Controller.extend({
   actions: {
     opening: function() {

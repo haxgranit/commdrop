@@ -47,25 +47,25 @@ export default modal.ModalController.extend({
     var res = [];
     res.push({
       id: '1',
-      text: new Ember.Handlebars.SafeString(i18n.t('we_didnt_do_it', "We didn't<br/>do it")),
+      text: new Ember.String.htmlSafe(i18n.t('we_didnt_do_it', "We didn't<br/>do it")),
       display_class: 'face sad',
       button_display_class: 'btn btn-default face_button'
     });
     res.push({
       id: '2',
-      text: new Ember.Handlebars.SafeString(i18n.t('we_did_it', "We barely<br/>did it")),
+      text: new Ember.String.htmlSafe(i18n.t('we_did_it', "We barely<br/>did it")),
       display_class: 'face neutral',
       button_display_class: 'btn btn-default face_button'
     });
     res.push({
       id: '3',
-      text: new Ember.Handlebars.SafeString(i18n.t('we_did_good', "We did<br/>good!")),
+      text: new Ember.String.htmlSafe(i18n.t('we_did_good', "We did<br/>good!")),
       display_class: 'face happy',
       button_display_class: 'btn btn-default face_button'
     });
     res.push({
       id: '4',
-      text: new Ember.Handlebars.SafeString(i18n.t('we_did_awesome', "We did<br/>awesome!")),
+      text: new Ember.String.htmlSafe(i18n.t('we_did_awesome', "We did<br/>awesome!")),
       display_class: 'face laugh',
       button_display_class: 'btn btn-default face_button'
     });

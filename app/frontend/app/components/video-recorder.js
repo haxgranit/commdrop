@@ -5,9 +5,12 @@ import app_state from '../utils/app_state';
 export default Ember.Component.extend({
   tagName: 'div',
   willInsertElement: function() {
-    this.sendAction('video_not_ready');
-    contentGrabbers.videoGrabber.setup(this);
-    this.set('app_state', app_state);
+    var _this = this;
+    Ember.run.later(function() {
+      _this.sendAction('video_not_ready');
+      contentGrabbers.videoGrabber.setup(_this);
+      _this.set('app_state', app_state);
+    });
   },
   willDestroyElement: function() {
     contentGrabbers.videoGrabber.clear_video_work();

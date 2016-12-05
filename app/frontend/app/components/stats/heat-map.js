@@ -2,19 +2,33 @@ import Ember from 'ember';
 import CoughDrop from '../../app';
 import i18n from '../../utils/i18n';
 
-export default Ember.Component.extend({ 
+export default Ember.Component.extend({
   didInsertElement: function() {
     this.draw();
   },
+  elem_class: function() {
+    if(this.get('side_by_side')) {
+      return Ember.String.htmlSafe('col-sm-6');
+    } else {
+      return Ember.String.htmlSafe('col-sm-8');
+    }
+  }.property('side_by_side'),
+  elem_style: function() {
+    if(this.get('right_side')) {
+      return Ember.String.htmlSafe('border-left: 1px solid #eee;');
+    } else {
+      return Ember.String.htmlSafe('');
+    }
+  }.property('right_side'),
   draw: function() {
     var stats = this.get('usage_stats');
     var elem = this.get('element').getElementsByClassName('touch_locations')[0];
-    
+
     CoughDrop.Visualizations.wait('heat-map', function() {
       if(elem && stats && stats.get('touch_locations')) {
         var touch_locations = {};
         var max = 0;
-        for(var key in stats.touch_locations) { 
+        for(var key in stats.touch_locations) {
           var points = key.split(/,/);
           var x = Math.round(parseFloat(points[0]) * 100 / 2);
           var y = Math.round(parseFloat(points[1]) * 100 / 4);
@@ -32,7 +46,7 @@ export default Ember.Component.extend({
         context.clearRect(0, 0, width, height);
         var stepx = width / 51;
         var stepy = height / 26;
-  
+
         var positions = [];
         for(var idx = 0; idx < 51; idx++) {
           for(var jdx = 0; jdx < 26; jdx++) {

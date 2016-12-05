@@ -22,7 +22,7 @@ import i18n from './i18n';
 // whether logging is temporarily disabled
 // "back button" history
 var app_state = Ember.Object.extend({
-  setup: function(container, application) {
+  setup: function(application) {
     application.register('cough_drop:app_state', app_state, { instantiate: false, singleton: true });
     Ember.$.each(['model', 'controller', 'view', 'route'], function(i, component) {
       application.inject(component, 'app_state', 'cough_drop:app_state');
@@ -41,7 +41,7 @@ var app_state = Ember.Object.extend({
       battery.level = Math.round(battery.level * 100);
       if(battery.level != _this.get('battery.level') || battery.charging !== _this.get('battery.charging')) {
         _this.set('battery', battery);
-        _this.set('battery.progress_style', new Ember.Handlebars.SafeString("width: " + parseInt(battery.level) + "%;"));
+        _this.set('battery.progress_style', new Ember.String.htmlSafe("width: " + parseInt(battery.level) + "%;"));
         _this.set('battery.low', battery.level < 15);
         _this.set('battery.really_low', battery.level < 10);
         if(battery.level <= 10 && !battery.charging) {
@@ -164,6 +164,7 @@ var app_state = Ember.Object.extend({
     }
   },
   global_transition: function(transition) {
+    if(transition.isAborted) { return; }
     app_state.set('latest_board_id', null);
     app_state.set('login_modal', false);
     // On desktop, setting too soon causes a re-render, but on mobile
@@ -1066,4 +1067,5 @@ app_state.ScrollTopRoute = Ember.Route.extend({
     }
   }
 });
+window.app_state = app_state;
 export default app_state;

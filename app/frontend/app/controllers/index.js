@@ -60,7 +60,7 @@ export default Ember.Controller.extend({
     return Math.round(done / total * 100);
   }.property('app_state.currentUser.preferences.progress'),
   blank_slate_percent_style: function() {
-    return new Ember.Handlebars.SafeString("width: " + this.get('blank_slate_percent') + "%;");
+    return new Ember.String.htmlSafe("width: " + this.get('blank_slate_percent') + "%;");
   }.property('blank_slate_percent'),
   checkForBlankSlate: function() {
     var _this = this;

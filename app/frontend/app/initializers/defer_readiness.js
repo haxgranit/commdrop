@@ -3,7 +3,7 @@ import extras from '../utils/extras';
 
 export default {
   name: 'defer_readiness',
-  initialize: function(container, app) {
+  initialize: function(app) {
     if(!window.cough_drop_readiness) {
       CoughDrop.app = app;
       app.deferReadiness();

@@ -11,7 +11,7 @@ export default {
         var border = fill.darken(30);
         r.border = border.toHexString();
       }
-      r.style = new Ember.Handlebars.SafeString("border-color: " + r.border + "; background: " + r.fill + ";");
+      r.style = new Ember.String.htmlSafe("border-color: " + r.border + "; background: " + r.fill + ";");
     });
     app_state.set('colored_keys', true);
   }

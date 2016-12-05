@@ -5,7 +5,7 @@
     {{/link-to}}
     {{t " - new note by %{user_name}" key='user_new_message' user_name=notif.author_user_name}}
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
-      <span title="{{unbound date notif.occurred_at}}">
+      <span title={{date notif.occurred_at}}>
         {{date_ago notif.occurred_at}}
       </span>
       {{t " - " key='dash'}}
@@ -20,7 +20,7 @@
       {{notif.text}}
     {{/link-to}}
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
-      <span title="{{unbound date notif.occurred_at}}">
+      <span title={{date notif.occurred_at}}>
         {{date_ago notif.occurred_at}}
       </span>
     </span>
@@ -30,7 +30,7 @@
     {{/link-to}}
     {{t " - home board was changed" key='home_board_changed'}}
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
-      <span title="{{unbound date notif.occurred_at}}">
+      <span title={{date notif.occurred_at}}>
         {{date_ago notif.occurred_at}}
       </span>
       {{#link-to 'board' notif.key}}
@@ -40,7 +40,7 @@
   {{else if notif.org_removed}}
     {{t "You have been removed as a %{role} for the organization %{org_name}" key='removed_from_org' role=notif.user_type org_name=notif.org_name}}
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
-      <span title="{{unbound date notif.occurred_at}}">
+      <span title={{date notif.occurred_at}}>
         {{date_ago notif.occurred_at}}
       </span>
     </span>
@@ -52,7 +52,7 @@
     {{#link-to 'user.badges' notif.user_name}}{{notif.badge_name}}{{/link-to}}
 
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
-      <span title="{{unbound date notif.occurred_at}}">
+      <span title={{date notif.occurred_at}}>
         {{date_ago notif.occurred_at}}
       </span>
       {{t " - " key='dash'}}
@@ -67,7 +67,7 @@
       {{#link-to 'board.history' notif.key}}{{t "history" key='history'}}{{/link-to}}
     </span>
     <span style="color: #888; font-size: 10px; white-space: nowrap; overflow: hidden; display: block;">
-      <span title="{{unbound date notif.occurred_at}}">
+      <span title={{date notif.occurred_at}}>
         {{date_ago notif.occurred_at}}
       </span>
       {{#if app_state.currentUser.supporter_role}}

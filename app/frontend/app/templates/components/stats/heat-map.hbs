@@ -1,4 +1,4 @@
-<div class={{if side_by_side "col-sm-6" "col-sm-8"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+<div class={{elem_class}} style={{elem_style}}>
   <h3>{{t "Activation Heat Map" key='heat_map'}}</h3>
   {{#if usage_stats.max_touches}}
     <canvas class="touch_locations" width="400" height="200" style="width: 100%; height: 300px; border: 1px solid #ccc; background: #eee;"></canvas>

@@ -48,8 +48,8 @@
         {{/if}}
         {{#if usage_stats2}}
           {{#if different_dates}}
-            {{stats/lost-or-gained-words usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=true}}
-            {{stats/lost-or-gained-words usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true}}
+            {{stats/lost-or-gained-words usage_stats=usage_stats ref_stats=usage_stats2 side_by_side=true word_cloud='word_cloud_left'}}
+            {{stats/lost-or-gained-words usage_stats=usage_stats2 ref_stats=usage_stats side_by_side=true right_side=true word_cloud='word_cloud_right'}}
           {{/if}}
         {{/if}}
       </div>

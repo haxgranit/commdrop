@@ -13,7 +13,7 @@ export default modal.ModalController.extend({
     var list = [];
     for(var idx = 0; idx < 80; idx++) {
       list.push({
-        style: "top: " + (Math.random() * 200) + "px; left: " + (Math.random() *100) + "%;",
+        style: Ember.String.htmlSafe("top: " + (Math.random() * 200) + "px; left: " + (Math.random() *100) + "%;"),
       });
     }
     this.set('confettis', list);

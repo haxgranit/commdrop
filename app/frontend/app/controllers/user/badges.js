@@ -9,7 +9,7 @@ export default Ember.Controller.extend({
     var _this = this;
     this.set('badges', {loading: true});
     this.store.query('badge', {user_id: this.get('model.id')}).then(function(badges) {
-      badges = badges.content.mapProperty('record');
+      badges = badges.content.mapBy('record');
       _this.set('badges', badges);
     }, function(err) {
       _this.set('badges', {error: true});

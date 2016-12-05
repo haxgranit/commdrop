@@ -13,7 +13,7 @@ export default modal.ModalController.extend({
     var current_buttons = (stashes.get_object('stashed_buttons', true) || []).reverse().filter(function(b) { return (b.stashed_at || default_stashed_at) > time_cutoff; });
     var stash = current_buttons.slice(0, 48).map(function(b) {
       delete b.stashed_at;
-      var button = Button.create(b); 
+      var button = Button.create(b);
       button.set('outer_display_class', button.get('outer_display_class') + ' stashed_button');
       button.set('positioning', {height: 100});
       return button;
@@ -35,6 +35,6 @@ export default modal.ModalController.extend({
   }.property('model.id'),
   image_style: function() {
     var height = 100 - CoughDrop.labelHeight - CoughDrop.boxPad;
-    return new Ember.Handlebars.SafeString("height: " + height + "px;");
+    return new Ember.String.htmlSafe("height: " + height + "px;");
   }.property('model.id')
 });

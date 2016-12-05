@@ -374,12 +374,12 @@ CoughDrop.Board = DS.Model.extend({
     // so if any of them are in-memory or in indexeddb, then we need to
     // reload or fetch them remotely to get the latest, updated version,
     // which will include the "my copy" information.
-    CoughDrop.store.peekAll('board').content.forEach(function(brd) {
-      if(affected_board_ids && affected_board_ids.indexOf(brd.record.get('id')) != -1) {
-        if(!brd.record.get('isLoading') && !brd.record.get('isNew')) {
-          brd.record.reload();
+    CoughDrop.store.peekAll('board').content.mapBy('record').forEach(function(brd) {
+      if(brd && affected_board_ids && affected_board_ids.indexOf(brd.record.get('id')) != -1) {
+        if(!brd.get('isLoading') && !brd.get('isNew')) {
+          brd.reload();
         }
-        found_board_ids.push(brd.record.get('id'));
+        found_board_ids.push(brd.get('id'));
       }
     });
     affected_board_ids.forEach(function(id) {
@@ -432,9 +432,8 @@ CoughDrop.Board = DS.Model.extend({
       return Ember.RSVP.resolve(button_set);
     } else {
       var valid_button_set = null;
-      var button_sets = CoughDrop.store.peekAll('buttonset').content.forEach(function(bs) {
-        bs = bs.record;
-        if((bs.get('board_ids') || []).indexOf(_this.get('id')) != -1) {
+      var button_sets = CoughDrop.store.peekAll('buttonset').content.mapBy('record').forEach(function(bs) {
+        if(bs && (bs.get('board_ids') || []).indexOf(_this.get('id')) != -1) {
           if(bs.get('fresh') || !valid_button_set) {
             valid_button_set = bs;
           }
@@ -473,14 +472,20 @@ CoughDrop.Board.reopenClass({
     // shortcoming.
     var _this = this;
     Ember.run.later(function() {
-      CoughDrop.store.peekAll('board').content.forEach(function(i) {
-        i.record.checkForDataURL().then(null, function() { });
+      CoughDrop.store.peekAll('board').content.mapBy('record').forEach(function(i) {
+        if(i) {
+          i.checkForDataURL().then(null, function() { });
+        }
       });
-      CoughDrop.store.peekAll('image').content.forEach(function(i) {
-        i.record.checkForDataURL().then(null, function() { });
+      CoughDrop.store.peekAll('image').content.mapBy('record').forEach(function(i) {
+        if(i) {
+          i.checkForDataURL().then(null, function() { });
+        }
       });
-      CoughDrop.store.peekAll('sound').content.forEach(function(i) {
-        i.record.checkForDataURL().then(null, function() { });
+      CoughDrop.store.peekAll('sound').content.mapBy('record').forEach(function(i) {
+        if(i) {
+          i.checkForDataURL().then(null, function() { });
+        }
       });
     });
   },

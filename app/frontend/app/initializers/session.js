@@ -9,14 +9,13 @@ import capabilities from '../utils/capabilities';
 
 export default {
   name: 'session',
-  initialize: function(container, app) {
+  initialize: function(app) {
     CoughDrop.app = app;
-    CoughDrop.container = container;
-    session.setup(container, app);
+    session.setup(app);
     session.restore();
-    persistence.setup(container, app);
-    stashes.connect(container, app);
-    coughDropExtras.setup(container, app);
-    app_state.setup(container, app);
+    persistence.setup(app);
+    stashes.connect(app);
+    coughDropExtras.setup(app);
+    app_state.setup(app);
   }
 };

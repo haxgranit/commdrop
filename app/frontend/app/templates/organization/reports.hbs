@@ -31,7 +31,7 @@
             {{#each results.list as |item|}}
               {{#if item.started_at}}
                 <span class='list-group-item'>
-                  <span title="{{unbound date item.started_at}}">
+                  <span title={{date item.started_at}}>
                     {{date_ago item.started_at}}
                   </span>
                   {{#link-to 'user.log' item.user.user_name log.id}}

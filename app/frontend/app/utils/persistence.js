@@ -11,7 +11,7 @@ import capabilities from './capabilities';
 
 var valid_stores = ['user', 'board', 'image', 'sound', 'settings', 'dataCache', 'buttonset'];
 var persistence = Ember.Object.extend({
-  setup: function(container, application) {
+  setup: function(application) {
     application.register('cough_drop:persistence', persistence, { instantiate: false, singleton: true });
     Ember.$.each(['model', 'controller', 'view', 'route'], function(i, component) {
       application.inject(component, 'persistence', 'cough_drop:persistence');
@@ -64,14 +64,16 @@ var persistence = Ember.Object.extend({
     var hash = {};
     var res = {};
     keys.forEach(function(key) { hash[key] = true; });
-    CoughDrop.store.peekAll(store).content.forEach(function(item) {
-      var record = item.record;
-      if(record && hash[record.get('id')]) {
-        if(store == 'board' && record.get('permissions') === undefined) {
-          // locally-cached board found from a list request doesn't count
-        } else {
-          hash[record.get('id')] = false;
-          res[record.get('id')] = record;
+    CoughDrop.store.peekAll(store).content.mapBy('record').forEach(function(item) {
+      if(item) {
+        var record = item.record;
+        if(record && hash[record.get('id')]) {
+          if(store == 'board' && record.get('permissions') === undefined) {
+            // locally-cached board found from a list request doesn't count
+          } else {
+            hash[record.get('id')] = false;
+            res[record.get('id')] = record;
+          }
         }
       }
     });
@@ -84,7 +86,12 @@ var persistence = Ember.Object.extend({
             if(item.data && item.data.id && hash[item.data.id]) {
               hash[item.data.id] = false;
               if(CoughDrop.store) {
-                res[item.data.id] = CoughDrop.store.push(store, item.data.raw);
+                var json_api = { data: {
+                  id: item.data.raw.id,
+                  type: store,
+                  attributes: item.data.raw
+                }};
+                res[item.data.id] = CoughDrop.store.push(json_api);
               }
             }
           });
@@ -1698,9 +1705,9 @@ document.addEventListener('offline', function() {
 });
 
 persistence.DSExtend = {
-  find: function(store, type, id) {
+  findRecord: function(store, type, id) {
     var _this = this;
-    var _super = this.__nextSuper;
+    var _super = this._super;
 
     var find = persistence.find(type.modelName, id, true);
 

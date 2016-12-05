@@ -55,7 +55,7 @@ var boundClasses = {};
           button.text_color = text.toRgbString();
           str = str + 'color: ' + button.text_color + ';';
         }
-        
+
         add_css_rule('.button.' + key, str);
         add_css_rule('.button.' + key + ':hover, .button.' + key + '.touched, .button.' + key + ':focus', hoverStr);
         this.classes[key] = [str, hoverStr, button.dark_border_color, button.dark_background_color, button.text_color];
@@ -82,11 +82,11 @@ var boundClasses = {};
       Ember.set(button, 'display_class', classes);
     }
   });
-  
+
   function create_sheet() {
     // TODO: this is an attempted optimization for a poorly-performing method
     if(styleElement) { return; }
-    
+
     // Create the <style> tag
     var newStyle = document.createElement('style');
     newStyle.setAttribute('data-for-board', 'true');
@@ -102,7 +102,7 @@ var boundClasses = {};
     if(styleElement) {
       document.head.removeChild(styleElement);
     }
-    
+
     // Add the <style> element to the page
     document.head.appendChild(newStyle);
 
@@ -111,7 +111,7 @@ var boundClasses = {};
   function add_css_rule(selector, rules, index) {
     var sheet = styleElement.sheet;
     if(sheet.insertRule) {
-      sheet.insertRule(selector + '{' + rules + '}', index);
+      sheet.insertRule(selector + '{' + rules + '}', index || sheet.cssRules.length);
     } else {
       sheet.addRule(selector, rules, index);
     }

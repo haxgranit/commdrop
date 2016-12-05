@@ -14,7 +14,7 @@
         {{t "manager" key='manager_count' count=model.total_managers }}
       </div>
       {{#if model.created}}
-        <div title="{{unbound date model.created}}">{{t "created" key='created'}} {{date_ago model.created}}</div>
+        <div title={{date model.created}}>{{t "created" key='created'}} {{date_ago model.created}}</div>
       {{/if}}
     </div>
     {{#if model.permissions.edit}}

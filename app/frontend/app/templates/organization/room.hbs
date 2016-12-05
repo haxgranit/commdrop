@@ -105,7 +105,7 @@
         <li>
           <p>
             {{#link-to 'user' log.user.user_name}}{{log.user.user_name}}{{/link-to}} -
-            <span title="{{unbound date log.started_at}}">
+            <span title={{date log.started_at}}>
               {{date_ago log.started_at}}
             </span>
             {{#link-to 'user.log' log.user.user_name log.id}}

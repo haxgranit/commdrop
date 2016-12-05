@@ -28,7 +28,7 @@ export default Ember.Controller.extend({
   load_user_badges: function() {
     var _this = this;
     this.store.query('badge', {user_id: this.get('user.id'), goal_id: this.get('model.id')}).then(function(badges) {
-      _this.set('user_badges', badges.content.mapProperty('record'));
+      _this.set('user_badges', badges.content.mapBy('record'));
     }, function(err) {
     });
 

@@ -22,7 +22,7 @@ CoughDrop.Badge = DS.Model.extend({
     return Math.min(Math.max(this.get('progress') || 0, 0) * 100, 100);
   }.property('progress'),
   progress_style: function() {
-    return "width: " + Math.min(Math.max((this.get('progress') || 0) * 100, 0), 100) + "%";
+    return Ember.String.htmlSafe("width: " + Math.min(Math.max((this.get('progress') || 0) * 100, 0), 100) + "%");
   }.property('progress'),
   numbered_interval(interval, number) {
     var res = {multiplier: 1, unit: i18n.t('day', "day")};

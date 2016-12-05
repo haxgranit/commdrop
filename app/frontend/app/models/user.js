@@ -105,7 +105,7 @@ CoughDrop.User = DS.Model.extend({
     var notifs = this.get('notifications') || [];
     notifs.forEach(function(notif) {
       notif[notif.type] = true;
-      notif.occurred_at = (Ember.Date.parse(notif.occurred_at) || new Date(notif.occurred_at));
+      notif.occurred_at = (Date.parse(notif.occurred_at) || new Date(notif.occurred_at));
     });
     return notifs;
   }.property('notifications'),

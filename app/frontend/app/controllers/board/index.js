@@ -130,7 +130,7 @@ export default Ember.Controller.extend({
       topHeight = topHeight + 30;
     }
     if(app_state.controller) {
-      app_state.controller.set('sidebar_style', new Ember.Handlebars.SafeString("height: " + (height - sidebarTopHeight + 20) + "px;"));
+      app_state.controller.set('sidebar_style', new Ember.String.htmlSafe("height: " + (height - sidebarTopHeight + 20) + "px;"));
     }
     this.setProperties({
       'height': height - topHeight,
@@ -139,7 +139,7 @@ export default Ember.Controller.extend({
     });
   }.observes('app_state.speak_mode', 'app_state.edit_mode', 'model.description', 'app_state.sidebar_pinned'),
   board_style: function() {
-    return new Ember.Handlebars.SafeString("position: relative; height: " + (this.get('height') + 5) + "px");
+    return new Ember.String.htmlSafe("position: relative; height: " + (this.get('height') + 5) + "px");
   }.property('height'),
   redraw_if_needed: function() {
     var now = (new Date()).getTime();

@@ -1,5 +1,5 @@
 {{#if status}}
-  <div class={{if side_by_side "col-sm-6" "col-sm-12"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+  <div class={{elem_class}} style={{elem_style}}>
     {{#if status.loading}}
       {{t "Loading..." key='loading'}}
     {{else if status.error}}
@@ -11,7 +11,7 @@
     {{/if}}
   </div>
 {{else if ref_status}}
-  <div class={{if side_by_side "col-sm-6" "col-sm-12"}} style={{if right_side "border-left: 1px solid #eee;"}}>
+  <div class={{elem_class}} style={{elem_style}}>
     &nbsp;
   </div>
 {{/if}}

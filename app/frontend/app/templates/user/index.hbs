@@ -201,7 +201,7 @@
           {{else if model.logs}}
             {{#each model.logs as |log|}}
               <p>
-                <span title="{{unbound date log.started_at}}">
+                <span title={{date log.started_at}}>
                   {{date_ago log.started_at}}
                 </span>
                 {{#link-to 'user.log' model.user_name log.id}}

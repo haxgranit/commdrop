@@ -11,6 +11,13 @@ export default Ember.Component.extend({
   init: function() {
     this._super(...arguments);
   },
+  select_style: function() {
+    if(this.get('short')) {
+      return Ember.String.htmlSafe('height: 25px;');
+    } else {
+      return Ember.String.htmlSafe('');
+    }
+  }.property('short'),
 
   actions: {
     change() {

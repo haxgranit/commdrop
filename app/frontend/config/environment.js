@@ -4,7 +4,8 @@ module.exports = function(environment) {
   var ENV = {
     modulePrefix: 'frontend',
     environment: environment,
-    baseURL: '/',
+//    baseURL: '/', // deprecated?
+    rootURL: '/',
     locationType: 'auto',
     EmberENV: {
       FEATURES: {
@@ -18,12 +19,12 @@ module.exports = function(environment) {
       // when it is created
     }
   };
-  
-  ENV['simple-auth'] = {
-    store: 'simple-auth-session-store:coughdrop-local-storage',
-    session: 'simple-auth-session:coughdrop',
-    authenticator: 'authenticator:coughdrop'
-  }
+
+//   ENV['simple-auth'] = {
+//     store: 'simple-auth-session-store:coughdrop-local-storage',
+//     session: 'simple-auth-session:coughdrop',
+//     authenticator: 'authenticator:coughdrop'
+//   }
 
   if (environment === 'development') {
     // ENV.APP.LOG_RESOLVER = true;
@@ -46,7 +47,7 @@ module.exports = function(environment) {
 
   if (environment === 'test') {
     // Testem prefers this...
-    ENV.baseURL = '/';
+    ENV.rootURL = '/';
     ENV.locationType = 'none';
 
     // keep test console output quieter

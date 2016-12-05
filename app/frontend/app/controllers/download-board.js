@@ -72,7 +72,7 @@ export default modal.ModalController.extend({
     return Math.round(100 * (this.get('progress.percent') || 0));
   }.property('progress.percent'),
   num_style: function() {
-    return new Ember.Handlebars.SafeString("width: " + this.get('num_percent') + "%;");
+    return new Ember.String.htmlSafe("width: " + this.get('num_percent') + "%;");
   }.property('num_percent'),
   download_type: function() {
     return this.get('model.type') != 'pdf';

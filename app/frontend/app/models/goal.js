@@ -154,7 +154,7 @@ CoughDrop.Goal = DS.Model.extend({
         reversed_units.push(unit);
       }
     });
-    var max = Math.max.apply(null, units.mapProperty('max_statuses'));
+    var max = Math.max.apply(null, units.mapBy('max_statuses'));
     reversed_units.max = max;
     return reversed_units;
   }.property('stats', 'best_time_level'),

@@ -170,6 +170,7 @@ var i18n = Ember.Object.extend({
   t: function(key, str, options) {
     var terms = str.match(/%{(\w+)}/g);
     var value;
+    options = Ember.assign({}, options);
     if(options && !options.hash) { options.hash = options; }
     for(var idx = 0; terms && idx < terms.length; idx++) {
       var word = terms[idx].match(/%{(\w+)}/)[1];

@@ -3,6 +3,27 @@ import app_state from '../../utils/app_state';
 import i18n from '../../utils/i18n';
 
 export default Ember.Component.extend({
+  elem_class: function() {
+    if(this.get('side_by_side')) {
+      return Ember.String.htmlSafe('col-xs-6');
+    } else {
+      return Ember.String.htmlSafe('col-xs-12');
+    }
+  }.property('side_by_side'),
+  elem_style: function() {
+    if(this.get('right_side')) {
+      return Ember.String.htmlSafe('border-left: 1px solid #eee; padding-top: 20px; padding-bottom: 20px;');
+    } else {
+      return Ember.String.htmlSafe('padding-top: 20px; padding-bottom: 20px');
+    }
+  }.property('right_side'),
+  inner_elem_style: function() {
+    if(this.get('tall_filter')) {
+      return Ember.String.htmlSafe('height: 110px; line-height: 37px; margin-top: -20px;');
+    } else {
+      return Ember.String.htmlSafe('line-height: 37px; margin-top: -20px;');
+    }
+  }.property('tall_filter'),
   filter_list: function() {
     var res = [];
     res.push({name: i18n.t('last_2_months', "Last 2 Months"), id: "last_2_months"});

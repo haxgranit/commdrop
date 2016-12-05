@@ -1,7 +1,7 @@
 <div style={{button.computed_style}} class={{unbound button.computed_class}} data-id={{unbound button.id}} tabindex="0">
   {{#if button.pending}}
     <div class="pending">
-      <img src="{{unbound path 'images/spinner.gif'}}" />
+      <img src={{path 'images/spinner.gif'}} />
     </div>
   {{/if}}
   <div class={{unbound button.action_class}}>
@@ -17,7 +17,7 @@
   {{#if button.sound}}
     <audio style="display: none;" preload="auto" src={{button.sound.best_url}} rel={{unbound button.sound.url}}></audio>
   {{/if}}
-  <div class={{unbound button_symbol_class}}>
+  <div class={{button_symbol_class}}>
     {{#unless button.hide_label}}
       <span class="button-label">{{unbound button.label}}</span>
     {{/unless}}

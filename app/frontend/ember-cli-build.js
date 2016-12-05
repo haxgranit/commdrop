@@ -4,11 +4,11 @@ var EmberApp = require('ember-cli/lib/broccoli/ember-app');
 module.exports = function(defaults) {
   var app = new EmberApp(defaults, {
     storeConfigInMeta: false,
-    vendorFiles: {
-      'handlebars.js': null,
-      'ember.js': 'bower_components/ember/ember.prod.js',
-      'ember-data.js': 'bower_components/ember-data/ember-data.prod.js'
-    },
+//    vendorFiles: {
+//      'handlebars.js': null,
+//      'ember.js': 'bower_components/ember/ember.prod.js',
+//      'ember-data.js': 'bower_components/ember-data/ember-data.prod.js'
+//    },
     fingerprint: {
       enabled: false
     },

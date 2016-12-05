@@ -39,7 +39,7 @@ import capabilities from './capabilities';
   };
 
   var extras = Ember.Object.extend({
-    setup: function(container, application) {
+    setup: function(application) {
       application.register('cough_drop:extras', extras, { instantiate: false, singleton: true });
       Ember.$.each(['model', 'controller', 'view', 'route'], function(i, component) {
         application.inject(component, 'extras', 'cough_drop:extras');
