@@ -721,7 +721,13 @@ class LogSession < ActiveRecord::Base
       end
       self.data['assessment'] = params['assessment'] if params['assessment']
       if self.data['assessment']
-        self.data['assessment']['manual'] = true
+        if non_user_params[:automatic_assessment]
+          self.data['assessment']['manual'] = false
+          self.data['assessment']['automatic'] = true
+        else
+          self.data['assessment']['manual'] = true
+          self.data['assessment']['automatic'] = false
+        end
       end
     end
     true

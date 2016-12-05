@@ -336,12 +336,13 @@ class UserBadge < ActiveRecord::Base
               },
               'goal_id' => goal.global_id
             # TODO: picking a device at random is bad
-            }, {user: user, author: user, device: user.devices[0]})
+            }, {user: user, author: user, device: user.devices[0], automatic_assessment: true})
           end
           valid = valid_unit(unit, badge_level)
           session.data['assessment']['tallies'][0]['correct'] = !!valid
           session.data['assessment']['totals']['correct'] = valid ? 1 : 0
           session.data['assessment']['totals']['incorrect'] = valid ? 0 : 1
+          session.data['assessment']['automatic'] = true
           session.save
         end
         units = []
