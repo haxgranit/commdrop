@@ -6,7 +6,15 @@ import i18n from '../utils/i18n';
 export default modal.ModalController.extend({
   opening: function() {
     if(this.get('model.user')) {
-      this.get('model.user').load_active_goals();
+      if(this.get('model.user').load_active_goals) {
+        this.get('model.user').load_active_goals();
+      } else {
+        var _this = this;
+        this.store.findRecord('user', this.get('model.user.id')).then(function(u) {
+          _this.set('model.user', u);
+          u.load_active_goals();
+        });
+      }
     }
     this.reset();
     this.set('goal_id', this.get('model.goal.id'));
