@@ -1,5 +1,5 @@
 class Api::SnapshotsController < ApplicationController
-  before_filter :require_api_token
+  before_action :require_api_token
 
   def index
     user = User.find_by_global_id(params['user_id'])

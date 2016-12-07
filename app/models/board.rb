@@ -576,7 +576,7 @@ class Board < ActiveRecord::Base
         later_version = all_versions[idx - 1]
         later_object = current
         if later_version
-          later_object = later_version.reify rescue nil
+          later_object = Board.load_version(later_version)
           if later_object && !later_object.settings
             later_object.load_secure_object rescue nil
           end

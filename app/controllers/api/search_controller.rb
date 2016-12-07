@@ -1,6 +1,6 @@
 require 'mime/types'
 class Api::SearchController < ApplicationController
-  before_filter :require_api_token, :except => [:audio]
+  before_action :require_api_token, :except => [:audio]
   def symbols
     res = Typhoeus.get("https://www.opensymbols.org/api/v1/symbols/search?q=#{CGI.escape(params['q'])}", :ssl_verifypeer => false)
     results = JSON.parse(res.body)

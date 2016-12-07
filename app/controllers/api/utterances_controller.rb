@@ -1,5 +1,5 @@
 class Api::UtterancesController < ApplicationController
-  before_filter :require_api_token, :except => [:show]
+  before_action :require_api_token, :except => [:show]
   
   def show
     utterance = Utterance.find_by_global_id(params['id'])

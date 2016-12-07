@@ -10,7 +10,7 @@ class BoardButtonImage < ActiveRecord::Base
   def self.disconnect(board_id, image_refs)
     return if image_refs.blank?
     images = ButtonImage.find_all_by_global_id(image_refs.map{|i| i[:id] })
-    BoardButtonImage.delete_all(:board_id => board_id, :button_image_id => images.map(&:id))
+    BoardButtonImage.where(:board_id => board_id, :button_image_id => images.map(&:id)).delete_all
   end
   
   def self.connect(board_id, image_refs, options={})

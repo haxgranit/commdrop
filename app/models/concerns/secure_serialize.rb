@@ -13,7 +13,12 @@ module SecureSerialize
   def load_secure_object
     @secure_object_json = nil.to_json
     if self.id
-      @secure_object = SecureJson.load(read_attribute(self.class.secure_column))
+      attr = read_attribute(self.class.secure_column)
+      if attr && attr.match(/\s*^{/)
+        @secure_object = JSON.parse(attr)
+      else
+        @secure_object = SecureJson.load(attr)
+      end
       @secure_object_json = @secure_object.to_json
     end
     true
@@ -54,20 +59,21 @@ module SecureSerialize
       cattr_accessor :secure_column
       cattr_accessor :more_before_saves
       self.secure_column = column
-      alias_method :real_reload, :reload
-      define_method(:reload) do |*args|
-        res = real_reload(*args)
-        load_secure_object
-        res
-      end
-      alias_method :real_set, '[]='
-      define_method('[]=') do |*args|
-        if args[0] == column
-          send("#{column}=", args[1])
-        else
-          real_set(*args)
-        end
-      end
+      prepend SecureSerializeHelpers
+#       alias_method :real_reload, :reload
+#       define_method(:reload) do |*args|
+#         res = real_reload(*args)
+#         load_secure_object
+#         res
+#       end
+#       alias_method :real_set, '[]='
+#       define_method('[]=') do |*args|
+#         if args[0] == column
+#           send("#{column}=", args[1])
+#         else
+#           real_set(*args)
+#         end
+#       end
       before_save :persist_secure_object
       define_singleton_method(:before_save) do |*args|
         raise "only simple before_save calls after secure_serialize: #{args.to_json}" unless args.length == 1 && args[0].is_a?(Symbol)
@@ -82,5 +88,62 @@ module SecureSerialize
       end
       after_initialize :load_secure_object
     end
+    
+    def load_version(v)
+      model = v.item
+      attrs = v.object_deserialized
+      return nil unless attrs
+      if !model
+        model = self.find_by(:id => v.item_id)
+        model ||= self.new
+        if model
+          (model.attribute_names - attrs.keys).each { |k| attrs[k] = nil }
+        end
+      end
+      attrs.each do |key, val|
+        model.send("#{key}=", val)
+      end
+      model
+    end
+  end
+  
+  module SecureSerializeHelpers
+    def reload(*args)
+      res = super
+      load_secure_object
+      res
+    end
+    
+    def []=(*args)
+      if args[0].to_s == self.class.secure_column
+        send("#{self.class.secure_column}=", args[1])
+      else
+        super
+      end
+    end
+    
+#     def read_attribute(*args)
+#       if args[1] == 'force'
+#         super(args[0])
+#       else
+#         if args[0].to_s == self.class.secure_column
+#           @secure_object
+#         else
+#           super
+#         end
+#       end
+#     end
+#     
+#     def write_attribute(*args)
+#       if args[2] == 'force'
+#         super(args[0], args[1])
+#       else
+#         if args[0].to_s == self.class.secure_column
+#           send("#{self.class.secure_column}=", args[1])
+#         else
+#           super
+#         end
+#       end
+#     end
   end
 end

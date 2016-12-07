@@ -66,7 +66,7 @@ describe('Board', function() {
       expect(copy.then).toNotEqual(undefined);
       waitsFor(function() { return record; });
       runs(function() {
-        expect(record.get('key')).toEqual('asdf');
+        expect(record.get('key')).toEqual('cookie');
         expect(record.get('name')).toEqual('cool stuff');
       });
     });
@@ -346,9 +346,10 @@ describe('Board', function() {
       board.find_content_locally().then(function() {
         resolved = true;
       });
+      expect(board.get('fetch_promise')).not.toEqual(undefined);
       waitsFor(function() { return resolved; });
       runs(function() {
-        expect(board.get('fetch_promise')).not.toEqual(undefined);
+        expect(board.get('fetch_promise')).toEqual(null);
         expect(call_args).toEqual([
           ['image', ['a']],
           ['sound', ['c', 'b']]
@@ -367,10 +368,10 @@ describe('Board', function() {
       var call_args = [];
       stub(persistence, 'push_records', function(type, ids) {
         if(type == 'image') {
-          CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/pic.png'});
+          CoughDrop.store.push({data: {type: 'image', id: 'a', attributes: {id: 'a', url: 'http://www.example.com/pic.png'}}});
         } else if(type == 'sound') {
-          CoughDrop.store.push('sound', {id: 'b', url: 'http://www.example.com/sound.mp3'});
-          CoughDrop.store.push('sound', {id: 'c', url: 'http://www.example.com/sound2.mp3'});
+          CoughDrop.store.push({data: {type: 'sound', id: 'b', attributes: {id: 'b', url: 'http://www.example.com/sound.mp3'}}});
+          CoughDrop.store.push({data: {type: 'sound', id: 'c', attributes: {id: 'c', url: 'http://www.example.com/sound2.mp3'}}});
         }
         call_args.push([type, ids]);
         return Ember.RSVP.resolve();
@@ -380,6 +381,8 @@ describe('Board', function() {
       board.find_content_locally().then(function() {
         resolved = true;
       });
+      expect(board.get('fetch_promise')).not.toEqual(undefined);
+
       var find_called = false;
       stub(CoughDrop.store, 'findRecord', function(a1, a2, a3) {
         find_called = true;
@@ -388,7 +391,7 @@ describe('Board', function() {
 
       waitsFor(function() { return resolved; });
       runs(function() {
-        expect(board.get('fetch_promise')).not.toEqual(undefined);
+        expect(board.get('fetch_promise')).toEqual(undefined);
         expect(call_args).toEqual([
           ['image', ['a']],
           ['sound', ['c', 'b']]

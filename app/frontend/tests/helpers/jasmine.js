@@ -1,6 +1,7 @@
 /*jshint -W079 */
-import { test } from 'ember-qunit';
+import { test, moduleFor } from 'ember-qunit';
 import { async } from 'qunit';
+import testHelpers from 'ember-test-helpers';
 import Ember from 'ember';
 
 var names = [];
@@ -11,6 +12,7 @@ var current_test_id = 0;
 var current_afters = [];
 var waiting = {};
 
+var assert = null;
 function test_wrap(name, instance, befores, afters, lookup) {
   var pre = [];
   var post = [];
@@ -25,14 +27,18 @@ function test_wrap(name, instance, befores, afters, lookup) {
     });
   });
   current_afters = post;
-  test(name, function(assert) {
+  QUnit.test(name, function(current_assert) {
+    assert = current_assert;
     Ember.run(function() {
       pre.forEach(function(callback) {
         callback();
       });
 
       var this_arg = window;
-      if(lookup) { this_arg = window.Frontend.__container__.lookup(lookup); }
+
+      if(lookup) {
+        this_arg = new testHelpers.TestModule(lookup, name, []);
+      }
 
       current_test_id++;
       instance.call(this_arg);
@@ -56,7 +62,7 @@ var describe = function(name, lookup, callback) {
     if(names.length === 0) { container_lookup = lookup; }
   }
   if(names.length === 0) {
-    module(name);
+    QUnit.module(name);
   }
   names.push(name);
   all_tests.push([]);
@@ -82,35 +88,39 @@ var it = function(rule, testing) {
 var expect = function(data) {
   var expectation = {};
   expectation.toEqual = function(arg) {
-    if((typeof data === 'object') || (typeof arg === 'object')) {
-      deepEqual(data, arg);
+    if((data === undefined && arg === null) || (data === null && arg === undefined)) {
+      assert.ok(true, 'both empty values');
+    } else if((typeof data === 'object') || (typeof arg === 'object')) {
+      assert.deepEqual(data, arg);
     } else {
-      equal(data, arg);
+      assert.equal(data, arg);
     }
   };
   expectation.toBeFalsy = function() {
     var falsy = !!data;
-    ok(falsy === false, data + ' should be falsey');
+    assert.ok(falsy === false, data + ' should be falsey');
   };
 
   expectation.toNotEqual = function(arg) {
-    if((typeof data === 'object') || (typeof arg === 'object')) {
-      QUnit.notDeepEqual(data, arg);
+    if((data === undefined && arg === null) || (data === null && arg === undefined)) {
+      assert.ok(false, data + " should not equal " + arg);
+    } else if((typeof data === 'object') || (typeof arg === 'object')) {
+      assert.notDeepEqual(data, arg);
     } else {
-      notEqual(data, arg);
+      assert.notEqual(data, arg);
     }
   };
   expectation.toBeGreaterThan = function(arg) {
-    ok(data > arg, data + ' should be greater than ' + arg);
+    assert.ok(data > arg, data + ' should be greater than ' + arg);
   };
   expectation.toBeLessThan = function(arg) {
-    ok(data < arg, data + ' should be less than ' + arg);
+    assert.ok(data < arg, data + ' should be less than ' + arg);
   };
   expectation.toMatch = function(regex) {
     if(typeof regex == 'string') {
       regex = new RegExp(regex);
     }
-    ok(data && data.match(regex), data + ' should match ' + regex.toString());
+    assert.ok(data && data.match(regex), data + ' should match ' + regex.toString());
   };
   expectation.toThrow = function(message) {
     var error = null;
@@ -121,12 +131,12 @@ var expect = function(data) {
     }
     if(error) {
       if(message) {
-        equal(message, error.message || error);
+        assert.equal(message, error.message || error);
       } else {
-        ok(true);
+        assert.ok(true);
       }
     } else {
-      ok(false, 'expected error, none was raised');
+      assert.ok(false, 'expected error, none was raised');
     }
   };
   expectation.not = {
@@ -139,9 +149,9 @@ var expect = function(data) {
         error = e;
       }
       if(error) {
-        ok(false, 'expected no error, got ' + error.message);
+        assert.ok(false, 'expected no error, got ' + error.message);
       } else {
-        ok(true);
+        assert.ok(true);
       }
     }
   };
@@ -153,28 +163,29 @@ var lastWaitsFor = null;
 var waitsFor = function(callback) {
   lastWaitsFor = callback;
 };
+
 var runs = function(callback) {
-  callback = callback || function() { ok(true); };
+  callback = callback || function() { assert.ok(true); };
   var id = current_test_id;
   var wait = lastWaitsFor;
   var attempts = 0;
   waiting[current_test_id] = waiting[current_test_id] || 0;
   waiting[current_test_id]++;
-  QUnit.stop(); // TODO: this seems like it should be QUnit.async()
+  var async_done = assert.async();
   var done = function() {
     if(id == current_test_id) {
       waiting[current_test_id]--;
-      QUnit.start();
+      async_done();
     }
   };
   var try_again = function() {
     if(wait()) {
-      done();
       Ember.run(callback);
+      done();
     } else if(id == current_test_id) {
       attempts++;
       if(attempts >= 55) {
-        ok(false, 'condition failed for more than 5000ms');
+        assert.ok(false, 'condition failed for more than 5000ms');
         done();
       } else {
         var delay = 1;
@@ -197,7 +208,7 @@ var afterEach = function(callback) {
 var stub = function(object, method, replacement) {
   stub.stubs = stub.stubs || [];
   var stash = object[method];
-  object[method] = replacement;
+  Ember.set(object, method, replacement);
   //console.log(stubs);
   stub.stubs.push([object, method, stash]);
 };

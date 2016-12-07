@@ -375,7 +375,7 @@ CoughDrop.Board = DS.Model.extend({
     // reload or fetch them remotely to get the latest, updated version,
     // which will include the "my copy" information.
     CoughDrop.store.peekAll('board').content.mapBy('record').forEach(function(brd) {
-      if(brd && affected_board_ids && affected_board_ids.indexOf(brd.record.get('id')) != -1) {
+      if(brd && affected_board_ids && affected_board_ids.indexOf(brd.get('id')) != -1) {
         if(!brd.get('isLoading') && !brd.get('isNew')) {
           brd.reload();
         }

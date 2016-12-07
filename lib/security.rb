@@ -77,7 +77,7 @@ module Security
     if !self.encryption_key || self.encryption_key.length < 24
       raise "SECURE_ENCRYPTION_KEY env variable should be at least 24 characters"
     end
-    return if !ActiveRecord::Base.connection.table_exists?('settings')
+    return if !ActiveRecord::Base.connection.data_source_exists?('settings')
     config_hash = Digest::SHA1.hexdigest(self.encryption_key)
     stored_hash = Setting.get('encryption_hash')
     return if stored_hash == config_hash

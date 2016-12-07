@@ -1688,7 +1688,7 @@ var boardGrabber = Ember.Object.extend({
       // match by key and then by query string. It'd be better if it were only
       // one lookup..
       var keyed_find_args = Ember.$.extend({}, find_args, {key: key});
-      keyed_find = CoughDrop.store.query('board', keyed_find_args);
+      keyed_find = CoughDrop.store.query('board', keyed_find_args).then(null, function() { return Ember.RSVP.resolve([]); });
     }
     keyed_find.then(function(data) {
       var board = data.find(function() { return true; });

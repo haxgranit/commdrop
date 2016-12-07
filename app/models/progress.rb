@@ -111,7 +111,7 @@ class Progress < ActiveRecord::Base
   end
  
   def self.clear_old_progresses
-    Progress.delete_all(["finished_at IS NOT NULL AND finished_at < ?", 7.days.ago])
+    Progress.where(["finished_at IS NOT NULL AND finished_at < ?", 7.days.ago]).delete_all
   end
   
   def self.perform_action(progress_id)

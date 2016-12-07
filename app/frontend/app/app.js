@@ -398,7 +398,9 @@ CoughDrop.YT = {
     Ember.run.later(CoughDrop.YT.poll, 100);
   }
 };
-Ember.run.later(CoughDrop.YT.poll, 500);
+if(!Ember.testing) {
+  Ember.run.later(CoughDrop.YT.poll, 500);
+}
 
 CoughDrop.Visualizations = {
   wait: function(name, callback) {

@@ -1,5 +1,5 @@
 class Api::IntegrationsController < ApplicationController
-  before_filter :require_api_token
+  before_action :require_api_token
   
   def index
     user = User.find_by_path(params['user_id'])

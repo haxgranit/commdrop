@@ -3,13 +3,13 @@ require 'spec_helper'
 describe Api::UtterancesController, :type => :controller do
   describe "POST create" do
     it "should require api token" do
-      post :create, :utterance => {}
+      post :create, params: {:utterance => {}}
       assert_missing_token
     end
     
     it "should generate a valid utterance" do
       token_user
-      post :create, :utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}
+      post :create, params: {:utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}}
       expect(response).to be_success
       u = Utterance.last
       expect(u).not_to eq(nil)
@@ -19,7 +19,7 @@ describe Api::UtterancesController, :type => :controller do
     
     it "should return a json response" do
       token_user
-      post :create, :utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}
+      post :create, params: {:utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['utterance']['id']).not_to eq(nil)
@@ -32,7 +32,7 @@ describe Api::UtterancesController, :type => :controller do
     it "should error gracefully on utterance create fail" do
       token_user
       expect_any_instance_of(Utterance).to receive(:process_params){|u| u.add_processing_error("bacon") }.and_return(false)
-      post :create, :utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}
+      post :create, params: {:utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq("utterance creation failed")
@@ -42,16 +42,16 @@ describe Api::UtterancesController, :type => :controller do
   
   describe "PUT update" do
     it "should require api token" do
-      put :update, :id => '1234', :utterance => {}
+      put :update, params: {:id => '1234', :utterance => {}}
       assert_missing_token
     end
     
     it "should update an utterance" do
       token_user
       utterance = Utterance.create(:user => @user)
-      put :update, :id => utterance.global_id, :utterance => {:show_user => true, :image_url => "http://www.pic.com/pic.png"}
+      put :update, params: {:id => utterance.global_id, :utterance => {:show_user => true, :image_url => "http://www.pic.com/pic.png"}}
       expect(response).to be_success
-      u = Utterance.last
+      u = Utterance.last.reload
       expect(u).not_to eq(nil)
       expect(u.data['show_user']).to eq(true)
       expect(u.data['image_url']).to eq("http://www.pic.com/pic.png")
@@ -60,7 +60,7 @@ describe Api::UtterancesController, :type => :controller do
     it "should return a json response" do
       token_user
       utterance = Utterance.create(:user => @user)
-      put :update, :id => utterance.global_id, :utterance => {:show_user => true, :sentence => "ok"}
+      put :update, params: {:id => utterance.global_id, :utterance => {:show_user => true, :sentence => "ok"}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['utterance']['id']).not_to eq(nil)
@@ -73,12 +73,29 @@ describe Api::UtterancesController, :type => :controller do
       expect(json['utterance']['user']['user_name']).to eq(@user.user_name)
       expect(json['utterance']['image_url']).not_to eq(nil)
     end
+
+    it "should return a json response" do
+      token_user
+      utterance = Utterance.create(:user => @user)
+      put :update, params: {:id => utterance.global_id, :utterance => {:show_user => false, :sentence => "ok"}}
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['utterance']['id']).not_to eq(nil)
+      expect(json['utterance']['link']).not_to eq(nil)
+      expect(json['utterance']['button_list']).to eq(nil)
+      expect(json['utterance']['sentence']).to eq("ok")
+      expect(json['utterance']['show_user']).to eq(false)
+      expect(json['utterance']['permissions']).to eq({'view' => true, 'edit' => true, 'user_id' => @user.global_id})
+      expect(json['utterance']['user']['id']).to eq(@user.global_id)
+      expect(json['utterance']['user']['user_name']).to eq(@user.user_name)
+      expect(json['utterance']['image_url']).not_to eq(nil)
+    end
     
     it "should error gracefully on utterance create fail" do
       token_user
       utterance = Utterance.create(:user => @user)
       expect_any_instance_of(Utterance).to receive(:process_params){|u| u.add_processing_error("bacon") }.and_return(false)
-      put :update, :id => utterance.global_id, :utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}
+      put :update, params: {:id => utterance.global_id, :utterance => {:button_list => [{label: "ok"}], :sentence => "ok"}}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq("utterance update failed")
@@ -88,13 +105,13 @@ describe Api::UtterancesController, :type => :controller do
   
   describe "POST share" do
     it "should require api token" do
-      post :share, :utterance_id => 'asdf'
+      post :share, params: {:utterance_id => 'asdf'}
       assert_missing_token
     end
     
     it "should error if not found" do
       token_user
-      post :share, :utterance_id => 'asdf'
+      post :share, params: {:utterance_id => 'asdf'}
       assert_not_found
     end
     
@@ -102,14 +119,14 @@ describe Api::UtterancesController, :type => :controller do
       token_user
       u = User.create
       utterance = Utterance.create(:user => u)
-      post :share, :utterance_id => utterance.global_id
+      post :share, params: {:utterance_id => utterance.global_id}
       assert_unauthorized
     end
     
     it "should return success on success" do
       token_user
       utterance = Utterance.create(:user => @user)
-      post :share, :utterance_id => utterance.global_id, :email => 'bob@example.com'
+      post :share, params: {:utterance_id => utterance.global_id, :email => 'bob@example.com'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['shared']).to eq(true)
@@ -120,7 +137,7 @@ describe Api::UtterancesController, :type => :controller do
       sup = User.create
       User.link_supervisor_to_user(sup, @user)
       utterance = Utterance.create(:user => @user, :data => {'sentence' => 'bacon free piglet'})
-      post :share, :utterance_id => utterance.global_id, :supervisor_id => sup.global_id
+      post :share, params: {:utterance_id => utterance.global_id, :supervisor_id => sup.global_id}
       json = JSON.parse(response.body)
       expect(json['shared']).to eq(true)
       Worker.process_queues
@@ -135,7 +152,7 @@ describe Api::UtterancesController, :type => :controller do
     it "should return error on error" do
       token_user
       utterance = Utterance.create(:user => @user)
-      post :share, :utterance_id => utterance.global_id, :supervisor_id => 1234
+      post :share, params: {:utterance_id => utterance.global_id, :supervisor_id => 1234}
       assert_error('utterance share failed')
     end
   end
@@ -143,18 +160,18 @@ describe Api::UtterancesController, :type => :controller do
   describe "GET show" do
     it "should not require api token" do
       u = Utterance.create(:data => {:button_list => [{label: 'ok'}], :sentence => 'ok'})
-      get :show, :id => u.global_id
+      get :show, params: {:id => u.global_id}
       expect(response).to be_success
     end
     
     it "should error gracefully if not found" do
-      get :show, :id => "abc"
+      get :show, params: {:id => "abc"}
       assert_not_found
     end
     
     it "should return a json response" do
       u = Utterance.create(:data => {:button_list => [{label: 'ok'}], :sentence => 'ok'})
-      get :show, :id => u.global_id
+      get :show, params: {:id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['utterance']['id']).not_to eq(nil)

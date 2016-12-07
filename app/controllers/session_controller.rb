@@ -1,5 +1,5 @@
 class SessionController < ApplicationController
-  before_filter :require_api_token, :only => [:oauth_logout]
+  before_action :require_api_token, :only => [:oauth_logout]
   
   def oauth
     error = nil

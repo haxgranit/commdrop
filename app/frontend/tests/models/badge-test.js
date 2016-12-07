@@ -23,13 +23,13 @@ describe('Badge', function() {
   describe('progress_style', function() {
     it('should return correct values', function() {
       var b = CoughDrop.store.createRecord('badge');
-      expect(b.get('progress_style')).toEqual('width: 0%');
+      expect(b.get('progress_style').string).toEqual('width: 0%');
       b.set('progress', 0.5);
-      expect(b.get('progress_style')).toEqual('width: 50%');
+      expect(b.get('progress_style').string).toEqual('width: 50%');
       b.set('progress', -1);
-      expect(b.get('progress_style')).toEqual('width: 0%');
+      expect(b.get('progress_style').string).toEqual('width: 0%');
       b.set('progress', 1.5);
-      expect(b.get('progress_style')).toEqual('width: 100%');
+      expect(b.get('progress_style').string).toEqual('width: 100%');
     });
   });
 

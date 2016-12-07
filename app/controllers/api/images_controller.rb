@@ -1,6 +1,6 @@
 class Api::ImagesController < ApplicationController
   include RemoteUploader
-  before_filter :require_api_token, :except => [:upload_success]
+  before_action :require_api_token, :except => [:upload_success]
   
   def create
     # TODO: search for an existing record with the exact same settings first

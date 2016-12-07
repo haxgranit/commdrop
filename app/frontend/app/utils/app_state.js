@@ -539,10 +539,10 @@ var app_state = Ember.Object.extend({
             }
           }
         }, function() {
-          modal.danger(i18n.t('user_retrive_failed', "Failed to retrieve user for Speak Mode"));
+          modal.error(i18n.t('user_retrive_failed', "Failed to retrieve user for Speak Mode"));
         });
       }, function() {
-        modal.danger(i18n.t('user_retrive_failed', "Failed to retrieve user for Speak Mode"));
+        modal.error(i18n.t('user_retrive_failed', "Failed to retrieve user for Speak Mode"));
       });
     }
   },

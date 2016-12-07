@@ -4,18 +4,18 @@ describe Api::UsersController, :type => :controller do
   describe "show" do
     it "should not require api token" do
       u = User.create
-      get :show, :id => u.global_id
+      get :show, params: {:id => u.global_id}
       expect(response).to be_success
     end
     
     it "should require view permissions" do
-      get :show, :id => "asdf"
+      get :show, params: {:id => "asdf"}
       assert_unauthorized
     end
     
     it "should return a valid object" do
       u = User.create
-      get :show, :id => u.global_id
+      get :show, params: {:id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['user']['id']).to eq(u.global_id)
@@ -49,7 +49,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
-      get :index, :q => 'bo'
+      get :index, params: {:q => 'bo'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -66,7 +66,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
-      get :index, :q => 'bob@example.com'
+      get :index, params: {:q => 'bob@example.com'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -74,7 +74,7 @@ describe Api::UsersController, :type => :controller do
       expect(json['user'][0]['id']).to eq(u3.global_id)
       expect(json['user'][1]['id']).to eq(u2.global_id)
 
-      get :index, :q => 'bob@'
+      get :index, params: {:q => 'bob@'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -88,7 +88,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
-      get :index, :q => 'bob'
+      get :index, params: {:q => 'bob'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -105,7 +105,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
-      get :index, :q => 'betsy'
+      get :index, params: {:q => 'betsy'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -120,7 +120,7 @@ describe Api::UsersController, :type => :controller do
   
   describe "update" do
     it "should not require api token" do
-      post :update, :id => 123
+      post :update, params: {:id => 123}
       expect(response).not_to be_success
       expect(response.body).not_to match(/Access token required/)
     end
@@ -128,7 +128,7 @@ describe Api::UsersController, :type => :controller do
     it "should error if neither reset token nor authorized api token" do
       u = User.create
       token_user
-      post :update, {:id => u.global_id, :user => {'name' => 'bob'}}
+      post :update, params: {:id => u.global_id, :user => {'name' => 'bob'}}
       assert_unauthorized
     end
     
@@ -138,14 +138,14 @@ describe Api::UsersController, :type => :controller do
       code = u.password_reset_code
       token = u.reset_token_for_code(code)
       expect(u.reload.valid_reset_token?(token)).to eq(true)
-      post :update, {:id => u.global_id, :reset_token => token, :user => {'password' => '12345678'}}
+      post :update, params: {:id => u.global_id, :reset_token => token, :user => {'password' => '12345678'}}
       expect(response).to be_success
       expect(u.reload.valid_password?('12345678')).to eq(true)
 
-      post :update, {:id => u.global_id, :reset_token => "abcdefg", :user => {'password' => '98765432'}}
+      post :update, params: {:id => u.global_id, :reset_token => "abcdefg", :user => {'password' => '98765432'}}
       assert_unauthorized
 
-      post :update, {:id => u.global_id, :reset_token => token, :user => {'password' => '98765432'}}
+      post :update, params: {:id => u.global_id, :reset_token => token, :user => {'password' => '98765432'}}
       assert_unauthorized
     end
     
@@ -156,7 +156,7 @@ describe Api::UsersController, :type => :controller do
       o.add_manager(@user.user_name, true)
       o.add_user(u.user_name, false)
       
-      post :update, {:id => u.global_id, :reset_token => 'admin', :user => {'name' => 'fred', 'password' => '2345654'}}
+      post :update, params: {:id => u.global_id, :reset_token => 'admin', :user => {'name' => 'fred', 'password' => '2345654'}}
       expect(response).to be_success
       expect(u.reload.valid_password?('2345654')).to eq(true)
       expect(u.settings['name']).to eq('No name')
@@ -169,7 +169,7 @@ describe Api::UsersController, :type => :controller do
       o.add_manager(@user.user_name, false)
       o.add_user(u.user_name, false)
       
-      post :update, {:id => u.global_id, :reset_token => 'admin', :user => {'name' => 'fred', 'password' => '2345654'}}
+      post :update, params: {:id => u.global_id, :reset_token => 'admin', :user => {'name' => 'fred', 'password' => '2345654'}}
       assert_unauthorized
     end
     
@@ -181,20 +181,20 @@ describe Api::UsersController, :type => :controller do
       o.add_manager(@user.user_name, true)
       o2.add_user(u.user_name, false)
       
-      post :update, {:id => u.global_id, :reset_token => 'admin', :user => {'name' => 'fred', 'password' => '2345654'}}
+      post :update, params: {:id => u.global_id, :reset_token => 'admin', :user => {'name' => 'fred', 'password' => '2345654'}}
       assert_unauthorized
     end
     
     it "should update parameters if allowed" do
       token_user
-      post :update, {:id => @user.global_id, :user => {:name => 'bob'}}
+      post :update, params: {:id => @user.global_id, :user => {:name => 'bob'}}
       expect(response).to be_success
       expect(@user.reload.settings['name']).to eq('bob')
     end
     
     it "should update device-specific settings if for the current user" do
       token_user
-      post :update, {:id => @user.global_id, :user => {:name => 'bob', :preferences => {:device => {:a => 1}}}}
+      post :update, params: {:id => @user.global_id, :user => {:name => 'bob', :preferences => {:device => {:a => 1}}}}
       expect(response).to be_success
       @user.reload
       expect(@user.settings['name']).to eq('bob')
@@ -206,7 +206,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       @user2 = User.create(:settings => {'supervisors' => [{'user_id' => @user.global_id, 'edit_permission' => true}]})
       expect(@user.supervisor_for?(@user2)).to eq(true)
-      post :update, {:id => @user2.global_id, :user => {:name => 'bob', :preferences => {:device => {:a => 1}}}}
+      post :update, params: {:id => @user2.global_id, :user => {:name => 'bob', :preferences => {:device => {:a => 1}}}}
       expect(response).to be_success
       @user2.reload
       expect(@user2.settings['name']).to eq('bob')
@@ -218,7 +218,7 @@ describe Api::UsersController, :type => :controller do
     it "should fail gracefully on user update fail" do
       token_user
       expect_any_instance_of(User).to receive(:process_params){|u| u.add_processing_error("bacon") }.and_return(false)
-      post :update, {:id => @user.global_id, :user => {:name => 'bob', :preferences => {:device => {:a => 1}}}}
+      post :update, params: {:id => @user.global_id, :user => {:name => 'bob', :preferences => {:device => {:a => 1}}}}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq("update failed")
@@ -230,7 +230,7 @@ describe Api::UsersController, :type => :controller do
       u2 = User.create
       b = Board.create(:user => u2)
       User.link_supervisor_to_user(@user, u2, nil, true)
-      put :update, {:id => u2.global_id, :user => {:preferences => {:home_board => {:id => b.global_id, :key => b.key}}}}
+      put :update, params: {:id => u2.global_id, :user => {:preferences => {:home_board => {:id => b.global_id, :key => b.key}}}}
       expect(response).to be_success
       expect(u2.reload.settings['preferences']['home_board']['id']).to eq(b.global_id)
     end
@@ -240,7 +240,7 @@ describe Api::UsersController, :type => :controller do
       u2 = User.create
       b = Board.create(:user => @user)
       User.link_supervisor_to_user(@user, u2, nil, true)
-      put :update, {:id => u2.global_id, :user => {:preferences => {:home_board => {:id => b.global_id, :key => b.key}}}}
+      put :update, params: {:id => u2.global_id, :user => {:preferences => {:home_board => {:id => b.global_id, :key => b.key}}}}
       expect(response).to be_success
       expect(u2.reload.settings['preferences']['home_board']['id']).to eq(b.global_id)
       expect(b.reload.shared_with?(u2)).to eq(true)
@@ -256,7 +256,7 @@ describe Api::UsersController, :type => :controller do
       expect(b.allows?(u3, 'view')).to eq(true)
       
       User.link_supervisor_to_user(@user, u2, nil, true)
-      put :update, {:id => u2.global_id, :user => {:preferences => {:home_board => {:id => b.global_id, :key => b.key}}}}
+      put :update, params: {:id => u2.global_id, :user => {:preferences => {:home_board => {:id => b.global_id, :key => b.key}}}}
       expect(response).to be_success
       expect(u2.reload.settings['preferences']['home_board']).to eq(nil)
       expect(b.reload.shared_with?(u2)).to eq(false)
@@ -265,27 +265,27 @@ describe Api::UsersController, :type => :controller do
   
   describe "create" do
     it "should not require api token" do
-      post :create, {:user => {'name' => 'fred'}}
+      post :create, params: {:user => {'name' => 'fred'}}
       expect(response).to be_success
     end
     
     it "should schedule delivery of a welcome message" do
       expect(UserMailer).to receive(:schedule_delivery).exactly(2).times
-      post :create, {:user => {'name' => 'fred'}}
+      post :create, params: {:user => {'name' => 'fred'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['user']['name']).to eq('fred')
     end
     
     it "should include access token information" do
-      post :create, {:user => {'name' => 'fred'}}
+      post :create, params: {:user => {'name' => 'fred'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['meta']['access_token']).not_to be_nil
     end
     
     it "should have correct defaults" do
-      post :create, {:user => {'name' => 'fred'}}
+      post :create, params: {:user => {'name' => 'fred'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       user = json['user']
@@ -298,7 +298,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should error gracefully on user create fail" do
       expect_any_instance_of(User).to receive(:process_params){|u| u.add_processing_error("bacon") }.and_return(false)
-      post :create, {:user => {'name' => 'fred'}}
+      post :create, params: {:user => {'name' => 'fred'}}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq("user creation failed")
@@ -310,7 +310,7 @@ describe Api::UsersController, :type => :controller do
   
   describe "replace_board" do
     it "should require api token" do
-      post :replace_board, :user_id => 1, :old_board_id => 1, :new_board_id => 2
+      post :replace_board, params: {:user_id => 1, :old_board_id => 1, :new_board_id => 2}
       assert_missing_token
     end
     
@@ -318,7 +318,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       b1 = Board.create(:user => @user)
       b2 = Board.create(:user => @user)
-      post :replace_board, :user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id
+      post :replace_board, params: {:user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']['id']).not_to eq(nil)
@@ -329,31 +329,31 @@ describe Api::UsersController, :type => :controller do
       token_user
       b1 = Board.create(:user => u)
       b2 = Board.create(:user => u)
-      post :replace_board, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :replace_board, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       assert_unauthorized
       
       b1.user = @user
       b1.save
-      post :replace_board, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :replace_board, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       assert_unauthorized
 
       b2.user = @user
       b2.save
-      post :replace_board, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :replace_board, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       assert_unauthorized
       
-      post :replace_board, :user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :replace_board, params: {:user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       expect(response).to be_success
       
       User.link_supervisor_to_user(@user, u, nil, true)
-      post :replace_board, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :replace_board, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       expect(response).to be_success
     end
   end
   
   describe "copy_board_links" do
     it "should require api token" do
-      post :copy_board_links, :user_id => 1, :old_board_id => 1, :new_board_id => 2
+      post :copy_board_links, params: {:user_id => 1, :old_board_id => 1, :new_board_id => 2}
       assert_missing_token
     end
     
@@ -361,7 +361,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       b1 = Board.create(:user => @user)
       b2 = Board.create(:user => @user)
-      post :copy_board_links, :user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id
+      post :copy_board_links, params: {:user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']['id']).not_to eq(nil)
@@ -372,38 +372,38 @@ describe Api::UsersController, :type => :controller do
       token_user
       b1 = Board.create(:user => u)
       b2 = Board.create(:user => u)
-      post :copy_board_links, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :copy_board_links, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       assert_unauthorized
       
       b1.user = @user
       b1.save
-      post :copy_board_links, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :copy_board_links, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       assert_unauthorized
 
       b2.user = @user
       b2.save
-      post :copy_board_links, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :copy_board_links, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       assert_unauthorized
       
-      post :copy_board_links, :user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :copy_board_links, params: {:user_id => @user.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       expect(response).to be_success
       
       User.link_supervisor_to_user(@user, u, nil, true)
-      post :copy_board_links, :user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true
+      post :copy_board_links, params: {:user_id => u.global_id, :old_board_id => b1.global_id, :new_board_id => b2.global_id, :access_token => @device.token, :check_token => true}
       expect(response).to be_success
     end
   end
   
   describe "hide_device" do
     it "should require api token" do
-      delete :hide_device, :user_id => 1, :device_id => 1
+      delete :hide_device, params: {:user_id => 1, :device_id => 1}
       assert_missing_token
     end
     
     it "should require permission for the user" do
       token_user
       u = User.create
-      delete :hide_device, :user_id => u.user_name, :device_id => 1
+      delete :hide_device, params: {:user_id => u.user_name, :device_id => 1}
       assert_unauthorized
     end
     
@@ -411,7 +411,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       u2 = User.create
       d = Device.create(:user => u2)
-      delete :hide_device, :user_id => @user.user_name, :device_id => d.global_id
+      delete :hide_device, params: {:user_id => @user.user_name, :device_id => d.global_id}
       expect(response.success?).to eq(false)
       expect(JSON.parse(response.body)['error']).to eq('matching device not found')
     end
@@ -419,7 +419,7 @@ describe Api::UsersController, :type => :controller do
     it "should successfully hide the device" do
       token_user
       d = Device.create(:user => @user)
-      delete :hide_device, :user_id => @user.user_name, :device_id => d.global_id
+      delete :hide_device, params: {:user_id => @user.user_name, :device_id => d.global_id}
       expect(response.success?).to eq(true)
       expect(JSON.parse(response.body)['hidden']).to eq(true)
     end
@@ -427,14 +427,14 @@ describe Api::UsersController, :type => :controller do
   
   describe "rename_device" do
     it "should require api token" do
-      put :rename_device, :user_id => 1, :device_id => 1, :device => {:name => 'fred'}
+      put :rename_device, params: {:user_id => 1, :device_id => 1, :device => {:name => 'fred'}}
       assert_missing_token
     end
     
     it "should require permission for the user" do
       token_user
       u = User.create
-      put :rename_device, :user_id => u.user_name, :device_id => 1, :device => {:name => 'fred'}
+      put :rename_device, params: {:user_id => u.user_name, :device_id => 1, :device => {:name => 'fred'}}
       assert_unauthorized
     end
     
@@ -442,7 +442,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       u2 = User.create
       d = Device.create(:user => u2)
-      put :rename_device, :user_id => @user.user_name, :device_id => d.global_id, :device => {:name => 'fred'}
+      put :rename_device, params: {:user_id => @user.user_name, :device_id => d.global_id, :device => {:name => 'fred'}}
       expect(response.success?).to eq(false)
       expect(JSON.parse(response.body)['error']).to eq('matching device not found')
     end
@@ -450,7 +450,7 @@ describe Api::UsersController, :type => :controller do
     it "should successfully hide the device" do
       token_user
       d = Device.create(:user => @user)
-      put :rename_device, :user_id => @user.user_name, :device_id => d.global_id, :device => {:name => 'fred'}
+      put :rename_device, params: {:user_id => @user.user_name, :device_id => d.global_id, :device => {:name => 'fred'}}
       expect(response.success?).to eq(true)
       expect(JSON.parse(response.body)['name']).to eq('fred')
     end
@@ -458,27 +458,27 @@ describe Api::UsersController, :type => :controller do
   
   describe "confirm_registration" do
     it "should not require api token" do
-      post :confirm_registration, :user_id => 1, :code => 'asdf'
+      post :confirm_registration, params: {:user_id => 1, :code => 'asdf'}
       expect(response).to be_success
     end
     
     it "should not error on invalid parameters" do
-      post :confirm_registration, :user_id => 1, :code => 'asdf'
+      post :confirm_registration, params: {:user_id => 1, :code => 'asdf'}
       expect(response).to be_success
       expect(response.body).to eq({confirmed: false}.to_json)
     end
     
     it "should return whether registration was confirmed or not" do
       u = User.create
-      post :confirm_registration, :user_id => u.global_id, :code => u.registration_code
+      post :confirm_registration, params: {:user_id => u.global_id, :code => u.registration_code}
       expect(response).to be_success
       expect(response.body).to eq({confirmed: true}.to_json)
 
-      post :confirm_registration, :user_id => u.global_id, :code => u.registration_code
+      post :confirm_registration, params: {:user_id => u.global_id, :code => u.registration_code}
       expect(response).to be_success
       expect(response.body).to eq({confirmed: true}.to_json)
 
-      post :confirm_registration, :user_id => u.global_id, :code => "abc"
+      post :confirm_registration, params: {:user_id => u.global_id, :code => "abc"}
       expect(response).to be_success
       expect(response.body).to eq({confirmed: false}.to_json)
     end
@@ -487,7 +487,7 @@ describe Api::UsersController, :type => :controller do
   describe "forgot_password" do
     it "should not require api token" do
       u = User.create(:settings => {'email' => 'bob@example.com'})
-      post :forgot_password, :key => u.user_name
+      post :forgot_password, params: {:key => u.user_name}
       expect(response).to be_success
     end
     
@@ -496,7 +496,7 @@ describe Api::UsersController, :type => :controller do
       10.times{|i| u.generate_password_reset }
       u.save
       expect(UserMailer).not_to receive(:schedule_delivery)
-      post :forgot_password, :key => u.user_name
+      post :forgot_password, params: {:key => u.user_name}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['email_sent']).to eq(false)
@@ -505,7 +505,7 @@ describe Api::UsersController, :type => :controller do
     end
     
     it "should return message when no users found" do
-      post :forgot_password, :key => 'shoelace'
+      post :forgot_password, params: {:key => 'shoelace'}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['email_sent']).to eq(false)
@@ -517,12 +517,12 @@ describe Api::UsersController, :type => :controller do
     it "should schedule a message delivery when non-throttled user is found" do
       u = User.create(:settings => {'email' => 'bob@example.com'})
       expect(UserMailer).to receive(:schedule_delivery)
-      post :forgot_password, :key => u.user_name
+      post :forgot_password, params: {:key => u.user_name}
       expect(response).to be_success
     end
     
     it "should return a success message when no users found but an email address provided" do
-      post :forgot_password, :key => 'shoelace@example.com'
+      post :forgot_password, params: {:key => 'shoelace@example.com'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['email_sent']).to eq(true)
@@ -530,14 +530,14 @@ describe Api::UsersController, :type => :controller do
     
     it "should schedule a message delivery when no user found by an email address provided" do
       expect(UserMailer).to receive(:schedule_delivery).with(:login_no_user, 'shoelace@example.com')
-      post :forgot_password, :key => 'shoelace@example.com'
+      post :forgot_password, params: {:key => 'shoelace@example.com'}
       expect(response).to be_success
     end
 
     it "should not include disabled emails" do
       u = User.create(:settings => {'email' => 'bob@example.com', 'email_disabled' => true})
       expect(UserMailer).not_to receive(:schedule_delivery)
-      post :forgot_password, :key => u.user_name
+      post :forgot_password, params: {:key => u.user_name}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['email_sent']).to eq(false)
@@ -547,14 +547,14 @@ describe Api::UsersController, :type => :controller do
     
     it "should include possibly-multiple users for the given email address" do
       u = User.create(:settings => {'email' => 'bob@example.com'})
-      post :forgot_password, :key => u.user_name
+      post :forgot_password, params: {:key => u.user_name}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['email_sent']).to eq(true)
       expect(json['users']).to eq(1)
       
       u2 = User.create(:settings => {'email' => 'bob@example.com'})
-      post :forgot_password, :key => 'bob@example.com'
+      post :forgot_password, params: {:key => 'bob@example.com'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['email_sent']).to eq(true)
@@ -566,7 +566,7 @@ describe Api::UsersController, :type => :controller do
       10.times{|i| u.generate_password_reset }
       u.save
       expect(UserMailer).to receive(:schedule_delivery)
-      post :forgot_password, :key => 'bob@example.com'
+      post :forgot_password, params: {:key => 'bob@example.com'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['email_sent']).to eq(true)
@@ -577,7 +577,7 @@ describe Api::UsersController, :type => :controller do
 
   describe "password_reset" do
     it "should not require api token" do
-      post :password_reset, :user_id => 1, :code => 'abc'
+      post :password_reset, params: {:user_id => 1, :code => 'abc'}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['valid']).to eq(false)
@@ -586,7 +586,7 @@ describe Api::UsersController, :type => :controller do
     it "should throttle to prevent brute force attacks"
     
     it "should return whether the code is valid" do
-      post :password_reset, :user_id => 1, :code => 'abc'
+      post :password_reset, params: {:user_id => 1, :code => 'abc'}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['valid']).to eq(false)
@@ -595,7 +595,7 @@ describe Api::UsersController, :type => :controller do
     it "should return a reset token on valid code exchange" do
       u = User.create
       u.generate_password_reset
-      post :password_reset, :user_id => u.global_id, :code => u.password_reset_code
+      post :password_reset, params: {:user_id => u.global_id, :code => u.password_reset_code}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['valid']).to eq(true)
@@ -606,7 +606,7 @@ describe Api::UsersController, :type => :controller do
   
   describe "flush_logs" do
     it "should require api token" do
-      post :flush_logs, :user_id => 1
+      post :flush_logs, params: {:user_id => 1}
       assert_missing_token
     end
     
@@ -614,13 +614,13 @@ describe Api::UsersController, :type => :controller do
       token_user
       @user2 = User.create(:settings => {'supervisors' => [{'user_id' => @user.global_id, 'edit_permission' => true}]})
       expect(@user.supervisor_for?(@user2)).to eq(true)
-      post :flush_logs, :user_id => @user2.global_id
+      post :flush_logs, params: {:user_id => @user2.global_id}
       assert_unauthorized
     end
     
     it "should error if user_name is not provided correctly" do
       token_user
-      post :flush_logs, :user_id => @user.global_id
+      post :flush_logs, params: {:user_id => @user.global_id}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['flushed']).to eq("false")
@@ -628,7 +628,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should return a progress object" do
       token_user
-      post :flush_logs, :user_id => @user.global_id, :user_name => @user.user_name
+      post :flush_logs, params: {:user_id => @user.global_id, :user_name => @user.user_name}
       expect(response).to be_success
       json = JSON.parse(response.body)
       progress = Progress.find_by_global_id(json['progress']['id'])
@@ -640,7 +640,7 @@ describe Api::UsersController, :type => :controller do
   
   describe "flush_user" do
     it "should require api token" do
-      post :flush_user, :user_id => 1
+      post :flush_user, params: {:user_id => 1}
       assert_missing_token
     end
     
@@ -648,13 +648,13 @@ describe Api::UsersController, :type => :controller do
       token_user
       @user2 = User.create(:settings => {'supervisors' => [{'user_id' => @user.global_id, 'edit_permission' => true}]})
       expect(@user.supervisor_for?(@user2)).to eq(true)
-      post :flush_user, :user_id => @user2.global_id
+      post :flush_user, params: {:user_id => @user2.global_id}
       assert_unauthorized
     end
     
     it "should error if user_name is not provided correctly" do
       token_user
-      post :flush_user, :user_id => @user.global_id
+      post :flush_user, params: {:user_id => @user.global_id}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['flushed']).to eq("false")
@@ -662,7 +662,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should return a progress object" do
       token_user
-      post :flush_user, :user_id => @user.global_id, :user_name => @user.user_name
+      post :flush_user, params: {:user_id => @user.global_id, :user_name => @user.user_name}
       expect(response).to be_success
       json = JSON.parse(response.body)
       progress = Progress.find_by_global_id(json['progress']['id'])
@@ -674,14 +674,14 @@ describe Api::UsersController, :type => :controller do
 
   describe "daily_stats" do
     it "should require an api token" do
-      get 'daily_stats', :user_id => 'asdf'
+      get 'daily_stats', params: {:user_id => 'asdf'}
       assert_missing_token
     end
     
     it "should error on expected errors" do
       token_user
       expect(Stats).to receive(:daily_use).with(@user.global_id, {}).and_raise(Stats::StatsError, 'bacon')
-      get 'daily_stats', :user_id => @user.global_id
+      get 'daily_stats', params: {:user_id => @user.global_id}
       expect(response.code).to eq("400")
       json = JSON.parse(response.body)
       expect(json['error']).to eq('bacon')
@@ -689,7 +689,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should return a stats result" do
       token_user
-      get 'daily_stats', :user_id => @user.global_id
+      get 'daily_stats', params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['start_at']).not_to eq(nil)
@@ -699,7 +699,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should use the provided date range" do
       token_user
-      get 'daily_stats', :user_id => @user.global_id, :start => '2014-01-01', :end => '2014-03-01'
+      get 'daily_stats', params: {:user_id => @user.global_id, :start => '2014-01-01', :end => '2014-03-01'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['start_at']).to match('2014-01-01')
@@ -709,7 +709,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should error on too large a date range" do
       token_user
-      get 'daily_stats', :user_id => @user.global_id, :start => '2014-01-01', :end => '2014-10-01'
+      get 'daily_stats', params: {:user_id => @user.global_id, :start => '2014-01-01', :end => '2014-10-01'}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq('time window cannot be greater than 6 months')
@@ -718,14 +718,14 @@ describe Api::UsersController, :type => :controller do
 
   describe "hourly_stats" do
     it "should require an api token" do
-      get 'hourly_stats', :user_id => 'asdf'
+      get 'hourly_stats', params: {:user_id => 'asdf'}
       assert_missing_token
     end
     
     it "should error on expected errors" do
       token_user
       expect(Stats).to receive(:hourly_use).with(@user.global_id, {}).and_raise(Stats::StatsError, 'bacon')
-      get 'hourly_stats', :user_id => @user.global_id
+      get 'hourly_stats', params: {:user_id => @user.global_id}
       expect(response.code).to eq("400")
       json = JSON.parse(response.body)
       expect(json['error']).to eq('bacon')
@@ -733,7 +733,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should return a stats result" do
       token_user
-      get 'hourly_stats', :user_id => @user.global_id
+      get 'hourly_stats', params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['start_at']).not_to eq(nil)
@@ -744,14 +744,14 @@ describe Api::UsersController, :type => :controller do
   
   describe "subscribe" do
     it "should require an api token" do
-      post :subscribe, :user_id => 'asdf'
+      post :subscribe, params: {:user_id => 'asdf'}
       assert_missing_token
     end
     
     it "should require edit permissions" do
       token_user
       u = User.create
-      post :subscribe, :user_id => u.global_id
+      post :subscribe, params: {:user_id => u.global_id}
       assert_unauthorized
     end
 
@@ -759,7 +759,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       p = Progress.create
       expect(Progress).to receive(:schedule).with(@user, :process_subscription_token, 'abc', 'monthly_6').and_return(p)
-      post :subscribe, :user_id => @user.global_id, :token => 'abc', :type => 'monthly_6'
+      post :subscribe, params: {:user_id => @user.global_id, :token => 'abc', :type => 'monthly_6'}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['progress']).not_to eq(nil)
@@ -769,7 +769,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       p = Progress.create
       expect(Progress).to receive(:schedule).with(@user, :redeem_gift_token, 'abc').and_return(p)
-      post :subscribe, :user_id => @user.global_id, :token => {'code' => 'abc'}, :type => 'gift_code'
+      post :subscribe, params: {:user_id => @user.global_id, :token => {'code' => 'abc'}, :type => 'gift_code'}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['progress']).not_to eq(nil)
@@ -783,7 +783,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       exp = @user.expires_at
       
-      post :subscribe, :user_id => @user.global_id, :token => {'code' => g.code}, :type => 'gift_code'
+      post :subscribe, params: {:user_id => @user.global_id, :token => {'code' => g.code}, :type => 'gift_code'}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['progress']).not_to eq(nil)
@@ -803,7 +803,7 @@ describe Api::UsersController, :type => :controller do
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
       
-      post :subscribe, {:user_id => u.global_id, :type => 'never_expires'}
+      post :subscribe, params: {:user_id => u.global_id, :type => 'never_expires'}
       expect(response).to be_success
       
       json = JSON.parse(response.body)
@@ -818,7 +818,7 @@ describe Api::UsersController, :type => :controller do
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
       
-      post :subscribe, {:user_id => u.global_id, :type => 'eval'}
+      post :subscribe, params: {:user_id => u.global_id, :type => 'eval'}
       expect(response).to be_success
       
       json = JSON.parse(response.body)
@@ -833,19 +833,19 @@ describe Api::UsersController, :type => :controller do
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
       
-      post :subscribe, {:user_id => u.global_id, :type => 'gift_code', 'code' => 'asdf'}
+      post :subscribe, params: {:user_id => u.global_id, :type => 'gift_code', 'code' => 'asdf'}
       assert_unauthorized
     end
 
     it "should not let non-admins set a subscription to never_expires" do
       token_user
-      post :subscribe, {:user_id => @user.global_id, :type => 'never_expires'}
+      post :subscribe, params: {:user_id => @user.global_id, :type => 'never_expires'}
       assert_unauthorized
     end
     
     it "should not let non-admins set a subscription to eval" do
       token_user
-      post :subscribe, {:user_id => @user.global_id, :type => 'eval'}
+      post :subscribe, params: {:user_id => @user.global_id, :type => 'eval'}
       assert_unauthorized
     end
     
@@ -855,7 +855,7 @@ describe Api::UsersController, :type => :controller do
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
       
-      post :subscribe, {:user_id => u.global_id, :type => 'add_voice'}
+      post :subscribe, params: {:user_id => u.global_id, :type => 'add_voice'}
       expect(response).to be_success
       
       json = JSON.parse(response.body)
@@ -868,7 +868,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       u = User.create
       
-      post :subscribe, {:user_id => u.global_id, :type => 'add_voice'}
+      post :subscribe, params: {:user_id => u.global_id, :type => 'add_voice'}
       assert_unauthorized
       
       expect(u.reload.settings['premium_voices']).to eq(nil)
@@ -877,14 +877,14 @@ describe Api::UsersController, :type => :controller do
   
   describe "unsubscribe" do
     it "should require an api token" do
-      delete :unsubscribe, :user_id => 'asdf'
+      delete :unsubscribe, params: {:user_id => 'asdf'}
       assert_missing_token
     end
     
     it "should require edit permissions" do
       token_user
       u = User.create
-      delete :unsubscribe, :user_id => u.global_id
+      delete :unsubscribe, params: {:user_id => u.global_id}
       assert_unauthorized
     end
 
@@ -892,7 +892,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       p = Progress.create
       expect(Progress).to receive(:schedule).with(@user, :process_subscription_token, 'token', 'unsubscribe').and_return(p)
-      delete :unsubscribe, :user_id => @user.global_id
+      delete :unsubscribe, params: {:user_id => @user.global_id}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['progress']).not_to eq(nil)
@@ -901,20 +901,20 @@ describe Api::UsersController, :type => :controller do
   
   describe "claim_voice" do
     it "should require api token" do
-      post :claim_voice, :user_id => '1_99999'
+      post :claim_voice, params: {:user_id => '1_99999'}
       assert_missing_token
     end
     
     it "should error on not found" do
       token_user
-      post :claim_voice, :user_id => 'abcdef'
+      post :claim_voice, params: {:user_id => 'abcdef'}
       assert_not_found('abcdef')
     end
     
     it "should require edit permissions" do
       token_user
       u = User.create
-      post :claim_voice, :user_id => u.global_id
+      post :claim_voice, params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
@@ -922,7 +922,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       @user.settings['premium_voices'] = {'allowed' => 0}
       @user.save
-      post :claim_voice, :user_id => @user.global_id, :voice_id => 'acbdef'
+      post :claim_voice, params: {:user_id => @user.global_id, :voice_id => 'acbdef'}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq('no more voices available')
@@ -931,7 +931,7 @@ describe Api::UsersController, :type => :controller do
     it "should return success and add the voice if correct" do
       token_user
       @user.subscription_override('never_expires')
-      post :claim_voice, :user_id => @user.global_id, :voice_id => 'asdf'
+      post :claim_voice, params: {:user_id => @user.global_id, :voice_id => 'asdf'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'voice_added' => true, 'voice_id' => 'asdf'})
@@ -943,7 +943,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       @user.subscription_override('never_expires')
       expect(Uploader).to receive(:signed_download_url).with('asdf').and_return("asdfjkl")
-      post :claim_voice, :user_id => @user.global_id, :voice_id => 'asdf', :voice_url => 'asdf'
+      post :claim_voice, params: {:user_id => @user.global_id, :voice_id => 'asdf', :voice_url => 'asdf'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'voice_added' => true, 'voice_id' => 'asdf', 'download_url' => 'asdfjkl'})
@@ -952,26 +952,26 @@ describe Api::UsersController, :type => :controller do
   
   describe "rename" do
     it "should require api token" do
-      post :rename, :user_id => "1_1"
+      post :rename, params: {:user_id => "1_1"}
       assert_missing_token
     end
     
     it "should error on not found" do
       token_user
-      post :rename, :user_id => "1_19999"
+      post :rename, params: {:user_id => "1_19999"}
       assert_not_found
     end
 
     it "should require edit permissions" do
       u = User.create
       token_user
-      post :rename, :user_id => u.global_id
+      post :rename, params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
     it "should rename the board" do
       token_user
-      post :rename, :user_id => @user.global_id, :old_key => @user.user_name, :new_key => "wilford"
+      post :rename, params: {:user_id => @user.global_id, :old_key => @user.user_name, :new_key => "wilford"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'rename' => true, 'key' => "wilford"})
@@ -979,7 +979,7 @@ describe Api::UsersController, :type => :controller do
 
     it "should require the correct old_key" do
       token_user
-      post :rename, :user_id => @user.global_id, :old_key => @user.user_name + "asdf", :new_key => "wilford"
+      post :rename, params: {:user_id => @user.global_id, :old_key => @user.user_name + "asdf", :new_key => "wilford"}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -988,7 +988,7 @@ describe Api::UsersController, :type => :controller do
     
     it "should require a valid new_key" do
       token_user
-      post :rename, :user_id => @user.global_id, :old_key => @user.user_name
+      post :rename, params: {:user_id => @user.global_id, :old_key => @user.user_name}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -998,7 +998,7 @@ describe Api::UsersController, :type => :controller do
     it "should report if there was a new_key name collision" do
       token_user
       u2 = User.create
-      post :rename, :user_id => @user.global_id, :old_key => @user.user_name, :new_key => u2.user_name
+      post :rename, params: {:user_id => @user.global_id, :old_key => @user.user_name, :new_key => u2.user_name}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -1006,57 +1006,29 @@ describe Api::UsersController, :type => :controller do
       expect(json['collision']).to eq(true)
     end
   end
-  # 
-#   def activate_button
-#     user = User.find_by_path(params['user_id'])
-#     return unless exists?(user, params['user_id'])
-#     return unless allowed?(user, 'supervise')
-#     board = Board.find_by_path(params['board_id'])
-#     return unless exists?(board, params['board_id'])
-#     return unless allowed?(board, 'view')
-#     button = params['button_id'] && board.settings['buttons'].detect{|b| b['id'].to_s == params['button_id'].to_s }
-#     if !button
-#       return api_error(400, {error: 'button not found'})
-#     elsif !button['integration'] || !button['integration']['user_integration_id']
-#       return api_error(400, {error: 'button integration not configured'})
-#     end
-#     associated_user = nil
-#     if params['associated_user_id']
-#       supervisee = User.find_by_path(params['associated_user_id'])
-#       if supervisee && supervisee.allows?(user, 'supervise')
-#         associated_user = supervisee
-#       end
-#     end
-#     progress = Progress.schedule(board, :notify, 'button_action', {
-#       'user_id' => user.global_id,
-#       'immediate' => true,
-#       'associated_user_id' => (associated_user && associated_user.global_id),
-#       'button_id' => params['button_id']
-#     })
-#     render json: JsonApi::Progress.as_json(progress, :wrapper => true)
-#   end
+
   describe "activate_button" do
     it "should require an api token" do
-      post :activate_button, :user_id => 'asdf', :board_id => 'asdf'
+      post :activate_button, params: {:user_id => 'asdf', :board_id => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid user" do
       token_user
-      post :activate_button, :user_id => 'asdf', :board_id => 'asdf'
+      post :activate_button, params: {:user_id => 'asdf', :board_id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require an authorized user" do
       token_user
       u = User.create
-      post :activate_button, :user_id => u.global_id, :board_id => 'asdf'
+      post :activate_button, params: {:user_id => u.global_id, :board_id => 'asdf'}
       assert_unauthorized
     end
     
     it "should require a valid board" do
       token_user
-      post :activate_button, :user_id => @user.global_id, :board_id => 'asdf'
+      post :activate_button, params: {:user_id => @user.global_id, :board_id => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -1064,14 +1036,14 @@ describe Api::UsersController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u)
-      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id
+      post :activate_button, params: {:user_id => @user.global_id, :board_id => b.global_id}
       assert_unauthorized
     end
     
     it "should require a valid button" do
       token_user
       b = Board.create(:user => @user)
-      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id
+      post :activate_button, params: {:user_id => @user.global_id, :board_id => b.global_id}
       assert_error('button not found')
     end
     
@@ -1082,7 +1054,7 @@ describe Api::UsersController, :type => :controller do
         'id' => '1'
       }]
       b.save
-      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1'
+      post :activate_button, params: {:user_id => @user.global_id, :board_id => b.global_id, :button_id => '1'}
       assert_error('button integration not configured')
     end
     
@@ -1095,7 +1067,7 @@ describe Api::UsersController, :type => :controller do
         'integration' => {'user_integration_id' => ui.global_id}
       }]
       b.save
-      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1'
+      post :activate_button, params: {:user_id => @user.global_id, :board_id => b.global_id, :button_id => '1'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']['id']).to_not eq(nil)
@@ -1115,7 +1087,7 @@ describe Api::UsersController, :type => :controller do
         'integration' => {'user_integration_id' => ui.global_id}
       }]
       b.save
-      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1', :associated_user_id => @user.global_id
+      post :activate_button, params: {:user_id => @user.global_id, :board_id => b.global_id, :button_id => '1', :associated_user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']['id']).to_not eq(nil)
@@ -1136,7 +1108,7 @@ describe Api::UsersController, :type => :controller do
         'integration' => {'user_integration_id' => ui.global_id}
       }]
       b.save
-      post :activate_button, :user_id => @user.global_id, :board_id => b.global_id, :button_id => '1', :associated_user_id => u.global_id
+      post :activate_button, params: {:user_id => @user.global_id, :board_id => b.global_id, :button_id => '1', :associated_user_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']['id']).to_not eq(nil)
@@ -1150,20 +1122,20 @@ describe Api::UsersController, :type => :controller do
   
   describe 'GET supervisors' do
     it "should require a valid token" do
-      get 'supervisors', 'user_id' => 'asdf'
+      get 'supervisors', params: {'user_id' => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid record" do
       token_user
-      get 'supervisors', 'user_id' => 'asdf'
+      get 'supervisors', params: {'user_id' => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      get 'supervisors', 'user_id' => u.global_id
+      get 'supervisors', params: {'user_id' => u.global_id}
       assert_unauthorized
     end
     
@@ -1171,7 +1143,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       u = User.create
       User.link_supervisor_to_user(u, @user)
-      get 'supervisors', 'user_id' => @user.global_id
+      get 'supervisors', params: {'user_id' => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['meta']['more']).to eq(false)
@@ -1182,20 +1154,20 @@ describe Api::UsersController, :type => :controller do
   
   describe 'GET supervisees' do
     it "should require a valid token" do
-      get 'supervisees', 'user_id' => 'asdf'
+      get 'supervisees', params: {'user_id' => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid record" do
       token_user
-      get 'supervisees', 'user_id' => 'asdf'
+      get 'supervisees', params: {'user_id' => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      get 'supervisees', 'user_id' => u.global_id
+      get 'supervisees', params: {'user_id' => u.global_id}
       assert_unauthorized
     end
     
@@ -1203,7 +1175,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       u = User.create
       User.link_supervisor_to_user(@user, u)
-      get 'supervisees', 'user_id' => @user.global_id
+      get 'supervisees', params: {'user_id' => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['meta']['more']).to eq(false)
@@ -1214,13 +1186,13 @@ describe Api::UsersController, :type => :controller do
   
   describe "GET 'sync_stamp'" do
     it "should require an access token" do
-      get 'sync_stamp', 'user_id' => 'asdf'
+      get 'sync_stamp', params: {'user_id' => 'asdf'}
         assert_missing_token
     end
     
     it "should require a valid user" do
       token_user
-      get 'sync_stamp', 'user_id' => 'asdf'
+      get 'sync_stamp', params: {'user_id' => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -1228,35 +1200,35 @@ describe Api::UsersController, :type => :controller do
       token_user
       u = User.create
       User.link_supervisor_to_user(@user, u, nil, true)
-      get 'sync_stamp', 'user_id' => u.global_id
+      get 'sync_stamp', params: {'user_id' => u.global_id}
       assert_unauthorized
     end
     
     it "should return the user's sync stamp" do
       token_user
-      get 'sync_stamp', 'user_id' => @user.global_id
+      get 'sync_stamp', params: {'user_id' => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
-      expect(json['sync_stamp']).to eq(@user.updated_at.iso8601)
+      expect(json['sync_stamp']).to eq(@user.updated_at.utc.iso8601)
     end
   end
   
   describe "translate" do
     it "should require an access token" do
-      post 'translate', :user_id => 'asdf'
+      post 'translate', params: {:user_id => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid user" do
       token_user
-      post 'translate', :user_id => 'asdf'
+      post 'translate', params: {:user_id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require permission" do
       token_user
       u = User.create
-      post 'translate', :user_id => u.global_id
+      post 'translate', params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
@@ -1264,7 +1236,7 @@ describe Api::UsersController, :type => :controller do
       token_user
       words = ['a', 'b', 'c']
       expect(WordData).to receive(:translate_batch).with(words.map{|w| {:text => w} }, 'en', 'es').and_return({a: 'a'})
-      post 'translate', :user_id => @user.global_id, :words => words, :source_lang => 'en', :destination_lang => 'es'
+      post 'translate', params: {:user_id => @user.global_id, :words => words, :source_lang => 'en', :destination_lang => 'es'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'a' => 'a'})
@@ -1273,20 +1245,20 @@ describe Api::UsersController, :type => :controller do
   
   describe "board_revisions" do
     it "should require an access token" do
-      get 'board_revisions', :user_id => '1_000'
+      get 'board_revisions', params: {:user_id => '1_000'}
       assert_missing_token
     end
     
     it "should require a valid user" do
       token_user
-      get 'board_revisions', :user_id => '1_000'
+      get 'board_revisions', params: {:user_id => '1_000'}
       assert_not_found('1_000')
     end
     
     it "should require permission" do
       token_user
       u = User.create
-      get 'board_revisions', :user_id => u.global_id
+      get 'board_revisions', params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
@@ -1309,7 +1281,7 @@ describe Api::UsersController, :type => :controller do
       @user.save
       Worker.process_queues
       expect(b1.reload.settings['downstream_board_ids'].sort).to eq([b2.global_id, b3.global_id].sort)
-      get 'board_revisions', :user_id => @user.global_id
+      get 'board_revisions', params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       hash = {}
@@ -1327,26 +1299,26 @@ describe Api::UsersController, :type => :controller do
   
   describe "places" do
     it "should require an access token" do
-      get 'places', :user_id => 'asdf'
+      get 'places', params: {:user_id => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid user" do
       token_user
-      get 'places', :user_id => 'asdf'
+      get 'places', params: {:user_id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      get 'places', :user_id => u.global_id
+      get 'places', params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
     it "should return a list of places" do
       token_user
-      get 'places', :user_id => @user.global_id
+      get 'places', params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq([])

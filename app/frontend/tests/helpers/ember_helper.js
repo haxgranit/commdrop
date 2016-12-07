@@ -63,10 +63,10 @@ queryLog.respondAndLog = function(event, defaultResponse) {
       if(fixture.method == 'GET' && fixture.id && fixture.id == event.id) {
         found = true;
         // find
-      } else if(fixture.method == 'POST' && fixture.compare && fixture.compare(event.object)) {
+      } else if(fixture.method == 'POST' && fixture.compare && fixture.compare(event.object.record)) {
         found = true;
         // createRecord
-      } else if(fixture.method == 'PUT' && fixture.compare && fixture.compare(event.object)) {
+      } else if(fixture.method == 'PUT' && fixture.compare && fixture.compare(event.object.record)) {
         found = true;
         // updateRecord
       } else if(fixture.method == 'GET' && fixture.query && JSON.stringify(fixture.query) == JSON.stringify(event.query)) {
@@ -319,10 +319,10 @@ ApplicationAdapter.reopen({
     options.url = url;
     return Ember.$.ajax(options);
   },
-  findRecord: function(store, type, id, snapshot) {
-    return this._super.apply(this, arguments);
-  },
-  find: function(store, type, id) {
+//   findRecord: function(store, type, id, snapshot) {
+//     return this._super.apply(this, arguments);
+//   },
+  findRecord: function(store, type, id) {
     if(queryLog.real_lookup) {
       return this._super.apply(this, arguments);
     }
@@ -439,7 +439,7 @@ afterEach(function() {
 
 afterEach(function() {
   stub.stubs.reverse().forEach(function(list) {
-    list[0][list[1]] = list[2];
+    Ember.set(list[0], list[1], list[2]);
   });
   stub.stubs = [];
 });

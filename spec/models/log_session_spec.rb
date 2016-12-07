@@ -925,6 +925,8 @@ describe LogSession, :type => :model do
       expect(s.data['stats']['recorded_incorrect']).to eq(2)
       expect(s.data['stats']['longest_correct_streak']).to eq(3)
       expect(s.data['stats']['longest_incorrect_streak']).to eq(2)
+      expect(s.data['assessment']['manual']).to eq(true)
+      expect(s.data['assessment']['automatic']).to eq(false)
     end
 
     it "should pull out embedded note events" do

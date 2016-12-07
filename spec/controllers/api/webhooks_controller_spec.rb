@@ -3,27 +3,27 @@ require 'spec_helper'
 describe Api::WebhooksController, :type => :controller do
   describe "get 'index'" do
     it "should require an api token" do
-      get 'index', 'user_id' => 'asdf'
+      get 'index', params: {'user_id' => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the user doesn't exist" do
       token_user
-      get 'index', 'user_id' => 'asdf'
+      get 'index', params: {'user_id' => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should error if not authorized" do
       token_user
       u = User.create
-      get 'index', 'user_id' => u.global_id
+      get 'index', params: {'user_id' => u.global_id}
       assert_unauthorized
     end
     
     it "should return a paginated list" do
       token_user
       w = Webhook.create(:user_id => @user.id)
-      get 'index', 'user_id' => @user.global_id
+      get 'index', params: {'user_id' => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)
@@ -36,26 +36,26 @@ describe Api::WebhooksController, :type => :controller do
   
   describe "post 'create'" do
     it "should require an api token" do
-      post 'create', 'webhook' => {'user_id' => 'asdf'}
+      post 'create', params: {'webhook' => {'user_id' => 'asdf'}}
       assert_missing_token
     end
     
     it "should error if the user doesn't exist" do
       token_user
-      post 'create', 'webhook' => {'user_id' => 'asdf'}
+      post 'create', params: {'webhook' => {'user_id' => 'asdf'}}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      post 'create', 'webhook' => {'user_id' => u.global_id}
+      post 'create', params: {'webhook' => {'user_id' => u.global_id}}
       assert_unauthorized
     end
     
     it "should create the webhook" do
       token_user
-      post 'create', 'webhook' => {'user_id' => @user.global_id, 'name' => 'test webhook'}
+      post 'create', params: {'webhook' => {'user_id' => @user.global_id, 'name' => 'test webhook'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)
@@ -67,13 +67,13 @@ describe Api::WebhooksController, :type => :controller do
   
   describe "post 'test'" do
     it "should require an api token" do
-      post 'test', 'webhook_id' => 'asdf'
+      post 'test', params: {'webhook_id' => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the webhook doesn't exist" do
       token_user
-      post 'test', 'webhook_id' => 'asdf'
+      post 'test', params: {'webhook_id' => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -81,14 +81,14 @@ describe Api::WebhooksController, :type => :controller do
       token_user
       u = User.create
       webhook = Webhook.create(:user_id => u.id)
-      post 'test', 'webhook_id' => webhook.global_id
+      post 'test', params: {'webhook_id' => webhook.global_id}
       assert_unauthorized
     end
     
     it "should schedule the test" do
       token_user
       webhook = Webhook.create(:user_id => @user.id)
-      post 'test', 'webhook_id' => webhook.global_id
+      post 'test', params: {'webhook_id' => webhook.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']).to_not eq(nil)
@@ -102,7 +102,7 @@ describe Api::WebhooksController, :type => :controller do
     it "should return a progress record" do
       token_user
       webhook = Webhook.create(:user_id => @user.id)
-      post 'test', 'webhook_id' => webhook.global_id
+      post 'test', params: {'webhook_id' => webhook.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)
@@ -113,13 +113,13 @@ describe Api::WebhooksController, :type => :controller do
   
   describe "put 'update'" do
     it "should require an api token" do
-      put 'update', 'id' => 'asdf'
+      put 'update', params: {'id' => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the record doesn't exist" do
       token_user
-      put 'update', 'id' => 'asdf'
+      put 'update', params: {'id' => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -127,14 +127,14 @@ describe Api::WebhooksController, :type => :controller do
       token_user
       u = User.create
       w = Webhook.create(:user_id => u.id)
-      put 'update', 'id' => w.global_id
+      put 'update', params: {'id' => w.global_id}
       assert_unauthorized
     end
     
     it "should update the record" do
       token_user
       w = Webhook.create(:user_id => @user.id)
-      put 'update', 'id' => w.global_id, 'webhook' => {'name' => 'new name'}
+      put 'update', params: {'id' => w.global_id, 'webhook' => {'name' => 'new name'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)
@@ -145,13 +145,13 @@ describe Api::WebhooksController, :type => :controller do
   
   describe "delete 'destroy'" do
     it "should require an api token" do
-      delete 'destroy', 'id' => 'asdf'
+      delete 'destroy', params: {'id' => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the record doesn't exist" do
       token_user
-      delete 'destroy', 'id' => 'asdf'
+      delete 'destroy', params: {'id' => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -159,14 +159,14 @@ describe Api::WebhooksController, :type => :controller do
       token_user
       u = User.create
       w = Webhook.create(:user_id => u.id)
-      delete 'destroy', 'id' => w.global_id
+      delete 'destroy', params: {'id' => w.global_id}
       assert_unauthorized
     end
     
     it "should delete the record" do
       token_user
       w = Webhook.create(:user_id => @user.id)
-      delete 'destroy', 'id' => w.global_id
+      delete 'destroy', params: {'id' => w.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)

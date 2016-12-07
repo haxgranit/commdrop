@@ -18,11 +18,11 @@ describe('utterance', function() {
     utterance.scope = window;
     utterance.setup(controller);
   });
-  
+
   afterEach(function() {
     utterance.scope = window;
   });
-  
+
   describe("setup", function() {
     it("should set the controller", function() {
       expect(utterance.controller).toEqual(controller);
@@ -60,7 +60,7 @@ describe('utterance', function() {
         {label: "how"}, {label: "are"}, {label: "you"}
       ];
       utterance.set('rawButtonList', buttons);
-      expect(app_state.get('button_list').mapProperty('label')).toEqual(buttons.mapProperty('label'));
+      expect(app_state.get('button_list').mapBy('label')).toEqual(buttons.mapBy('label'));
     });
     it("should set buttonList to the controller and stash", function() {
       var buttons = [
@@ -109,7 +109,7 @@ describe('utterance', function() {
       expect(computed[0].label).toEqual("cantankerous");
     });
   });
-  
+
   describe("modify_button", function() {
     it("should return a valid button object", function() {
       var result = utterance.modify_button({label: "cow"}, {label: "hat"});
@@ -152,7 +152,7 @@ describe('utterance', function() {
       expect(result.modifications.length).toEqual(1);
     });
   });
-  
+
   describe("add_button", function() {
     it("should add the button to the list, controller and stash", function() {
       var b = {label: "occupy"};
@@ -168,17 +168,17 @@ describe('utterance', function() {
       var b = {label: "occupy"};
       var res = utterance.add_button(b);
       expect(res.label).toEqual('occupy');
-      
+
       var b2 = {label: "try"};
       res = utterance.add_button(b2);
       expect(res.label).toEqual('try');
-      
+
       var b3 = {label: ":plural"};
       res = utterance.add_button(b3);
       expect(res.label).toEqual('tries');
     });
   });
-  
+
   describe("speak_button", function() {
     it("should speak text", function() {
       var spoken = null;
@@ -207,7 +207,7 @@ describe('utterance', function() {
       expect(played).toEqual("http://sound.com/jump.mp3");
     });
   });
-  
+
   describe("speak_text", function() {
     it("should speak text", function() {
       var spoken = null;
@@ -218,7 +218,7 @@ describe('utterance', function() {
       expect(spoken).toEqual("I am glad");
     });
   });
-  
+
   describe("alert", function() {
     it("should play a beep sound", function() {
       var spoken = null;
@@ -229,7 +229,7 @@ describe('utterance', function() {
       expect(spoken).toEqual("beep");
     });
   });
-  
+
   describe("clear", function() {
     it("should clear the buttonList everywhere", function() {
       utterance.set('rawButtonList', [{}, {}]);
@@ -247,7 +247,7 @@ describe('utterance', function() {
       expect(logged).toEqual(true);
     });
   });
-  
+
   describe("backspace", function() {
     it("should remove the last button", function() {
       utterance.set('rawButtonList', [{label: "cow"}, {label: "fries"}]);
@@ -285,7 +285,7 @@ describe('utterance', function() {
       utterance.backspace();
       expect(logged).toEqual(true);
     });
-    
+
     it('should not remove the last button if a ghost vocalization', function() {
       utterance.set('rawButtonList', [{label: "cow"}, {label: "fries"}]);
       utterance.set('list_vocalized', true);
@@ -298,7 +298,7 @@ describe('utterance', function() {
       utterance.backspace();
       expect(utterance.get('rawButtonList').length).toEqual(0);
     });
-    
+
     it('should un-ghost the vocalization if a ghost vocalization', function() {
       utterance.set('rawButtonList', [{label: "cow"}, {label: "fries"}]);
       utterance.set('list_vocalized', true);
@@ -307,7 +307,7 @@ describe('utterance', function() {
       expect(utterance.get('list_vocalized')).toEqual(false);
     });
   });
-  
+
   describe("set_and_say_buttons", function() {
     it("should update the raw list, and the controller and stash", function() {
       var buttons = [{label: "smart"}, {label: "lad"}];
@@ -318,14 +318,14 @@ describe('utterance', function() {
       expect(app_state.get('button_list')[1].label).toEqual(buttons[1].label);
       expect(stashes.get('working_vocalization')).toEqual(buttons);
     });
-    
+
     it("should vocalize the new button list", function() {
       var buttons = [{label: "smart"}, {label: "lad"}];
       utterance.set_and_say_buttons(buttons);
       expect(controller.vocalized).toEqual(true);
     });
   });
-  
+
   describe("vocalize_list", function() {
     it("should log the utterance", function() {
       stub(speecher, 'speak_collection', function() { });
@@ -354,7 +354,7 @@ describe('utterance', function() {
       expect(items[0].text).toEqual("how ever are you r hippos");
     });
   });
-  
+
   describe("test_voice", function() {
     it("should generate a test utterance using the provided settings", function() {
       var correct = false;
@@ -367,7 +367,7 @@ describe('utterance', function() {
       utterance.test_voice("", 1.1, 1.3, 2.0);
       expect(correct).toEqual(true);
     });
-    
+
     it("should correct for bad values", function() {
       var correct = false;
       var scope = {};

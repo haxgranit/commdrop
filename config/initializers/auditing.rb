@@ -28,4 +28,3 @@ unless ENV['SKIP_VALIDATIONS']
   # TODO: log any script/runner calls, any console statements
 end
 
-PaperTrail.serializer = SecureJson

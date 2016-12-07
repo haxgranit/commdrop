@@ -10,13 +10,13 @@ import CoughDrop from '../../app';
 
 describe('boardGrabber', function() {
   var boardGrabber = contentGrabbers.boardGrabber;
-  
+
   var controller = null;
   beforeEach(function() {
     var model = Ember.Object.create({id: 1234});
     controller = Ember.Object.create({model: model});
   });
-  
+
   describe('setup', function() {
     it('should set the button and controller attributes', function() {
       var a = {a: 1};
@@ -26,7 +26,7 @@ describe('boardGrabber', function() {
       expect(boardGrabber.button).toEqual(a);
     });
   });
-  
+
   describe('clear', function() {
     it('should clear foundBoards and linkedBoardName (board search attributes) on controller', function() {
       controller.setProperties({foundBoards: 1, linkedBoardName: 2});
@@ -36,7 +36,7 @@ describe('boardGrabber', function() {
       expect(controller.get('linkedBoardName')).toEqual(null);
     });
   });
-  
+
   describe('find_board', function() {
     it('should use the exact board if found', function() {
       var called = null;
@@ -53,12 +53,12 @@ describe('boardGrabber', function() {
       controller.set('linkedBoardName', 'hat');
       boardGrabber.setup(null, controller);
       boardGrabber.find_board();
-      
+
       waitsFor(function() { return called != null; }, 'too slow', 1000);
-      runs(function() { 
-        expect(called).toEqual(true); 
-        expect(controller.get('foundBoards.results')).toEqual(null); 
-        expect(controller.get('linkedBoardName')).toEqual(null); 
+      runs(function() {
+        expect(called).toEqual(true);
+        expect(controller.get('foundBoards.results')).toEqual(null);
+        expect(controller.get('linkedBoardName')).toEqual(null);
       });
     });
     it('should use the exact board if found by URL, stripping off the URL part', function() {
@@ -77,19 +77,19 @@ describe('boardGrabber', function() {
       controller.set('linkedBoardName', url);
       boardGrabber.setup(null, controller);
       boardGrabber.find_board();
-      
+
       waitsFor(function() { return called != null; }, 'too slow', 1000);
-      runs(function() { 
-        expect(called).toEqual(true); 
-        expect(controller.get('foundBoards.results')).toEqual(null); 
-        expect(controller.get('linkedBoardName')).toEqual(null); 
+      runs(function() {
+        expect(called).toEqual(true);
+        expect(controller.get('foundBoards.results')).toEqual(null);
+        expect(controller.get('linkedBoardName')).toEqual(null);
       });
     });
     it('should show search results if no exact board found', function() {
       queryLog.defineFixture({
         method: 'GET',
         type: 'board',
-        query: {q: "hat"},
+        query: {public: true, q: "hat"},
         response: Ember.RSVP.resolve({board: [{id: '123', key: 'hippo'}]})
       });
       controller.set('linkedBoardName', 'hat');
@@ -97,13 +97,13 @@ describe('boardGrabber', function() {
       boardGrabber.find_board();
       expect(controller.get('foundBoards.ready')).toEqual(false);
       waitsFor(function() { return controller.get('foundBoards.ready'); });
-      runs(function() { 
-        expect(controller.get('foundBoards.results')).not.toEqual(null); 
-        expect(controller.get('linkedBoardName')).toEqual("hat"); 
+      runs(function() {
+        expect(controller.get('foundBoards.results')).not.toEqual(null);
+        expect(controller.get('linkedBoardName')).toEqual("hat");
       });
     });
   });
-  
+
   describe('build_board', function() {
     it('should create a board record for editing using the linkedBoardName', function() {
       controller.set('linkedBoardName', 'cookie');
@@ -135,7 +135,7 @@ describe('boardGrabber', function() {
       expect(controller.get('pending_board')).toEqual(null);
     });
   });
-  
+
   describe('create_board', function() {
     it('should create a new board based on the pending_board attribute', function() {
       var called = false;
@@ -164,7 +164,7 @@ describe('boardGrabber', function() {
       });
     });
   });
-  
+
   describe('pick_board', function() {
     it('should set correct board attributes', function() {
       var called = false;
@@ -179,11 +179,11 @@ describe('boardGrabber', function() {
       });
       boardGrabber.setup(null, controller);
       boardGrabber.pick_board(board);
-    
+
       expect(called).toEqual(true);
     });
   });
-  
+
   describe("file_selected", function() {
     it("should error on invalid file type", function() {
       var message = null;

@@ -1,6 +1,6 @@
 class Api::OrganizationsController < ApplicationController
-  before_filter :require_api_token
-  before_filter :require_org, :except => [:show, :create, :index, :update, :destroy]
+  before_action :require_api_token
+  before_action :require_org, :except => [:show, :create, :index, :update, :destroy]
 
   def require_org
     @org = Organization.find_by_global_id(params['organization_id'])

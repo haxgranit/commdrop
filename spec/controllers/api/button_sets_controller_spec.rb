@@ -3,13 +3,13 @@ require 'spec_helper'
 describe Api::ButtonSetsController, :type => :controller do
   describe "show" do
     it "should not require api token" do
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_not_found
     end
     
     it "should require existing object" do
       token_user
-      get :show, :id => '1_19999'
+      get :show, params: {:id => '1_19999'}
       assert_not_found
     end
 
@@ -18,7 +18,7 @@ describe Api::ButtonSetsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       bs = BoardDownstreamButtonSet.update_for(b.global_id)
-      get :show, :id => b.global_id
+      get :show, params: {:id => b.global_id}
       assert_unauthorized
     end
     
@@ -26,7 +26,7 @@ describe Api::ButtonSetsController, :type => :controller do
       token_user
       b = Board.create(:user => @user)
       bs = BoardDownstreamButtonSet.update_for(b.global_id)
-      get :show, :id => b.global_id
+      get :show, params: {:id => b.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['buttonset']['id']).to eq(b.global_id)

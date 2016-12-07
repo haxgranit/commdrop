@@ -659,12 +659,10 @@ describe("i18n", function() {
   describe("safe", function() {
     it("should return safe text", function() {
       var res = Ember.templateHelpers.safe('something <b>cool</b>');
-      expect(res instanceof Ember.Handlebars.SafeString).toEqual(true);
       expect(res.string).toEqual('something <b>cool</b>');
     });
     it("should strip html if specified", function() {
       var res = Ember.templateHelpers.safe('something <b>cool</b>', 'stripped');
-      expect(res instanceof Ember.Handlebars.SafeString).toEqual(true);
       expect(res.string).toEqual('something cool');
     });
   });

@@ -27,7 +27,7 @@ describe BoardsController, :type => :controller do
     it "should render if status not set" do
       ls = LogSession.new
       expect(LogSession).to receive(:find_by_global_id).with('oho').and_return(ls)
-      get "log_goal_status", :goal_id => 'asdf', :goal_code => 'asdf', :log_id => 'oho'
+      get "log_goal_status", params: {:goal_id => 'asdf', :goal_code => 'asdf', :log_id => 'oho'}
       expect(response).to be_success
       expect(assigns[:log]).to eq(ls)
     end
@@ -37,7 +37,7 @@ describe BoardsController, :type => :controller do
       g = UserGoal.create(:user => u)
       expect(UserGoal).to receive(:find_by_global_id).with(g.global_id).and_return(g)
       expect(g).to receive(:process_status_from_code).with('4', 'asdf').and_return(nil)
-      get "log_goal_status", :goal_id => g.global_id, :goal_code => 'asdf', :status => '4'
+      get "log_goal_status", params: {:goal_id => g.global_id, :goal_code => 'asdf', :status => '4'}
       expect(response).to be_success
       expect(assigns[:error]).to eq(true)
     end
@@ -46,7 +46,7 @@ describe BoardsController, :type => :controller do
       u = User.create
       d = Device.create(:user => u)
       g = UserGoal.create(:user => u)
-      get "log_goal_status", :goal_id => g.global_id, :goal_code => g.goal_code(u), :status => '3'
+      get "log_goal_status", params: {:goal_id => g.global_id, :goal_code => g.goal_code(u), :status => '3'}
       expect(response).to be_redirect
       s = LogSession.last
       expect(s.user).to eq(u)
@@ -60,7 +60,7 @@ describe BoardsController, :type => :controller do
       g = UserGoal.create(:user => u)
       expect(UserGoal).to receive(:find_by_global_id).with(g.global_id).and_return(g)
       expect(g).to receive(:process_status_from_code).with('4', 'asdf').and_return(nil)
-      get "log_goal_status", :goal_id => g.global_id, :goal_code => 'asdf', :status => '4'
+      get "log_goal_status", params: {:goal_id => g.global_id, :goal_code => 'asdf', :status => '4'}
       expect(response).to be_success
       expect(assigns[:error]).to eq(true)
     end
@@ -72,7 +72,7 @@ describe BoardsController, :type => :controller do
       b = Board.create(:user => u, :public => true)
       meta = b.meta_record
       expect_any_instance_of(Board).to receive(:meta_record).and_return(meta)
-      get :board, :id => b.key
+      get :board, params: {:id => b.key}
       expect(response).to be_success
     end
 
@@ -81,7 +81,7 @@ describe BoardsController, :type => :controller do
       b = Board.create(:user => u)
       meta = b.meta_record
       expect_any_instance_of(Board).to_not receive(:meta_record)
-      get :board, :id => b.key
+      get :board, params: {:id => b.key}
       expect(response).to be_success
     end
     
@@ -89,7 +89,7 @@ describe BoardsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       OldKey.create(:type => 'board', :key => 'bob/fred', :record_id => b.global_id)
-      get :board, :id => 'bob/fred'
+      get :board, params: {:id => 'bob/fred'}
       expect(response).to be_redirect
       expect(response.location).to match(/\/#{b.key}$/)
     end
@@ -100,14 +100,14 @@ describe BoardsController, :type => :controller do
       u = User.create(:settings => {'public' => true})
       meta = u.meta_record
       expect_any_instance_of(User).to receive(:meta_record).and_return(meta)
-      get :user, :id => u.global_id
+      get :user, params: {:id => u.global_id}
       expect(response).to be_success
     end
 
     it "should redirect when old key found" do
       u = User.create
       OldKey.create(:type => 'user', :key => 'bobfred', :record_id => u.global_id)
-      get :user, :id => 'bobfred'
+      get :user, params: {:id => 'bobfred'}
       expect(response).to be_redirect
       expect(response.location).to match(/\/#{u.user_name}$/)
     end
@@ -117,7 +117,7 @@ describe BoardsController, :type => :controller do
     it "should redirect to the icon's url" do
       u = User.create
       b = Board.create(:user => u)
-      get :icon, :id => b.global_id
+      get :icon, params: {:id => b.global_id}
       expect(response).to be_redirect
       expect(response.location).to eq(b.icon_url_or_fallback)
     end
@@ -128,7 +128,7 @@ describe BoardsController, :type => :controller do
     
     it "should load the utterance record" do
       u = Utterance.create(:data => {:sentence => "ok guys"})
-      get :utterance, :id => u.global_id
+      get :utterance, params: {:id => u.global_id}
 #      response.should be_success
     end
     
@@ -136,7 +136,7 @@ describe BoardsController, :type => :controller do
       u = Utterance.create(:data => {:sentence => "ok guys"})
       meta = u.meta_record
       expect_any_instance_of(Utterance).to receive(:meta_record).and_return(meta)
-      get :utterance, :id => u.global_id
+      get :utterance, params: {:id => u.global_id}
       expect(response).to be_success
       expect(assigns[:meta_record]).not_to eq(nil)
 #      response.body.should match(/meta name="twitter:description" content="ok guys"/)

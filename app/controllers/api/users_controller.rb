@@ -1,7 +1,7 @@
 class Api::UsersController < ApplicationController
   extend ::NewRelic::Agent::MethodTracer
 
-  before_filter :require_api_token, :except => [:update, :show, :create, :confirm_registration, :forgot_password, :password_reset]
+  before_action :require_api_token, :except => [:update, :show, :create, :confirm_registration, :forgot_password, :password_reset]
   def show
     user = User.find_by_path(params['id'])
     user_device = @api_user == user && @api_device

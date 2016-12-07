@@ -1,6 +1,6 @@
 class Api::SoundsController < ApplicationController
   include RemoteUploader
-  before_filter :require_api_token, :except => [:upload_success]
+  before_action :require_api_token, :except => [:upload_success]
 
   def create
     sound = ButtonSound.process_new(params['sound'], {:user => @api_user, :remote_upload_possible => true})

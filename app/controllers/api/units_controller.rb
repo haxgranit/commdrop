@@ -1,5 +1,5 @@
 class Api::UnitsController < ApplicationController
-  before_filter :require_api_token
+  before_action :require_api_token
 
   def index
     org = Organization.find_by_global_id(params['organization_id'])

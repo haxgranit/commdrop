@@ -6,7 +6,7 @@ describe Api::MessagesController, :type => :controller do
       orig = ENV['ALLOW_UNAUTHENTICATED_TICKETS']
       ENV['ALLOW_UNAUTHENTICATED_TICKETS'] = nil
       
-      post :create, {}
+      post :create, params: {}
       expect(response.success?).to eq(false)
       json = JSON.parse(response.body)
       expect(json['error']).to eq('API token required')
@@ -18,7 +18,7 @@ describe Api::MessagesController, :type => :controller do
       orig = ENV['ALLOW_UNAUTHENTICATED_TICKETS']
       ENV['ALLOW_UNAUTHENTICATED_TICKETS'] = 'true'
 
-      post :create, {}
+      post :create, params: {}
       expect(response.success?).to eq(false)
       json = JSON.parse(response.body)
       expect(json['error']).to eq('message creation failed')
@@ -27,7 +27,7 @@ describe Api::MessagesController, :type => :controller do
     end
     
     it "should create a message" do
-      post :create, :message => {'name' => 'fred'}
+      post :create, params: {:message => {'name' => 'fred'}}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['received']).to eq(true)
@@ -38,7 +38,7 @@ describe Api::MessagesController, :type => :controller do
     
     it "should schedule a delivery for the created message" do
       expect(AdminMailer).to receive(:schedule_delivery).with(:message_sent, /\d+_\d+/).and_return(true)
-      post :create, :message => {'name' => 'fred'}
+      post :create, params: {:message => {'name' => 'fred'}}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['received']).to eq(true)
@@ -48,7 +48,7 @@ describe Api::MessagesController, :type => :controller do
       orig = ENV['ZENDESK_DOMAIN']
       ENV['ZENDESK_DOMAIN'] = 'asdf'
       expect(AdminMailer).not_to receive(:schedule_delivery)
-      post :create, :message => {'name' => 'fred', 'recipient' => 'support', 'email' => 'bob@asdf.com'}
+      post :create, params: {:message => {'name' => 'fred', 'recipient' => 'support', 'email' => 'bob@asdf.com'}}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['received']).to eq(true)

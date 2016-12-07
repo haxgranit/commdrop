@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Api::GoalsController, type: :controller do
   describe "index" do
     it "should not require api token" do
-      get :index, :template_header => 1
+      get :index, params: {:template_header => 1}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']).to eq([])
@@ -11,7 +11,7 @@ describe Api::GoalsController, type: :controller do
     
     it "should list template_header goals" do
       g = UserGoal.create(:template_header => true)
-      get :index, :template_header => 1
+      get :index, params: {:template_header => 1}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal'].length).to eq(1)
@@ -21,14 +21,14 @@ describe Api::GoalsController, type: :controller do
     it "should require permission for user goals" do
       u = User.create
       token_user
-      get :index, :user_id => u.global_id
+      get :index, params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
     it "should list user goals if authorized" do
       token_user
       g = UserGoal.create(:user => @user)
-      get :index, :user_id => @user.global_id
+      get :index, params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal'].length).to eq(1)
@@ -40,7 +40,7 @@ describe Api::GoalsController, type: :controller do
       50.times do |i|
         UserGoal.create(:user => @user)
       end
-      get :index, :user_id => @user.global_id
+      get :index, params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal'].length).to eq(30)
@@ -52,7 +52,7 @@ describe Api::GoalsController, type: :controller do
       g = UserGoal.create(:user => @user, :settings => {'template_header_id' => 'self'}, :template_header => true)
       Worker.process_queues
       expect(g.reload.settings['template_header_id']).to eq(g.global_id)
-      get :index, :template_header_id => g.global_id
+      get :index, params: {:template_header_id => g.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal'].length).to eq(1)
@@ -61,7 +61,7 @@ describe Api::GoalsController, type: :controller do
     it "should list a user's template if authorized" do
       token_user
       g = UserGoal.create(:user => @user, :template => true)
-      get :index, :user_id => @user.global_id, :template => true
+      get :index, params: {:user_id => @user.global_id, :template => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal'].length).to eq(1)
@@ -72,7 +72,7 @@ describe Api::GoalsController, type: :controller do
       token_user
       g = UserGoal.create(:user => @user, :global => true)
       g2 = UserGoal.create(:user => @user)
-      get :index, :global => true
+      get :index, params: {:global => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal'].length).to eq(1)
@@ -82,13 +82,13 @@ describe Api::GoalsController, type: :controller do
   
   describe "show" do
     it "should require api token" do
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require valid record" do
       token_user
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -96,14 +96,14 @@ describe Api::GoalsController, type: :controller do
       token_user
       u = User.create
       g = UserGoal.create(:user => u)
-      get :show, :id => g.global_id
+      get :show, params: {:id => g.global_id}
       assert_unauthorized
     end
     
     it "should return goal" do
       token_user
       g = UserGoal.create(:user => @user)
-      get :show, :id => g.global_id
+      get :show, params: {:id => g.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']['id']).to eq(g.global_id)
@@ -118,20 +118,20 @@ describe Api::GoalsController, type: :controller do
     
     it "should require valid user_id" do
       token_user
-      post :create, :goal => {'user_id' => 'asdf'}
+      post :create, params: {:goal => {'user_id' => 'asdf'}}
       assert_not_found('asdf')
     end
     
     it "should require permission" do
       token_user
       u = User.create
-      post :create, :goal => {'user_id' => u.global_id}
+      post :create, params: {:goal => {'user_id' => u.global_id}}
       assert_unauthorized
     end
     
     it "should create goal" do
       token_user
-      post :create, :goal => {'user_id' => @user.global_id, 'summary' => 'cool goal'}
+      post :create, params: {:goal => {'user_id' => @user.global_id, 'summary' => 'cool goal'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']['id']).to_not be_nil
@@ -140,11 +140,11 @@ describe Api::GoalsController, type: :controller do
     
     it "should require admin permission to create a template header" do
       token_user
-      post :create, :goal => {'template_header' => true, 'summary' => 'template goal'}
+      post :create, params: {:goal => {'template_header' => true, 'summary' => 'template goal'}}
       assert_unauthorized
       o = Organization.create(:admin => true, :settings => {'total_licenses' => 1})
       o.add_manager(@user.user_name, true)
-      post :create, :goal => {'template_header' => true, 'summary' => 'template goal'}
+      post :create, params: {:goal => {'template_header' => true, 'summary' => 'template goal'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']['id']).to_not be_nil
@@ -152,7 +152,7 @@ describe Api::GoalsController, type: :controller do
     
     it "should default to the api_user when creating a goal" do
       token_user
-      post :create, :goal => {'summary' => 'cool goal'}
+      post :create, params: {:goal => {'summary' => 'cool goal'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']['id']).to_not be_nil
@@ -162,13 +162,13 @@ describe Api::GoalsController, type: :controller do
 
   describe "update" do
     it "should require api token" do
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require existing record" do
       token_user
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -176,14 +176,14 @@ describe Api::GoalsController, type: :controller do
       token_user
       u = User.create
       g = UserGoal.create(:user => u)
-      put :update, :id => g.global_id
+      put :update, params: {:id => g.global_id}
       assert_unauthorized
     end
     
     it "should update the record" do
       token_user
       g = UserGoal.create(:user => @user)
-      put :update, :id => g.global_id, :goal => {'summary' => 'better goal'}
+      put :update, params: {:id => g.global_id, :goal => {'summary' => 'better goal'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']['id']).to eq(g.global_id)
@@ -195,7 +195,7 @@ describe Api::GoalsController, type: :controller do
       u = User.create
       User.link_supervisor_to_user(@user, u, nil, false)
       g = UserGoal.create(:user => u)
-      put :update, :id => g.global_id, :goal => {'summary' => 'dumb name', 'comment' => {'text' => 'hey yo'}}
+      put :update, params: {:id => g.global_id, :goal => {'summary' => 'dumb name', 'comment' => {'text' => 'hey yo'}}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']['summary']).to eq('user goal')
@@ -207,13 +207,13 @@ describe Api::GoalsController, type: :controller do
 
   describe "destroy" do
     it "should require api token" do
-      delete :destroy, :id => 'asdf'
+      delete :destroy, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require existing record" do
       token_user
-      delete :destroy, :id => 'asdf'
+      delete :destroy, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -222,7 +222,7 @@ describe Api::GoalsController, type: :controller do
       u = User.create
       User.link_supervisor_to_user(@user, u, nil, false)
       g = UserGoal.create(:user => u)
-      delete :destroy, :id => g.global_id
+      delete :destroy, params: {:id => g.global_id}
       assert_unauthorized
     end
     
@@ -231,7 +231,7 @@ describe Api::GoalsController, type: :controller do
       u = User.create
       User.link_supervisor_to_user(@user, u, nil, true)
       g = UserGoal.create(:user => u)
-      delete :destroy, :id => g.global_id
+      delete :destroy, params: {:id => g.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['goal']['id']).to eq(g.global_id)

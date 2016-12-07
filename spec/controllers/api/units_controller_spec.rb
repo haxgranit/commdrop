@@ -9,14 +9,14 @@ describe Api::UnitsController, :type => :controller do
     
     it "should require an existing org" do
       token_user
-      get :index, :organization_id => 'asdf'
+      get :index, params: {:organization_id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       o = Organization.create
-      get :index, :organization_id => o.global_id
+      get :index, params: {:organization_id => o.global_id}
       assert_unauthorized
     end
     
@@ -26,7 +26,7 @@ describe Api::UnitsController, :type => :controller do
       o.add_manager(@user.global_id)
       ou = OrganizationUnit.create(:organization => o)
       ou2 = OrganizationUnit.create(:organization => o)
-      get :index, :organization_id => o.global_id
+      get :index, params: {:organization_id => o.global_id}
       expect(response).to be_success
       res = JSON.parse(response.body)
       expect(res['unit']).to_not eq(nil)
@@ -43,14 +43,14 @@ describe Api::UnitsController, :type => :controller do
     
     it "should require an existing org" do
       token_user
-      post :create, :unit => {'organization_id' => 'asdf'}
+      post :create, params: {:unit => {'organization_id' => 'asdf'}}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       o = Organization.create
-      post :create, :unit => {'organization_id' => o.global_id}
+      post :create, params: {:unit => {'organization_id' => o.global_id}}
       assert_unauthorized
     end
     
@@ -58,7 +58,7 @@ describe Api::UnitsController, :type => :controller do
       token_user
       o = Organization.create
       o.add_manager(@user.user_name)
-      post :create, :unit => {'organization_id' => o.global_id, 'name' => 'Cool Room'}
+      post :create, params: {:unit => {'organization_id' => o.global_id, 'name' => 'Cool Room'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['unit']['name']).to eq('Cool Room')
@@ -67,20 +67,20 @@ describe Api::UnitsController, :type => :controller do
 
   describe "show" do
     it "should require an api token" do
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require an existing record" do
       token_user
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       ou = OrganizationUnit.create
-      get :show, :id => ou.global_id
+      get :show, params: {:id => ou.global_id}
       assert_unauthorized
     end
     
@@ -89,7 +89,7 @@ describe Api::UnitsController, :type => :controller do
       o = Organization.create
       o.add_manager(@user.user_name)
       ou = OrganizationUnit.create(:organization => o)
-      get :show, :id => ou.global_id
+      get :show, params: {:id => ou.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['unit']['id']).to eq(ou.global_id)
@@ -98,20 +98,20 @@ describe Api::UnitsController, :type => :controller do
   
   describe "update" do
     it "should require an api token" do
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require an existing record" do
       token_user
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       ou = OrganizationUnit.create
-      put :update, :id => ou.global_id
+      put :update, params: {:id => ou.global_id}
       assert_unauthorized
     end
     
@@ -120,7 +120,7 @@ describe Api::UnitsController, :type => :controller do
       o = Organization.create
       o.add_manager(@user.user_name)
       ou = OrganizationUnit.create(:organization => o)
-      put :update, :id => ou.global_id, :unit => {'name' => 'Better Room'}
+      put :update, params: {:id => ou.global_id, :unit => {'name' => 'Better Room'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['unit']['id']).to eq(ou.global_id)
@@ -130,20 +130,20 @@ describe Api::UnitsController, :type => :controller do
 
   describe "destroy" do
     it "should require an api token" do
-      delete :destroy, :id => 'asdf'
+      delete :destroy, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require an existing record" do
       token_user
-      delete :destroy, :id => 'asdf'
+      delete :destroy, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       ou = OrganizationUnit.create
-      delete :destroy, :id => ou.global_id
+      delete :destroy, params: {:id => ou.global_id}
       assert_unauthorized
     end
     
@@ -152,7 +152,7 @@ describe Api::UnitsController, :type => :controller do
       o = Organization.create
       o.add_manager(@user.user_name)
       ou = OrganizationUnit.create(:organization => o)
-      delete :destroy, :id => ou.global_id
+      delete :destroy, params: {:id => ou.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['unit']['id']).to eq(ou.global_id)
@@ -162,13 +162,13 @@ describe Api::UnitsController, :type => :controller do
   
   describe "stats" do
     it "should require api token" do
-      get :stats, :unit_id => '1_1234'
+      get :stats, params: {:unit_id => '1_1234'}
       assert_missing_token
     end
     
     it "should return not found unless org exists" do
       token_user
-      get :stats, :unit_id => '1_1234'
+      get :stats, params: {:unit_id => '1_1234'}
       assert_not_found("1_1234")
     end
     
@@ -176,7 +176,7 @@ describe Api::UnitsController, :type => :controller do
       token_user
       o = Organization.create
       u = OrganizationUnit.create(:organization => o)
-      get :stats, :unit_id => u.global_id
+      get :stats, params: {:unit_id => u.global_id}
       assert_unauthorized
     end
     
@@ -190,7 +190,7 @@ describe Api::UnitsController, :type => :controller do
       o.add_supervisor(@user.user_name, false)
       u.add_supervisor(@user.user_name)
       expect(u.reload.all_user_ids.length).to eq(1)
-      get :stats, :unit_id => u.global_id
+      get :stats, params: {:unit_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'weeks' => [], 'user_weeks' => {}, 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0, 'recent_session_count' => 0, 'recent_session_user_count' => 0, 'total_users' => 0}})
@@ -208,14 +208,14 @@ describe Api::UnitsController, :type => :controller do
         ]
       }, {:user => user, :device => d, :author => user})
       Worker.process_queues
-      get :stats, :unit_id => u.global_id
+      get :stats, params: {:unit_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'weeks' => [], 'user_weeks' => {}, 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0, 'recent_session_count' => 0, 'recent_session_user_count' => 0, 'total_users' => 0}})
       
       expect(u.add_communicator(user.user_name)).to eq(true)
       expect(u.reload.all_user_ids.length).to eq(2)
-      get :stats, :unit_id => u.global_id
+      get :stats, params: {:unit_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)['weeks']
       expect(json.length).to eq(2)
@@ -240,12 +240,12 @@ describe Api::UnitsController, :type => :controller do
       o.add_user(user.user_name, false, false)
       u.add_supervisor(@user.user_name)
       expect(u.reload.all_user_ids.length).to eq(1)
-      get :stats, :unit_id => u.global_id
+      get :stats, params: {:unit_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'weeks' => [], 'user_weeks' => {}, 'user_counts' => {'goal_set' => 0, 'goal_recently_logged' => 0, 'recent_session_count' => 0, 'recent_session_user_count' => 0, 'total_users' => 0}})
       
-      get :stats, :unit_id => u.global_id
+      get :stats, params: {:unit_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['user_counts']).to eq({
@@ -258,7 +258,7 @@ describe Api::UnitsController, :type => :controller do
       
       u.add_communicator(user.user_name)
       expect(u.reload.all_user_ids.length).to eq(2)
-      get :stats, :unit_id => u.global_id
+      get :stats, params: {:unit_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['user_counts']).to eq({
@@ -273,13 +273,13 @@ describe Api::UnitsController, :type => :controller do
   
   describe "logs" do
     it "should require api token" do
-      get :logs, :unit_id => '1_1234'
+      get :logs, params: {:unit_id => '1_1234'}
       assert_missing_token
     end
     
     it "should return not found unless org exists" do
       token_user
-      get :logs, :unit_id => '1_1234'
+      get :logs, params: {:unit_id => '1_1234'}
       assert_not_found("1_1234")
     end
     
@@ -287,7 +287,7 @@ describe Api::UnitsController, :type => :controller do
       token_user
       o = Organization.create
       u = OrganizationUnit.create(:organization => o)
-      get :logs, :unit_id => u.global_id
+      get :logs, params: {:unit_id => u.global_id}
       assert_unauthorized
     end
     
@@ -309,7 +309,7 @@ describe Api::UnitsController, :type => :controller do
         }, {:user => u, :device => d, :author => u})
       end
       
-      get :logs, :unit_id => unit.global_id
+      get :logs, params: {:unit_id => unit.global_id}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['meta']).not_to eq(nil)

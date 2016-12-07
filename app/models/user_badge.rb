@@ -44,6 +44,10 @@ class UserBadge < ActiveRecord::Base
     true
   end
   
+  def global
+    !!(self.data && self.data['global_goal'])
+  end
+  
   def notify_on_earned(frd=false)
     if !frd && @just_earned
       schedule(:notify_on_earned, true)
@@ -77,7 +81,7 @@ class UserBadge < ActiveRecord::Base
     (self.data && self.data['earn_recorded'] && Time.parse(self.data['earn_recorded'])) || self.updated_at
   end
   
-  def award!(earned, badge_level)
+  def award!(earned, badge_level=nil)
     return if self.earned
     # {:started, :ended, :tally, :streak}
     self.earned = true
@@ -126,7 +130,7 @@ class UserBadge < ActiveRecord::Base
     end
   end
   
-  def mark_progress!(percent, progress_expires_at=nil, badge_level)
+  def mark_progress!(percent, progress_expires_at=nil, badge_level=nil)
     return if self.earned
     self.data ||= {}
     raise "invalid percent" if percent >= 1.0 || percent < 0.0
@@ -454,7 +458,7 @@ class UserBadge < ActiveRecord::Base
           level += 1
           prior_earned = true
         else
-          badge.mark_progress!(progress, badge_level)
+          badge.mark_progress!(progress, nil, badge_level)
           prior_earned = false
         end
       else

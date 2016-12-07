@@ -1724,4 +1724,29 @@ describe User, :type => :model do
       expect(User.find_for_login('bob@example.com')).to eq(nil)
     end
   end
+  
+  describe "versions" do
+    it "should track versions correctly" do
+      u = User.create!
+      u.reload
+      u.settings['email'] = 'email@example.com'
+      u.save!
+      u.reload
+      u.settings['email'] = 'emails@example.com'
+      u.settings['something_else'] = 'frogs'
+      u.save!
+      u.reload
+      u.settings['something_else'] = 'cool'
+      u.save!
+      u.reload
+      expect(u.versions.count).to eq(4)
+      expect(User.load_version(u.versions[-1]).settings['something_else']).to eq('cool')
+      expect(User.load_version(u.versions[-1]).settings['email']).to eq('emails@example.com')
+      expect(User.load_version(u.versions[-2]).settings['something_else']).to eq('frogs')
+      expect(User.load_version(u.versions[-2]).settings['email']).to eq('emails@example.com')
+      expect(User.load_version(u.versions[-3]).settings['something_else']).to eq(nil)
+      expect(User.load_version(u.versions[-3]).settings['email']).to eq('email@example.com')
+      expect(User.load_version(u.versions[-4])).to eq(nil)
+    end
+  end
 end

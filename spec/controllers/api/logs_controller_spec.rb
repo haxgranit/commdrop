@@ -10,7 +10,7 @@ describe Api::LogsController, :type => :controller do
     it "should return unauthorized unless edit permissions allowed" do
       u = User.create
       token_user
-      get :index, :user_id => u.global_id
+      get :index, params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
@@ -22,7 +22,7 @@ describe Api::LogsController, :type => :controller do
           {'timestamp' => 3.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
         ]
       }, {:user => @user, :device => @device, :author => @user})
-      get :index, :user_id => @user.global_id
+      get :index, params: {:user_id => @user.global_id}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(1)
     end
@@ -37,7 +37,7 @@ describe Api::LogsController, :type => :controller do
           ]
         }, {:user => @user, :device => @device, :author => @user})
       end
-      get :index, :user_id => @user.global_id
+      get :index, params: {:user_id => @user.global_id}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(JsonApi::Log::DEFAULT_PAGE)
       expect(json['meta']['next_url']).not_to eq(nil)
@@ -60,7 +60,7 @@ describe Api::LogsController, :type => :controller do
       end
       Worker.process_queues
       expect(@user.reload.supervisees.length).to eq(2)
-      get :index, :user_id => @user.global_id, :supervisees => true
+      get :index, params: {:user_id => @user.global_id, :supervisees => true}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(6)
       expect(json['log'][0]['author']['id']).to eq(users[0].global_id)
@@ -96,26 +96,26 @@ describe Api::LogsController, :type => :controller do
       l3.ip_cluster_id = ip.id
       l3.save 
 
-      get :index, :user_id => @user.global_id, :start => 2.weeks.ago.to_s, :end => 1.day.from_now.to_s, :device_id => @device.global_id
+      get :index, params: {:user_id => @user.global_id, :start => 2.weeks.ago.to_s, :end => 1.day.from_now.to_s, :device_id => @device.global_id}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(2)
       expect(json['log'].map{|l| l['id'] }).to eq([l3.global_id, l2.global_id])
       
-      get :index, :user_id => @user.global_id, :device_id => "abc"
+      get :index, params: {:user_id => @user.global_id, :device_id => "abc"}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(0)
 
-      get :index, :user_id => @user.global_id, :end => 3.days.ago.to_s
+      get :index, params: {:user_id => @user.global_id, :end => 3.days.ago.to_s}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(2)
       expect(json['log'].map{|l| l['id'] }).to eq([l2.global_id, l1.global_id])
 
-      get :index, :user_id => @user.global_id, :location_id => geo.global_id
+      get :index, params: {:user_id => @user.global_id, :location_id => geo.global_id}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(2)
       expect(json['log'].map{|l| l['id'] }).to eq([l2.global_id, l1.global_id])
 
-      get :index, :user_id => @user.global_id, :location_id => ip.global_id
+      get :index, params: {:user_id => @user.global_id, :location_id => ip.global_id}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(2)
       expect(json['log'].map{|l| l['id'] }).to eq([l3.global_id, l1.global_id])
@@ -131,7 +131,7 @@ describe Api::LogsController, :type => :controller do
           ]
         }, {:user => @user, :device => @device, :author => @user})
       end
-      get :index, :user_id => @user.global_id, :start => 2.weeks.ago.to_s
+      get :index, params: {:user_id => @user.global_id, :start => 2.weeks.ago.to_s}
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(JsonApi::Log::DEFAULT_PAGE)
       expect(json['meta']['next_url']).to match(/user_id=/)
@@ -140,31 +140,7 @@ describe Api::LogsController, :type => :controller do
       expect(json['meta']['next_url']).not_to match(/device_id=/)
       expect(json['meta']['next_url']).not_to match(/location_id=/)
     end
-    
-#     user = User.find_by_path(params['user_id'])
-#     return unless allowed?(user, 'supervise')
-#     user_ids = [user.id]
-#     user_ids = [] if params['supervisees']
-#     if params['supervisees']
-#       user_ids += user.supervisees.map(&:id)
-#     end
-#     user_ids = user_ids.uniq
-#     
-#     options = {:start => params['start'], :end => params['end']}
-#     Stats.sanitize_find_options!(options)
-#     logs = LogSession.where({:user_id => user_ids}).where.not({:started_at => nil})
-#     params['type'] ||= 'all'
-#     if params['type'] != 'all'
-#       logs = logs.where(:log_type => params['type'])
-#     end
-#     if params['goal_id']
-#       goal = UserGoal.find_by_global_id(params['goal_id'])
-#       if goal && goal.user == user
-#         logs = logs.where(:goal_id => goal.id)
-#       else
-#         logs = logs.where(:id => 0)
-#       end
-#     end
+
     it "should filter by goal_id" do
       token_user
       g = UserGoal.create(:user => @user)
@@ -189,7 +165,7 @@ describe Api::LogsController, :type => :controller do
           {'timestamp' => 17.seconds.ago.to_i, 'type' => 'button', 'button' => {'label' => 'never mind', 'board' => {'id' => '1_1'}}}
         ]
       }, {:user => @user, :device => @device, :author => @user})
-      get :index, :user_id => @user.global_id, :goal_id => g.global_id
+      get :index, params: {:user_id => @user.global_id, :goal_id => g.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(3)
@@ -222,7 +198,7 @@ describe Api::LogsController, :type => :controller do
         ]
       }, {:user => u, :device => @device, :author => @user})
 
-      get :index, :user_id => @user.global_id, :goal_id => g.global_id
+      get :index, params: {:user_id => @user.global_id, :goal_id => g.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['log'].length).to eq(0)
@@ -232,20 +208,20 @@ describe Api::LogsController, :type => :controller do
   
   describe "create" do
     it "should require api token" do
-      post :create, {}
+      post :create, params: {}
       assert_missing_token
     end
     
     it "should return unauthorized unless edit permissions allowed" do
       u = User.create
       token_user
-      post :create, :user_id => u.global_id
+      post :create, params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
     it "should generate a log result and return it" do
       token_user
-      post :create, :log => {:events => [{'timestamp' => 5.hours.ago.to_i, 'type' => 'button', 'button' => {'label' => 'cool', 'board' => {'id' => '1_1'}}}]}
+      post :create, params: {:log => {:events => [{'timestamp' => 5.hours.ago.to_i, 'type' => 'button', 'button' => {'label' => 'cool', 'board' => {'id' => '1_1'}}}]}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['log']['pending']).to eq(true)
@@ -257,7 +233,7 @@ describe Api::LogsController, :type => :controller do
     it "should try to extract and canonicalize the ip address" do
       token_user
       request.env['HTTP_X_FORWARDED_FOR'] = "8.7.6.5"
-      post :create, :log => {:events => [{'timestamp' => 5.hours.ago.to_i, 'type' => 'button', 'button' => {'label' => 'cool', 'board' => {'id' => '1_1'}}}]}
+      post :create, params: {:log => {:events => [{'timestamp' => 5.hours.ago.to_i, 'type' => 'button', 'button' => {'label' => 'cool', 'board' => {'id' => '1_1'}}}]}}
       expect(response).to be_success
       Worker.process_queues
       s = LogSession.last
@@ -270,7 +246,7 @@ describe Api::LogsController, :type => :controller do
     it "should error gracefully on log update fail" do
       expect_any_instance_of(LogSession).to receive(:process_params){|u| u.add_processing_error("bacon") }.and_return(false)
       token_user
-      post :create, :log => {:events => [{'timestamp' => 5.hours.ago.to_i, 'type' => 'button', 'button' => {'label' => 'cool', 'board' => {'id' => '1_1'}}}]}
+      post :create, params: {:log => {:events => [{'timestamp' => 5.hours.ago.to_i, 'type' => 'button', 'button' => {'label' => 'cool', 'board' => {'id' => '1_1'}}}]}}
       Worker.process_queues
       expect(response).to be_success
       json = JSON.parse(response.body)
@@ -280,7 +256,7 @@ describe Api::LogsController, :type => :controller do
   
   describe "update" do
     it "should require api token" do
-      put 'update', :id => '1234'
+      put 'update', params: {:id => '1234'}
       assert_missing_token
     end
     
@@ -289,7 +265,7 @@ describe Api::LogsController, :type => :controller do
       u = User.create
       d = Device.create(:user => u)
       log = LogSession.create(:user => u, :author => u, :device => d)
-      put 'update', :id => log.global_id
+      put 'update', params: {:id => log.global_id}
       assert_unauthorized
     end
     
@@ -298,7 +274,7 @@ describe Api::LogsController, :type => :controller do
       d = Device.create(:user => @user)
       log = LogSession.create(:user => @user, :author => @user, :device => d)
       expect_any_instance_of(LogSession).to receive(:process_params).with({}, hash_including(:update_only => true))
-      put 'update', :id => log.global_id, 'log' => {}
+      put 'update', params: {:id => log.global_id, 'log' => {}}
       expect(response).to be_success
     end
     
@@ -332,7 +308,7 @@ describe Api::LogsController, :type => :controller do
           ]}
         ]
       }
-      put 'update', :id => log.global_id, 'log' => params
+      put 'update', params: {:id => log.global_id, 'log' => params}
       expect(response).to be_success
       json = JSON.parse(response.body)
       
@@ -358,19 +334,19 @@ describe Api::LogsController, :type => :controller do
   
   describe "lam" do
     it "should not require api token" do
-      get 'lam', :log_id => '1234'
+      get 'lam', params: {:log_id => '1234'}
       expect(response).to be_success
     end
     
     it "should error gracefully on not found" do
-      get 'lam', :log_id => '1234'
+      get 'lam', params: {:log_id => '1234'}
       expect(response).to be_success
       expect(response.body).to eql("Not found")
       
       u = User.create
       d = Device.create
       log = LogSession.create(:user => u, :device => d, :author => u)
-      get 'lam', :log_id => log.global_id
+      get 'lam', params: {:log_id => log.global_id}
       expect(response).to be_success
       expect(response.body).to eql("Not found")
     end
@@ -379,7 +355,7 @@ describe Api::LogsController, :type => :controller do
       u = User.create
       d = Device.create
       log = LogSession.create(:user => u, :device => d, :author => u)
-      get 'lam', :log_id => log.global_id, :nonce => log.data['nonce']
+      get 'lam', params: {:log_id => log.global_id, :nonce => log.data['nonce']}
       expect(response).to be_success
       expect(response.body).to match(/CAUTION/)
       expect(response.body).to match(/LAM Version 2\.00/)
@@ -388,26 +364,26 @@ describe Api::LogsController, :type => :controller do
 
   describe "import" do
     it "should require an api token" do
-      post 'import', :user_id => 'asdf'
+      post 'import', params: {:user_id => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the user doesn't exist" do
       token_user
-      post 'import', :user_id => 'asdf'
+      post 'import', params: {:user_id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      post 'import', :user_id => u.global_id
+      post 'import', params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
     it "should error if no content provided" do
       token_user
-      post 'import', :user_id => @user.global_id
+      post 'import', params: {:user_id => @user.global_id}
       expect(response).to_not be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq('missing content for import')
@@ -416,7 +392,7 @@ describe Api::LogsController, :type => :controller do
     it "should process the data" do
       token_user
       expect(Stats).to receive(:process_lam).with('some content', @user).and_return([{}])
-      post 'import', :user_id => @user.global_id, :content => "some content"
+      post 'import', params: {:user_id => @user.global_id, :content => "some content"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['log']).to_not eq(nil)

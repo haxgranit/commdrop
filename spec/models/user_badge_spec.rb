@@ -712,6 +712,8 @@ describe UserBadge, type: :model do
       g.save
 
       UserBadge.check_for(u.global_id)     
+      UserBadge.check_for(u.global_id)     
+      UserBadge.check_for(u.global_id)     
       badges = UserBadge.where(:user => u, :user_goal => g).order(:level)
       expect(badges.count).to eq(2)
       
@@ -720,6 +722,8 @@ describe UserBadge, type: :model do
       expect(auto_tracks.map{|s| s.started_at.to_date.iso8601 }).to eq(["2016-06-09", "2016-06-08", "2016-06-07", "2016-06-06", "2016-06-05"])
       expect(auto_tracks.map{|s| s.data['assessment']['totals']['correct']}).to eq([1, 0, 1, 0, 0])
       expect(auto_tracks.map{|s| s.data['assessment']['totals']['incorrect']}).to eq([0, 1, 0, 1, 1])
+      expect(auto_tracks.map{|s| s.data['assessment']['automatic']}).to eq([true, true, true, true, true])
+      expect(auto_tracks.map{|s| s.data['assessment']['manual']}).to eq([false, false, false, false, false])
     end
   end
   
@@ -900,6 +904,7 @@ describe UserBadge, type: :model do
         'units' => [{}],
         'tally' => 4,
         'name' => 'Unnamed Badge',
+        'badge_level' => nil,
         'streak' => 3,
         'percent' => 1.0
       })
@@ -925,6 +930,7 @@ describe UserBadge, type: :model do
         'ended' => ended.utc.iso8601,
         'earn_recorded' => Time.now.utc.iso8601,
         'global_goal' => nil,
+        'badge_level' => nil,
         'units' => [{}],
         'tally' => 4,
         'name' => 'cool goal',
@@ -1257,6 +1263,7 @@ describe UserBadge, type: :model do
       
       o = WeeklyStatsSummary.where(:user_id => u.id)
       expect(WeeklyStatsSummary).to receive(:where).with(:user_id => u.id).and_return(o)
+      expect(o).to receive(:find_in_batches).and_return([])
       expect(o).to_not receive(:where)
       expect(UserBadge).to receive(:cluster_days).with(:date, []).and_return([])
       UserBadge.check_goal_badges(u, g, 0)
@@ -1274,6 +1281,7 @@ describe UserBadge, type: :model do
       
       o = WeeklyStatsSummary.where(:user_id => u.id)
       expect(WeeklyStatsSummary).to receive(:where).with(:user_id => u.id).and_return(o)
+      expect(o).to receive(:find_in_batches).and_return([])
       expect(o).to_not receive(:where)
       expect(UserBadge).to receive(:cluster_days).with(:weekyear, []).and_return([])
       UserBadge.check_goal_badges(u, g, 0)
@@ -1291,6 +1299,7 @@ describe UserBadge, type: :model do
       
       o = WeeklyStatsSummary.where(:user_id => u.id)
       expect(WeeklyStatsSummary).to receive(:where).with(:user_id => u.id).and_return(o)
+      expect(o).to receive(:find_in_batches).and_return([])
       expect(o).to_not receive(:where)
       expect(UserBadge).to receive(:cluster_days).with(:biweekyear, []).and_return([])
       UserBadge.check_goal_badges(u, g, 0)
@@ -1308,6 +1317,7 @@ describe UserBadge, type: :model do
       
       o = WeeklyStatsSummary.where(:user_id => u.id)
       expect(WeeklyStatsSummary).to receive(:where).with(:user_id => u.id).and_return(o)
+      expect(o).to receive(:find_in_batches).and_return([])
       expect(o).to_not receive(:where)
       expect(UserBadge).to receive(:cluster_days).with(:monthyear, []).and_return([])
       UserBadge.check_goal_badges(u, g, 0)
@@ -1362,6 +1372,7 @@ describe UserBadge, type: :model do
       
       o = WeeklyStatsSummary.where(:user_id => u.id)
       expect(WeeklyStatsSummary).to receive(:where).with(:user_id => u.id).and_return(o)
+      expect(o).to receive(:find_in_batches).and_return([])
       expect(o).to_not receive(:where)
       a = {}
       b = {}
@@ -1383,6 +1394,7 @@ describe UserBadge, type: :model do
       
       o = WeeklyStatsSummary.where(:user_id => u.id)
       expect(WeeklyStatsSummary).to receive(:where).with(:user_id => u.id).and_return(o)
+      expect(o).to receive(:find_in_batches).and_return([])
       expect(o).to_not receive(:where)
       a = {
         weekyear: 1234,

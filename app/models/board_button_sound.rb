@@ -10,7 +10,7 @@ class BoardButtonSound < ActiveRecord::Base
   def self.disconnect(board_id, sound_refs)
     return if sound_refs.blank?
     sounds = ButtonSound.find_all_by_global_id(sound_refs.map{|s| s[:id] })
-    BoardButtonSound.delete_all(:board_id => board_id, :button_sound_id => sounds.map(&:id))
+    BoardButtonSound.where(:board_id => board_id, :button_sound_id => sounds.map(&:id)).delete_all
   end
   
   def self.connect(board_id, sound_refs, options={})

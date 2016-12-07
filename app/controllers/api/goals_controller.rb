@@ -1,5 +1,5 @@
 class Api::GoalsController < ApplicationController
-  before_filter :require_api_token, :except => [:index]
+  before_action :require_api_token, :except => [:index]
   
   def index
     if !params['template_header']

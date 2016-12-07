@@ -1,5 +1,6 @@
 class Api::LogsController < ApplicationController
-  before_filter :require_api_token, :except => [:lam]
+  before_action :require_api_token, :except => [:lam]
+  
   def index
     user = User.find_by_path(params['user_id'])
     return unless allowed?(user, 'supervise')

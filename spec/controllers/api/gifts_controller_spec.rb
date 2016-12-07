@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Api::GiftsController, :type => :controller do
   describe "show" do
     it "should not require an access token" do
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       expect(response.success?).not_to eq(true)
       json = JSON.parse(response.body)
       expect(response.code).to eq("404")
@@ -11,7 +11,7 @@ describe Api::GiftsController, :type => :controller do
     end
     
     it "should error gracefully on a missing gift" do
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       expect(response.success?).not_to eq(true)
       json = JSON.parse(response.body)
       expect(response.code).to eq("404")
@@ -23,7 +23,7 @@ describe Api::GiftsController, :type => :controller do
       g.active = false
       g.save
       
-      get :show, :id => g.code
+      get :show, params: {:id => g.code}
       expect(response.success?).not_to eq(true)
       json = JSON.parse(response.body)
       expect(response.code).to eq("404")
@@ -33,7 +33,7 @@ describe Api::GiftsController, :type => :controller do
     it "should return a gift record" do
       token_user
       g = GiftPurchase.create
-      get :show, :id => g.code
+      get :show, params: {:id => g.code}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(response.code).to eq("200")
@@ -45,7 +45,7 @@ describe Api::GiftsController, :type => :controller do
       g = GiftPurchase.new
       g.code = 'abcd000'
       g.save
-      get :show, :id => 'ABcD0Oo'
+      get :show, params: {:id => 'ABcD0Oo'}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(response.code).to eq("200")

@@ -4,7 +4,10 @@ module Processable
   extend ActiveSupport::Concern
   
   def process(params, non_user_params=nil)
-    params = params.with_indifferent_access
+    if params.respond_to?(:to_unsafe_h)
+      params = params.to_unsafe_h
+    end
+    params = (params || {}).with_indifferent_access
     non_user_params = (non_user_params || {}).with_indifferent_access
     @processing_errors = []
     res = self.process_params(params.with_indifferent_access, non_user_params)
@@ -39,6 +42,10 @@ module Processable
   
   def process_html(html)
     Sanitize.fragment(html, Sanitize::Config::RELAXED)
+  end
+  
+  def process_boolean(bool)
+    return bool == true || bool == '1' || bool == 'true'
   end
   
   def generate_unique_key(suggestion)

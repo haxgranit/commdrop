@@ -10,7 +10,7 @@ describe('stashes', function() {
     window.localStorage.root_board_state = null;
       stashes.orientation = null;
       stashes.volume = null;
-      stashes.geo.latest = null;
+      Ember.set(stashes.geo, 'latest', null);
       stashes.ambient_light = null;
       stashes.screen_brightness = null;
       stashes.set('referenced_user_id', null);

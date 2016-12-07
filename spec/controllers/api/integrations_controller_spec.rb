@@ -3,27 +3,27 @@ require 'spec_helper'
 describe Api::IntegrationsController, :type => :controller do
   describe "get 'index'" do
     it "should require an api token" do
-      get 'index', 'user_id' => 'asdf'
+      get 'index', params: {'user_id' => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the user doesn't exist" do
       token_user
-      get 'index', 'user_id' => 'asdf'
+      get 'index', params: {'user_id' => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should error if not authorized" do
       token_user
       u = User.create
-      get 'index', 'user_id' => u.global_id
+      get 'index', params: {'user_id' => u.global_id}
       assert_unauthorized
     end
     
     it "should return a paginated list" do
       token_user
       ui = UserIntegration.create(:user_id => @user.id)
-      get 'index', 'user_id' => @user.global_id
+      get 'index', params: {'user_id' => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)
@@ -42,20 +42,20 @@ describe Api::IntegrationsController, :type => :controller do
     
     it "should error if the user doesn't exist" do
       token_user
-      post 'create', 'integration' => {'user_id' => 'asdf'}
+      post 'create', params: {'integration' => {'user_id' => 'asdf'}}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      post 'create', 'integration' => {'user_id' => u.global_id}
+      post 'create', params: {'integration' => {'user_id' => u.global_id}}
       assert_unauthorized
     end
     
     it "should create the record" do
       token_user
-      post 'create', 'integration' => {'user_id' => @user.global_id, 'name' => 'test integration'}
+      post 'create', params: {'integration' => {'user_id' => @user.global_id, 'name' => 'test integration'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)
@@ -66,13 +66,13 @@ describe Api::IntegrationsController, :type => :controller do
   
   describe "put 'update'" do
     it "should require an api token" do
-      put 'update', 'id' => 'asdf'
+      put 'update', params: {'id' => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the record doesn't exist" do
       token_user
-      put 'update', 'id' => 'asdf'
+      put 'update', params: {'id' => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -80,14 +80,14 @@ describe Api::IntegrationsController, :type => :controller do
       token_user
       u = User.create
       ui = UserIntegration.create(:user_id => u.id)
-      put 'update', 'id' => ui.global_id
+      put 'update', params: {'id' => ui.global_id}
       assert_unauthorized
     end
     
     it "should update the record" do
       token_user
       ui = UserIntegration.create(:user_id => @user.id)
-      put 'update', 'id' => ui.global_id, 'integration' => {'name' => 'new name'}
+      put 'update', params: {'id' => ui.global_id, 'integration' => {'name' => 'new name'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)
@@ -98,13 +98,13 @@ describe Api::IntegrationsController, :type => :controller do
   
   describe "delete 'destroy'" do
     it "should require an api token" do
-      delete 'destroy', 'id' => 'asdf'
+      delete 'destroy', params: {'id' => 'asdf'}
       assert_missing_token
     end
     
     it "should error if the record doesn't exist" do
       token_user
-      delete 'destroy', 'id' => 'asdf'
+      delete 'destroy', params: {'id' => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -112,14 +112,14 @@ describe Api::IntegrationsController, :type => :controller do
       token_user
       u = User.create
       ui = UserIntegration.create(:user_id => u.id)
-      delete 'destroy', 'id' => ui.global_id
+      delete 'destroy', params: {'id' => ui.global_id}
       assert_unauthorized
     end
     
     it "should delete the record" do
       token_user
       ui = UserIntegration.create(:user_id => @user.id)
-      delete 'destroy', 'id' => ui.global_id
+      delete 'destroy', params: {'id' => ui.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to_not eq(nil)

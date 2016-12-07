@@ -66,7 +66,7 @@ var persistence = Ember.Object.extend({
     keys.forEach(function(key) { hash[key] = true; });
     CoughDrop.store.peekAll(store).content.mapBy('record').forEach(function(item) {
       if(item) {
-        var record = item.record;
+        var record = item;
         if(record && hash[record.get('id')]) {
           if(store == 'board' && record.get('permissions') === undefined) {
             // locally-cached board found from a list request doesn't count
@@ -1566,7 +1566,7 @@ var persistence = Ember.Object.extend({
       data[type.modelName].id = persistence.temporary_id();
     }
     if(type.mimic_server_processing) {
-      data = type.mimic_server_processing(record, data);
+      data = type.mimic_server_processing(snapshot.record, data);
     }
 
     return data;
@@ -1849,7 +1849,8 @@ persistence.DSExtend = {
   },
   query: function(store, type, query) {
     if(persistence.get('online')) {
-      return this._super(store, type, query);
+      var res = this._super(store, type, query);
+      return res;
     } else {
       return persistence.offline_reject();
     }

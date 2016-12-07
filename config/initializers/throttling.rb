@@ -1,9 +1,10 @@
 require 'rack/attack'
+
 module Throttling
   NORMAL_CUTOFF = 150
   TOKEN_CUTOFF = 20
   PROTECTED_CUTOFF = 10
-  class Application < Rails::Application
+  class Coughdrop::Application < Rails::Application
     uri = RedisInit.redis_uri
     unless ENV['SKIP_VALIDATIONS']
       raise "redis URI needed for throttling" unless uri
@@ -33,7 +34,6 @@ module Throttling
         req.ip
       end
     end
-    
     config.middleware.use Rack::Attack
   end
 end

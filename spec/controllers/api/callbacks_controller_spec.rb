@@ -23,7 +23,7 @@ describe Api::CallbacksController, :type => :controller do
       expect(client).to receive(:confirm_subscription).with(topic_arn: 'fried', token: 'ahem', authenticate_on_unsubscribe: 'true')
       request.headers['x-amz-sns-message-type'] = 'SubscriptionConfirmation'
       request.headers['x-amz-sns-topic-arn'] = 'fried'
-      post 'callback', {:Token => 'ahem'}.to_json
+      post 'callback', body: {:Token => 'ahem'}.to_json
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => true})
@@ -40,7 +40,7 @@ describe Api::CallbacksController, :type => :controller do
       expect(client).to receive(:confirm_subscription).with(topic_arn: 'fried', token: 'ahem', authenticate_on_unsubscribe: 'true')
       request.headers['x-amz-sns-message-type'] = 'SubscriptionConfirmation'
       request.headers['x-amz-sns-topic-arn'] = 'fried'
-      post 'callback', {:Token => 'ahem'}.to_json
+      post 'callback', body: {:Token => 'ahem'}.to_json
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => true})
@@ -68,7 +68,7 @@ describe Api::CallbacksController, :type => :controller do
       expect(Transcoder).to receive(:handle_event){|params|
         expect(params['a']).to eq('1')
       }.and_return(false)
-      post 'callback', {a: '1'}.to_json
+      post 'callback', body: {a: '1'}.to_json
       expect(response).to_not be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'error' => 'event not handled', 'status' => 400})
@@ -80,7 +80,7 @@ describe Api::CallbacksController, :type => :controller do
       expect(Transcoder).to receive(:handle_event){|params|
         expect(params['a']).to eq('1')
       }.and_return(true)
-      post 'callback', {a: '1'}.to_json
+      post 'callback', body: {a: '1'}.to_json
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'handled' => true})
@@ -122,7 +122,7 @@ describe Api::CallbacksController, :type => :controller do
 
       request.headers['x-amz-sns-message-type'] = 'Notification'
       request.headers['x-amz-sns-topic-arn'] = 'fried:audio_conversion_events:chicken'
-      post 'callback', {'Message' => {
+      post 'callback', body: {'Message' => {
         'jobId' => 'onetwo',
         'state' => 'COMPLETED'
       }.to_json }.to_json

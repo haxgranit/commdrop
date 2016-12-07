@@ -351,7 +351,7 @@ describe('videoGrabber', function() {
       waitsFor(function() { return controller.get('video_recording.video_streams'); });
       runs(function() {
         expect(controller.get('video_recording.video_streams').length).toEqual(3);
-        expect(controller.get('video_recording.video_streams').mapProperty('id')).toEqual(['aaa', 'ccc', 'ddd']);
+        expect(controller.get('video_recording.video_streams').mapBy('id')).toEqual(['aaa', 'ccc', 'ddd']);
 
         videoGrabber.swap_streams();
         mediaCallback(stream);
@@ -409,7 +409,7 @@ describe('videoGrabber', function() {
       waitsFor(function() { return controller.get('video_recording.video_streams'); });
       runs(function() {
         expect(controller.get('video_recording.video_streams').length).toEqual(3);
-        expect(controller.get('video_recording.video_streams').mapProperty('id')).toEqual(['aaa', 'ccc', 'ddd']);
+        expect(controller.get('video_recording.video_streams').mapBy('id')).toEqual(['aaa', 'ccc', 'ddd']);
 
         videoGrabber.swap_streams();
         mediaCallback(stream);

@@ -9,14 +9,14 @@ describe Api::BadgesController, :type => :controller do
     
     it "should require an existing user" do
       token_user
-      get 'index', :user_id => 'asdf'
+      get 'index', params: {:user_id => 'asdf'}
       assert_not_found('asdf')
     end
 
     it "should require authorization" do
       token_user
       u = User.create
-      get 'index', :user_id => u.global_id
+      get 'index', params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
@@ -25,7 +25,7 @@ describe Api::BadgesController, :type => :controller do
       u = User.create(:settings => {'public' => true})
       b = UserBadge.create(:user => u, :highlighted => true)
       b2 = UserBadge.create(:user => u)
-      get 'index', :user_id => u.global_id
+      get 'index', params: {:user_id => u.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['badge'].length).to eq(1)
@@ -36,7 +36,7 @@ describe Api::BadgesController, :type => :controller do
       token_user
       g = UserGoal.create(:user => @user)
       b = UserBadge.create(:user => @user, :user_goal => g)
-      get 'index', :user_id => @user.global_id, :goal_id => g.global_id
+      get 'index', params: {:user_id => @user.global_id, :goal_id => g.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['badge'].length).to eq(1)
@@ -45,7 +45,7 @@ describe Api::BadgesController, :type => :controller do
     
     it "should require a valid goal" do
       token_user
-      get 'index', :user_id => @user.global_id, :goal_id => 'asdf'
+      get 'index', params: {:user_id => @user.global_id, :goal_id => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -53,7 +53,7 @@ describe Api::BadgesController, :type => :controller do
       token_user
       u = User.create
       g = UserGoal.create(:user => u)
-      get 'index', :user_id => @user.global_id, :goal_id => g.global_id
+      get 'index', params: {:user_id => @user.global_id, :goal_id => g.global_id}
       assert_unauthorized
     end
     
@@ -62,7 +62,7 @@ describe Api::BadgesController, :type => :controller do
       50.times do |i|
         b = UserBadge.create(:user => @user)
       end
-      get 'index', :user_id => @user.global_id
+      get 'index', params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['badge'].length).to eq(10)
@@ -73,7 +73,7 @@ describe Api::BadgesController, :type => :controller do
       token_user
       b = UserBadge.create(:user => @user)
       b2 = UserBadge.create(:user => @user, :superseded => true)
-      get 'index', :user_id => @user.global_id
+      get 'index', params: {:user_id => @user.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['badge'].length).to eq(1)
@@ -86,13 +86,13 @@ describe Api::BadgesController, :type => :controller do
   
   describe "show" do
     it "should require an api token" do
-      get 'show', :id => 'asdf'
+      get 'show', params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid record" do
       token_user
-      get 'show', :id => 'asdf'
+      get 'show', params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -100,14 +100,14 @@ describe Api::BadgesController, :type => :controller do
       token_user
       u = User.create
       b = UserBadge.create(:user => u)
-      get 'show', :id => b.global_id
+      get 'show', params: {:id => b.global_id}
       assert_unauthorized
     end
     
     it "should return a record" do
       token_user
       b = UserBadge.create(:user => @user)
-      get 'show', :id => b.global_id
+      get 'show', params: {:id => b.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['badge']).to_not eq(nil)
@@ -117,13 +117,13 @@ describe Api::BadgesController, :type => :controller do
 
   describe "update" do
     it "should require an api token" do
-      put 'update', :id => 'asdf'
+      put 'update', params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid record" do
       token_user
-      put 'update', :id => 'asdf'
+      put 'update', params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
@@ -131,14 +131,14 @@ describe Api::BadgesController, :type => :controller do
       token_user
       u = User.create
       b = UserBadge.create(:user => u)
-      put 'update', :id => b.global_id, :badge => {'highlighted' => true}
+      put 'update', params: {:id => b.global_id, :badge => {'highlighted' => true}}
       assert_unauthorized
     end
     
     it "should update the record" do
       token_user
       b = UserBadge.create(:user => @user)
-      put 'update', :id => b.global_id, :badge => {'highlighted' => true}
+      put 'update', params: {:id => b.global_id, :badge => {'highlighted' => true}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['badge']['id']).to eq(b.global_id)

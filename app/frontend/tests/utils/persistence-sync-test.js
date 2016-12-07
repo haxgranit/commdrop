@@ -56,10 +56,10 @@ describe("persistence-sync", function() {
   var board = null;
   function push_board(callback) {
     db_wait(function() {
-      CoughDrop.store.push('board', {
+      CoughDrop.store.push({data: {type: 'board', id: '1234', attributes: {
         id: '1234',
         name: 'Best Board'
-      });
+      }}});
       var record = null;
       CoughDrop.store.find('board', '1234').then(function(res) {
         record = res;

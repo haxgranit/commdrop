@@ -342,7 +342,7 @@ class User < ActiveRecord::Base
       User.where(:id => self.id).update_all(:updated_at => Time.now)
     end
     
-    UserBoardConnection.delete_all(:user_id => self.id, :board_id => orphan_board_ids)
+    UserBoardConnection.where(:user_id => self.id, :board_id => orphan_board_ids).delete_all
     # TODO: sharding
     Board.where(:id => orphan_board_ids).select('id').each do |board|
       if board

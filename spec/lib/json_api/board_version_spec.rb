@@ -116,10 +116,10 @@ describe JsonApi::BoardVersion do
       b.process({'name' => 'jed'}, {'user' => u})
       expect(b.settings['edit_description']['notes']).to eq(['renamed the board'])
       PaperTrail.whodunnit = "admin:somebody@example.com"
-      b.process({'buttons' => [{'id' => 1, 'label' => 'something'}]})
-      expect(b.settings['edit_description']['notes']).to eq(['modified buttons'])
+      b.process({'name' => 'ned', 'buttons' => [{'id' => 1, 'label' => 'something'}]})
+      expect(b.settings['edit_description']['notes']).to eq(['renamed the board', 'modified buttons'])
       PaperTrail.whodunnit = "user:#{u.global_id}"
-      b.process({'name' => 'jed'}, {'user' => u})
+      b.process({}, {'user' => u})
       expect(b.settings['edit_description']).to eq(nil)
       b.destroy
       
@@ -133,14 +133,19 @@ describe JsonApi::BoardVersion do
       expect(versions_json['boardversion'].length).to eq(5)
       expect(versions_json['boardversion'][0]['action']).to eq('deleted')
       expect(versions_json['boardversion'][0]['modifier']['user_name']).to eq(u.user_name)
+      expect(versions_json['boardversion'][0]['name']).to eq(nil)
       expect(versions_json['boardversion'][1]['action']).to eq('updated')
       expect(versions_json['boardversion'][1]['modifier']['user_name']).to eq(u.user_name)
-      expect(versions_json['boardversion'][2]['action']).to eq('modified buttons')
+      expect(versions_json['boardversion'][1]['name']).to eq('ned')
+      expect(versions_json['boardversion'][2]['action']).to eq('renamed the board, modified buttons')
       expect(versions_json['boardversion'][2]['modifier']['description']).to eq('CoughDrop Admin')
+      expect(versions_json['boardversion'][2]['name']).to eq('ned')
       expect(versions_json['boardversion'][3]['action']).to eq('renamed the board')
       expect(versions_json['boardversion'][3]['modifier']['description']).to eq('Unknown User')
+      expect(versions_json['boardversion'][3]['name']).to eq('jed')
       expect(versions_json['boardversion'][4]['action']).to eq('created')
       expect(versions_json['boardversion'][4]['modifier']['description']).to eq('Unknown User')
+      expect(versions_json['boardversion'][4]['name']).to eq(nil)
     end
     
     it "should include immediately upstream board ids if admin specified" do

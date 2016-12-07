@@ -11,6 +11,7 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'simplecov', :require => false
   gem 'rack-test'
+  gem 'rails-controller-testing'
 end
 
 gem 'rails', '5.0'

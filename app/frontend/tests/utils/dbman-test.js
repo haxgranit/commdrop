@@ -95,7 +95,7 @@ describe('dbman', function() {
 
       waitsFor(function() { return results; });
       runs(function() {
-        expect(results.mapProperty('data').mapProperty('name').sort()).toEqual(['top hat', 'ugly hat']);
+        expect(results.mapBy('data').mapBy('name').sort()).toEqual(['top hat', 'ugly hat']);
       });
     });
 

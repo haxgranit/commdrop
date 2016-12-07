@@ -1256,7 +1256,7 @@ describe("filesystem", function() {
           timeout = t;
         }
       });
-      persistence.setup({}, app);
+      persistence.setup(app);
       expect(persistence.get('local_system')).toEqual({
         available: true,
         requires_confirmation: true
@@ -1296,7 +1296,7 @@ describe("filesystem", function() {
           timeout = t;
         }
       });
-      persistence.setup({}, app);
+      persistence.setup(app);
       expect(persistence.get('local_system')).toEqual({
         available: true,
         allowed: true,

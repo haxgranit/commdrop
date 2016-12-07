@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Api::SearchController, :type => :controller do
   describe "symbols" do
     it "should require api token" do
-      get :symbols, :q => 'hat'
+      get :symbols, params: {:q => 'hat'}
       assert_missing_token
     end
     
@@ -15,7 +15,7 @@ describe Api::SearchController, :type => :controller do
       ]
       res = OpenStruct.new(:body => list.to_json)
       expect(Typhoeus).to receive(:get).with("https://www.opensymbols.org/api/v1/symbols/search?q=hat", :ssl_verifypeer => false).and_return(res)
-      get :symbols, :q => 'hat'
+      get :symbols, params: {:q => 'hat'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq([
@@ -36,11 +36,11 @@ describe Api::SearchController, :type => :controller do
       res2 = OpenStruct.new(:body => list2.to_json)
       expect(Typhoeus).to receive(:get).with("https://www.opensymbols.org/api/v1/symbols/search?q=hat", :ssl_verifypeer => false).and_return(res)
       expect(Typhoeus).to receive(:get).with("https://www.opensymbols.org/api/v1/symbols/search?q=hats", :ssl_verifypeer => false).and_return(res2)
-      get :symbols, :q => 'hat'
+      get :symbols, params: {:q => 'hat'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq([])
-      get :symbols, :q => 'hats'
+      get :symbols, params: {:q => 'hats'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json.length).to eq(2)
@@ -54,14 +54,14 @@ describe Api::SearchController, :type => :controller do
   
   describe "proxy" do
     it "should require api token" do
-      get :proxy, :url => 'http://www.example.com/pic.png'
+      get :proxy, params: {:url => 'http://www.example.com/pic.png'}
       assert_missing_token
     end
     
     it "should return content type and data-uri" do
       token_user
       expect(controller).to receive(:get_url_in_chunks).and_return(['image/png', '12345'])
-      get :proxy, :url => 'http://www.example.com/pic.png'
+      get :proxy, params: {:url => 'http://www.example.com/pic.png'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['content_type']).to eq('image/png')
@@ -71,7 +71,7 @@ describe Api::SearchController, :type => :controller do
     it "should return error response if there are unexpected problems" do
       token_user
       expect(controller).to receive(:get_url_in_chunks).and_raise(Api::SearchController::BadFileError, 'something bad')
-      get :proxy, :url => 'http://www.example.com/pic.png'
+      get :proxy, params: {:url => 'http://www.example.com/pic.png'}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq('something bad')
@@ -83,7 +83,7 @@ describe Api::SearchController, :type => :controller do
         expect(req.url).to eq("http://www.example.com/a%20good%20pic.png")
         true
       }.and_return(['image/png', '12345'])
-      get :proxy, :url => 'http://www.example.com/a good pic.png'
+      get :proxy, params: {:url => 'http://www.example.com/a good pic.png'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['content_type']).to eq('image/png')
@@ -96,7 +96,7 @@ describe Api::SearchController, :type => :controller do
         expect(req.url).to eq("http://www.example.com/a%20good%20pic.png")
         true
       }.and_return(['image/png', '12345'])
-      get :proxy, :url => 'http://www.example.com/a%20good%20pic.png'
+      get :proxy, params: {:url => 'http://www.example.com/a%20good%20pic.png'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['content_type']).to eq('image/png')
@@ -106,19 +106,19 @@ describe Api::SearchController, :type => :controller do
   
   describe "apps" do
     it "should require an api token" do
-      get :apps, :q => 'hat', :os => 'ios'
+      get :apps, params: {:q => 'hat', :os => 'ios'}
       assert_missing_token
     end
     
     it "should return the results of a call to AppSearcher" do
       token_user
       expect(AppSearcher).to receive(:find).with('hat', 'ios').and_return({})
-      get :apps, :q => 'hat', :os => 'ios'
+      get :apps, params: {:q => 'hat', :os => 'ios'}
       expect(response).to be_success
       expect(response.body).to eq("{}")
       
       expect(AppSearcher).to receive(:find).with('hat', 'android').and_return([])
-      get :apps, :q => 'hat', :os => 'android'
+      get :apps, params: {:q => 'hat', :os => 'android'}
       expect(response).to be_success
       expect(response.body).to eq("[]")
     end
@@ -186,7 +186,7 @@ describe Api::SearchController, :type => :controller do
   
   describe "parts_of_speech" do
     it "should require api token" do
-      get :parts_of_speech, :q => 'hat'
+      get :parts_of_speech, params: {:q => 'hat'}
       assert_missing_token
     end
     
@@ -196,7 +196,7 @@ describe Api::SearchController, :type => :controller do
         :word => 'hat',
         :types => ['noun']
       })
-      get :parts_of_speech, :q => 'hat'
+      get :parts_of_speech, params: {:q => 'hat'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({

@@ -534,7 +534,7 @@ describe Stats do
       u = User.create
       d = Device.create
       
-      ts = Time.now.change(:hour => 14, :min => 30, :sec => 8).to_i
+      ts = Time.now.utc.change(:hour => 14, :min => 30, :sec => 8).to_i
       s1 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '1', 'label' => 'ok go', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => ts}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s2 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '2', 'label' => 'never again', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13.0001', '12.0001'], 'timestamp' => ts + 1}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
       s3 = LogSession.process_new({'events' => [{'type' => 'button', 'button' => {'button_id' => '3', 'label' => 'ok go to the store', 'board' => {'id' => '1_1'}, 'spoken' => true}, 'geo' => ['13', '12'], 'timestamp' => ts + 2}]}, {:user => u, :author => u, :device => d, :ip_address => '1.2.3.4'})
@@ -551,8 +551,8 @@ describe Stats do
       ClusterLocation.clusterize_ips(u.global_id)
       ClusterLocation.clusterize_geos(u.global_id)
       ClusterLocation.all.each{|c| c.generate_stats(true) }
-      start_at = Time.at(ts - 8)
-      end_at = Time.at(ts + 13)
+      start_at = Time.at(ts - 8).utc
+      end_at = Time.at(ts + 13).utc
 
       res = Stats.hourly_use(u.global_id, {:start_at => start_at, :end_at => end_at})
       expect(res[:total_buttons]).to eq(8)
@@ -562,14 +562,14 @@ describe Stats do
       expect(res[:hours]).not_to eq(nil)
       expect(res[:hours].length).to eq(24)
       
-      expect(res[:hours].map{|h| h[:total_buttons] }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0])
-      expect(res[:hours].map{|h| h[:locations].length }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0])
-      hour = res[:hours][-4]
+      expect(res[:hours].map{|h| h[:total_buttons] }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      expect(res[:hours].map{|h| h[:locations].length }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      hour = res[:hours][14]
       expect(hour[:locations].length).to eq(3)
       expect(hour[:words_by_frequency].length).to eq(14)
 
-      start_at = Time.at(ts - 10813)
-      end_at = Time.at(ts + 13)
+      start_at = Time.at(ts - 10813).utc
+      end_at = Time.at(ts + 13).utc
       res = Stats.hourly_use(u.global_id, {:start_at => start_at, :end_at => end_at})
       expect(res[:total_buttons]).to eq(13)
       expect(res[:total_words]).to eq(35)
@@ -578,14 +578,14 @@ describe Stats do
       expect(res[:hours]).not_to eq(nil)
       expect(res[:hours].length).to eq(24)
       
-      expect(res[:hours].map{|h| h[:total_buttons] }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 8, 0, 0, 0])
-      expect(res[:hours].map{|h| h[:buttons_by_frequency].map{|b| b['count'] }.sum }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 8, 0, 0, 0])
-      expect(res[:hours].map{|h| h[:words_by_frequency].map{|b| b['count'] }.sum }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 22, 0, 0, 0])
-      expect(res[:hours].map{|h| h[:locations].length }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0])
-      hour = res[:hours][-4]
+      expect(res[:hours].map{|h| h[:total_buttons] }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      expect(res[:hours].map{|h| h[:buttons_by_frequency].map{|b| b['count'] }.sum }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      expect(res[:hours].map{|h| h[:words_by_frequency].map{|b| b['count'] }.sum }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      expect(res[:hours].map{|h| h[:locations].length }).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+      hour = res[:hours][14]
       expect(hour[:locations].length).to eq(3)
       expect(hour[:words_by_frequency].length).to eq(14)
-      hour = res[:hours][-7]
+      hour = res[:hours][11]
       expect(hour[:locations].length).to eq(3)
       expect(hour[:words_by_frequency].length).to eq(11)
       expect(hour[:words_by_frequency].map{|w| w['text'] }).to eq(["never", "again", "watch", "on", "ok", "my", "ice", "go", "cream", "candy", "bar"])
@@ -768,8 +768,8 @@ describe Stats do
   describe "time_block" do
     it "should properly adjust a timestamp to the right time block" do
       expect(Stats.time_block(0)).to eq(4 * 24 * 4)
-      expect(Stats.time_block(Date.parse('monday').to_time('utc').to_i)).to eq(4 * 24 * 1)
-      expect(Stats.time_block(Date.parse('friday').to_time('utc').to_i)).to eq(4 * 24 * 5)
+      expect(Stats.time_block(Date.parse('monday').to_time(:utc).to_i)).to eq(4 * 24 * 1)
+      expect(Stats.time_block(Date.parse('friday').to_time(:utc).to_i)).to eq(4 * 24 * 5)
       expect(Stats.time_block(1445125716)).to eq(671)
     end
   end
@@ -780,8 +780,8 @@ describe Stats do
       blocks[1445125716 / 15] = 4
       blocks[1444521012 / 15] = 2
       blocks[0] = 2
-      blocks[Date.parse('tuesday').to_time('utc').to_i / 15] = 3
-      blocks[Date.parse('monday').to_time('utc').to_i / 15] = 1
+      blocks[Date.parse('tuesday').to_time(:utc).to_i / 15] = 3
+      blocks[Date.parse('monday').to_time(:utc).to_i / 15] = 1
       
       res = Stats.time_offset_blocks(blocks)
       expect(res.keys.length).to eq(4)

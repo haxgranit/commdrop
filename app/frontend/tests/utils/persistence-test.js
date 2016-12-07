@@ -46,10 +46,10 @@ describe("persistence", function() {
   var board = null;
   function push_board(callback) {
     db_wait(function() {
-      CoughDrop.store.push('board', {
+      CoughDrop.store.push({data: {type: 'board', id: '1234', attributes: {
         id: '1234',
         name: 'Best Board'
-      });
+      }}});
       var record = null;
       CoughDrop.store.find('board', '1234').then(function(res) {
         record = res;
@@ -65,7 +65,7 @@ describe("persistence", function() {
 
   describe("setup", function() {
     it("should properly inject settings", function() {
-      persistence.setup({}, app);
+      persistence.setup(app);
       expect(app.registered).toEqual(true);
       expect(app.injections).toEqual(['model', 'controller', 'view', 'route']);
     });
@@ -74,7 +74,7 @@ describe("persistence", function() {
         persistence.set('last_sync_at', 12345);
         persistence.remove('settings', {storageId: 'lastSync'}, 'lastSync').then(function() {
           setTimeout(function() {
-            persistence.setup({}, app);
+            persistence.setup(app);
             coughDropExtras.set('ready', false);
             coughDropExtras.set('ready', true);
           }, 10);
@@ -88,7 +88,7 @@ describe("persistence", function() {
         persistence.set('last_sync_at', 222);
         persistence.store('settings', {last_sync: 12345}, 'lastSync').then(function() {
           setTimeout(function() {
-            persistence.setup({}, app);
+            persistence.setup(app);
           }, 100);
         });
         waitsFor(function() { return persistence.get('last_sync_at') === 12345; });
@@ -1680,7 +1680,7 @@ describe("persistence", function() {
             {id: '134'}
           ]});
         });
-        CoughDrop.store.find('board', {user_id: 'example', starred: true, public: true}).then(function(res) {
+        CoughDrop.store.query('board', {user_id: 'example', starred: true, public: true}).then(function(res) {
           done = res.content && res.content[0] && res.content[0].id === '134';
         }, function() {
           dbg();
@@ -1695,7 +1695,7 @@ describe("persistence", function() {
         stub(Ember.$, 'realAjax', function(options) {
           return Ember.RSVP.reject({});
         });
-        CoughDrop.store.find('board', {user_id: 'example', starred: true, public: true}).then(function(res) {
+        CoughDrop.store.query('board', {user_id: 'example', starred: true, public: true}).then(function(res) {
           dbg();
         }, function() {
           done = true;
@@ -1714,7 +1714,7 @@ describe("persistence", function() {
           ajaxed = true;
         });
         var done;
-        CoughDrop.store.find('board', {user_id: 'example', starred: true, public: true}).then(function(res) {
+        CoughDrop.store.query('board', {user_id: 'example', starred: true, public: true}).then(function(res) {
           done = res.content && res.content[0] && res.content[0].id === '134';
         }, function() {
           rejected = true;
@@ -1726,8 +1726,8 @@ describe("persistence", function() {
   });
   describe('push_records', function() {
     it('should not call find if all ids already pushed', function() {
-      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
-      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var a = CoughDrop.store.push({data: {type: 'image', id: 'a', attributes: {id: 'a', url: 'http://www.example.com/a.png'}}});
+      var b = CoughDrop.store.push({data: {type: 'image', id: 'b', attributes: {id: 'b', url: 'http://www.example.com/b.png'}}});
       var records = null;
       var called = false;
       stub(coughDropExtras.storage, 'find_all', function() {
@@ -1736,7 +1736,7 @@ describe("persistence", function() {
       });
       persistence.push_records('image', ['a', 'b']).then(function(res) {
         records = res;
-      });
+      }, function(err) { debugger; });
       waitsFor(function() { return records; });
       runs(function() {
         expect(records).toEqual({
@@ -1748,8 +1748,8 @@ describe("persistence", function() {
     });
 
     it('should return combination of already-pushed and newly-retrieved records in the result', function() {
-      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
-      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var a = CoughDrop.store.push({data: {type: 'image', id: 'a', attributes: {id: 'a', url: 'http://www.example.com/a.png'}}});
+      var b = CoughDrop.store.push({data: {type: 'image', id: 'b', attributes: {id: 'b', url: 'http://www.example.com/b.png'}}});
       var records = null;
       var called = false;
       stub(coughDropExtras.storage, 'find_all', function() {
@@ -1773,8 +1773,8 @@ describe("persistence", function() {
     });
 
     it('should do a bulk lookup with the provided ids', function() {
-      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
-      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var a = CoughDrop.store.push({data: {type: 'image', id: 'a', attributes: {id: 'a', url: 'http://www.example.com/a.png'}}});
+      var b = CoughDrop.store.push({data: {type: 'image', id: 'b', attributes: {id: 'b', url: 'http://www.example.com/b.png'}}});
       var records = null;
       var called = false;
       var called_keys = null;
@@ -1801,8 +1801,8 @@ describe("persistence", function() {
     });
 
     it('should reject on find error', function() {
-      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
-      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var a = CoughDrop.store.push({data: {type: 'image', id: 'a', attributes: {id: 'a', url: 'http://www.example.com/a.png'}}});
+      var b = CoughDrop.store.push({data: {type: 'image', id: 'b', attributes: {id: 'b', url: 'http://www.example.com/b.png'}}});
       var called_keys = null;
       stub(coughDropExtras.storage, 'find_all', function(store, keys) {
         called_keys = keys;
@@ -1819,8 +1819,8 @@ describe("persistence", function() {
     });
 
     it('should not include extra records returned via find_all', function() {
-      var a = CoughDrop.store.push('image', {id: 'a', url: 'http://www.example.com/a.png'});
-      var b = CoughDrop.store.push('image', {id: 'b', url: 'http://www.example.com/b.png'});
+      var a = CoughDrop.store.push({data: {type: 'image', id: 'a', attributes: {id: 'a', url: 'http://www.example.com/a.png'}}});
+      var b = CoughDrop.store.push({data: {type: 'image', id: 'b', attributes: {id: 'b', url: 'http://www.example.com/b.png'}}});
       var records = null;
       var called = false;
       stub(coughDropExtras.storage, 'find_all', function() {

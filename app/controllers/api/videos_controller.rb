@@ -1,6 +1,6 @@
 class Api::VideosController < ApplicationController
   include RemoteUploader
-  before_filter :require_api_token, :except => [:upload_success]
+  before_action :require_api_token, :except => [:upload_success]
 
   def create
     video = UserVideo.process_new(params['video'], {:user => @api_user, :remote_upload_possible => true})

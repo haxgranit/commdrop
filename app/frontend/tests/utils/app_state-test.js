@@ -49,7 +49,7 @@ describe('app_state', function() {
 
   describe('setup', function() {
     it("should properly inject settings", function() {
-      app_state.setup({}, app);
+      app_state.setup(app);
       expect(app.registered).toEqual(true);
       expect(app.injections).toEqual(['model', 'controller', 'view', 'route']);
     });
@@ -58,7 +58,7 @@ describe('app_state', function() {
       stub(app_state, 'refresh_user', function() {
         called = true;
       });
-      app_state.setup({}, app);
+      app_state.setup(app);
       expect(app_state.get('button_list')).toEqual([]);
       expect(app_state.get('stashes')).toEqual(stashes);
       expect(called).toEqual(true);
@@ -67,7 +67,7 @@ describe('app_state', function() {
 
   describe('setup_controller', function() {
     it("should initialize on app startup", function() {
-      app_state.setup({}, app);
+      app_state.setup(app);
 
       var modal_closed = false;
       var logging_checked = false;
@@ -110,7 +110,7 @@ describe('app_state', function() {
 
   describe('speak_mode_handlers', function() {
     it("should call volume_check", function() {
-      app_state.setup({}, app);
+      app_state.setup(app);
 
       var checks = 0;
       var warnings = 0;
@@ -196,7 +196,7 @@ describe('app_state', function() {
 
   describe('global_transition', function() {
     it("should clean up state", function() {
-      app_state.setup({}, app);
+      app_state.setup(app);
       app_state.setup_controller(route, controller);
       waitsFor(function() {
         return boardGrabber.transitioner;
@@ -891,7 +891,7 @@ describe('app_state', function() {
       });
       promise.then(null, function() { });
       var danger;
-      stub(modal, 'danger', function(msg) {
+      stub(modal, 'error', function(msg) {
         danger = msg;
       });
       app_state.set('speakModeUser', null);
@@ -1144,7 +1144,7 @@ describe('app_state', function() {
       app_state.set('sessionUser', user);
       waitsFor(function() { return saved; });
       runs(function() {
-        ok(true);
+        expect(1).toEqual(1);
         navigator.standalone = standalone;
       });
     });
@@ -1666,7 +1666,7 @@ describe('app_state', function() {
         route = r;
         settings = s;
       });
-      ok(true);
+      expect(1).toEqual(1);
 
       app_state.jump_to_root_board({index_as_fallback: true});
       expect(route).toEqual('board');

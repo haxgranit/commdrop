@@ -115,6 +115,7 @@ class Utterance < ActiveRecord::Base
       self.data['image_url'] = params['image_url'] 
       self.data['default_image_url'] = false
     end
-    self.data['show_user'] = params['show_user'] if params['show_user']
+    self.data['show_user'] = process_boolean(params['show_user']) if params['show_user']
+    return true
   end
 end

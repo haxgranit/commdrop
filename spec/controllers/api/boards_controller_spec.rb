@@ -11,7 +11,7 @@ describe Api::BoardsController, :type => :controller do
       u = User.create(:settings => {:public => true})
       b = Board.create(:user => u, :public => true)
       b2 = Board.create(:user => u)
-      get :index, :user_id => u.global_id, :public => true
+      get :index, params: {:user_id => u.global_id, :public => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -20,19 +20,19 @@ describe Api::BoardsController, :type => :controller do
     
     it "should require view_detailed permissions when filtering by user_id" do
       u = User.create
-      get :index, :user_id => u.global_id
+      get :index, params: {:user_id => u.global_id}
       assert_unauthorized
 
-      get :index, :user_id => u.global_id, :public => true
+      get :index, params: {:user_id => u.global_id, :public => true}
       assert_unauthorized
     end
     
     it "should require edit permissions when filtering by user_id unless public" do
       u = User.create(:settings => {:public => true})
-      get :index, :user_id => u.global_id
+      get :index, params: {:user_id => u.global_id}
       assert_unauthorized
       
-      get :index, :user_id => u.global_id, :public => true
+      get :index, params: {:user_id => u.global_id, :public => true}
       expect(response).to be_success
     end
     
@@ -42,7 +42,7 @@ describe Api::BoardsController, :type => :controller do
       @user.save
       b = Board.create(:user => @user, :public => true)
       b2 = Board.create(:user => @user)
-      get :index, :user_id => @user.global_id, :private => true
+      get :index, params: {:user_id => @user.global_id, :private => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -58,7 +58,7 @@ describe Api::BoardsController, :type => :controller do
       b3 = Board.create(:user => u3, :public => true)
       @user.settings['starred_board_ids'] = [b1.global_id, b2.global_id, b3.global_id]
       @user.save
-      get :index, :user_id => @user.global_id, :starred => true
+      get :index, params: {:user_id => @user.global_id, :starred => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(2)
@@ -81,7 +81,7 @@ describe Api::BoardsController, :type => :controller do
     it "should filter by a key" do
       u = User.create(:settings => {:public => true})
       b = Board.create(:user => u, :public => true)
-      get :index, :key => b.key
+      get :index, params: {:key => b.key}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -93,7 +93,7 @@ describe Api::BoardsController, :type => :controller do
       @user.settings['public'] = true
       @user.save
       b = Board.create(:user => @user, :public => true)
-      get :index, :key => b.key.split(/\//)[1]
+      get :index, params: {:key => b.key.split(/\//)[1]}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -104,13 +104,13 @@ describe Api::BoardsController, :type => :controller do
       u = User.create(:settings => {:public => true})
       b = Board.create(:user => u, :public => true, :settings => {'name' => "one two three"})
       b2 = Board.create(:user => u, :public => true, :settings => {'name' => "four five six"})
-      get :index, :q => "two"
+      get :index, params: {:q => "two"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
       expect(json['board'][0]['id']).to eq(b.global_id)
 
-      get :index, :q => "six"
+      get :index, params: {:q => "six"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -121,13 +121,13 @@ describe Api::BoardsController, :type => :controller do
       token_user
       b = Board.create(:user => @user, :settings => {'name' => "one two three"})
       b2 = Board.create(:user => @user, :settings => {'name' => "four five six"})
-      get :index, :user_id => @user.global_id, :q => "two"
+      get :index, params: {:user_id => @user.global_id, :q => "two"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
       expect(json['board'][0]['id']).to eq(b.global_id)
 
-      get :index, :user_id => @user.global_id, :q => "six"
+      get :index, params: {:user_id => @user.global_id, :q => "six"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -140,14 +140,14 @@ describe Api::BoardsController, :type => :controller do
       Board.where(:id => b.id).update_all({:home_popularity => 3, :popularity => 1})
       b2 = Board.create(:user => u, :public => true)
       Board.where(:id => b2.id).update_all({:home_popularity => 1, :popularity => 3})
-      get :index, :sort => "home_popularity"
+      get :index, params: {:sort => "home_popularity"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(2)
       expect(json['board'][0]['id']).to eq(b.global_id)
       expect(json['board'][1]['id']).to eq(b2.global_id)
 
-      get :index, :sort => "popularity"
+      get :index, params: {:sort => "popularity"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(2)
@@ -161,7 +161,7 @@ describe Api::BoardsController, :type => :controller do
       Board.where(:id => b.id).update_all({:home_popularity => 3, :popularity => 1})
       b2 = Board.create(:user => u, :public => true, :settings => {'custom_order' => 1})
       Board.where(:id => b2.id).update_all({:home_popularity => 1, :popularity => 3})
-      get :index, :sort => "custom_order"
+      get :index, params: {:sort => "custom_order"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(2)
@@ -174,7 +174,7 @@ describe Api::BoardsController, :type => :controller do
       b = Board.create(:user => u, :public => true)
       Board.where(:id => b.id).update_all({:home_popularity => 3})
       b2 = Board.create(:user => u, :public => true)
-      get :index, :sort => "home_popularity"
+      get :index, params: {:sort => "home_popularity"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -186,7 +186,7 @@ describe Api::BoardsController, :type => :controller do
       u2 = User.create
       b = Board.create(:user => u2, :settings => {'name' => 'cool board'}, :public => true)
       b.share_with(@user)
-      get :index, :user_id => @user.global_id, :q => 'cool', :include_shared => true
+      get :index, params: {:user_id => @user.global_id, :q => 'cool', :include_shared => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -210,13 +210,13 @@ describe Api::BoardsController, :type => :controller do
       b2.save
       Worker.process_queues
       
-      get :index, :user_id => @user.global_id, :q => 'bodacious', :include_shared => true
+      get :index, params: {:user_id => @user.global_id, :q => 'bodacious', :include_shared => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
       expect(json['board'][0]['id']).to eq(b3.global_id)
 
-      get :index, :user_id => @user.global_id, :q => 'board', :include_shared => true
+      get :index, params: {:user_id => @user.global_id, :q => 'board', :include_shared => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(3)
@@ -241,12 +241,12 @@ describe Api::BoardsController, :type => :controller do
       b2.save
       Worker.process_queues
       
-      get :index, :user_id => @user.global_id, :q => 'awesome', :include_shared => true
+      get :index, params: {:user_id => @user.global_id, :q => 'awesome', :include_shared => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(0)
 
-      get :index, :user_id => @user.global_id, :q => 'board', :include_shared => true
+      get :index, params: {:user_id => @user.global_id, :q => 'board', :include_shared => true}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(2)
@@ -259,28 +259,28 @@ describe Api::BoardsController, :type => :controller do
     it "should not require api token" do
       u = User.create
       b = Board.create(:user => u, :public => true)
-      get :show, :id => b.global_id
+      get :show, params: {:id => b.global_id}
       expect(response).to be_success
     end
     
     it "should require existing object" do
       u = User.create
       b = Board.create(:user => u)
-      get :show, :id => '1_19999'
+      get :show, params: {:id => '1_19999'}
       assert_not_found
     end
 
     it "should require authorization" do
       u = User.create
       b = Board.create(:user => u)
-      get :show, :id => b.global_id
+      get :show, params: {:id => b.global_id}
       assert_unauthorized
     end
     
     it "should return a json response" do
       token_user
       b = Board.create(:user => @user)
-      get :show, :id => b.global_id
+      get :show, params: {:id => b.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['id']).to eq(b.global_id)
@@ -292,7 +292,7 @@ describe Api::BoardsController, :type => :controller do
       key = b.key
       b.destroy
       Worker.process_queues
-      get :show, :id => key
+      get :show, params: {:id => key}
       assert_not_found(key)
       json = JSON.parse(response.body)
       expect(json['deleted']).to eq(true)
@@ -304,7 +304,7 @@ describe Api::BoardsController, :type => :controller do
       key = b.global_id
       b.destroy
       Worker.process_queues
-      get :show, :id => key
+      get :show, params: {:id => key}
       assert_not_found(key)
       json = JSON.parse(response.body)
       expect(json['deleted']).to eq(true)
@@ -317,7 +317,7 @@ describe Api::BoardsController, :type => :controller do
       key = b.key
       b.destroy
       Worker.process_queues
-      get :show, :id => key
+      get :show, params: {:id => key}
       assert_not_found
       json = JSON.parse(response.body)
       expect(json['deleted']).to eq(nil)
@@ -327,7 +327,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       User.link_supervisor_to_user(@user, u)
-      get :show, :id => "#{u.user_name}/bacon"
+      get :show, params: {:id => "#{u.user_name}/bacon"}
       assert_not_found("#{u.user_name}/bacon")
       json = JSON.parse(response.body)
       expect(json['deleted']).to eq(nil)
@@ -337,7 +337,7 @@ describe Api::BoardsController, :type => :controller do
     it "should not return never_existed status if not allowed" do
       token_user
       u = User.create
-      get :show, :id => "#{u.user_name}/bacon"
+      get :show, params: {:id => "#{u.user_name}/bacon"}
       assert_not_found
       json = JSON.parse(response.body)
       expect(json['deleted']).to eq(nil)
@@ -353,7 +353,7 @@ describe Api::BoardsController, :type => :controller do
     
     it "should create a new board" do
       token_user
-      post :create, :board => {:name => "my board"}
+      post :create, params: {:board => {:name => "my board"}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['name']).to eq('my board')
@@ -362,7 +362,7 @@ describe Api::BoardsController, :type => :controller do
     it "should error gracefully on board creation fail" do
       expect_any_instance_of(Board).to receive(:process_params){|u| u.add_processing_error("bacon") }.and_return(false)
       token_user
-      post :create, :board => {:name => "my board"}
+      post :create, params: {:board => {:name => "my board"}}
       json = JSON.parse(response.body)
       expect(json['error']).to eq("board creation failed")
       expect(json['errors']).to eq(["bacon"])
@@ -372,7 +372,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       com = User.create
       User.link_supervisor_to_user(@user, com, nil, true)
-      post :create, :board => {:name => "my board", :for_user_id => com.global_id}
+      post :create, params: {:board => {:name => "my board", :for_user_id => com.global_id}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['name']).to eq('my board')
@@ -384,7 +384,7 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       User.link_supervisor_to_user(@user, u, nil, true)
       b = Board.create(:user => @user)
-      post :create, :board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}
+      post :create, params: {:board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['id']).to_not eq(nil)
@@ -399,7 +399,7 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       User.link_supervisor_to_user(@user, u, nil, true)
       b = Board.create(:user => u)
-      post :create, :board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}
+      post :create, params: {:board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['id']).to_not eq(nil)
@@ -415,7 +415,7 @@ describe Api::BoardsController, :type => :controller do
       u2 = User.create
       User.link_supervisor_to_user(@user, u, nil, true)
       b = Board.create(:user => u2)
-      post :create, :board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}
+      post :create, params: {:board => {:name => "copy", :for_user_id => u.global_id, :buttons => [{'id' => '1', 'load_board' => {'id' => b.global_id}, 'label' => 'farce'}]}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['id']).to_not eq(nil)
@@ -428,7 +428,7 @@ describe Api::BoardsController, :type => :controller do
     it "should not allow creating a board for a random someone else" do
       token_user
       com = User.create
-      post :create, :board => {:name => "my board", :for_user_id => com.global_id}
+      post :create, params: {:board => {:name => "my board", :for_user_id => com.global_id}}
       assert_unauthorized
     end
     
@@ -436,21 +436,21 @@ describe Api::BoardsController, :type => :controller do
       token_user
       com = User.create
       User.link_supervisor_to_user(@user, com, nil, false)
-      post :create, :board => {:name => "my board", :for_user_id => com.global_id}
+      post :create, params: {:board => {:name => "my board", :for_user_id => com.global_id}}
       assert_unauthorized
     end
   end
   
   describe "update" do
     it "should require api token" do
-      put :update, :id => "1_1"
+      put :update, params: {:id => "1_1"}
       assert_missing_token
     end
     
     it "should error on not found" do
       u = User.create
       token_user
-      put :update, :id => "1_19999"
+      put :update, params: {:id => "1_19999"}
       assert_not_found
     end
 
@@ -458,14 +458,14 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       token_user
-      put :update, :id => b.global_id
+      put :update, params: {:id => b.global_id}
       assert_unauthorized
     end
     
     it "should update the board" do
       token_user
       b = Board.create(:user => @user)
-      put :update, :id => b.global_id, :board => {:name => "cool board 2"}
+      put :update, params: {:id => b.global_id, :board => {:name => "cool board 2"}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['name']).to eq("cool board 2")
@@ -476,7 +476,7 @@ describe Api::BoardsController, :type => :controller do
       b = Board.create(:user => @user)
       b2 = Board.create(:user => @user)
       button = {:id => 123, :load_board => {:id => b2.global_id, :key => b2.key}}
-      put :update, :id => b.global_id, :board => {:name => "cool board 2", :buttons => [button]}
+      put :update, params: {:id => b.global_id, :board => {:name => "cool board 2", :buttons => [button]}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['name']).to eq("cool board 2")
@@ -490,7 +490,7 @@ describe Api::BoardsController, :type => :controller do
       b = Board.create(:user => @user)
       b2 = Board.create(:user => @u2)
       button = {:id => 123, :load_board => {:id => b2.global_id, :key => b2.key}}
-      put :update, :id => b.global_id, :board => {:name => "cool board 2", :buttons => [button]}
+      put :update, params: {:id => b.global_id, :board => {:name => "cool board 2", :buttons => [button]}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['name']).to eq("cool board 2")
@@ -502,7 +502,7 @@ describe Api::BoardsController, :type => :controller do
       expect_any_instance_of(Board).to receive(:process_params){|u| u.add_processing_error("bacon") }.and_return(false)
       token_user
       b = Board.create(:user => @user)
-      put :update, :id => b.global_id, :board => {:name => "cool board 2"}
+      put :update, params: {:id => b.global_id, :board => {:name => "cool board 2"}}
       json = JSON.parse(response.body)
       expect(json['error']).to eq("board update failed")
       expect(json['errors']).to eq(["bacon"])
@@ -517,7 +517,7 @@ describe Api::BoardsController, :type => :controller do
       b = Board.find(b.id)
       @user = User.find(@user.id)
       
-      put :update, :id => b.global_id, :board => {:sharing_key => "add_shallow-#{@user.user_name}"}
+      put :update, params: {:id => b.global_id, :board => {:sharing_key => "add_shallow-#{@user.user_name}"}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board']['shared_users'].length).to eq(2)
@@ -529,20 +529,20 @@ describe Api::BoardsController, :type => :controller do
   
   describe "star" do
     it "should require api token" do
-      post :star, :board_id => "1_1"
+      post :star, params: {:board_id => "1_1"}
       assert_missing_token
     end
     
     it "should error on not found" do
       token_user
-      post :star, :board_id => "1_1"
+      post :star, params: {:board_id => "1_1"}
       assert_not_found
     end
     
     it "should star the board and return a json response" do
       token_user
       b = Board.create(:user => @user)
-      post :star, :board_id => b.global_id
+      post :star, params: {:board_id => b.global_id}
       expect(response).to be_success
       expect(b.reload.settings['starred_user_ids']).to eq([@user.global_id])
       json = JSON.parse(response.body)
@@ -552,20 +552,20 @@ describe Api::BoardsController, :type => :controller do
   
   describe "unstar" do
     it "should require api token" do
-      delete :star, :board_id => "1_1"
+      delete :star, params: {:board_id => "1_1"}
       assert_missing_token
     end
 
     it "should error on not found" do
       token_user
-      delete :star, :board_id => "1_1"
+      delete :star, params: {:board_id => "1_1"}
       assert_not_found
     end
 
     it "should star the board and return a json response" do
       token_user
       b = Board.create(:user => @user, :settings => {'starred_user_ids' => [@user.global_id]})
-      delete :unstar, :board_id => b.global_id
+      delete :unstar, params: {:board_id => b.global_id}
       expect(response).to be_success
       expect(b.reload.settings['starred_user_ids']).to eq([])
       json = JSON.parse(response.body)
@@ -575,13 +575,13 @@ describe Api::BoardsController, :type => :controller do
   
   describe "destroy" do
     it "should require api token" do
-      delete :destroy, :id => "1_1"
+      delete :destroy, params: {:id => "1_1"}
       assert_missing_token
     end
 
     it "should error on not found" do
       token_user
-      delete :destroy, :id => "1_1"
+      delete :destroy, params: {:id => "1_1"}
       assert_not_found
     end
     
@@ -589,14 +589,14 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       token_user
-      delete :destroy, :id => b.global_id
+      delete :destroy, params: {:id => b.global_id}
       assert_unauthorized
     end
     
     it "should delete the board and return a json response" do
       token_user
       b = Board.create(:user => @user)
-      delete :destroy, :id => b.global_id
+      delete :destroy, params: {:id => b.global_id}
       expect(response).to be_success
       expect(Board.find_by(:id => b.id)).to eq(nil)
       json = JSON.parse(response.body)
@@ -606,7 +606,7 @@ describe Api::BoardsController, :type => :controller do
   
   describe "stats" do
     it "should require api token" do
-      get :stats, :board_id => '1_1'
+      get :stats, params: {:board_id => '1_1'}
       assert_missing_token
     end
     
@@ -614,7 +614,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u)
-      get :stats, :board_id => b.global_id
+      get :stats, params: {:board_id => b.global_id}
       assert_unauthorized
     end
     
@@ -629,7 +629,7 @@ describe Api::BoardsController, :type => :controller do
       b.settings['forks'] = 1
       b.save
       
-      get :stats, :board_id => b.global_id
+      get :stats, params: {:board_id => b.global_id}
       expect(response).to be_success
       hash = JSON.parse(response.body)
       expect(hash['uses']).to eq(3)
@@ -638,21 +638,21 @@ describe Api::BoardsController, :type => :controller do
   
   describe "download" do
     it "should not error on not found" do
-      post :download, :board_id => "1_19999"
+      post :download, params: {:board_id => "1_19999"}
       assert_not_found
     end
 
     it "should not require api token" do
       u = User.create
       b = Board.create(:user => u, :public => true)
-      post :download, :board_id => b.global_id
+      post :download, params: {:board_id => b.global_id}
       expect(response).to be_success
     end
     
     it "should require permission" do
       u = User.create
       b = Board.create(:user => u)
-      post :download, :board_id => b.global_id
+      post :download, params: {:board_id => b.global_id}
       assert_unauthorized
     end
     
@@ -661,7 +661,7 @@ describe Api::BoardsController, :type => :controller do
     it "should return a progress record" do
       u = User.create
       b = Board.create(:user => u, :public => true)
-      post :download, :board_id => b.global_id
+      post :download, params: {:board_id => b.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']['id']).not_to eq(nil)
@@ -670,13 +670,13 @@ describe Api::BoardsController, :type => :controller do
   
   describe "rename" do
     it "should require api token" do
-      post :rename, :board_id => "1_1"
+      post :rename, params: {:board_id => "1_1"}
       assert_missing_token
     end
     
     it "should error on not found" do
       token_user
-      post :rename, :board_id => "1_19999"
+      post :rename, params: {:board_id => "1_19999"}
       assert_not_found
     end
 
@@ -684,14 +684,14 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       token_user
-      post :rename, :board_id => b.global_id
+      post :rename, params: {:board_id => b.global_id}
       assert_unauthorized
     end
     
     it "should rename the board" do
       token_user
       b = Board.create(:user => @user)
-      post :rename, :board_id => b.global_id, :old_key => b.key, :new_key => "#{@user.user_name}/bacon"
+      post :rename, params: {:board_id => b.global_id, :old_key => b.key, :new_key => "#{@user.user_name}/bacon"}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'rename' => true, 'key' => "#{@user.user_name}/bacon"})
@@ -700,7 +700,7 @@ describe Api::BoardsController, :type => :controller do
     it "should require the correct old_key" do
       token_user
       b = Board.create(:user => @user)
-      post :rename, :board_id => b.global_id, :old_key => b.key + "asdf", :new_key => "#{@user.user_name}/bacon"
+      post :rename, params: {:board_id => b.global_id, :old_key => b.key + "asdf", :new_key => "#{@user.user_name}/bacon"}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -710,7 +710,7 @@ describe Api::BoardsController, :type => :controller do
     it "should require a valid new_key" do
       token_user
       b = Board.create(:user => @user)
-      post :rename, :board_id => b.global_id, :old_key => b.key
+      post :rename, params: {:board_id => b.global_id, :old_key => b.key}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -721,7 +721,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       b = Board.create(:user => @user)
       b2 = Board.create(:user => @user)
-      post :rename, :board_id => b.global_id, :old_key => b.key, :new_key => b2.key
+      post :rename, params: {:board_id => b.global_id, :old_key => b.key, :new_key => b2.key}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -732,7 +732,7 @@ describe Api::BoardsController, :type => :controller do
     it "should not allow changing the username prefix for the new_key" do
       token_user
       b = Board.create(:user => @user)
-      post :rename, :board_id => b.global_id, :old_key => b.key, :new_key => "#{@user.user_name}x/bacon"
+      post :rename, params: {:board_id => b.global_id, :old_key => b.key, :new_key => "#{@user.user_name}x/bacon"}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).not_to eq(nil)
@@ -742,7 +742,7 @@ describe Api::BoardsController, :type => :controller do
   
   describe "import" do
     it "should require api token" do
-      post :import, :url => 'http://www.example.com/file.obf'
+      post :import, params: {:url => 'http://www.example.com/file.obf'}
       assert_missing_token
     end
     
@@ -750,7 +750,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       p = Progress.create
       expect(Progress).to receive(:schedule).with(Board, :import, @user.global_id, 'http://www.example.com/file.obf').and_return(p)
-      post :import, :url => 'http://www.example.com/file.obf'
+      post :import, params: {:url => 'http://www.example.com/file.obf'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']['id']).to eq(p.global_id)
@@ -758,7 +758,7 @@ describe Api::BoardsController, :type => :controller do
     
     it "should return import upload parameters for no url" do
       token_user
-      post :import, :type => 'obf'
+      post :import, params: {:type => 'obf'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['remote_upload']).to_not eq(nil)
@@ -774,7 +774,7 @@ describe Api::BoardsController, :type => :controller do
     
     it "should require a valid board" do
       token_user
-      post :unlink, :board_id => 'asdf'
+      post :unlink, params: {:board_id => 'asdf'}
       assert_not_found
     end
     
@@ -782,7 +782,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u)
-      post :unlink, :board_id => b.global_id, :user_id => u.global_id
+      post :unlink, params: {:board_id => b.global_id, :user_id => u.global_id}
       assert_unauthorized
     end
     
@@ -792,7 +792,7 @@ describe Api::BoardsController, :type => :controller do
       u2 = User.create
       b = Board.create(:user => u2)
       User.link_supervisor_to_user(@user, u, nil, true)
-      post :unlink, :board_id => b.global_id, :user_id => u.global_id, :type => 'delete'
+      post :unlink, params: {:board_id => b.global_id, :user_id => u.global_id, :type => 'delete'}
       assert_unauthorized
     end
     
@@ -801,7 +801,7 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       User.link_supervisor_to_user(@user, u, nil, true)
-      post :unlink, :board_id => b.global_id, :user_id => u.global_id, :type => 'delete'
+      post :unlink, params: {:board_id => b.global_id, :user_id => u.global_id, :type => 'delete'}
       expect(response).to be_success
     end
     
@@ -812,7 +812,7 @@ describe Api::BoardsController, :type => :controller do
       b.star!(u, true)
       expect(b.starred_by?(u)).to eq(true)
       User.link_supervisor_to_user(@user, u, nil, true)
-      post :unlink, :board_id => b.global_id, :user_id => u.global_id, :type => 'unstar'
+      post :unlink, params: {:board_id => b.global_id, :user_id => u.global_id, :type => 'unstar'}
       expect(response).to be_success
       expect(b.reload.starred_by?(u)).to eq(false)
     end
@@ -823,7 +823,7 @@ describe Api::BoardsController, :type => :controller do
       b = Board.create(:user => u)
       b.star!(u, true)
       User.link_supervisor_to_user(@user, u, nil, true)
-      post :unlink, :board_id => b.global_id, :user_id => u.global_id, :type => 'bacon'
+      post :unlink, params: {:board_id => b.global_id, :user_id => u.global_id, :type => 'bacon'}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json['error']).to eq('unrecognized type')
@@ -835,7 +835,7 @@ describe Api::BoardsController, :type => :controller do
       b = Board.create(:user => u)
       b.share_with(@user)
       expect(b.shared_with?(@user)).to eq(true)
-      post :unlink, :board_id => b.global_id, :user_id => @user.global_id, :type => 'unlink'
+      post :unlink, params: {:board_id => b.global_id, :user_id => @user.global_id, :type => 'unlink'}
       expect(response).to be_success
       expect(b.reload.shared_with?(@user.reload)).to eq(false)
     end
@@ -843,13 +843,13 @@ describe Api::BoardsController, :type => :controller do
   
   describe "history" do
     it "should require an access token" do
-      get :history, :board_id => "asdf/asdf"
+      get :history, params: {:board_id => "asdf/asdf"}
       assert_missing_token
     end
     
     it "should require a valid board" do
       token_user
-      get :history, :board_id => "asdf/asdf"
+      get :history, params: {:board_id => "asdf/asdf"}
       assert_not_found
     end
     
@@ -857,7 +857,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u)
-      get :history, :board_id => b.key
+      get :history, params: {:board_id => b.key}
       assert_unauthorized
     end
     
@@ -866,7 +866,7 @@ describe Api::BoardsController, :type => :controller do
         token_user
         PaperTrail.whodunnit = "user:#{@user.global_id}"
         b = Board.create(:user => @user, :settings => {'buttons' => []})
-        get :history, :board_id => b.key
+        get :history, params: {:board_id => b.key}
         expect(response).to be_success
         json = JSON.parse(response.body)
         expect(json['boardversion']).not_to eq(nil)
@@ -890,7 +890,7 @@ describe Api::BoardsController, :type => :controller do
         vs = b.versions.where('whodunnit IS NOT NULL')
         expect(vs.length).to eq(2)
         
-        get :history, :board_id => key
+        get :history, params: {:board_id => key}
         expect(response).to be_success
         json = JSON.parse(response.body)
         expect(json['boardversion']).not_to eq(nil)
@@ -928,7 +928,7 @@ describe Api::BoardsController, :type => :controller do
         vs2 = Board.user_versions(new_b2.global_id)
         expect(vs.length).to eq(2)
         
-        get :history, :board_id => new_b2.key
+        get :history, params: {:board_id => new_b2.key}
         expect(response).to be_success
         json = JSON.parse(response.body)
         expect(json['boardversion']).not_to eq(nil)
@@ -944,7 +944,7 @@ describe Api::BoardsController, :type => :controller do
         b = Board.create(:user => u, :settings => {'buttons' => []}, :public => true)
         key = b.key
         b.destroy
-        get :history, :board_id => key
+        get :history, params: {:board_id => key}
         assert_unauthorized
       end
     end
@@ -952,13 +952,13 @@ describe Api::BoardsController, :type => :controller do
   
   describe "share_response" do
     it "should require api token" do
-      post :share_response, :board_id => "asdf/asdf"
+      post :share_response, params: {:board_id => "asdf/asdf"}
       assert_missing_token
     end
     
     it "should require a valid board" do
       token_user
-      post :share_response, :board_id => "asdf/asdf"
+      post :share_response, params: {:board_id => "asdf/asdf"}
       assert_not_found
     end
     
@@ -966,7 +966,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u)
-      post :share_response, :board_id => b.key
+      post :share_response, params: {:board_id => b.key}
       assert_unauthorized
     end
     
@@ -975,7 +975,7 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       b.share_with(@user, true, true)
-      post :share_response, :board_id => b.key, :approve => 'true'
+      post :share_response, params: {:board_id => b.key, :approve => 'true'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['approved']).to eq(true)
@@ -987,7 +987,7 @@ describe Api::BoardsController, :type => :controller do
       u = User.create
       b = Board.create(:user => u)
       b.share_with(@user, true, true)
-      post :share_response, :board_id => b.key, :approve => 'false'
+      post :share_response, params: {:board_id => b.key, :approve => 'false'}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['approved']).to eq(false)
@@ -998,20 +998,20 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u, :public => true)
-      post :share_response, :board_id => b.key, :approve => 'true'
+      post :share_response, params: {:board_id => b.key, :approve => 'true'}
       assert_error('board share update failed', 400)
     end
   end
   
   describe "copies" do
     it "should require api token" do
-      get :copies, :board_id => "asdf/asdf"
+      get :copies, params: {:board_id => "asdf/asdf"}
       assert_missing_token
     end
     
     it "should require a valid board" do
       token_user
-      get :copies, :board_id => "asdf/asdf"
+      get :copies, params: {:board_id => "asdf/asdf"}
       assert_not_found
     end
     
@@ -1019,7 +1019,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u)
-      get :copies, :board_id => b.key
+      get :copies, params: {:board_id => b.key}
       assert_unauthorized
     end
     
@@ -1027,7 +1027,7 @@ describe Api::BoardsController, :type => :controller do
       token_user
       b = Board.create(:user => @user)
       b2 = b.copy_for(@user)
-      get :copies, :board_id => b.key
+      get :copies, params: {:board_id => b.key}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['board'].length).to eq(1)
@@ -1036,13 +1036,13 @@ describe Api::BoardsController, :type => :controller do
   
   describe "translate" do
     it "should require api token" do
-      post 'translate', :board_id => '1_1234'
+      post 'translate', params: {:board_id => '1_1234'}
       assert_missing_token
     end
     
     it "should require a valid board" do
       token_user
-      post 'translate', :board_id => '1_1234'
+      post 'translate', params: {:board_id => '1_1234'}
       assert_not_found('1_1234')
     end
     
@@ -1050,14 +1050,14 @@ describe Api::BoardsController, :type => :controller do
       token_user
       u = User.create
       b = Board.create(:user => u)
-      post 'translate', :board_id => b.global_id
+      post 'translate', params: {:board_id => b.global_id}
       assert_unauthorized
     end
     
     it "should schedule a translation" do
       token_user
       b = Board.create(:user => @user)
-      post 'translate', :board_id => b.global_id, 'translations' => {}, 'source_lang' => 'en', 'destination_lang' => 'es', 'board_ids_to_translate' => []
+      post 'translate', params: {:board_id => b.global_id, 'translations' => {}, 'source_lang' => 'en', 'destination_lang' => 'es', 'board_ids_to_translate' => []}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['progress']).to_not eq(nil)

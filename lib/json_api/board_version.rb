@@ -42,10 +42,15 @@ module JsonApi::BoardVersion
         }
       end
       later_object = version.instance_variable_get('@later_object')
-      
-      obj = version.reify rescue nil
+      obj = Board.load_version(version)
       if obj && !obj.settings
-        obj.load_secure_object rescue nil
+        begin
+          obj.load_secure_object
+        rescue => e 
+          puts "error!"
+          puts e.to_s
+          puts e.backtrace
+        end
       end
       if json['action'] == 'created' && later_object && later_object.parent_board_id
         json['action'] = 'copied'
@@ -54,6 +59,7 @@ module JsonApi::BoardVersion
         if json['action'] == 'updated' && obj.settings['edit_description'] && obj.settings['edit_description']['notes'] && obj.settings['edit_description']['notes'].length > 0
           json['action'] = obj.settings['edit_description']['notes'].join(', ')
         end
+        json['name'] = obj.settings['name']
         json['button_labels'] = (obj.settings['buttons'] || []).map{|b| b['label'] || b['vocalization'] }
         json['grid'] = obj.settings['grid']
         if args[:admin]

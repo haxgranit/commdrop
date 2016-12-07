@@ -1,6 +1,6 @@
 class Api::BoardsController < ApplicationController
   extend ::NewRelic::Agent::MethodTracer
-  before_filter :require_api_token, :except => [:index, :user_index, :show, :download]
+  before_action :require_api_token, :except => [:index, :user_index, :show, :download]
 
   def index
     boards = Board

@@ -514,7 +514,7 @@ describe('pictureGrabber', function() {
       waitsFor(function() { return controller.get('webcam.video_streams'); });
       runs(function() {
         expect(controller.get('webcam.video_streams').length).toEqual(3);
-        expect(controller.get('webcam.video_streams').mapProperty('id')).toEqual(['aaa', 'ccc', 'ddd']);
+        expect(controller.get('webcam.video_streams').mapBy('id')).toEqual(['aaa', 'ccc', 'ddd']);
 
         pictureGrabber.swap_streams();
         mediaCallback(stream);
@@ -569,7 +569,7 @@ describe('pictureGrabber', function() {
       waitsFor(function() { return controller.get('webcam.video_streams'); });
       runs(function() {
         expect(controller.get('webcam.video_streams').length).toEqual(3);
-        expect(controller.get('webcam.video_streams').mapProperty('id')).toEqual(['aaa', 'ccc', 'ddd']);
+        expect(controller.get('webcam.video_streams').mapBy('id')).toEqual(['aaa', 'ccc', 'ddd']);
 
         pictureGrabber.swap_streams();
         mediaCallback(stream);

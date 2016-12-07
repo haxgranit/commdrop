@@ -9,7 +9,7 @@ describe Api::VideosController, type: :controller do
     
     it "should create the record" do
       token_user
-      post :create, :video => {'url' => 'http://www.example.com/video.mp4', 'content_type' => 'video/mp4'}
+      post :create, params: {:video => {'url' => 'http://www.example.com/video.mp4', 'content_type' => 'video/mp4'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['video']['id']).not_to eq(nil)
@@ -19,20 +19,20 @@ describe Api::VideosController, type: :controller do
   
   describe "show" do
     it "should require api token" do
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require valid record" do
       token_user
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
 
     it "should return result" do
       token_user
       v = UserVideo.create(:url => 'http://www.example.com/video.mp4')
-      get :show, :id => v.global_id
+      get :show, params: {:id => v.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['video']['id']).to eq(v.global_id)
@@ -42,20 +42,20 @@ describe Api::VideosController, type: :controller do
   
   describe "update" do
     it "should require api token" do
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require a valid record" do
       token_user
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
 
     it "should require permission" do
       token_user
       v = UserVideo.create
-      put :update, :id => v.global_id
+      put :update, params: {:id => v.global_id}
       assert_unauthorized
     end
     
@@ -63,7 +63,7 @@ describe Api::VideosController, type: :controller do
       token_user
       v = UserVideo.create(:user => @user, :settings => {'content_type' => 'video/mp4'})
 
-      put :update, :id => v.global_id, :video => {:license => {'type' => 'CC-By'}}
+      put :update, params: {:id => v.global_id, :video => {:license => {'type' => 'CC-By'}}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['video']['id']).to eq(v.global_id)
@@ -73,14 +73,14 @@ describe Api::VideosController, type: :controller do
   
   describe "upload_success" do
     it "should not require api token" do
-      get :upload_success, :video_id => "1234"
+      get :upload_success, params: {:video_id => "1234"}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => false, 'message' => 'Invalid confirmation key'})
     end
     
     it "should error for bad confirmation key" do
-      get :upload_success, :video_id => "1234"
+      get :upload_success, params: {:video_id => "1234"}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => false, 'message' => 'Invalid confirmation key'})
@@ -91,7 +91,7 @@ describe Api::VideosController, type: :controller do
       config = Uploader.remote_upload_config
       res = OpenStruct.new(:success? => false)
       expect(Typhoeus).to receive(:head).with(config[:upload_url] + v.full_filename).and_return(res)
-      get :upload_success, :video_id => v.global_id, :confirmation => v.confirmation_key
+      get :upload_success, params: {:video_id => v.global_id, :confirmation => v.confirmation_key}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => false, 'message' => 'File not found'})
@@ -102,7 +102,7 @@ describe Api::VideosController, type: :controller do
       config = Uploader.remote_upload_config
       res = OpenStruct.new(:success? => true)
       expect(Typhoeus).to receive(:head).with(config[:upload_url] + v.full_filename).and_return(res)
-      get :upload_success, :video_id => v.global_id, :confirmation => v.confirmation_key
+      get :upload_success, params: {:video_id => v.global_id, :confirmation => v.confirmation_key}
       json = JSON.parse(response.body)
       expect(response).to be_success
       expect(v.reload.url).not_to eq(nil)

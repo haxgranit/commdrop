@@ -7,14 +7,14 @@ describe RemoteUploader, :type => :controller do
   end
   describe "upload_success" do
     it "should not require api token" do
-      get :index, :image_id => "1234"
+      get :index, params: {:image_id => "1234"}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => false, 'message' => 'Invalid confirmation key'})
     end
     
     it "should error for bad confirmation key" do
-      get :index, :image_id => "1234"
+      get :index, params: {:image_id => "1234"}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => false, 'message' => 'Invalid confirmation key'})
@@ -25,7 +25,7 @@ describe RemoteUploader, :type => :controller do
       config = Uploader.remote_upload_config
       res = OpenStruct.new(:success? => false)
       expect(Typhoeus).to receive(:head).with(config[:upload_url] + s.full_filename).and_return(res)
-      get :index, :image_id => s.global_id, :confirmation => s.confirmation_key
+      get :index, params: {:image_id => s.global_id, :confirmation => s.confirmation_key}
       expect(response).not_to be_success
       json = JSON.parse(response.body)
       expect(json).to eq({'confirmed' => false, 'message' => 'File not found'})
@@ -36,7 +36,7 @@ describe RemoteUploader, :type => :controller do
       config = Uploader.remote_upload_config
       res = OpenStruct.new(:success? => true)
       expect(Typhoeus).to receive(:head).with(config[:upload_url] + s.full_filename).and_return(res)
-      get :index, :image_id => s.global_id, :confirmation => s.confirmation_key
+      get :index, params: {:image_id => s.global_id, :confirmation => s.confirmation_key}
       json = JSON.parse(response.body)
       expect(response).to be_success
       expect(s.reload.url).not_to eq(nil)

@@ -1,5 +1,5 @@
 class Api::GiftsController < ApplicationController
-  before_filter :require_api_token, :except => [:show]
+  before_action :require_api_token, :except => [:show]
   # TODO: implement throttling to prevent brute force gift lookup
 
   def show

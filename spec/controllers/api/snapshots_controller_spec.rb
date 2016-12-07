@@ -9,14 +9,14 @@ describe Api::SnapshotsController, :type => :controller do
     
     it "should require an existing user" do
       token_user
-      get :index, :user_id => 'asdf'
+      get :index, params: {:user_id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      get :index, :user_id => u.global_id
+      get :index, params: {:user_id => u.global_id}
       assert_unauthorized
     end
     
@@ -24,7 +24,7 @@ describe Api::SnapshotsController, :type => :controller do
       token_user
       s1 = LogSnapshot.create(:user => @user)
       s2 = LogSnapshot.create(:user => @user)
-      get :index, :user_id => @user.global_id
+      get :index, params: {:user_id => @user.global_id}
       expect(response).to be_success
       res = JSON.parse(response.body)
       expect(res['snapshot']).to_not eq(nil)
@@ -41,20 +41,20 @@ describe Api::SnapshotsController, :type => :controller do
     
     it "should require an existing org" do
       token_user
-      post :create, :snapshot => {'user_id' => 'asdf'}
+      post :create, params: {:snapshot => {'user_id' => 'asdf'}}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       u = User.create
-      post :create, :snapshot => {'user_id' => u.global_id}
+      post :create, params: {:snapshot => {'user_id' => u.global_id}}
       assert_unauthorized
     end
     
     it "should create the unit and return the result" do
       token_user
-      post :create, :snapshot => {'user_id' => @user.global_id, 'name' => 'Cool Snapshot', 'device_id' => 'asdf', 'bacon' => 'none'}
+      post :create, params: {:snapshot => {'user_id' => @user.global_id, 'name' => 'Cool Snapshot', 'device_id' => 'asdf', 'bacon' => 'none'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['snapshot']['name']).to eq('Cool Snapshot')
@@ -65,27 +65,27 @@ describe Api::SnapshotsController, :type => :controller do
 
   describe "show" do
     it "should require an api token" do
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require an existing record" do
       token_user
-      get :show, :id => 'asdf'
+      get :show, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       s = LogSnapshot.create
-      get :show, :id => s.global_id
+      get :show, params: {:id => s.global_id}
       assert_unauthorized
     end
     
     it "should return the result" do
       token_user
       s = LogSnapshot.create(:user => @user)
-      get :show, :id => s.global_id
+      get :show, params: {:id => s.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['snapshot']['id']).to eq(s.global_id)
@@ -94,27 +94,27 @@ describe Api::SnapshotsController, :type => :controller do
   
   describe "update" do
     it "should require an api token" do
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require an existing record" do
       token_user
-      put :update, :id => 'asdf'
+      put :update, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       s = LogSnapshot.create
-      put :update, :id => s.global_id
+      put :update, params: {:id => s.global_id}
       assert_unauthorized
     end
     
     it "should update the record and return the result" do
       token_user
       s = LogSnapshot.create(:user => @user)
-      put :update, :id => s.global_id, :snapshot => {'name' => 'Better Snapshot'}
+      put :update, params: {:id => s.global_id, :snapshot => {'name' => 'Better Snapshot'}}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['snapshot']['id']).to eq(s.global_id)
@@ -124,27 +124,27 @@ describe Api::SnapshotsController, :type => :controller do
 
   describe "destroy" do
     it "should require an api token" do
-      delete :destroy, :id => 'asdf'
+      delete :destroy, params: {:id => 'asdf'}
       assert_missing_token
     end
     
     it "should require an existing record" do
       token_user
-      delete :destroy, :id => 'asdf'
+      delete :destroy, params: {:id => 'asdf'}
       assert_not_found('asdf')
     end
     
     it "should require authorization" do
       token_user
       s = LogSnapshot.create
-      delete :destroy, :id => s.global_id
+      delete :destroy, params: {:id => s.global_id}
       assert_unauthorized
     end
     
     it "should delete the record and return the result" do
       token_user
       s = LogSnapshot.create(:user => @user)
-      delete :destroy, :id => s.global_id
+      delete :destroy, params: {:id => s.global_id}
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json['snapshot']['id']).to eq(s.global_id)

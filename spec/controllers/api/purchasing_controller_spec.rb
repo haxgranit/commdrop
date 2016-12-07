@@ -10,7 +10,7 @@ describe Api::PurchasingController, :type => :controller do
         :status => 200,
         :data => {:a => 1}
       })
-      post :event, :a => 1, :b => 'asdf'
+      post :event, params: {:a => 1, :b => 'asdf'}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['a']).to eq(1)
@@ -22,7 +22,7 @@ describe Api::PurchasingController, :type => :controller do
       token_user
       p = Progress.create
       expect(Progress).to receive(:schedule).with(GiftPurchase, :process_subscription_token, {'id' => 'abc'}, {'type' => 'long_term_150', 'email' => nil, 'user_id' => @user.global_id}).and_return(p)
-      post :purchase_gift, :token => {'id' => 'abc'}, :type => 'long_term_150'
+      post :purchase_gift, params: {:token => {'id' => 'abc'}, :type => 'long_term_150'}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['progress']).not_to eq(nil)

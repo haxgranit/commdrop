@@ -23,7 +23,7 @@ describe('session', function() {
           injections.push(injection);
         }
       };
-      session.setup(null, app);
+      session.setup(app);
       expect(CoughDrop.session).toEqual(session);
       expect(injections).toEqual(['model', 'controller', 'view', 'route']);
       expect(registered).toEqual(true);

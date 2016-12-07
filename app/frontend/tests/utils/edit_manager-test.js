@@ -101,10 +101,10 @@ describe('editManager', function() {
         }
       });
       editManager.Button.attributes = Button.attributes;
-      var image = CoughDrop.store.push('image', {
+      var image = CoughDrop.store.push({data: {type: 'image', id: 9, attributes: {
         id: 9,
         url: 'http://www.example.com/pic.png'
-      });
+      }}});
       var button = editManager.Button.create({
         id: 1482,
         label: "ham and cheese",
@@ -382,10 +382,10 @@ describe('editManager', function() {
       expect(called).toEqual(true);
     });
     it("should retrieve image and sound records when a stash is applied", function() {
-      var image = CoughDrop.store.push('image', {
+      var image = CoughDrop.store.push({data: {type: 'image', id: 9, attributes: {
         id: 9,
         url: 'http://www.example.com/pic.png'
-      });
+      }}});
       var button = Button.create({
         id: 1482,
         label: "ham and cheese",
@@ -1860,12 +1860,12 @@ describe('editManager', function() {
       runs();
     });
     it("should retrieve local image and sound records", function() {
-      CoughDrop.store.push('image', {
+      CoughDrop.store.push({data: {type: 'image', id: 123, attributes: {
         id: 123, url: 'http://www.example.com/pic.png'
-      });
-      CoughDrop.store.push('sound', {
+      }}});
+      CoughDrop.store.push({data: {type: 'sound', id: 123, attributes: {
         id: 123, url: 'http://www.example.com/pic.png'
-      });
+      }}});
       board.set('model.buttons', [{id: 1, label: 'pic', image_id: 123, sound_id: 123}]);
       board.set('model.grid', {
         rows: 1,
