@@ -228,7 +228,7 @@ var editManager = Ember.Object.extend({
   change_button: function(id, options) {
     this.save_state({
       button_id: id,
-      changes: Ember.keys(options)
+      changes: Object.keys(options)
     });
     var button = this.find_button(id);
     if(button) {
