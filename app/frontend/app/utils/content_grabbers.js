@@ -1017,7 +1017,7 @@ var videoGrabber = Ember.Object.extend({
     _this.controller.addObserver('video_preview', _this, _this.default_video_preview_license);
   },
   clear: function() {
-    var stream = this.controller.get('video_recording.stream');
+    var stream = this.controller && this.controller.get('video_recording.stream');
     if(stream && stream.stop) {
       stream.stop();
     } else if(stream && stream.getTracks) {
@@ -1031,13 +1031,17 @@ var videoGrabber = Ember.Object.extend({
   },
   clear_video_work: function() {
     Ember.$('#video_upload').val('');
-    this.controller.set('video_preview', null);
+    if(this.controller) {
+      this.controller.set('video_preview', null);
+    }
     this.clear();
-    this.controller.set('video_recording', null);
+    if(this.controller) {
+      this.controller.set('video_recording', null);
+    }
   },
   default_video_preview_license: function() {
     var user = app_state.get('currentUser');
-    if(user && this.controller.get('video_preview')) {
+    if(user && this.controller && this.controller.get('video_preview')) {
       if(!this.controller.get('video_preview.license')) {
        this.controller.set('video_preview.license', {type: 'private'});
       }
@@ -1268,9 +1272,9 @@ var videoGrabber = Ember.Object.extend({
   },
   toggle_recording_video: function(action) {
     if(!action) {
-      action = this.controller.get('video_recording.recording') ? 'stop' : 'start';
+      action = this.controller && this.controller.get('video_recording.recording') ? 'stop' : 'start';
     }
-    var mr = this.controller.get('video_recording.media_recorder');
+    var mr = this.controller && this.controller.get('video_recording.media_recorder');
     if(action == 'start' && mr && mr.state == 'inactive') {
       this.controller.set('video_recording.video_url', window.URL.createObjectURL(this.controller.get('video_recording.stream')));
       this.controller.set('video_recording.blob', null);
