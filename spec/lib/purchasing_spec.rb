@@ -656,7 +656,51 @@ describe Purchasing do
       res = Purchasing.cancel_other_subscriptions(u, '4567')
       expect(res).to eq(true)
     end
-
+    
+    it "should cancel subscriptions on prior customer ids" do
+      u = User.create
+      u.settings['subscription'] = {'customer_id' => '2345', 'prior_customer_ids' => ['3456', '4567']}
+      a = {'id' => '3456'}
+      b = {'id' => '6789'}
+      c = {'id' => '4567', 'status' => 'active'}
+      expect(a).to receive(:delete)
+      expect(b).to receive(:delete)
+      expect(c).to receive(:delete)
+      expect(Stripe::Customer).to receive(:retrieve).with('2345').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: [a]})
+      }))
+      expect(Stripe::Customer).to receive(:retrieve).with('3456').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: [b, c]})
+      }))
+      expect(Stripe::Customer).to receive(:retrieve).with('4567').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: []})
+      }))
+      res = Purchasing.cancel_other_subscriptions(u, 'all')
+      expect(res).to eq(true)
+    end
+    
+    it "should cancel subscriptions on all but the specified subscription_id, even for prior customer ids" do
+      u = User.create
+      u.settings['subscription'] = {'customer_id' => '2345', 'prior_customer_ids' => ['3456', '4567']}
+      a = {'id' => '3456'}
+      b = {'id' => '6789'}
+      c = {'id' => '4567', 'status' => 'active'}
+      expect(a).to receive(:delete)
+      expect(b).to receive(:delete)
+      expect(c).not_to receive(:delete)
+      expect(Stripe::Customer).to receive(:retrieve).with('2345').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: [a]})
+      }))
+      expect(Stripe::Customer).to receive(:retrieve).with('3456').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: [b]})
+      }))
+      expect(Stripe::Customer).to receive(:retrieve).with('4567').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: [c]})
+      }))
+      res = Purchasing.cancel_other_subscriptions(u, '4567')
+      expect(res).to eq(true)
+    end
+    
     it "should log subscription cancellations" do
       u = User.create
       u.settings['subscription'] = {'customer_id' => '2345'}
@@ -681,6 +725,49 @@ describe Purchasing do
       expect(u.subscription_events[-2]['reason']).to eq('4567')
       expect(u.subscription_events[-3]['log']).to eq('subscription canceling')
       expect(u.subscription_events[-3]['reason']).to eq('4567')
+    end
+    
+    it "should log errors on failed cancellations" do
+      u = User.create
+      res = Purchasing.cancel_other_subscriptions(u, '1234')
+      expect(res).to eq(false)
+      expect(u.subscription_events.length).to eq(0)
+      
+      u = User.create({'settings' => {'subscription' => {'customer_id' => '1234'}}})
+      expect(Stripe::Customer).to receive(:retrieve).with('1234').and_raise("no dice")
+      res = Purchasing.cancel_other_subscriptions(u, '1234')
+      expect(res).to eq(false)
+      expect(u.subscription_events.length).to eq(2)
+      expect(u.subscription_events.map{|e| e['log'] }).to eq(['subscription canceling', 'subscription cancel error'])
+      expect(u.subscription_events[1]['error']).to eq('no dice')
+
+      u = User.create({'settings' => {'subscription' => {'customer_id' => '2345'}}})
+      subscr = OpenStruct.new
+      expect(subscr).to receive(:all).and_raise('naughty')
+      expect(Stripe::Customer).to receive(:retrieve).with('2345').and_return(OpenStruct.new({
+        subscriptions: subscr
+      }))
+      res = Purchasing.cancel_other_subscriptions(u, '2345')
+      expect(res).to eq(false)
+      expect(u.subscription_events.length).to eq(2)
+      expect(u.subscription_events.map{|e| e['log'] }).to eq(['subscription canceling', 'subscription cancel error'])
+      expect(u.subscription_events[1]['error']).to eq('naughty')
+      
+      u = User.create({'settings' => {'subscription' => {'customer_id' => '3456'}}})
+      a = {'id' => '3456'}
+      b = {'id' => '4567'}
+      all = [a, b]
+      subscr = OpenStruct.new
+      expect(b).to receive(:delete).and_raise('yipe')
+      expect(Stripe::Customer).to receive(:retrieve).with('3456').and_return(OpenStruct.new({
+        subscriptions: OpenStruct.new({all: all})
+      }))
+      res = Purchasing.cancel_other_subscriptions(u, '3456')
+      expect(res).to eq(false)
+      expect(u.subscription_events.length).to eq(2)
+      expect(u.subscription_events.map{|e| e['log'] }).to eq(['subscription canceling', 'subscription cancel error'])
+      expect(u.subscription_events[1]['subscription_id']).to eq('4567')
+      expect(u.subscription_events[1]['error']).to eq('yipe')
     end
     
     it "should not cancel other subscriptions if the referenced subscription is inactive" do
@@ -874,7 +961,7 @@ describe Purchasing do
   
   describe "logging" do
     it "should log user events without erroring" do
-      u = User.create
+      u = User.create(:settings => {'subscription' => {}})
       expect(Stripe::Charge).to receive(:create).with({
         :amount => 15000,
         :currency => 'usd',

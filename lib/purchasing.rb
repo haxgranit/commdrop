@@ -395,34 +395,55 @@ module Purchasing
   end
   
   def self.cancel_other_subscriptions(user, except_subscription_id)
-    return false unless user
+    return false unless user && user.settings && user.settings['subscription']
     Stripe.api_key = ENV['STRIPE_SECRET_KEY']
-    begin
-      user.log_subscription_event({:log => 'subscription canceling', reason: except_subscription_id}) if user
-      customer_id = user.settings['subscription']['customer_id']
-      customer = Stripe::Customer.retrieve(customer_id) if customer_id
+    user.log_subscription_event({:log => 'subscription canceling', reason: except_subscription_id}) if user
+    customer_ids = []
+    # cancel all subscriptions tied to the user, even if their customer_id has changed in the mean time
+    customer_ids << user.settings['subscription']['customer_id'] if user.settings['subscription']['customer_id']
+    customer_ids += user.settings['subscription']['prior_customer_ids'] || []
+    customer_ids = customer_ids.select{|id| id && id != 'free' }
+    # need to collect subscriptions for all affiliated customer_ids to try to find the right exception
+    subs = []
+    customer_ids.each do |customer_id|
+      begin
+        customer = Stripe::Customer.retrieve(customer_id)
+      rescue => e
+        user.log_subscription_event({:log => 'subscription cancel error', :detail => 'error retrieving customer', :error => e.to_s, :trace => e.backtrace}) if user
+      end
       if customer
-        subs = customer.subscriptions.all
-        do_cancel = (except_subscription_id == 'all')
-        subs.each do |sub|
-          if sub['id'] == except_subscription_id && sub['status'] != 'canceled' && sub['status'] != 'past_due'
-            do_cancel = true
-          end
-        end
-        if do_cancel
-          subs.each do |sub|
-            if sub['id'] == except_subscription_id && except_subscription_id != 'all'
-            else
-              user.log_subscription_event({:log => 'subscription canceled', id: sub['id'], reason: except_subscription_id}) if user
-              sub.delete
-            end
-          end
+        begin
+          customer_subs = customer.subscriptions.all.to_a
+          subs += customer_subs
+        rescue => e
+          user.log_subscription_event({:log => 'subscription cancel error', :detail => 'error retrieving subscriptions', :error => e.to_s, :trace => e.backtrace}) if user
+          return false
         end
       else
         return false
-      end    
-    rescue => e
-      return false
+      end
+    end
+    do_cancel = (except_subscription_id == 'all')
+    subs.each do |sub|
+      # plan to cancel all other subscriptions if the specified one is active
+      if sub['id'] == except_subscription_id && sub['status'] != 'canceled' && sub['status'] != 'past_due'
+        do_cancel = true
+      end
+    end
+    if do_cancel
+      subs.each do |sub|
+        # don't cancel the specified subscription
+        if sub['id'] == except_subscription_id && except_subscription_id != 'all'
+        else
+          begin
+            sub.delete
+            user.log_subscription_event({:log => 'subscription canceled', id: sub['id'], reason: except_subscription_id}) if user
+          rescue => e
+            user.log_subscription_event({:log => 'subscription cancel error', :detail => 'error deleting subscription', :subscription_id => sub['id'], :error => e.to_s, :trace => e.backtrace}) if user
+            return false
+          end
+        end
+      end
     end
     true
   end
