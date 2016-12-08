@@ -754,7 +754,7 @@ var pictureGrabber = Ember.Object.extend({
     });
     return save_image;
   },
-  select_image_preview: function(url) {
+  select_image_preview: function(url, force_content_type) {
     var preview = this.controller && this.controller.get('image_preview');
     if(!preview || !preview.url) { return; }
     this.controller.set('model.pending_image', true);
@@ -766,17 +766,17 @@ var pictureGrabber = Ember.Object.extend({
           _this.select_image_preview(_this.edited_image_data);
         } else {
           editManager.get_edited_image().then(function(data) {
-            _this.select_image_preview(data);
+            _this.select_image_preview(data, 'image/png');
           }, function() {
           });
         }
         return;
       } else {
-        preview.url = url;
+        Ember.set(preview, 'url', url);
       }
     }
     if(preview.url.match(/^data:/)) {
-      preview.content_type = preview.content_type || preview.url.split(/;/)[0].split(/:/)[1];
+      Ember.set(preview, 'content_type', force_content_type || preview.content_type || preview.url.split(/;/)[0].split(/:/)[1]);
     }
     if(!preview.license || !preview.license.copyright_notice_url) {
       Ember.set(preview, 'license', preview.license || {});
