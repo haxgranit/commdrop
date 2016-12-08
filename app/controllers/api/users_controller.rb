@@ -220,7 +220,7 @@ class Api::UsersController < ApplicationController
   def subscribe
     user = User.find_by_path(params['user_id'])
     admin = Organization.admin
-    token = params['token']
+    token = params['token'].to_unsafe_h
     if params['type'] == 'gift_code'
       return unless allowed?(user, 'edit')
       progress = Progress.schedule(user, :redeem_gift_token, token['code'])

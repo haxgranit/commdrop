@@ -758,8 +758,8 @@ describe Api::UsersController, :type => :controller do
     it "should schedule token processing" do
       token_user
       p = Progress.create
-      expect(Progress).to receive(:schedule).with(@user, :process_subscription_token, 'abc', 'monthly_6').and_return(p)
-      post :subscribe, params: {:user_id => @user.global_id, :token => 'abc', :type => 'monthly_6'}
+      expect(Progress).to receive(:schedule).with(@user, :process_subscription_token, {'code' => 'abc'}, 'monthly_6').and_return(p)
+      post :subscribe, params: {:user_id => @user.global_id, :token => {'code' => 'abc'}, :type => 'monthly_6'}
       expect(response.success?).to eq(true)
       json = JSON.parse(response.body)
       expect(json['progress']).not_to eq(nil)
