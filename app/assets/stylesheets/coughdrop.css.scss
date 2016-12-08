@@ -2204,6 +2204,9 @@ table>tbody>tr.voice_pad>td {
 table tr.long_delay td {
   border-top-width: 2px;
 }
+.small-placeholder:placeholder-shown {
+  font-size: 12px;
+}
 .btn-group.quick_money {
   .btn {
     z-index: inherit;

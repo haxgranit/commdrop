@@ -63,12 +63,17 @@
                 <div style="float: left; width: 250px;">
                   <div class="input-group input-group-lg">
                     <span class="input-group-addon">$</span>
-                   {{input type='text' value=subscription.subscription_custom_amount class='form-control' placeholder='multiple of $50 > 100'}}
+                   {{input type='text' value=subscription.subscription_custom_amount class='form-control small-placeholder' placeholder='multiple of $50 at least $150'}}
                   </div>
                 </div>
               {{/if}}
               <div style="clear: left;">
               </div>
+              {{#if custom_amount_error}}
+                <div>
+                  <p class='text-danger'>{{t "Please enter a valid custom amount, a multiple of $50, at least $150 in total." key='invalid_gift_amount'}}</p>
+                </div>
+              {{/if}}
             </div>
           </div>
         </div>
