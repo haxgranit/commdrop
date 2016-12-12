@@ -182,6 +182,7 @@ class Api::BoardsController < ApplicationController
     board = Board.find_by_path(params['id'])
     return unless exists?(board)
     return unless allowed?(board, 'edit')
+    params = JSON.parse(request.body.read)
     if board.process(params['board'], {:user => @api_user, :starrer => @api_user})
       render json: JsonApi::Board.as_json(board, :wrapper => true, :permissions => @api_user).to_json
     else
