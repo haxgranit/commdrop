@@ -127,6 +127,7 @@ class UserBadge < ActiveRecord::Base
       self.data['name'] = self.user_goal.settings['badge_name'] || self.user_goal.settings['summary']
       level = self.user_goal.badge_level(self.level)
       self.data['image_url'] = level['image_url'] if level && level['image_url']
+      self.data['sound_url'] = level['sound_url'] if level && level['sound_url']
     end
   end
   
@@ -192,6 +193,7 @@ class UserBadge < ActiveRecord::Base
       badge_level['interval'] = 'date'
       badge_level['interval'] = badge['interval'] if interval_types.include?(badge['interval'])
       badge_level['image_url'] = UserGoal.new.process_string(badge['image_url']) if badge['image_url']
+      badge_level['sound_url'] = UserGoal.new.process_string(badge['sound_url']) if badge['sound_url']
       
       if badge['watchlist']
         badge_level['watchlist'] = true

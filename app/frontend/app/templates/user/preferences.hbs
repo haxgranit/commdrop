@@ -690,18 +690,29 @@
         {{bound-select select_class="form-control" select_id="scanning_mode" content=targetingList selection=model.preferences.device.dwell_targeting action=(action (mut model.preferences.device.dwell_targeting)) }}
       </div>
     </div>
-    {{#if app_state.feature_flags.modeling}}
     <div class="form-group">
-      <label for="dwell_modeling" class="col-sm-3 control-label">{{t "Dwell Modeling" key='dwell_modeling'}}</label>
+      <label for="dwell_gravity" class="col-sm-3 control-label">{{t "Dwell Gravity" key='dwell_gravity'}}</label>
       <div class="col-sm-5">
         <div class="checkbox">
           <label>
-            {{input type="checkbox" checked=model.preferences.device.dwell_modeling id="dwell_modeling"}}
-            {{t "Mark clicks/touches as modeling events, not user selections" key='touch_as_modeling'}}
+            {{input type="checkbox" checked=model.preferences.device.dwell_gravity id="dwell_gravity"}}
+            {{t "Stay on the same target if the user's gaze leaves a bit" key='enable_dwell_gravity'}}
           </label>
         </div>
       </div>
     </div>
+    {{#if app_state.feature_flags.modeling}}
+      <div class="form-group">
+        <label for="dwell_modeling" class="col-sm-3 control-label">{{t "Dwell Modeling" key='dwell_modeling'}}</label>
+        <div class="col-sm-5">
+          <div class="checkbox">
+            <label>
+              {{input type="checkbox" checked=model.preferences.device.dwell_modeling id="dwell_modeling"}}
+              {{t "Mark clicks/touches as modeling events, not user selections" key='touch_as_modeling'}}
+            </label>
+          </div>
+        </div>
+      </div>
     {{/if}}
   {{/if}}
 {{/if}}

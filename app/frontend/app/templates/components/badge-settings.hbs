@@ -3,12 +3,19 @@
     <label class="col-sm-2 control-label">
       {{t "Level %{level}" key='level_n' level=index increment='level' }}
     </label>
-    <div class='col-sm-2'>
-      <img src={{badge.image_url}} style='height: 75px; max-width: 75px;'/>
-    </div>
-    <div class='col-sm-3'>
-      <button class='btn btn-default' type='button' {{action 'change_image'}}>{{t "New Image"}}</button>
+    <div class='col-sm-4'>
+      <img src={{badge.image_url}} style='height: 75px; max-width: 75px; vertical-align: bottom;'/>
+      <button class='btn btn-default' type='button' {{action 'change_image'}}>{{t "New Image" key='new_image'}}</button>
       <button class='btn btn-default' type='button' {{action 'delete_badge'}}><span class='glyphicon glyphicon-trash'></span></button>
+    </div>
+    <div class='col-sm-4'>
+      {{#if badge.sound_url}}
+        <audio src={{badge.sound_url}} style='display: block; height: 40px; max-width: 100%;' controls='true'/>
+      {{else}}
+        <span class='glyphicon glyphicon-volume-off' style='display: block; height: 40px; font-size: 30px;'></span>
+      {{/if}}
+        <button class='btn btn-default' type='button' {{action 'change_sound'}}>{{t "New Sound" key='new_sound'}}</button>
+        <button class='btn btn-default' type='button' {{action 'delete_sound'}}><span class='glyphicon glyphicon-trash'></span></button>
     </div>
   </div>
 {{/if}}

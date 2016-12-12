@@ -215,5 +215,17 @@ export default Ember.Component.extend({
     delete_badge: function(state) {
       this.sendAction('remove_badge', this.get('badge'));
     },
+    change_sound: function() {
+      var _this = this;
+      modal.open('new-sound').then(function(sound) {
+//        debugger
+        if(sound && sound.url) {
+          _this.set('badge.sound_url', sound.url);
+        }
+      });
+    },
+    delete_sound: function() {
+      this.get('badge').set('sound_url', null);
+    }
   }
 });

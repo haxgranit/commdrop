@@ -525,6 +525,27 @@ describe Api::BoardsController, :type => :controller do
       b = Board.find(b.id)
       expect(b.shared_users.length).to eq(2)
     end
+    
+    it "should preserve grid order" do
+      token_user
+      b = Board.create(:user => @user)
+      request.headers['Content-Type'] = 'application/json'
+      put :update, params: {:id => b.global_id}, body: 
+      {
+        :board => {
+          :name => "cool board 2",
+          :buttons => [{'id' => '1', 'label' => 'can'}, {'id' => '2', 'label' => 'span'}],
+          :grid => {
+            'rows' => 1, 'columns' => 3,
+            'order' => [[1, nil, 2]]
+          }
+        }
+      }.to_json
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json['board']['name']).to eq("cool board 2")
+      expect(json['board']['grid']['order']).to eq([[1, nil, 2]])
+    end
   end
   
   describe "star" do

@@ -123,7 +123,7 @@ export default Ember.Controller.extend({
       }
     },
     badge_popup: function(badge) {
-      if(badge.user_badge.earned) {
+      if(badge.user_badge) {
         modal.open('badge-awarded', {badge: badge.user_badge});
       }
     }

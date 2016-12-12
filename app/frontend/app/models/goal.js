@@ -6,7 +6,7 @@ import Utils from '../utils/misc';
 
 CoughDrop.Goal = DS.Model.extend({
   didLoad: function() {
-    this.set('badges_enabled', !!this.get('badges'));
+    this.check_badges();
   },
   user_id: DS.attr('string'),
   video_id: DS.attr('string'),
@@ -307,6 +307,9 @@ CoughDrop.Goal = DS.Model.extend({
     badge.id = Math.random();
     this.get('badges').pushObject(badge);
   },
+  check_badges: function() {
+    this.set('badges_enabled', !!this.get('badges'));
+  }.observes('badges'),
   set_zero_badge: function(obj, changed) {
     if(changed == 'auto_assessment' && this.get('auto_assessment') === false) {
       this.set('assessment_badge', null);

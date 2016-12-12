@@ -14,6 +14,28 @@ export default Ember.Controller.extend({
     {name: i18n.t('weeks', "Weeks"), id: "week"},
     {name: i18n.t('days', "Days"), id: "day"}
   ],
+  load_user_badges: function() {
+    var _this = this;
+    this.store.query('badge', {user_id: this.get('app_state.currentUser.id'), goal_id: this.get('model.id')}).then(function(badges) {
+      _this.set('user_badges', badges.content.mapBy('record'));
+    }, function(err) {
+    });
+
+  }.observes('app_state.currentUser.id', 'model.id', 'model.badges'),
+  mapped_badges: function() {
+    var user_badges = this.get('user_badges');
+    if(user_badges) {
+      var res = [];
+      (this.get('model.badges') || []).forEach(function(badge) {
+        var new_badge = Ember.$.extend({}, badge);
+        new_badge.user_badge = user_badges.find(function(b) { return b.get('level') == badge.level; });
+        res.push(new_badge);
+      });
+      return res;
+    } else {
+      return this.get('model.badges');
+    }
+  }.property('model.badges', 'user_badges'),
   load_templates_for_header: function() {
     if(this.get('model.template_header')) {
       this.load_templates();
@@ -100,6 +122,11 @@ export default Ember.Controller.extend({
     add_badge_level: function() {
       if(this.get('model')) {
         this.get('model').add_badge_level();
+      }
+    },
+    badge_popup: function(badge) {
+      if(badge.user_badge) {
+        modal.open('badge-awarded', {badge: badge.user_badge});
       }
     }
   }

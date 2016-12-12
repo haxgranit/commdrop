@@ -623,6 +623,7 @@ var buttonTracker = Ember.Object.extend({
       buttonTracker.dwell_elem = elem;
       var icon = document.createElement('div');
       icon.id = 'dwell_icon';
+      icon.className = 'dwell_icon';
       document.body.appendChild(icon);
       buttonTracker.dwell_icon_elem = icon;
     }
@@ -650,6 +651,18 @@ var buttonTracker = Ember.Object.extend({
 
     var now = (new Date()).getTime();
     var duration = event.duration || 50;
+
+    // Current target logic:
+    // If already tracking, clear the current progress if
+    //   - too long in total time
+    //   - too long since a valid linger event
+    //   - outside the tracked element's loose bounds
+    // If we're still tracking
+    //   - keep tracking if still on the same element
+    //   - start over on a new element if lingering over a new element and
+    //     still within the original tracked element's loosed bounds, but
+    //     with more dwell gravity towards the new element
+    //   - start over if on a new element
     if(buttonTracker.last_dwell_linger) {
       // check if we're outside the screen bounds, or the timestamp bounds.
       // if so clear the object
@@ -669,9 +682,9 @@ var buttonTracker = Ember.Object.extend({
       }
     }
     if(elem_wrap && buttonTracker.last_dwell_linger && elem_wrap.dom == buttonTracker.last_dwell_linger.dom) {
-      // if they're the same, we're rockin'
+      // if still lingering on the same element, we're rockin'
       buttonTracker.buttonDown = true;
-    } else if(elem_wrap && buttonTracker.last_dwell_linger && elem_wrap.dom != buttonTracker.last_dwell_linger.dom) {
+    } else if(buttonTracker.dwell_gravity && elem_wrap && buttonTracker.last_dwell_linger && elem_wrap.dom != buttonTracker.last_dwell_linger.dom) {
       // if there's a valid existing linger for a different element, decide between it and the new linger
       var old_bounds = buttonTracker.last_dwell_linger.loose_bounds();
       var new_bounds = elem_wrap.loose_bounds();
@@ -681,6 +694,8 @@ var buttonTracker = Ember.Object.extend({
         var weight = 1.0;
         // weight later events slightly more, otherwise it gets impossible to break out
         if(idx > (list.length / 2)) { weight = 2.0; }
+        if(idx > (list.length * 2 / 3)) { weight = 3.0; }
+        if(idx > (list.length * 4 / 5)) { weight = 5.0; }
         avg_x = avg_x + (e.clientX * weight);
         avg_y = avg_y + (e.clientY * weight);
         tally = tally + (1 * weight);
@@ -696,6 +711,8 @@ var buttonTracker = Ember.Object.extend({
     } else if(elem_wrap) {
       buttonTracker.last_dwell_linger = elem_wrap;
     }
+//    console.log(buttonTracker.last_dwell_linger);
+//    if(!buttonTracker.last_dwell_linger) { console.log(elem_wrap); }
     if(buttonTracker.last_dwell_linger) {
       // place the dwell icon in the center of the current linger
       if(!buttonTracker.last_dwell_linger.started) {
@@ -708,6 +725,7 @@ var buttonTracker = Ember.Object.extend({
         var clone = buttonTracker.dwell_elem.cloneNode(true);
         clone.style.animationDuration = buttonTracker.dwell_timeout + 'ms';
         clone.style.webkitAnimationDuration = buttonTracker.dwell_timeout + 'ms';
+        buttonTracker.dwell_elem.style.left = '-1000px';
         buttonTracker.dwell_elem.parentNode.replaceChild(clone, buttonTracker.dwell_elem);
         clone.classList.add('targeting');
         clone.classList.add(buttonTracker.dwell_animation);
@@ -752,13 +770,21 @@ var buttonTracker = Ember.Object.extend({
     event = buttonTracker.normalize_event(event);
     if(event.clientX === undefined || event.clientY === undefined) { return null; }
     var left = 0;
+    var icon_left = 0;
     if(buttonTracker.dwell_elem) {
       var left = buttonTracker.dwell_elem.style.left;
       buttonTracker.dwell_elem.style.left = '-1000px';
     }
+    if(buttonTracker.dwell_icon_elem) {
+      var icon_left = buttonTracker.dwell_icon_elem.style.left;
+      buttonTracker.dwell_icon_elem.style.left = '-1000px';
+    }
     var $target = Ember.$(document.elementFromPoint(event.clientX, event.clientY));
     if(buttonTracker.dwell_elem) {
       buttonTracker.dwell_elem.style.left = left;
+    }
+    if(buttonTracker.dwell_icon_elem) {
+      buttonTracker.dwell_icon_elem.style.left = icon_left;
     }
     var region = $target.closest(".advanced_selection")[0];
     if(!region && loose) {
@@ -796,13 +822,21 @@ var buttonTracker = Ember.Object.extend({
   button_from_point: function(x, y) {
     // TODO: support virtual board dom
     var elem_left = null;
+    var icon_left = null;
     if(buttonTracker.dwell_elem) {
       elem_left = buttonTracker.dwell_elem.style.left;
       buttonTracker.dwell_elem.style.left = '-1000px';
     }
+    if(buttonTracker.dwell_icon_elem) {
+      icon_left = buttonTracker.dwell_icon_elem.style.left;
+      buttonTracker.dwell_icon_elem.style.left = '-1000px';
+    }
     var elem = document.elementFromPoint(x, y);
     if(buttonTracker.dwell_elem) {
       buttonTracker.dwell_elem.style.left = elem_left;
+    }
+    if(buttonTracker.dwell_icon_elem) {
+      buttonTracker.dwell_icon_elem.style.left = icon_left;
     }
 
     var $target = Ember.$(elem).closest('.button');
@@ -823,6 +857,10 @@ var buttonTracker = Ember.Object.extend({
   element_wrap: function(elem) {
     if(!elem) { return null; }
     var res = null;
+    var loose_distance = 5;
+    if(buttonTracker.dwell_gravity) {
+      loose_distance = 50;
+    }
     if(elem.button) {
       res = {
         id: elem.id,
@@ -840,10 +878,10 @@ var buttonTracker = Ember.Object.extend({
         },
         loose_bounds: function() {
           return {
-            width: elem.width + 100,
-            height: elem.height + 100,
-            top: elem.top - 50,
-            left: elem.left - 50
+            width: elem.width + (loose_distance * 2),
+            height: elem.height + (loose_distance * 2),
+            top: elem.top - loose_distance,
+            left: elem.left - loose_distance
           };
         },
         data: function(attr, val) {
@@ -877,10 +915,10 @@ var buttonTracker = Ember.Object.extend({
           var offset = {};
           if($e.length > 0) { offset = $e.offset() || {}; }
           res.cached_loose_bounds = {
-            width: $e.outerWidth() + 100,
-            height: $e.outerHeight() + 100,
-            top: offset.top - 50,
-            left: offset.left - 50
+            width: $e.outerWidth() + (loose_distance * 2),
+            height: $e.outerHeight() + (loose_distance * 2),
+            top: offset.top - loose_distance,
+            left: offset.left - loose_distance
           };
           return res.cached_loose_bounds;
         },

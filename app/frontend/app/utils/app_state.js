@@ -477,6 +477,7 @@ var app_state = Ember.Object.extend({
         buttonTracker.dwell_no_cutoff = _this.get('currentUser.preferences.device.dwell_no_cutoff');
         buttonTracker.dwell_cursor = _this.get('currentUser.preferences.device.dwell_cursor');
         buttonTracker.dwell_modeling = _this.get('currentUser.preferences.device.dwell_modeling');
+        buttonTracker.dwell_gravity = _this.get('currentUser.preferences.device.dwell_gravity');
         if(buttonTracker.dwell_type == 'eyegaze') {
           capabilities.eye_gaze.listen();
         }

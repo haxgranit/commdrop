@@ -892,6 +892,20 @@ describe Board, :type => :model do
       expect(b.settings['name']).to eq('Coolness')
       expect(b.settings['description']).to eq('Something fun')
     end
+    
+    it "should preserve the grid order correctly" do
+      u = User.create
+      b = Board.create(:user => u)
+      b.process({
+        'buttons' => [{'id' => 1, 'label' => 'friend'}, {'id' => 2, 'label' => 'send'}, {'id' => '3', 'label' => 'blend'}],
+        'grid' => {
+          'rows' => 3,
+          'columns' => 3,
+          'order' => [[nil,1,nil],[2,nil,3],[nil,nil,nil]]
+        }
+      })
+      expect(b.settings['grid']['order']).to eq([[nil,1,nil],[2,nil,3],[nil,nil,nil]])
+    end
   end
 
   it "should securely serialize settings" do

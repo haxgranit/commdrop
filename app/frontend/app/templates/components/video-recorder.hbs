@@ -3,7 +3,7 @@
     <div class="row">
       {{#if video}}
         <div class="col-sm-10">
-          <video id='video_elem' controls preload='metadata' src={{video.url}} style="width: 100%; border: 1px solid #ccc;"></video>
+          <video id='video_elem' controls preload='metadata' src={{video.url}} style="width: 100%; max-height: 300px; border: 1px solid #ccc;"></video>
         </div>
       {{else}}
         <div class="col-sm-2 video_buttons">

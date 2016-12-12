@@ -572,6 +572,8 @@ class LogSession < ActiveRecord::Base
     elsif params['assessment']
       params['events'] = nil
       self.process_new(params, non_user_params)
+    elsif params['type'] == 'daily_use'
+      self.process_daily_use(params, non_user_params)
     else
       res = LogSession.new(:data => {})
       # background-job it, too much processing for in-request!
@@ -607,6 +609,21 @@ class LogSession < ActiveRecord::Base
     else
       raise "only event-list logs can be delay-processed"
     end
+  end
+  
+  def self.process_daily_use(params, non_user_params)
+    raise "author required" unless non_user_params[:author]
+    session = LogSession.find_or_create_by(:type => 'daily_use', :user_id => non_user_params[:author].id)
+    session.data['events'] = []
+    days = session.data['days'] || {}
+    params['events'].each do |day|
+      existing_day = days[day['date']]
+      existing_day ||= day
+      existing_day['active'] ||= day['active']
+    end
+    session.data['days'] = days
+    session.save
+    session
   end
   
   def check_for_merger

@@ -59,6 +59,7 @@ var stashes = Ember.Object.extend({
       'working_vocalization': [],
       'current_mode': 'default',
       'usage_log': [],
+      'daily_use': [],
       'boardHistory': [],
       'browse_history': [],
       'history_enabled': true,
@@ -298,7 +299,53 @@ var stashes = Ember.Object.extend({
     stashes.push_log(true);
     return log_event;
   },
+  track_daily_use: function() {
+    var now = (new Date()).getTime();
+    var today = window.moment().toISOString().substring(0, 10);
+    var daily_use = stashes.get('daily_use') || [];
+    var found = false;
+    daily_use.forEach(function(d) {
+      if(d.date == today) {
+        found = true;
+        // if it's been less than 5 minutes since the last event, add the difference
+        // to the total minutes for the day
+        if(now - d.last_timestamp < (5 * 60 * 1000)) {
+          d.total_minutes = (d.total_minutes || 0) + ((now - d.last_timestamp) / (5 * 60 * 1000));
+        }
+        d.last_timestamp = now;
+      }
+    });
+    if(!found) {
+      daily_use.push({
+        date: today,
+        last_timestamp: now
+      });
+    }
+    stashes.persist('daily_use', daily_use);
+    // once we have data for more than one day, push it and then clear the history
+    if(daily_use.length > 1 && stashes.get('online')) {
+      var days = [];
+      daily_use.forEach(function(d) {
+        days.push({
+          date: d.date,
+          active: d.total_minutes > 30
+        });
+      });
+      // ajax call to push daily_use data
+      var log = CoughDrop.store.createRecord('log', {
+        type: 'daily_use',
+        events: days
+      });
+      log.save().then(function() {
+        // clear the old days that have been persisted
+        var dailies = stashes.get('daily_use') || [];
+        dailies = dailies.filter(function(d) { return d == today; });
+        stashes.persist('daily_use', dailies);
+      }, function() { });
+    }
+  },
   log: function(obj) {
+    stashes.track_daily_use();
     if(!stashes.get('history_enabled')) { return null; }
     if(!stashes.get('logging_enabled')) { return null; }
     if(stashes.get('logging_paused_at')) {

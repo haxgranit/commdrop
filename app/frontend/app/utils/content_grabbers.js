@@ -360,7 +360,7 @@ var pictureGrabber = Ember.Object.extend({
       var canvas = window.scratch_canvas;
       img.onload = function() {
         Ember.run(function() {
-          if(img.width < _this.default_size && img.height < _this.default_size) {
+          if(img.width < _this.default_size && img.height < _this.default_size && data_url.match(/^data/)) {
             return resolve({url: data_url, width: img.width, height: img.height});
           }
           var pct = img.width / img.height;
@@ -412,7 +412,13 @@ var pictureGrabber = Ember.Object.extend({
   },
   file_selected: function(file, type) {
     var _this = this;
-    var reader = contentGrabbers.read_file(file);
+    var reader = null;
+    if(file && file.localURL) {
+      // large data URLs seem to barf on iOS when drawing to a canvas or as an img src
+      reader = Ember.RSVP.resolve({target: {result: file.localURL}});
+    } else {
+      reader = contentGrabbers.read_file(file);
+    }
     if(type == 'avatar' && contentGrabbers.avatar_result) {
       contentGrabbers.avatar_result(true, 'loading');
     } else if(type == 'badge' && contentGrabbers.badge_result) {
@@ -422,7 +428,19 @@ var pictureGrabber = Ember.Object.extend({
       window.result = data.target.result;
       return pictureGrabber.size_image(data.target.result);
     });
-    sizer.then(function(res) {
+
+    var force_data_url = sizer.then(function(res) {
+      if(res.url && res.url.match(/^data/)) {
+        return Ember.RSVP.resolve(res);
+      } else {
+        return contentGrabbers.read_file(file).then(function(data) {
+          res.url = data.target.result;
+          return Ember.RSVP.resolve(res);
+        });
+      }
+    });
+
+    force_data_url.then(function(res) {
       var url = res.url;
       if(type == 'avatar' || type == 'badge') {
         var content_type = (url.split(/:/)[1] || "").split(/;/)[0];
@@ -910,7 +928,13 @@ var pictureGrabber = Ember.Object.extend({
   start_webcam: function() {
     var _this = this;
     // TODO: cross-browser
-    if(navigator.getUserMedia) {
+    if(navigator.device && navigator.device.capture && navigator.device.capture.captureImage) {
+      navigator.device.capture.captureImage(function(files) {
+        var media_file = files[0];
+        var file = new window.File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
+        _this.file_selected(file);
+      }, function() { }, {limit: 1});
+    } else if(navigator.getUserMedia) {
       var last_stream_id = stashes.get('last_stream_id');
       var constraints = {video: true};
       if(last_stream_id) {
@@ -926,12 +950,6 @@ var pictureGrabber = Ember.Object.extend({
       }, function() {
         console.log("permission not granted");
       });
-    } else if(navigator.device && navigator.device.capture && navigator.device.capture.captureImage) {
-      navigator.device.capture.captureImage(function(files) {
-        var media_file = files[0];
-        var file = new window.File(media_file.name, media_file.localURL, media_file.type, media_file.lastModifiedDate, media_file.size);
-        _this.file_selected(file);
-      }, function() { }, {limit: 1});
     }
   },
   swap_streams: function() {
@@ -1250,7 +1268,7 @@ var videoGrabber = Ember.Object.extend({
       };
     }
     if(enumerator && !streams) {
-      enumerator().then(function(list) {
+      enumerator.call(window.navigator.mediaDevices || window).then(function(list) {
         var video_streams = [];
         list.forEach(function(device) {
           if(device.kind == 'videoinput' || device.kind == 'video') {
@@ -1391,16 +1409,18 @@ var videoGrabber = Ember.Object.extend({
 var soundGrabber = Ember.Object.extend({
   setup: function(button, controller) {
     this.controller = controller;
-    this.button = button;
     var _this = this;
-    Ember.run.later(function() {
-      button.findContentLocally().then(function() {
-        var sound = button.get('sound');
-        if(sound) {
-          sound.check_for_editable_license();
-        }
+    this.button = button;
+    if(button) {
+      Ember.run.later(function() {
+        button.findContentLocally().then(function() {
+          var sound = button.get('sound');
+          if(sound) {
+            sound.check_for_editable_license();
+          }
+        });
       });
-    });
+    }
     _this.controller.addObserver('sound_preview', _this, _this.default_sound_preview_license);
   },
   clear: function() {
@@ -1614,15 +1634,21 @@ var soundGrabber = Ember.Object.extend({
       return contentGrabbers.save_record(sound);
     });
 
-    save_sound.then(function(sound) {
+    return save_sound.then(function(sound) {
       var button_sound = {url: sound.get('url'), id: sound.id};
       _this.controller.set('model.sound', sound);
       _this.clear_sound_work();
-      editManager.change_button(_this.controller.get('model.id'), {
-        'sound': sound,
-        'sound_id': sound.id
-      });
+      if(_this.button) {
+        editManager.change_button(_this.controller.get('model.id'), {
+          'sound': sound,
+          'sound_id': sound.id
+        });
+      }
       _this.controller.set('model.pending_sound', false);
+      return {
+        url: sound.get('url'),
+        id: sound.id
+      };
     }, function(err) {
       err = err || {};
       err.error = err.error || "unexpected error";

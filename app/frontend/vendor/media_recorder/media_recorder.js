@@ -1,3 +1,4 @@
+window.originalMediaRecorder = window.MediaRecorder;
 if(!window.MediaRecorder) {
   polyfillMediaRecorder();
 }
