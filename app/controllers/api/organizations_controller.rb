@@ -98,6 +98,20 @@ class Api::OrganizationsController < ApplicationController
       users = users.select{|u| active_user_ids.include?(u.id) }
     elsif params['report'] == 'eval_accounts'
       users = User.where({:expires_at => nil}).select{|u| u.settings['subscription'] && u.settings['subscription']['plan_id'] == 'eval_monthly_free' }
+    elsif params['report'].match(/home_boards/)
+      home_connections = UserBoardConnection.where(:home => true)
+      if params['report'].match(/recent/)
+        home_connections = home_connections.where(['updated_at > ?', 3.months.ago])
+      end
+      counts = {}
+      # TODO: sharding
+      home_connections.each{|c| counts[c.board_id] ||= 0; counts[c.board_id] += 1 }
+      board_ids = home_connections.map(&:board_id)
+      boards = Board.where(:id => board_ids)
+      stats = {}
+      boards.each do |board|
+        stats[board.key] = counts[board.id] || 0
+      end
     elsif params['report'].match(/recent_/)
       # logins signed up more than 3 weeks ago that have been used in the last week
       x = 3
