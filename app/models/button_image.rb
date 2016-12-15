@@ -29,6 +29,10 @@ class ButtonImage < ActiveRecord::Base
     true
   end
   
+  def protected?
+    !!self.settings['protected']
+  end
+  
   def track_image_use_later
     schedule(:track_image_use)
     true
@@ -82,6 +86,8 @@ class ButtonImage < ActiveRecord::Base
     self.settings['badge'] = !!params['badge'] if params['badge'] != nil
     # TODO: raise a stink if content_type, width or height are not provided
     process_license(params['license']) if params['license']
+    self.settings['protected'] = params['protected'] if params['protected'] != nil
+    self.settings['finding_user_name'] = params['finding_user_name'] if params['finding_user_name']
     self.settings['suggestion'] = params['suggestion'] if params['suggestion']
     self.settings['search_term'] = params['search_term'] if params['search_term']
     self.settings['external_id'] = params['external_id'] if params['external_id']

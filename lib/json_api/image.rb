@@ -12,6 +12,7 @@ module JsonApi::Image
     ['pending', 'content_type', 'width', 'height'].each do |key|
       json[key] = image.settings[key]
     end
+    json['protected'] = !!image.protected?
     json['license'] = OBF::Utils.parse_license(image.settings['license'])
     if (args[:data] || !image.url) && image.data
       json['url'] = image.data

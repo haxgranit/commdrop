@@ -14,6 +14,24 @@ class Api::SearchController < ApplicationController
     render json: results.to_json
   end
   
+  def protected_symbols
+    res = []
+    if params['library']
+      if @api_user.can_access_library?(params['library'])
+        # API call to retrieve data
+        # Most likely will have to do a proxy url for image results, to 
+        #   confirm account access or append some kind of access token
+        # Probably belongs in a lib somewhere
+      end
+    end
+    res = res.map do |item|
+      item['finding_user_name'] = @api_user.user_name
+      item['protected'] = true
+      item
+    end
+    render json: res.to_json
+  end
+    
   def parts_of_speech
     data = WordData.find_word(params['q'])
     render json: data.to_json

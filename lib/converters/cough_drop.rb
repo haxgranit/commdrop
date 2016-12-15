@@ -20,8 +20,11 @@ module Converters::CoughDrop
       'private' => !board.public,
       'key' => board.key,
       'word_suggestions' => !!board.settings['word_suggestions'],
-      
+      'protected' => board.protected_material?
     }
+    if board.protected_material? && board.user
+      res['protected_content_user_identifier'] = board.user.settings['email']
+    end
     grid = []
     res['buttons'] = []
     button_count = board.settings['buttons'].length
@@ -123,6 +126,10 @@ module Converters::CoughDrop
 
     raise "user required" unless opts['user']
     raise "missing id" unless obj['id']
+    if obj['ext_coughdrop_settings'] && obj['ext_coughdrop_settings']['protected'] && obj['ext_coughdrop_settings']['key']
+      user_name = obj['ext_coughdrop_settings']['key'].split(/\//)[0]
+      raise "can't import protected boards to a different user" unless user_name == opts['user'].user_name
+    end
 
     hashes = {}
     hashes['images_hash_ids'] = obj['buttons'].map{|b| b && b['image_id'] }.compact

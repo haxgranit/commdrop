@@ -201,6 +201,7 @@ Coughdrop::Application.routes.draw do
     end
     
     get "search/symbols" => "search#symbols"
+    get "search/protected_symbols" => "search#protected_symbols"
     get "search/proxy" => "search#proxy"
     get "search/parts_of_speech" => "search#parts_of_speech"
     get "search/apps" => "search#apps"

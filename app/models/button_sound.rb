@@ -29,6 +29,10 @@ class ButtonSound < ActiveRecord::Base
     true
   end
   
+  def protected?
+    false
+  end
+  
   def process_params(params, non_user_params)
     raise "user required as sound author" unless self.user_id || non_user_params[:user]
     self.user ||= non_user_params[:user] if non_user_params[:user]

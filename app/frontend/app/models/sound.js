@@ -13,6 +13,7 @@ CoughDrop.Sound = DS.Model.extend({
   content_type: DS.attr('string'),
   duration: DS.attr('number'),
   pending: DS.attr('boolean'),
+  protected: DS.attr('boolean'),
   license: DS.attr('raw'),
   permissions: DS.attr('raw'),
   file: DS.attr('boolean'),

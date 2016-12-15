@@ -12,6 +12,7 @@ module JsonApi::Sound
     ['pending', 'content_type', 'duration'].each do |key|
       json[key] = sound.settings[key]
     end
+    json['protected'] = !!sound.protected?
     json['license'] = OBF::Utils.parse_license(sound.settings['license'])
     if (args[:data] || !sound.url) && sound.data
       json['url'] = sound.data

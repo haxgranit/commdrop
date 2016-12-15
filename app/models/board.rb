@@ -233,7 +233,7 @@ class Board < ActiveRecord::Base
     self.settings['license'] ||= {type: 'private'}
     self.name = self.settings['name']
     if self.protected_material?
-      self.public = false
+      self.public = false unless self.settings['protected'] && self.settings['protected']['demo'] && !self.parent_board_id
     elsif self.public == nil
       if self.user && self.user.premium?
         self.public = false
@@ -249,6 +249,9 @@ class Board < ActiveRecord::Base
   end
   
   def protected_material?
+    if self.settings['protected']
+      return true if self.settings['protected']['media'] || self.settings['protected']['vocabulary']
+    end
     false
   end
   
@@ -406,21 +409,33 @@ class Board < ActiveRecord::Base
       sounds << {:id => button['sound_id']} if button['sound_id']
     end
     
-    existing_image_ids = BoardButtonImage.images_for_board(self.id).map(&:global_id)
+    found_images = BoardButtonImage.images_for_board(self.id)
+    protected_images = found_images.select(&:protected?)
+    existing_image_ids = existing_images.map(&:global_id)
     existing_images = existing_image_ids.map{|id| {:id => id} }
     image_ids = images.map{|i| i[:id] }
     new_images = images.select{|i| !existing_image_ids.include?(i[:id]) }
     orphan_images = existing_images.select{|i| !image_ids.include?(i[:id]) }
     BoardButtonImage.connect(self.id, new_images, :user_id => self.user.global_id)
     BoardButtonImage.disconnect(self.id, orphan_images)
-    
-    existing_sound_ids = BoardButtonSound.sounds_for_board(self.id).map(&:global_id)
+
+    found_sounds = BoardButtonSound.sounds_for_board(self.id)
+    protected_sounds = found_sounds.select(&:protected?)
+    existing_sound_ids = found_sounds.map(&:global_id)
     existing_sounds = existing_sound_ids.map{|id| {:id => id} }
     sound_ids = sounds.map{|i| i[:id] }
     new_sounds = sounds.select{|i| !existing_sound_ids.include?(i[:id]) }
     orphan_sounds = existing_sounds.select{|i| !sound_ids.include?(i[:id]) }
     BoardButtonSound.connect(self.id, new_sounds, :user_id => self.user.global_id)
     BoardButtonSound.disconnect(self.id, orphan_sounds)
+    if (protected_images + protected_sounds).length > 0 && self.settings['protected_media'] != true
+      self.settings['protected'] ||= {}
+      self.settings['protected']['media'] = true
+      self.save_without_post_processing
+    elsif (protected_images + protected_sounds).length == 0 && self.settings['protected_media'] == true
+      self.settings['protected']['media'] = false if self.settings['protected']
+      self.save_without_post_processing
+    end
     @images_mapped_at = Time.now.to_i
   end
   
@@ -439,8 +454,15 @@ class Board < ActiveRecord::Base
     @edit_notes = []
     self.user ||= non_user_params[:user] if non_user_params[:user]
     if params['parent_board_id']
-      parent_id = params['parent_board_id'].split(/_/).last
-      self.parent_board_id = parent_id
+      parent_board = Board.find_all_by_global_id(params['parent_board_id'])
+      if !parent_board
+        add_processing_error('parent board not found')
+        return false
+      elsif parent_board.protected_material? && !non_user_params[:allow_copying_protected_boards]
+        add_processing_error('cannot copy protected boards')
+        return false
+      end
+      self.parent_board = parent_board
     end
     self.settings ||= {}
     self.settings['last_updated'] = Time.now.iso8601

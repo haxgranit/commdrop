@@ -572,6 +572,8 @@ var pictureGrabber = Ember.Object.extend({
         search = _this.flickr_search;
       } else if(this.controller.get('image_library') == 'public_domain') {
         search = _this.public_domain_image_search;
+      } else if(this.controller.get('image_library') && this.controller.get('image_library').match(/^protected/)) {
+        search = _this.protected_search;
       }
       search(text).then(function(data) {
         _this.controller.set('image_search.previews', data);
@@ -580,6 +582,15 @@ var pictureGrabber = Ember.Object.extend({
         _this.controller.set('image_search.error', err);
       });
     }
+  },
+  protected_search: function(text) {
+    var library = this.controller.get('image_library').split(/_/)[1];
+    return persistence.ajax('/api/v1/search/protected_symbols?library=' + encodeURIComponent(library) + '&q=' + encodeURIComponent(text), { type: 'GET'
+    }).then(function(data) {
+      return data;
+    }, function(xhr, message) {
+      return Ember.RSVP.reject(message.error);
+    });
   },
   open_symbols_search: function(text) {
     return persistence.ajax('/api/v1/search/symbols?q=' + encodeURIComponent(text), { type: 'GET'
@@ -829,7 +840,9 @@ var pictureGrabber = Ember.Object.extend({
         height: data.height,
         external_id: preview.external_id,
         search_term: preview.search_term,
-        license: preview.license
+        license: preview.license,
+        protected: preview.protected,
+        finding_user_name: preview.finding_user_name
       });
       var _this = this;
       return contentGrabbers.save_record(image);

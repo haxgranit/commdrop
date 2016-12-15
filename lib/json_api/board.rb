@@ -31,6 +31,7 @@ module JsonApi::Board
     json['public'] = !!board.public
     json['full_set_revision'] = board.full_set_revision
     json['current_revision'] = board.current_revision
+    json['protected'] = !!board.protected_material?
     json['button_set_id'] = board.button_set_id
     json['brand_new'] = board.created_at < 1.hour.ago
     json['non_author_uses'] = board.settings['non_author_uses']
@@ -64,6 +65,7 @@ module JsonApi::Board
   end
   
   def self.extra_includes(board, json, args={})
+    json['board']['protected_settings'] = board.settings['protected'] if board.protected_material?
     self.trace_execution_scoped(['json/board/images_and_sounds']) do
       hash = board.buttons_and_images_for(args[:permissions])
       json['images'] = hash['images']

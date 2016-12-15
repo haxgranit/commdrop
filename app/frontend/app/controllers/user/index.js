@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import persistence from '../../utils/persistence';
+import CoughDrop from '../../app';
 import modal from '../../utils/modal';
 import app_state from '../../utils/app_state';
 import i18n from '../../utils/i18n';

@@ -271,6 +271,8 @@ CoughDrop.Board = DS.Model.extend({
   word_suggestions: DS.attr('boolean'),
   public: DS.attr('boolean'),
   brand_new: DS.attr('boolean'),
+  protected: DS.attr('boolean'),
+  protected_settings: DS.attr('raw'),
   non_author_uses: DS.attr('number'),
   downstream_boards: DS.attr('number'),
   immediately_upstream_boards: DS.attr('number'),
@@ -421,6 +423,16 @@ CoughDrop.Board = DS.Model.extend({
   checkForDataURLOnChange: function() {
     this.checkForDataURL().then(null, function() { });
   }.observes('image_url'),
+  for_sale: function() {
+    if(this.get('protected')) {
+      var settings = this.get('protected_settings') || {};
+      if(settings.cost) {
+        return true;
+      } else if(settings.root_board) {
+        return true;
+      }
+    }
+  }.property('protected', 'protected_settings'),
   load_button_set: function(force) {
     var _this = this;
     if(this.get('button_set') && !force) {

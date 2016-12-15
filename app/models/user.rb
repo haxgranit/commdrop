@@ -87,6 +87,10 @@ class User < ActiveRecord::Base
     self.save
   end
   
+  def can_access_library?(library)
+    false
+  end
+  
   def disable_feature(feature)
     self.settings['feature_flags'].delete(feature.to_s) if self.settings && self.settings['feature_flags']
     self.save

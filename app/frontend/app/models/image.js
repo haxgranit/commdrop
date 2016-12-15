@@ -16,6 +16,7 @@ CoughDrop.Image = DS.Model.extend({
   pending: DS.attr('boolean'),
   avatar: DS.attr('boolean'),
   badge: DS.attr('boolean'),
+  protected: DS.attr('boolean'),
   suggestion: DS.attr('string'),
   external_id: DS.attr('string'),
   search_term: DS.attr('string'),

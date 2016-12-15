@@ -82,6 +82,16 @@ module JsonApi::Log
     if log.data['readable_ip_address']
       json['log']['readable_ip_address'] = log.data['readable_ip_address']
     end
+    if log.data['days']
+      str = 2.months.ago.to_date.iso8601
+      events = []
+      log.data['days'].each do |key, day|
+        if key >= str
+          events << day
+        end
+      end
+      json['log']['daily_use'] = events.sort_by{|e| e['date'] }
+    end
 
     (log.data['events'] || []).each do |event|
       entry = {}

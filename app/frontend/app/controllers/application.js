@@ -30,6 +30,10 @@ export default Ember.Controller.extend({
       modal.error(i18n.t('need_online_for_copying', "You must be connected to the Internet to make copies of boards."));
       return Ember.RSVP.reject();
     }
+    if(oldBoard.get('protected')) {
+      modal.error(i18n.t('cant_copy_protected_boards', "This board contains purchased content, and can't be copied."));
+      return Ember.RSVP.reject();
+    }
     // If a board has any sub-boards or if the current user has any supervisees,
     // or if the board is in the current user's board set,
     // then there's a confirmation step before copying.
@@ -261,6 +265,10 @@ export default Ember.Controller.extend({
       modal.open('rename-board', {board: this.get('board').get('model')});
     },
     shareBoard: function() {
+      if(oldBoard.get('protected')) {
+        modal.error(i18n.t('cant_share_protected_boards', "This board contains purchased content, and can't be shared."));
+        return;
+      }
       modal.open('share-board', {board: this.get('board').get('model')});
     },
     copy_and_edit_board: function() {
