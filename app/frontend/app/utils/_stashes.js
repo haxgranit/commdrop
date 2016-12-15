@@ -392,6 +392,7 @@ var stashes = Ember.Object.extend({
           // success!
         }, function() {
           // error, try again later
+          console.error("log push failed");
           stashes.persist('usage_log', history.concat(stashes.get('usage_log')));
         });
       }
