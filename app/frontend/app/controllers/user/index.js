@@ -17,6 +17,27 @@ export default Ember.Controller.extend({
     var now = (new Date()).getTime();
     return (now - persistence.get('last_sync_at')) > (7 * 24 * 60 * 60 * 1000);
   }.property('persistence.last_sync_at'),
+  check_daily_use: function() {
+    var current_user_name = this.get('daily_use.user_name');
+    if(this.get('model.user_name') && current_user_name != this.get('model.user_name') && this.get('model.permissions.admin_support_actions') && !this.get('daily_use')) {
+      var _this = this;
+      _this.set('daily_use', {loading: true});
+      persistence.ajax('/api/v1/users/' + this.get('model.user_name') + '/daily_use', {type: 'GET'}).then(function(data) {
+        var log = CoughDrop.store.push({ data: {
+          id: data.log.id,
+          type: 'log',
+          attributes: data.log
+        }});
+        _this.set('daily_use', log);
+      }, function(err) {
+        if(err && err.result && err.result.error == 'no data available') {
+          _this.set('daily_use', null);
+        } else {
+          _this.set('daily_use', {error: true});
+        }
+      });
+    }
+  }.observes('model.user_name', 'model.permissions.admin_support_actions'),
   blank_slate: function() {
     return !this.get('model.preferences.home_board.key') &&
       this.get('public_boards_shortened').length === 0 &&

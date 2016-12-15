@@ -1324,4 +1324,10 @@ describe Api::UsersController, :type => :controller do
       expect(json).to eq([])
     end
   end
+  
+  describe "daily_user" do
+    it "should have specs" do
+      write_this_test
+    end
+  end
 end

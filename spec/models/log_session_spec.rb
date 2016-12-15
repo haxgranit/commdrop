@@ -1930,4 +1930,10 @@ describe LogSession, :type => :model do
       expect(s.webhook_content(nil, 'lam', nil)).to eq('asdf')
     end
   end
+  
+  describe "process_daily_use" do
+    it "should have specs" do
+      write_this_test
+    end
+  end
 end

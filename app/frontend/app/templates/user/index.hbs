@@ -571,6 +571,25 @@
             {{/if}}
           </div>
 
+          <h5 style="margin-top: 20px;">{{t "Recent Usage:" key='recent usage'}}</h5>
+          {{#if daily_use.loading}}
+            <p>{{t "Loading..." key='loading'}}</p>
+          {{else if daily_use.error}}
+            <p>{{t "Error loading data" key='error_loading_data'}}</p>
+          {{else if daily_use.daily_use_history}}
+            <div class='daily_use'>
+              {{#each daily_use.daily_use_history as |day|}}
+                <div class={{day.activity}} style={{day.display_style}}>
+                  <span>
+                    {{day.date}}
+                  </span>
+                </div>
+              {{/each}}
+            </div>
+          {{else}}
+            <p>{{t "No data loaded" key='no_data'}}</p>
+          {{/if}}
+
           <h5 style="margin-top: 20px;">{{t "Devices:" key='devices_colon'}}</h5>
             {{#if model.devices}}
               <table class="table table-striped table-hover">

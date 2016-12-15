@@ -188,6 +188,9 @@ class LogSession < ActiveRecord::Base
       self.ended_at ||= DateTime.strptime(last_tally['timestamp'].to_s, '%s') if last_tally
       self.started_at ||= Time.now
       self.ended_at ||= self.started_at
+    elsif self.data['days']
+      self.log_type = 'daily_use'
+      self.data['events'] = []
     end
     if self.data['goal']
       if self.data['assessment']
@@ -613,16 +616,21 @@ class LogSession < ActiveRecord::Base
   
   def self.process_daily_use(params, non_user_params)
     raise "author required" unless non_user_params[:author]
-    session = LogSession.find_or_create_by(:type => 'daily_use', :user_id => non_user_params[:author].id)
+    session = LogSession.find_or_create_by(:log_type => 'daily_use', :user_id => non_user_params[:author].id)
+    session.author = non_user_params[:author]
+    session.device = non_user_params[:device]
     session.data['events'] = []
     days = session.data['days'] || {}
     params['events'].each do |day|
       existing_day = days[day['date']]
+      existing_day = nil unless existing_day.is_a?(Hash)
+      day = day.to_unsafe_h if day.respond_to?(:to_unsafe_h)
       existing_day ||= day
       existing_day['active'] ||= day['active']
+      days[day['date']] = existing_day
     end
     session.data['days'] = days
-    session.save
+    session.save!
     session
   end
   

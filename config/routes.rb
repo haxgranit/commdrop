@@ -156,6 +156,7 @@ Coughdrop::Application.routes.draw do
       post 'translate' => 'users#translate'
       get 'board_revisions' => 'users#board_revisions'
       get 'places' => 'users#places'
+      get 'daily_use' => 'users#daily_use'
     end
     
     resources :images do

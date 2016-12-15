@@ -687,6 +687,36 @@ footer .wide_links {
     font-size: 12px;
   }
 }
+.daily_use > div {
+  float: left;
+  height: 100px;
+  border: 1px solid #eee;
+  margin-left: -1px;
+  span {
+    display: inline-block;
+    margin-top: 40px;
+    margin-left: -30px;
+    transform: rotate(-90deg);
+    visibility: hidden;
+  }
+  &.light {
+    background: #bddaf3;
+  }
+  &.active {
+    background: #337ab7;
+    color: #fff;
+  }
+  &:nth-child(5n + 1) {
+    span {
+      visibility: visible;
+    }
+  }
+}
+.daily_use::after {
+  content: "";
+  display: block;
+  clear: both;
+}
 .listed_badge {
   width: 100%;
   padding: 5px;

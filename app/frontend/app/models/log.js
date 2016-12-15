@@ -8,6 +8,7 @@ export default DS.Model.extend({
   note: DS.attr('raw'),
   device: DS.attr('raw'),
   author: DS.attr('raw'),
+  daily_use: DS.attr('raw'),
   user: DS.attr('raw'),
   imported: DS.attr('boolean'),
   started_at: DS.attr('date'),
@@ -118,6 +119,32 @@ export default DS.Model.extend({
     });
     return result;
   }.property('assessment'),
+  daily_use_history: function() {
+    var res = [];
+    var daily = this.get('daily_use') || [];
+    var first = daily[0];
+    if(!first) { return null; }
+    var date = window.moment(first.date);
+    var today = window.moment();
+    var finder = function(d) { return d.date == str; };
+    while(date <= today) {
+      var str = date.format('YYYY-MM-DD');
+      var day = daily.find(finder);
+      day = day || {date: str, activity: Ember.String.htmlSafe('none')};
+      if(day.active === false) {
+        day.activity = Ember.String.htmlSafe('light');
+      } else if(day.active === true) {
+        day.activity = Ember.String.htmlSafe('active');
+      }
+      res.push(day);
+      date = date.add(1, 'day');
+    }
+    var pct = Math.round(1 / res.length * 1000) / 10;
+    res.forEach(function(d) {
+      d.display_style = Ember.String.htmlSafe('width: ' + pct + '%;');
+    });
+    return res;
+  }.property('daily_use'),
   toggle_notes: function(event_id) {
     var notes = [];
     var found = false;

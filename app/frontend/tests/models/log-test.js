@@ -44,4 +44,10 @@ describe('Log', function() {
       expect(log.get('goal_status_class')).toEqual('');
     });
   });
+
+  describe("daily_use_history", function() {
+    it('should have specs', function() {
+      expect('test').toEqual('todo');
+    });
+  });
 });
