@@ -21,6 +21,8 @@ export default Ember.Controller.extend({
         list.push({id: 'active_free_supervisor_without_supervisees_or_org', name: i18n.t('active_free_supervisor_without_supervisees_or_org', "Active free supervisors without any supervisees or org")});
         list.push({id: 'free_supervisor_with_supervisors', name: i18n.t('free_supervisor_with_supervisors', "Free supervisors with their own supervisors")});
         list.push({id: 'multiple_emails', name: i18n.t('multiple_emails', "Emails with multiple signups")});
+        list.push({id: 'home_boards', name: i18n.t('home_boards', "Most common home boards")});
+        list.push({id: 'recent_home_boards', name: i18n.t('recent_home_boards', "Most common home boards in the last 3 months")});
         list.push({id: 'current_but_expired', name: i18n.t('current_but_expired', "Used currently but now expired")});
         list.push({id: 'subscriptions', name: i18n.t('subscriptions', "Subscriptions over time") });
         list.push({id: 'missing_words', name: i18n.t('missing_words', "Button labels that don't have matching parts of speech")});
