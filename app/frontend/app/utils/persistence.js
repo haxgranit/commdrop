@@ -1335,11 +1335,11 @@ var persistence = Ember.Object.extend({
                       }
                     }, function(error) {
                       console.log(error);
-                      console.error("should have been safely cached, but board content wasn't in db:" + board.id);
+                      console.log("should have been safely cached, but board content wasn't in db:" + board.id);
                       return Ember.RSVP.resolve();
                     });
                   }, function() {
-                    console.error("should have been safely cached, but board wasn't in db:" + board.id);
+                    console.log("should have been safely cached, but board wasn't in db:" + board.id);
                     return Ember.RSVP.resolve();
                   }));
                 }
