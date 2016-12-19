@@ -806,9 +806,20 @@ var app_state = Ember.Object.extend({
     var now_time_string = _this.time_string((new Date()).getTime());
     var any_places = false;
     boards.forEach(function(b) { if(b.places) { any_places = true; } });
-    var place_types = [];
+    var current_place_types = [];
     if(_this.get('nearby_places') && any_places) {
-      // set place_types to the list of places for the closest-retrieved place
+      // set current_place_types to the list of places for the closest-retrieved place
+      (_this.get('nearby_places') || []).forEach(function(place) {
+        var d = geolocation.distance(place.latitude, place.longitude, stashes.get('geo.latest.coords.latitude'), stashes.get('geo.latest.coords.longitude'));
+        // anything with 500ft could be a winner
+        if(d && d < 500) {
+          place.types.forEach(function(type) {
+            if(!current_place_types.indexOf(type) == -1) {
+              current_place_types.push(type);
+            }
+          });
+        }
+      });
     }
     boards.forEach(function(brd) {
       var do_add = false;
@@ -846,10 +857,10 @@ var app_state = Ember.Object.extend({
           }
         });
       }
-      if(brd.places && place_types && place_types.length > 0) {
+      if(brd.places && current_place_types && current_place_types.length > 0) {
         var places = brd.places || [];
         if(places.split) { places = places.split(/,/); }
-        var any_match = places.find(function(p) { return place_types.indexOf(p) !== -1; });
+        var any_match = places.find(function(p) { return current_place_types.indexOf(p) !== -1; });
         if(any_match) {
           matches['place'] = true;
         }
