@@ -176,6 +176,8 @@ module JsonApi::User
           json['stats']['board_set_ids_including_supervisees'] = json['stats']['board_set_ids']
         end
       end
+    else
+      json['avatar_url'] = nil
     end
     json
   end
