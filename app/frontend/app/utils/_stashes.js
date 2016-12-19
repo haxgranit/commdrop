@@ -383,15 +383,25 @@ var stashes = Ember.Object.extend({
       // since the last recorded event.
       if(usage_log.length > 10 || diff == -1 || diff > (60 * 60 * 1000) || !only_if_convenient) {
         var history = [].concat(usage_log);
-        stashes.persist('usage_log', []);
+        // If there are tons of events, break them up into smaller chunks, this may
+        // be why user logs stopped getting persisted for one user's device.
+        var to_persist = history.slice(0, 250);
+        var for_later = history.slice(250, history.length);
+        stashes.persist('usage_log', for_later);
         var log = CoughDrop.store.createRecord('log', {
-          events: history
+          events: to_persist
         });
         log.cleanup();
         log.save().then(function() {
+          if(for_later.length > 0) {
+            Ember.run.later(function() {
+              stashes.push_log();
+            });
+          }
           // success!
-        }, function() {
+        }, function(err) {
           // error, try again later
+          console.log(err);
           console.error("log push failed");
           stashes.persist('usage_log', history.concat(stashes.get('usage_log')));
         });
