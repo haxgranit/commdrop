@@ -555,4 +555,19 @@ describe('Board', function() {
       });
     });
   });
+
+  describe("for_sale", function() {
+    it('should return the correct value', function() {
+      var b = CoughDrop.store.createRecord('board');
+      expect(b.get('for_sale')).toEqual(false);
+      b.set('protected', true);
+      expect(b.get('for_sale')).toEqual(false);
+      b.set('protected_settings', {});
+      expect(b.get('for_sale')).toEqual(false);
+      b.set('protected_settings', {cost: 100});
+      expect(b.get('for_sale')).toEqual(true);
+      b.set('protected_settings', {root_board: {}});
+      expect(b.get('for_sale')).toEqual(true);
+    });
+  });
 });

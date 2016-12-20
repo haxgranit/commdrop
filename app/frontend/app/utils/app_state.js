@@ -806,7 +806,7 @@ var app_state = Ember.Object.extend({
     var now_time_string = _this.time_string((new Date()).getTime());
     var any_places = false;
     boards.forEach(function(b) { if(b.places) { any_places = true; } });
-    var current_place_types = [];
+    var current_place_types = {};
     if(_this.get('nearby_places') && any_places) {
       // set current_place_types to the list of places for the closest-retrieved place
       (_this.get('nearby_places') || []).forEach(function(place) {
@@ -814,8 +814,12 @@ var app_state = Ember.Object.extend({
         // anything with 500ft could be a winner
         if(d && d < 500) {
           place.types.forEach(function(type) {
-            if(!current_place_types.indexOf(type) == -1) {
-              current_place_types.push(type);
+            if(!current_place_types[type] || current_place_types[type].distance > d) {
+              current_place_types[type] = {
+                distance: d,
+                latitude: place.latitude,
+                longitude: place.longitude
+              };
             }
           });
         }
@@ -830,6 +834,7 @@ var app_state = Ember.Object.extend({
       if(ssids && ssids.indexOf(_this.get('current_ssid')) != -1) {
         matches['ssid'] = true;
       }
+      var geo_set = false;
       if(brd.geos && stashes.get('geo.latest.coords')) {
         var geos = brd.geos || [];
         if(geos.split) { geos = geos.split(/;/).map(function(g) { return g.split(/,/).map(function(n) { return parseFloat(n); }); }); }
@@ -838,6 +843,7 @@ var app_state = Ember.Object.extend({
           var d = geolocation.distance(stashes.get('geo.latest.coords.latitude'), stashes.get('geo.latest.coords.longitude'), geo[0], geo[1]);
           if(d && d < loose_tolerance && (brd.geo_distance == -1 || d < brd.geo_distance)) {
             brd.geo_distance = d;
+            geo_set = true;
             matches['geo'] = true;
           }
         });
@@ -857,13 +863,21 @@ var app_state = Ember.Object.extend({
           }
         });
       }
-      if(brd.places && current_place_types && current_place_types.length > 0) {
+      if(brd.places && Object.keys(current_place_types).length > 0) {
         var places = brd.places || [];
         if(places.split) { places = places.split(/,/); }
-        var any_match = places.find(function(p) { return current_place_types.indexOf(p) !== -1; });
-        if(any_match) {
-          matches['place'] = true;
-        }
+        var closest = null;
+        places.forEach(function(place) {
+          if(current_place_types[place]) {
+            if(!closest || current_place_types[place].distance < closest) {
+              closest = current_place_types[place].distance;
+              matches['place'] = true;
+              if(!geo_set) {
+                brd.geo_distance = closest;
+              }
+            }
+          }
+        });
       }
 
       if(brd.highlight_type == 'locations' && (matches['geo'] || matches['ssid'])) {

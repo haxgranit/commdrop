@@ -25,7 +25,7 @@ export default Ember.Controller.extend({
   }.property('app_state.currentUser'),
   check_valid_amount: function(force) {
     var amount = parseInt(this.get('subscription.subscription_custom_amount'), 10);
-    if(amount && (amount < 150 || (amount % 50 != 0))) {
+    if(amount && (amount < 150 || (amount % 50 !== 0))) {
       if(this.get('custom_amount_error') === undefined && force !== true) {
         var _this = this;
         Ember.run.later(function() {

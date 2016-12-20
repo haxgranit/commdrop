@@ -1126,12 +1126,11 @@ var capabilities;
         capabilities.last_lux = event.reading && event.reading.illuminance;
         stashes.ambient_light = capabilities.last_lux;
       };
-    } else {
-      window.addEventListener('devicelight', function(event) {
-        capabilities.last_lux = event.lux || event.value;
-        stashes.ambient_light = capabilities.last_lux;
-      });
     }
+    window.addEventListener('devicelight', function(event) {
+      capabilities.last_lux = event.lux || event.value;
+      stashes.ambient_light = capabilities.last_lux;
+    });
 
     // TODO: ProximitySensor?
   };

@@ -46,8 +46,30 @@ describe('Log', function() {
   });
 
   describe("daily_use_history", function() {
-    it('should have specs', function() {
-      expect('test').toEqual('todo');
+    it('should return the correct value', function() {
+      var l = CoughDrop.store.createRecord('log');
+      expect(l.get('daily_use_history')).toEqual(null);
+      l.set('daily_use', []);
+      expect(l.get('daily_use_history')).toEqual(null);
+      var moment = window.moment;
+      stub(window, 'moment', function(str) {
+        if(str) {
+          return moment(str);
+        } else {
+          return moment('2016-12-19');
+        }
+      });
+      l.set('daily_use', [
+        {date: '2016-11-01', active: true},
+        {date: '2016-11-20', active: false}
+      ]);
+      expect(l.get('daily_use_history').length).toEqual(49);
+      expect(l.get('daily_use_history')[0].date).toEqual('2016-11-01');
+      expect(l.get('daily_use_history')[0].active).toEqual(true);
+      expect(l.get('daily_use_history')[1].date).toEqual('2016-11-02');
+      expect(l.get('daily_use_history')[1].active).toEqual(undefined);
+      expect(l.get('daily_use_history')[19].date).toEqual('2016-11-20');
+      expect(l.get('daily_use_history')[19].active).toEqual(false);
     });
   });
 });

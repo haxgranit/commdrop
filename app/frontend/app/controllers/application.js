@@ -265,7 +265,7 @@ export default Ember.Controller.extend({
       modal.open('rename-board', {board: this.get('board').get('model')});
     },
     shareBoard: function() {
-      if(oldBoard.get('protected')) {
+      if(this.get('board.model.protected')) {
         modal.error(i18n.t('cant_share_protected_boards', "This board contains purchased content, and can't be shared."));
         return;
       }

@@ -432,6 +432,7 @@ CoughDrop.Board = DS.Model.extend({
         return true;
       }
     }
+    return false;
   }.property('protected', 'protected_settings'),
   load_button_set: function(force) {
     var _this = this;

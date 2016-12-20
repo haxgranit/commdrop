@@ -1861,8 +1861,28 @@ describe('app_state', function() {
       expect(app_state.get('fenced_sidebar_board.key')).toEqual('b');
     });
 
-//     it("should return a place-matched board if found and matching a geo place", function() {
-//     });
+    it("should return a place-matched board if found and matching a geo place", function() {
+      stashes.set('geo.latest', {coords: {latitude: 1, longitude: 1}});
+      var now = (new Date()).getTime();
+      app_state.set('nearby_places', [
+        {name: 'slammer', latitude: 1.0001, longitude: 1.0001, types: ['dungeon']},
+        {name: 'zen', latitude: 1.0002, longitude: 1.0002, types: ['heaven']}
+      ]);
+      app_state.set('currentUser', Ember.Object.extend({
+        sidebar_boards_with_fallbacks: function() {
+          return [
+            {key: 'a', highlight_type: 'places', places: ['dungeon', 'prison']},
+            {key: 'b', highlight_type: 'places', places: ['dungeon']},
+            {key: 'c', highlight_type: 'places', places: ['nirvana', 'heaven', 'bliss']}
+          ];
+        }.property()
+      }).create());
+      expect(app_state.get('fenced_sidebar_board')).toNotEqual(undefined);
+      expect(app_state.get('fenced_sidebar_board.key')).toEqual('a');
+      stashes.set('geo.latest', {coords: {latitude: 1.0003, longitude: 1.0003}});
+      expect(app_state.get('fenced_sidebar_board')).toNotEqual(undefined);
+      expect(app_state.get('fenced_sidebar_board.key')).toEqual('c');
+    });
 
     it("should return the last-found result if not too old and nothing else found", function() {
       var last = {
